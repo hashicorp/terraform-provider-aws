@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceLocalDisk,
-			TypeName:                "aws_storagegateway_local_disk",
-			Name:                    "Local Disk",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLocalDisk,
+			TypeName: "aws_storagegateway_local_disk",
+			Name:     "Local Disk",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -37,10 +39,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceCache,
-			TypeName:                "aws_storagegateway_cache",
-			Name:                    "Cache",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCache,
+			TypeName: "aws_storagegateway_cache",
+			Name:     "Cache",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCachediSCSIVolume,
@@ -49,7 +53,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceFileSystemAssociation,
@@ -58,7 +64,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceGateway,
@@ -67,7 +75,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNFSFileShare,
@@ -76,7 +86,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSMBFileShare,
@@ -85,7 +97,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceStorediSCSIVolume,
@@ -94,7 +108,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTapePool,
@@ -103,19 +119,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUploadBuffer,
-			TypeName:                "aws_storagegateway_upload_buffer",
-			Name:                    "Upload Buffer",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUploadBuffer,
+			TypeName: "aws_storagegateway_upload_buffer",
+			Name:     "Upload Buffer",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceWorkingStorage,
-			TypeName:                "aws_storagegateway_working_storage",
-			Name:                    "Working Storage",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceWorkingStorage,
+			TypeName: "aws_storagegateway_working_storage",
+			Name:     "Working Storage",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

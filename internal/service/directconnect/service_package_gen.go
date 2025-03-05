@@ -26,34 +26,44 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceConnection,
-			TypeName:                "aws_dx_connection",
-			Name:                    "Connection",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceConnection,
+			TypeName: "aws_dx_connection",
+			Name:     "Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceGateway,
-			TypeName:                "aws_dx_gateway",
-			Name:                    "Gateway",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGateway,
+			TypeName: "aws_dx_gateway",
+			Name:     "Gateway",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceLocation,
-			TypeName:                "aws_dx_location",
-			Name:                    "Location",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLocation,
+			TypeName: "aws_dx_location",
+			Name:     "Location",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceLocations,
-			TypeName:                "aws_dx_locations",
-			Name:                    "Locations",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLocations,
+			TypeName: "aws_dx_locations",
+			Name:     "Locations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRouterConfiguration,
-			TypeName:                "aws_dx_router_configuration",
-			Name:                    "Router Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRouterConfiguration,
+			TypeName: "aws_dx_router_configuration",
+			Name:     "Router Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,10 +71,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceBGPPeer,
-			TypeName:                "aws_dx_bgp_peer",
-			Name:                    "BGP Peer",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBGPPeer,
+			TypeName: "aws_dx_bgp_peer",
+			Name:     "BGP Peer",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConnection,
@@ -73,49 +85,65 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConnectionAssociation,
-			TypeName:                "aws_dx_connection_association",
-			Name:                    "Connection LAG Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConnectionAssociation,
+			TypeName: "aws_dx_connection_association",
+			Name:     "Connection LAG Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConnectionConfirmation,
-			TypeName:                "aws_dx_connection_confirmation",
-			Name:                    "Connection Confirmation",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConnectionConfirmation,
+			TypeName: "aws_dx_connection_confirmation",
+			Name:     "Connection Confirmation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGateway,
-			TypeName:                "aws_dx_gateway",
-			Name:                    "Gateway",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGateway,
+			TypeName: "aws_dx_gateway",
+			Name:     "Gateway",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGatewayAssociation,
-			TypeName:                "aws_dx_gateway_association",
-			Name:                    "Gateway Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGatewayAssociation,
+			TypeName: "aws_dx_gateway_association",
+			Name:     "Gateway Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGatewayAssociationProposal,
-			TypeName:                "aws_dx_gateway_association_proposal",
-			Name:                    "Gateway Association Proposal",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGatewayAssociationProposal,
+			TypeName: "aws_dx_gateway_association_proposal",
+			Name:     "Gateway Association Proposal",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceHostedConnection,
-			TypeName:                "aws_dx_hosted_connection",
-			Name:                    "Hosted Connection",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceHostedConnection,
+			TypeName: "aws_dx_hosted_connection",
+			Name:     "Hosted Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceHostedPrivateVirtualInterface,
-			TypeName:                "aws_dx_hosted_private_virtual_interface",
-			Name:                    "Hosted Private Virtual Interface",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceHostedPrivateVirtualInterface,
+			TypeName: "aws_dx_hosted_private_virtual_interface",
+			Name:     "Hosted Private Virtual Interface",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHostedPrivateVirtualInterfaceAccepter,
@@ -124,13 +152,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceHostedPublicVirtualInterface,
-			TypeName:                "aws_dx_hosted_public_virtual_interface",
-			Name:                    "Hosted Public Virtual Interface",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceHostedPublicVirtualInterface,
+			TypeName: "aws_dx_hosted_public_virtual_interface",
+			Name:     "Hosted Public Virtual Interface",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHostedPublicVirtualInterfaceAccepter,
@@ -139,13 +171,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceHostedTransitVirtualInterface,
-			TypeName:                "aws_dx_hosted_transit_virtual_interface",
-			Name:                    "Hosted Transit Virtual Interface",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceHostedTransitVirtualInterface,
+			TypeName: "aws_dx_hosted_transit_virtual_interface",
+			Name:     "Hosted Transit Virtual Interface",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHostedTransitVirtualInterfaceAccepter,
@@ -154,7 +190,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceLag,
@@ -163,13 +201,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceMacSecKeyAssociation,
-			TypeName:                "aws_dx_macsec_key_association",
-			Name:                    "MACSec Key Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceMacSecKeyAssociation,
+			TypeName: "aws_dx_macsec_key_association",
+			Name:     "MACSec Key Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePrivateVirtualInterface,
@@ -178,7 +220,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePublicVirtualInterface,
@@ -187,7 +231,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitVirtualInterface,
@@ -196,7 +242,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

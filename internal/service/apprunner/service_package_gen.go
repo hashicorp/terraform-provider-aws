@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newHostedZoneIDDataSource,
-			TypeName:                "aws_apprunner_hosted_zone_id",
-			Name:                    "Hosted Zone ID",
-			IsRegionOverrideEnabled: false,
+			Factory:  newHostedZoneIDDataSource,
+			TypeName: "aws_apprunner_hosted_zone_id",
+			Name:     "Hosted Zone ID",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -29,16 +31,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceDefaultAutoScalingConfigurationVersion,
-			TypeName:                "aws_apprunner_default_auto_scaling_configuration_version",
-			Name:                    "Default AutoScaling Configuration Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceDefaultAutoScalingConfigurationVersion,
+			TypeName: "aws_apprunner_default_auto_scaling_configuration_version",
+			Name:     "Default AutoScaling Configuration Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDeploymentResource,
-			TypeName:                "aws_apprunner_deployment",
-			Name:                    "Deployment",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDeploymentResource,
+			TypeName: "aws_apprunner_deployment",
+			Name:     "Deployment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -56,7 +62,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConnection,
@@ -65,13 +73,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCustomDomainAssociation,
-			TypeName:                "aws_apprunner_custom_domain_association",
-			Name:                    "Custom Domain Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCustomDomainAssociation,
+			TypeName: "aws_apprunner_custom_domain_association",
+			Name:     "Custom Domain Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceObservabilityConfiguration,
@@ -80,7 +92,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceService,
@@ -89,7 +103,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCConnector,
@@ -98,7 +114,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCIngressConnection,
@@ -107,7 +125,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

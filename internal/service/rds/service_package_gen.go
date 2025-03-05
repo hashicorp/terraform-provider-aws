@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newClusterParameterGroupDataSource,
-			TypeName:                "aws_rds_cluster_parameter_group",
-			Name:                    "Cluster Parameter Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  newClusterParameterGroupDataSource,
+			TypeName: "aws_rds_cluster_parameter_group",
+			Name:     "Cluster Parameter Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,19 +37,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "db_cluster_snapshot_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceExportTask,
-			TypeName:                "aws_rds_export_task",
-			Name:                    "Export Task",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceExportTask,
+			TypeName: "aws_rds_export_task",
+			Name:     "Export Task",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceInstanceState,
-			TypeName:                "aws_rds_instance_state",
-			Name:                    "Instance State",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceInstanceState,
+			TypeName: "aws_rds_instance_state",
+			Name:     "Instance State",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newIntegrationResource,
@@ -56,7 +64,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newShardGroupResource,
@@ -65,7 +75,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -73,92 +85,120 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceClusterSnapshot,
-			TypeName:                "aws_db_cluster_snapshot",
-			Name:                    "DB Cluster Snapshot",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceClusterSnapshot,
+			TypeName: "aws_db_cluster_snapshot",
+			Name:     "DB Cluster Snapshot",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceEventCategories,
-			TypeName:                "aws_db_event_categories",
-			Name:                    "Event Categories",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceEventCategories,
+			TypeName: "aws_db_event_categories",
+			Name:     "Event Categories",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInstance,
-			TypeName:                "aws_db_instance",
-			Name:                    "DB Instance",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInstance,
+			TypeName: "aws_db_instance",
+			Name:     "DB Instance",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInstances,
-			TypeName:                "aws_db_instances",
-			Name:                    "DB Instances",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInstances,
+			TypeName: "aws_db_instances",
+			Name:     "DB Instances",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceParameterGroup,
-			TypeName:                "aws_db_parameter_group",
-			Name:                    "DB Parameter Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceParameterGroup,
+			TypeName: "aws_db_parameter_group",
+			Name:     "DB Parameter Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceProxy,
-			TypeName:                "aws_db_proxy",
-			Name:                    "DB Proxy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceProxy,
+			TypeName: "aws_db_proxy",
+			Name:     "DB Proxy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSnapshot,
-			TypeName:                "aws_db_snapshot",
-			Name:                    "DB Snapshot",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSnapshot,
+			TypeName: "aws_db_snapshot",
+			Name:     "DB Snapshot",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSubnetGroup,
-			TypeName:                "aws_db_subnet_group",
-			Name:                    "DB Subnet Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSubnetGroup,
+			TypeName: "aws_db_subnet_group",
+			Name:     "DB Subnet Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceCertificate,
-			TypeName:                "aws_rds_certificate",
-			Name:                    "Certificate",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCertificate,
+			TypeName: "aws_rds_certificate",
+			Name:     "Certificate",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceCluster,
-			TypeName:                "aws_rds_cluster",
-			Name:                    "Cluster",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCluster,
+			TypeName: "aws_rds_cluster",
+			Name:     "Cluster",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceClusters,
-			TypeName:                "aws_rds_clusters",
-			Name:                    "Clusters",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceClusters,
+			TypeName: "aws_rds_clusters",
+			Name:     "Clusters",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceEngineVersion,
-			TypeName:                "aws_rds_engine_version",
-			Name:                    "Engine Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceEngineVersion,
+			TypeName: "aws_rds_engine_version",
+			Name:     "Engine Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrderableInstance,
-			TypeName:                "aws_rds_orderable_db_instance",
-			Name:                    "Orderable DB Instance",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrderableInstance,
+			TypeName: "aws_rds_orderable_db_instance",
+			Name:     "Orderable DB Instance",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceReservedOffering,
-			TypeName:                "aws_rds_reserved_instance_offering",
-			Name:                    "Reserved Instance Offering",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceReservedOffering,
+			TypeName: "aws_rds_reserved_instance_offering",
+			Name:     "Reserved Instance Offering",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -172,7 +212,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "db_cluster_snapshot_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEventSubscription,
@@ -181,7 +223,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceInstance,
@@ -190,19 +234,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInstanceAutomatedBackupsReplication,
-			TypeName:                "aws_db_instance_automated_backups_replication",
-			Name:                    "Instance Automated Backups Replication",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInstanceAutomatedBackupsReplication,
+			TypeName: "aws_db_instance_automated_backups_replication",
+			Name:     "Instance Automated Backups Replication",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInstanceRoleAssociation,
-			TypeName:                "aws_db_instance_role_association",
-			Name:                    "DB Instance IAM Role Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInstanceRoleAssociation,
+			TypeName: "aws_db_instance_role_association",
+			Name:     "DB Instance IAM Role Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceOptionGroup,
@@ -211,7 +261,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceParameterGroup,
@@ -220,7 +272,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceProxy,
@@ -229,13 +283,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceProxyDefaultTargetGroup,
-			TypeName:                "aws_db_proxy_default_target_group",
-			Name:                    "DB Proxy Default Target Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceProxyDefaultTargetGroup,
+			TypeName: "aws_db_proxy_default_target_group",
+			Name:     "DB Proxy Default Target Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceProxyEndpoint,
@@ -244,13 +302,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceProxyTarget,
-			TypeName:                "aws_db_proxy_target",
-			Name:                    "DB Proxy Target",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceProxyTarget,
+			TypeName: "aws_db_proxy_target",
+			Name:     "DB Proxy Target",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSnapshot,
@@ -259,7 +321,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "db_snapshot_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSnapshotCopy,
@@ -268,7 +332,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "db_snapshot_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSubnetGroup,
@@ -277,13 +343,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCertificate,
-			TypeName:                "aws_rds_certificate",
-			Name:                    "Default Certificate",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCertificate,
+			TypeName: "aws_rds_certificate",
+			Name:     "Default Certificate",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCluster,
@@ -292,13 +362,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClusterActivityStream,
-			TypeName:                "aws_rds_cluster_activity_stream",
-			Name:                    "Cluster Activity Stream",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClusterActivityStream,
+			TypeName: "aws_rds_cluster_activity_stream",
+			Name:     "Cluster Activity Stream",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceClusterEndpoint,
@@ -307,7 +381,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceClusterInstance,
@@ -316,7 +392,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceClusterParameterGroup,
@@ -325,13 +403,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClusterRoleAssociation,
-			TypeName:                "aws_rds_cluster_role_association",
-			Name:                    "Cluster IAM Role Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClusterRoleAssociation,
+			TypeName: "aws_rds_cluster_role_association",
+			Name:     "Cluster IAM Role Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCustomDBEngineVersion,
@@ -340,7 +422,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceGlobalCluster,
@@ -349,7 +433,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceReservedInstance,
@@ -358,7 +444,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

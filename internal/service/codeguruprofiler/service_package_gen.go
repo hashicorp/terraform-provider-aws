@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceProfilingGroup,
-			TypeName:                "aws_codeguruprofiler_profiling_group",
-			Name:                    "Profiling Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceProfilingGroup,
+			TypeName: "aws_codeguruprofiler_profiling_group",
+			Name:     "Profiling Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,7 +37,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

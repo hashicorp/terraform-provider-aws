@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newKeyResource,
-			TypeName:                "aws_cloudfrontkeyvaluestore_key",
-			Name:                    "Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  newKeyResource,
+			TypeName: "aws_cloudfrontkeyvaluestore_key",
+			Name:     "Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

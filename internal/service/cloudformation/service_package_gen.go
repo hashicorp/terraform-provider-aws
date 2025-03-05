@@ -26,23 +26,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceExport,
-			TypeName:                "aws_cloudformation_export",
-			Name:                    "Export",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceExport,
+			TypeName: "aws_cloudformation_export",
+			Name:     "Export",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceStack,
-			TypeName:                "aws_cloudformation_stack",
-			Name:                    "Stack",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceStack,
+			TypeName: "aws_cloudformation_stack",
+			Name:     "Stack",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceType,
-			TypeName:                "aws_cloudformation_type",
-			Name:                    "Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceType,
+			TypeName: "aws_cloudformation_type",
+			Name:     "Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -50,36 +56,46 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceStack,
-			TypeName:                "aws_cloudformation_stack",
-			Name:                    "Stack",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStack,
+			TypeName: "aws_cloudformation_stack",
+			Name:     "Stack",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceStackInstances,
-			TypeName:                "aws_cloudformation_stack_instances",
-			Name:                    "Stack Instances",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStackInstances,
+			TypeName: "aws_cloudformation_stack_instances",
+			Name:     "Stack Instances",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceStackSet,
-			TypeName:                "aws_cloudformation_stack_set",
-			Name:                    "Stack Set",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStackSet,
+			TypeName: "aws_cloudformation_stack_set",
+			Name:     "Stack Set",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceStackSetInstance,
-			TypeName:                "aws_cloudformation_stack_set_instance",
-			Name:                    "Stack Set Instance",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStackSetInstance,
+			TypeName: "aws_cloudformation_stack_set_instance",
+			Name:     "Stack Set Instance",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceType,
-			TypeName:                "aws_cloudformation_type",
-			Name:                    "Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceType,
+			TypeName: "aws_cloudformation_type",
+			Name:     "Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -22,16 +22,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newAWSLogSourceResource,
-			TypeName:                "aws_securitylake_aws_log_source",
-			Name:                    "AWS Log Source",
-			IsRegionOverrideEnabled: false,
+			Factory:  newAWSLogSourceResource,
+			TypeName: "aws_securitylake_aws_log_source",
+			Name:     "AWS Log Source",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newCustomLogSourceResource,
-			TypeName:                "aws_securitylake_custom_log_source",
-			Name:                    "Custom Log Source",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCustomLogSourceResource,
+			TypeName: "aws_securitylake_custom_log_source",
+			Name:     "Custom Log Source",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newDataLakeResource,
@@ -40,7 +44,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newSubscriberResource,
@@ -49,13 +55,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newSubscriberNotificationResource,
-			TypeName:                "aws_securitylake_subscriber_notification",
-			Name:                    "Subscriber Notification",
-			IsRegionOverrideEnabled: false,
+			Factory:  newSubscriberNotificationResource,
+			TypeName: "aws_securitylake_subscriber_notification",
+			Name:     "Subscriber Notification",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

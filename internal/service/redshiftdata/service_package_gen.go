@@ -30,10 +30,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceStatement,
-			TypeName:                "aws_redshiftdata_statement",
-			Name:                    "Statement",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStatement,
+			TypeName: "aws_redshiftdata_statement",
+			Name:     "Statement",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -28,7 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -36,89 +38,115 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceComponent,
-			TypeName:                "aws_imagebuilder_component",
-			Name:                    "Component",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceComponent,
+			TypeName: "aws_imagebuilder_component",
+			Name:     "Component",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceComponents,
-			TypeName:                "aws_imagebuilder_components",
-			Name:                    "Components",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceComponents,
+			TypeName: "aws_imagebuilder_components",
+			Name:     "Components",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceContainerRecipe,
-			TypeName:                "aws_imagebuilder_container_recipe",
-			Name:                    "Container Recipe",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceContainerRecipe,
+			TypeName: "aws_imagebuilder_container_recipe",
+			Name:     "Container Recipe",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceContainerRecipes,
-			TypeName:                "aws_imagebuilder_container_recipes",
-			Name:                    "Container Recipes",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceContainerRecipes,
+			TypeName: "aws_imagebuilder_container_recipes",
+			Name:     "Container Recipes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceDistributionConfiguration,
-			TypeName:                "aws_imagebuilder_distribution_configuration",
-			Name:                    "Distribution Configuration",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDistributionConfiguration,
+			TypeName: "aws_imagebuilder_distribution_configuration",
+			Name:     "Distribution Configuration",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceDistributionConfigurations,
-			TypeName:                "aws_imagebuilder_distribution_configurations",
-			Name:                    "Distribution Configurations",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDistributionConfigurations,
+			TypeName: "aws_imagebuilder_distribution_configurations",
+			Name:     "Distribution Configurations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceImage,
-			TypeName:                "aws_imagebuilder_image",
-			Name:                    "Image",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceImage,
+			TypeName: "aws_imagebuilder_image",
+			Name:     "Image",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceImagePipeline,
-			TypeName:                "aws_imagebuilder_image_pipeline",
-			Name:                    "Image Pipeline",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceImagePipeline,
+			TypeName: "aws_imagebuilder_image_pipeline",
+			Name:     "Image Pipeline",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceImagePipelines,
-			TypeName:                "aws_imagebuilder_image_pipelines",
-			Name:                    "Image Pipelines",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceImagePipelines,
+			TypeName: "aws_imagebuilder_image_pipelines",
+			Name:     "Image Pipelines",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceImageRecipe,
-			TypeName:                "aws_imagebuilder_image_recipe",
-			Name:                    "Image Recipe",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceImageRecipe,
+			TypeName: "aws_imagebuilder_image_recipe",
+			Name:     "Image Recipe",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceImageRecipes,
-			TypeName:                "aws_imagebuilder_image_recipes",
-			Name:                    "Image Recipes",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceImageRecipes,
+			TypeName: "aws_imagebuilder_image_recipes",
+			Name:     "Image Recipes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInfrastructureConfiguration,
-			TypeName:                "aws_imagebuilder_infrastructure_configuration",
-			Name:                    "Infrastructure Configuration",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInfrastructureConfiguration,
+			TypeName: "aws_imagebuilder_infrastructure_configuration",
+			Name:     "Infrastructure Configuration",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInfrastructureConfigurations,
-			TypeName:                "aws_imagebuilder_infrastructure_configurations",
-			Name:                    "Infrastructure Configurations",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInfrastructureConfigurations,
+			TypeName: "aws_imagebuilder_infrastructure_configurations",
+			Name:     "Infrastructure Configurations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -132,7 +160,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceContainerRecipe,
@@ -141,7 +171,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDistributionConfiguration,
@@ -150,7 +182,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceImage,
@@ -159,7 +193,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceImagePipeline,
@@ -168,7 +204,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceImageRecipe,
@@ -177,7 +215,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceInfrastructureConfiguration,
@@ -186,7 +226,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceWorkflow,
@@ -195,7 +237,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

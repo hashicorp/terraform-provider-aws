@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceConnection,
-			TypeName:                "aws_codestarconnections_connection",
-			Name:                    "Connection",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceConnection,
+			TypeName: "aws_codestarconnections_connection",
+			Name:     "Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,13 +45,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceHost,
-			TypeName:                "aws_codestarconnections_host",
-			Name:                    "Host",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceHost,
+			TypeName: "aws_codestarconnections_host",
+			Name:     "Host",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

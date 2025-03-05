@@ -28,7 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -36,24 +38,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceFirewall,
-			TypeName:                "aws_networkfirewall_firewall",
-			Name:                    "Firewall",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceFirewall,
+			TypeName: "aws_networkfirewall_firewall",
+			Name:     "Firewall",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceFirewallPolicy,
-			TypeName:                "aws_networkfirewall_firewall_policy",
-			Name:                    "Firewall Policy",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceFirewallPolicy,
+			TypeName: "aws_networkfirewall_firewall_policy",
+			Name:     "Firewall Policy",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceResourcePolicy,
-			TypeName:                "aws_networkfirewall_resource_policy",
-			Name:                    "Resource Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceResourcePolicy,
+			TypeName: "aws_networkfirewall_resource_policy",
+			Name:     "Resource Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -67,7 +75,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceFirewallPolicy,
@@ -76,19 +86,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceLoggingConfiguration,
-			TypeName:                "aws_networkfirewall_logging_configuration",
-			Name:                    "Logging Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceLoggingConfiguration,
+			TypeName: "aws_networkfirewall_logging_configuration",
+			Name:     "Logging Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResourcePolicy,
-			TypeName:                "aws_networkfirewall_resource_policy",
-			Name:                    "Resource Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResourcePolicy,
+			TypeName: "aws_networkfirewall_resource_policy",
+			Name:     "Resource Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRuleGroup,
@@ -97,7 +113,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -18,16 +18,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceReservedCacheNodeOffering,
-			TypeName:                "aws_elasticache_reserved_cache_node_offering",
-			Name:                    "Reserved Cache Node Offering",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceReservedCacheNodeOffering,
+			TypeName: "aws_elasticache_reserved_cache_node_offering",
+			Name:     "Reserved Cache Node Offering",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceServerlessCache,
-			TypeName:                "aws_elasticache_serverless_cache",
-			Name:                    "Serverless Cache",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceServerlessCache,
+			TypeName: "aws_elasticache_serverless_cache",
+			Name:     "Serverless Cache",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -41,7 +45,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newServerlessCacheResource,
@@ -50,7 +56,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -58,28 +66,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCluster,
-			TypeName:                "aws_elasticache_cluster",
-			Name:                    "Cluster",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCluster,
+			TypeName: "aws_elasticache_cluster",
+			Name:     "Cluster",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceReplicationGroup,
-			TypeName:                "aws_elasticache_replication_group",
-			Name:                    "Replication Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceReplicationGroup,
+			TypeName: "aws_elasticache_replication_group",
+			Name:     "Replication Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSubnetGroup,
-			TypeName:                "aws_elasticache_subnet_group",
-			Name:                    "Subnet Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSubnetGroup,
+			TypeName: "aws_elasticache_subnet_group",
+			Name:     "Subnet Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceUser,
-			TypeName:                "aws_elasticache_user",
-			Name:                    "User",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceUser,
+			TypeName: "aws_elasticache_user",
+			Name:     "User",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -93,13 +109,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGlobalReplicationGroup,
-			TypeName:                "aws_elasticache_global_replication_group",
-			Name:                    "Global Replication Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGlobalReplicationGroup,
+			TypeName: "aws_elasticache_global_replication_group",
+			Name:     "Global Replication Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceParameterGroup,
@@ -108,7 +128,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceReplicationGroup,
@@ -117,7 +139,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSubnetGroup,
@@ -126,7 +150,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceUser,
@@ -135,7 +161,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceUserGroup,
@@ -144,13 +172,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUserGroupAssociation,
-			TypeName:                "aws_elasticache_user_group_association",
-			Name:                    "User Group Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUserGroupAssociation,
+			TypeName: "aws_elasticache_user_group_association",
+			Name:     "User Group Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

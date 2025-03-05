@@ -26,28 +26,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceLink,
-			TypeName:                "aws_oam_link",
-			Name:                    "Link",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceLink,
+			TypeName: "aws_oam_link",
+			Name:     "Link",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourceLinks,
-			TypeName:                "aws_oam_links",
-			Name:                    "Links",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceLinks,
+			TypeName: "aws_oam_links",
+			Name:     "Links",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourceSink,
-			TypeName:                "aws_oam_sink",
-			Name:                    "Sink",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceSink,
+			TypeName: "aws_oam_sink",
+			Name:     "Sink",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourceSinks,
-			TypeName:                "aws_oam_sinks",
-			Name:                    "Sinks",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceSinks,
+			TypeName: "aws_oam_sinks",
+			Name:     "Sinks",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,7 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceSink,
@@ -70,13 +80,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceSinkPolicy,
-			TypeName:                "aws_oam_sink_policy",
-			Name:                    "Sink Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceSinkPolicy,
+			TypeName: "aws_oam_sink_policy",
+			Name:     "Sink Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceGroup,
-			TypeName:                "aws_autoscaling_group",
-			Name:                    "Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGroup,
+			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceGroups,
-			TypeName:                "aws_autoscaling_groups",
-			Name:                    "Groups",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGroups,
+			TypeName: "aws_autoscaling_groups",
+			Name:     "Groups",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceLaunchConfiguration,
-			TypeName:                "aws_launch_configuration",
-			Name:                    "Launch Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLaunchConfiguration,
+			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,58 +55,76 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAttachment,
-			TypeName:                "aws_autoscaling_attachment",
-			Name:                    "Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAttachment,
+			TypeName: "aws_autoscaling_attachment",
+			Name:     "Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGroup,
-			TypeName:                "aws_autoscaling_group",
-			Name:                    "Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGroup,
+			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGroupTag,
-			TypeName:                "aws_autoscaling_group_tag",
-			Name:                    "Group Tag",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGroupTag,
+			TypeName: "aws_autoscaling_group_tag",
+			Name:     "Group Tag",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceLifecycleHook,
-			TypeName:                "aws_autoscaling_lifecycle_hook",
-			Name:                    "Lifecycle Hook",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceLifecycleHook,
+			TypeName: "aws_autoscaling_lifecycle_hook",
+			Name:     "Lifecycle Hook",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceNotification,
-			TypeName:                "aws_autoscaling_notification",
-			Name:                    "Notification",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceNotification,
+			TypeName: "aws_autoscaling_notification",
+			Name:     "Notification",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePolicy,
-			TypeName:                "aws_autoscaling_policy",
-			Name:                    "Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePolicy,
+			TypeName: "aws_autoscaling_policy",
+			Name:     "Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSchedule,
-			TypeName:                "aws_autoscaling_schedule",
-			Name:                    "Scheduled Action",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSchedule,
+			TypeName: "aws_autoscaling_schedule",
+			Name:     "Scheduled Action",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTrafficSourceAttachment,
-			TypeName:                "aws_autoscaling_traffic_source_attachment",
-			Name:                    "Traffic Source Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTrafficSourceAttachment,
+			TypeName: "aws_autoscaling_traffic_source_attachment",
+			Name:     "Traffic Source Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceLaunchConfiguration,
-			TypeName:                "aws_launch_configuration",
-			Name:                    "Launch Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceLaunchConfiguration,
+			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

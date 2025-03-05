@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceFindingIds,
-			TypeName:                "aws_guardduty_finding_ids",
-			Name:                    "Finding Ids",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceFindingIds,
+			TypeName: "aws_guardduty_finding_ids",
+			Name:     "Finding Ids",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,13 +37,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newMemberDetectorFeatureResource,
-			TypeName:                "aws_guardduty_member_detector_feature",
-			Name:                    "Member Detector Feature",
-			IsRegionOverrideEnabled: false,
+			Factory:  newMemberDetectorFeatureResource,
+			TypeName: "aws_guardduty_member_detector_feature",
+			Name:     "Member Detector Feature",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,10 +55,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceDetector,
-			TypeName:                "aws_guardduty_detector",
-			Name:                    "Detector",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceDetector,
+			TypeName: "aws_guardduty_detector",
+			Name:     "Detector",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -66,13 +74,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceDetectorFeature,
-			TypeName:                "aws_guardduty_detector_feature",
-			Name:                    "Detector Feature",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceDetectorFeature,
+			TypeName: "aws_guardduty_detector_feature",
+			Name:     "Detector Feature",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceFilter,
@@ -81,13 +93,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInviteAccepter,
-			TypeName:                "aws_guardduty_invite_accepter",
-			Name:                    "Invite Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInviteAccepter,
+			TypeName: "aws_guardduty_invite_accepter",
+			Name:     "Invite Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceIPSet,
@@ -96,37 +112,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceMember,
-			TypeName:                "aws_guardduty_member",
-			Name:                    "Member",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceMember,
+			TypeName: "aws_guardduty_member",
+			Name:     "Member",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceOrganizationAdminAccount,
-			TypeName:                "aws_guardduty_organization_admin_account",
-			Name:                    "Organization Admin Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceOrganizationAdminAccount,
+			TypeName: "aws_guardduty_organization_admin_account",
+			Name:     "Organization Admin Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceOrganizationConfiguration,
-			TypeName:                "aws_guardduty_organization_configuration",
-			Name:                    "Organization Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceOrganizationConfiguration,
+			TypeName: "aws_guardduty_organization_configuration",
+			Name:     "Organization Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceOrganizationConfigurationFeature,
-			TypeName:                "aws_guardduty_organization_configuration_feature",
-			Name:                    "Organization Configuration Feature",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceOrganizationConfigurationFeature,
+			TypeName: "aws_guardduty_organization_configuration_feature",
+			Name:     "Organization Configuration Feature",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourcePublishingDestination,
-			TypeName:                "aws_guardduty_publishing_destination",
-			Name:                    "Publishing Destination",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourcePublishingDestination,
+			TypeName: "aws_guardduty_publishing_destination",
+			Name:     "Publishing Destination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceThreatIntelSet,
@@ -135,7 +163,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

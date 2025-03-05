@@ -37,19 +37,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Bucket",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceBucketAccessKey,
-			TypeName:                "aws_lightsail_bucket_access_key",
-			Name:                    "Bucket Access Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceBucketAccessKey,
+			TypeName: "aws_lightsail_bucket_access_key",
+			Name:     "Bucket Access Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceBucketResourceAccess,
-			TypeName:                "aws_lightsail_bucket_resource_access",
-			Name:                    "Bucket Resource Access",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceBucketResourceAccess,
+			TypeName: "aws_lightsail_bucket_resource_access",
+			Name:     "Bucket Resource Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceCertificate,
@@ -59,7 +65,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Certificate",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceContainerService,
@@ -69,13 +77,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ContainerService",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceContainerServiceDeploymentVersion,
-			TypeName:                "aws_lightsail_container_service_deployment_version",
-			Name:                    "Container Service Deployment Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceContainerServiceDeploymentVersion,
+			TypeName: "aws_lightsail_container_service_deployment_version",
+			Name:     "Container Service Deployment Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceDatabase,
@@ -85,7 +97,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Database",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceDisk,
@@ -95,13 +109,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Disk",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceDiskAttachment,
-			TypeName:                "aws_lightsail_disk_attachment",
-			Name:                    "Disk Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceDiskAttachment,
+			TypeName: "aws_lightsail_disk_attachment",
+			Name:     "Disk Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceDistribution,
@@ -111,19 +129,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Distribution",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceDomain,
-			TypeName:                "aws_lightsail_domain",
-			Name:                    "Domain",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceDomain,
+			TypeName: "aws_lightsail_domain",
+			Name:     "Domain",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceDomainEntry,
-			TypeName:                "aws_lightsail_domain_entry",
-			Name:                    "Domain Entry",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceDomainEntry,
+			TypeName: "aws_lightsail_domain_entry",
+			Name:     "Domain Entry",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceInstance,
@@ -133,13 +157,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Instance",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceInstancePublicPorts,
-			TypeName:                "aws_lightsail_instance_public_ports",
-			Name:                    "Instance Public Ports",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceInstancePublicPorts,
+			TypeName: "aws_lightsail_instance_public_ports",
+			Name:     "Instance Public Ports",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceKeyPair,
@@ -149,7 +177,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "KeyPair",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceLoadBalancer,
@@ -159,49 +189,65 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "LB",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceLoadBalancerAttachment,
-			TypeName:                "aws_lightsail_lb_attachment",
-			Name:                    "Load Balancer Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceLoadBalancerAttachment,
+			TypeName: "aws_lightsail_lb_attachment",
+			Name:     "Load Balancer Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceLoadBalancerCertificate,
-			TypeName:                "aws_lightsail_lb_certificate",
-			Name:                    "Load Balancer Certificate",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceLoadBalancerCertificate,
+			TypeName: "aws_lightsail_lb_certificate",
+			Name:     "Load Balancer Certificate",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceLoadBalancerCertificateAttachment,
-			TypeName:                "aws_lightsail_lb_certificate_attachment",
-			Name:                    "Load Balancer Certificate Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceLoadBalancerCertificateAttachment,
+			TypeName: "aws_lightsail_lb_certificate_attachment",
+			Name:     "Load Balancer Certificate Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceLoadBalancerHTTPSRedirectionPolicy,
-			TypeName:                "aws_lightsail_lb_https_redirection_policy",
-			Name:                    "Load Balancer HTTPS Redirection Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceLoadBalancerHTTPSRedirectionPolicy,
+			TypeName: "aws_lightsail_lb_https_redirection_policy",
+			Name:     "Load Balancer HTTPS Redirection Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceLoadBalancerStickinessPolicy,
-			TypeName:                "aws_lightsail_lb_stickiness_policy",
-			Name:                    "Load Balancer Stickiness Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceLoadBalancerStickinessPolicy,
+			TypeName: "aws_lightsail_lb_stickiness_policy",
+			Name:     "Load Balancer Stickiness Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceStaticIP,
-			TypeName:                "aws_lightsail_static_ip",
-			Name:                    "Static IP",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceStaticIP,
+			TypeName: "aws_lightsail_static_ip",
+			Name:     "Static IP",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceStaticIPAttachment,
-			TypeName:                "aws_lightsail_static_ip_attachment",
-			Name:                    "Static IP Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceStaticIPAttachment,
+			TypeName: "aws_lightsail_static_ip_attachment",
+			Name:     "Static IP Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

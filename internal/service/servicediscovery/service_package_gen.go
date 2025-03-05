@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceDNSNamespace,
-			TypeName:                "aws_service_discovery_dns_namespace",
-			Name:                    "DNS Namespace",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDNSNamespace,
+			TypeName: "aws_service_discovery_dns_namespace",
+			Name:     "DNS Namespace",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceHTTPNamespace,
-			TypeName:                "aws_service_discovery_http_namespace",
-			Name:                    "HTTP Namespace",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceHTTPNamespace,
+			TypeName: "aws_service_discovery_http_namespace",
+			Name:     "HTTP Namespace",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceService,
-			TypeName:                "aws_service_discovery_service",
-			Name:                    "Service",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceService,
+			TypeName: "aws_service_discovery_service",
+			Name:     "Service",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -55,13 +61,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInstance,
-			TypeName:                "aws_service_discovery_instance",
-			Name:                    "Instance",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInstance,
+			TypeName: "aws_service_discovery_instance",
+			Name:     "Instance",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePrivateDNSNamespace,
@@ -70,7 +80,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePublicDNSNamespace,
@@ -79,7 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceService,
@@ -88,7 +102,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

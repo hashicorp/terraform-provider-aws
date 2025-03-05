@@ -26,52 +26,68 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceOutpostAsset,
-			TypeName:                "aws_outposts_asset",
-			Name:                    "Asset",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOutpostAsset,
+			TypeName: "aws_outposts_asset",
+			Name:     "Asset",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOutpostAssets,
-			TypeName:                "aws_outposts_assets",
-			Name:                    "Assets",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOutpostAssets,
+			TypeName: "aws_outposts_assets",
+			Name:     "Assets",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOutpost,
-			TypeName:                "aws_outposts_outpost",
-			Name:                    "Outpost",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOutpost,
+			TypeName: "aws_outposts_outpost",
+			Name:     "Outpost",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOutpostInstanceType,
-			TypeName:                "aws_outposts_outpost_instance_type",
-			Name:                    "Outpost Instance Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOutpostInstanceType,
+			TypeName: "aws_outposts_outpost_instance_type",
+			Name:     "Outpost Instance Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOutpostInstanceTypes,
-			TypeName:                "aws_outposts_outpost_instance_types",
-			Name:                    "Outpost Instance Types",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOutpostInstanceTypes,
+			TypeName: "aws_outposts_outpost_instance_types",
+			Name:     "Outpost Instance Types",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOutposts,
-			TypeName:                "aws_outposts_outposts",
-			Name:                    "Outposts",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOutposts,
+			TypeName: "aws_outposts_outposts",
+			Name:     "Outposts",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSite,
-			TypeName:                "aws_outposts_site",
-			Name:                    "Site",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSite,
+			TypeName: "aws_outposts_site",
+			Name:     "Site",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSites,
-			TypeName:                "aws_outposts_sites",
-			Name:                    "Sites",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSites,
+			TypeName: "aws_outposts_sites",
+			Name:     "Sites",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

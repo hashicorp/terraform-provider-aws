@@ -18,16 +18,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceRuntimeVersion,
-			TypeName:                "aws_synthetics_runtime_version",
-			Name:                    "Runtime Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceRuntimeVersion,
+			TypeName: "aws_synthetics_runtime_version",
+			Name:     "Runtime Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceRuntimeVersions,
-			TypeName:                "aws_synthetics_runtime_versions",
-			Name:                    "Runtime Versions",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceRuntimeVersions,
+			TypeName: "aws_synthetics_runtime_versions",
+			Name:     "Runtime Versions",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,7 +53,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceGroup,
@@ -58,13 +64,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceGroupAssociation,
-			TypeName:                "aws_synthetics_group_association",
-			Name:                    "Group Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceGroupAssociation,
+			TypeName: "aws_synthetics_group_association",
+			Name:     "Group Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

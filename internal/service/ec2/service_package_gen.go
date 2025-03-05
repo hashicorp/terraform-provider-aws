@@ -18,41 +18,53 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newCapacityBlockOfferingDataSource,
-			TypeName:                "aws_ec2_capacity_block_offering",
-			Name:                    "Capacity Block Offering",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCapacityBlockOfferingDataSource,
+			TypeName: "aws_ec2_capacity_block_offering",
+			Name:     "Capacity Block Offering",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceSpotDataFeedSubscription,
-			TypeName:                "aws_spot_datafeed_subscription",
-			Name:                    "Spot Data Feed Subscription Data Source",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceSpotDataFeedSubscription,
+			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Data Feed Subscription Data Source",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newVPCIPAMDataSource,
-			TypeName:                "aws_vpc_ipam",
-			Name:                    "IPAM",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  newVPCIPAMDataSource,
+			TypeName: "aws_vpc_ipam",
+			Name:     "IPAM",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newVPCIPAMsDataSource,
-			TypeName:                "aws_vpc_ipams",
-			Name:                    "IPAMs",
-			IsRegionOverrideEnabled: false,
+			Factory:  newVPCIPAMsDataSource,
+			TypeName: "aws_vpc_ipams",
+			Name:     "IPAMs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newSecurityGroupRuleDataSource,
-			TypeName:                "aws_vpc_security_group_rule",
-			Name:                    "Security Group Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  newSecurityGroupRuleDataSource,
+			TypeName: "aws_vpc_security_group_rule",
+			Name:     "Security Group Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newSecurityGroupRulesDataSource,
-			TypeName:                "aws_vpc_security_group_rules",
-			Name:                    "Security Group Rules",
-			IsRegionOverrideEnabled: false,
+			Factory:  newSecurityGroupRulesDataSource,
+			TypeName: "aws_vpc_security_group_rules",
+			Name:     "Security Group Rules",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -60,10 +72,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newEBSFastSnapshotRestoreResource,
-			TypeName:                "aws_ebs_fast_snapshot_restore",
-			Name:                    "EBS Fast Snapshot Restore",
-			IsRegionOverrideEnabled: false,
+			Factory:  newEBSFastSnapshotRestoreResource,
+			TypeName: "aws_ebs_fast_snapshot_restore",
+			Name:     "EBS Fast Snapshot Restore",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newCapacityBlockReservationResource,
@@ -72,7 +86,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newInstanceConnectEndpointResource,
@@ -81,31 +97,41 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newInstanceMetadataDefaultsResource,
-			TypeName:                "aws_ec2_instance_metadata_defaults",
-			Name:                    "Instance Metadata Defaults",
-			IsRegionOverrideEnabled: false,
+			Factory:  newInstanceMetadataDefaultsResource,
+			TypeName: "aws_ec2_instance_metadata_defaults",
+			Name:     "Instance Metadata Defaults",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newTransitGatewayDefaultRouteTableAssociationResource,
-			TypeName:                "aws_ec2_transit_gateway_default_route_table_association",
-			Name:                    "Transit Gateway Default Route Table Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newTransitGatewayDefaultRouteTableAssociationResource,
+			TypeName: "aws_ec2_transit_gateway_default_route_table_association",
+			Name:     "Transit Gateway Default Route Table Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newTransitGatewayDefaultRouteTablePropagationResource,
-			TypeName:                "aws_ec2_transit_gateway_default_route_table_propagation",
-			Name:                    "Transit Gateway Default Route Table Propagation",
-			IsRegionOverrideEnabled: false,
+			Factory:  newTransitGatewayDefaultRouteTablePropagationResource,
+			TypeName: "aws_ec2_transit_gateway_default_route_table_propagation",
+			Name:     "Transit Gateway Default Route Table Propagation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newEIPDomainNameResource,
-			TypeName:                "aws_eip_domain_name",
-			Name:                    "EIP Domain Name",
-			IsRegionOverrideEnabled: false,
+			Factory:  newEIPDomainNameResource,
+			TypeName: "aws_eip_domain_name",
+			Name:     "EIP Domain Name",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newVPCBlockPublicAccessExclusionResource,
@@ -114,25 +140,33 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newVPCBlockPublicAccessOptionsResource,
-			TypeName:                "aws_vpc_block_public_access_options",
-			Name:                    "VPC Block Public Access Options",
-			IsRegionOverrideEnabled: false,
+			Factory:  newVPCBlockPublicAccessOptionsResource,
+			TypeName: "aws_vpc_block_public_access_options",
+			Name:     "VPC Block Public Access Options",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newVPCEndpointPrivateDNSResource,
-			TypeName:                "aws_vpc_endpoint_private_dns",
-			Name:                    "VPC Endpoint Private DNS",
-			IsRegionOverrideEnabled: false,
+			Factory:  newVPCEndpointPrivateDNSResource,
+			TypeName: "aws_vpc_endpoint_private_dns",
+			Name:     "VPC Endpoint Private DNS",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newVPCEndpointServicePrivateDNSVerificationResource,
-			TypeName:                "aws_vpc_endpoint_service_private_dns_verification",
-			Name:                    "VPC Endpoint Service Private DNS Verification",
-			IsRegionOverrideEnabled: false,
+			Factory:  newVPCEndpointServicePrivateDNSVerificationResource,
+			TypeName: "aws_vpc_endpoint_service_private_dns_verification",
+			Name:     "VPC Endpoint Service Private DNS Verification",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResource,
@@ -141,7 +175,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newSecurityGroupIngressRuleResource,
@@ -150,13 +186,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceSecurityGroupVPCAssociation,
-			TypeName:                "aws_vpc_security_group_vpc_association",
-			Name:                    "Security Group VPC Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceSecurityGroupVPCAssociation,
+			TypeName: "aws_vpc_security_group_vpc_association",
+			Name:     "Security Group VPC Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -164,535 +204,701 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceAMI,
-			TypeName:                "aws_ami",
-			Name:                    "AMI",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceAMIIDs,
-			TypeName:                "aws_ami_ids",
-			Name:                    "AMI IDs",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceAvailabilityZone,
-			TypeName:                "aws_availability_zone",
-			Name:                    "Availability Zone",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceAvailabilityZones,
-			TypeName:                "aws_availability_zones",
-			Name:                    "Availability Zones",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceCustomerGateway,
-			TypeName:                "aws_customer_gateway",
-			Name:                    "Customer Gateway",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEBSDefaultKMSKey,
-			TypeName:                "aws_ebs_default_kms_key",
-			Name:                    "EBS Default KMS Key",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEBSEncryptionByDefault,
-			TypeName:                "aws_ebs_encryption_by_default",
-			Name:                    "EBS Encryption By Default",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEBSSnapshot,
-			TypeName:                "aws_ebs_snapshot",
-			Name:                    "EBS Snapshot",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEBSSnapshotIDs,
-			TypeName:                "aws_ebs_snapshot_ids",
-			Name:                    "EBS Snapshot IDs",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEBSVolume,
-			TypeName:                "aws_ebs_volume",
-			Name:                    "EBS Volume",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEBSVolumes,
-			TypeName:                "aws_ebs_volumes",
-			Name:                    "EBS Volumes",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceClientVPNEndpoint,
-			TypeName:                "aws_ec2_client_vpn_endpoint",
-			Name:                    "Client VPN Endpoint",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceCoIPPool,
-			TypeName:                "aws_ec2_coip_pool",
-			Name:                    "COIP Pool",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceCoIPPools,
-			TypeName:                "aws_ec2_coip_pools",
-			Name:                    "COIP Pools",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceHost,
-			TypeName:                "aws_ec2_host",
-			Name:                    "Host",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInstanceType,
-			TypeName:                "aws_ec2_instance_type",
-			Name:                    "Instance Type",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInstanceTypeOffering,
-			TypeName:                "aws_ec2_instance_type_offering",
-			Name:                    "Instance Type Offering",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInstanceTypeOfferings,
-			TypeName:                "aws_ec2_instance_type_offerings",
-			Name:                    "Instance Type Offering",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInstanceTypes,
-			TypeName:                "aws_ec2_instance_types",
-			Name:                    "Instance Types",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGateway,
-			TypeName:                "aws_ec2_local_gateway",
-			Name:                    "Local Gateway",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGatewayRouteTable,
-			TypeName:                "aws_ec2_local_gateway_route_table",
-			Name:                    "Local Gateway Route Table",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGatewayRouteTables,
-			TypeName:                "aws_ec2_local_gateway_route_tables",
-			Name:                    "Local Gateway Route Table",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGatewayVirtualInterface,
-			TypeName:                "aws_ec2_local_gateway_virtual_interface",
-			Name:                    "Local Gateway Virtual Interface",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGatewayVirtualInterfaceGroup,
-			TypeName:                "aws_ec2_local_gateway_virtual_interface_group",
-			Name:                    "Local Gateway Virtual Interface Group",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGatewayVirtualInterfaceGroups,
-			TypeName:                "aws_ec2_local_gateway_virtual_interface_groups",
-			Name:                    "Local Gateway Virtual Interface Groups",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLocalGateways,
-			TypeName:                "aws_ec2_local_gateways",
-			Name:                    "Local Gateways",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceManagedPrefixList,
-			TypeName:                "aws_ec2_managed_prefix_list",
-			Name:                    "Managed Prefix List",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceManagedPrefixLists,
-			TypeName:                "aws_ec2_managed_prefix_lists",
-			Name:                    "Managed Prefix Lists",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNetworkInsightsAnalysis,
-			TypeName:                "aws_ec2_network_insights_analysis",
-			Name:                    "Network Insights Analysis",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNetworkInsightsPath,
-			TypeName:                "aws_ec2_network_insights_path",
-			Name:                    "Network Insights Path",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourcePublicIPv4Pool,
-			TypeName:                "aws_ec2_public_ipv4_pool",
-			Name:                    "Public IPv4 Pool",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourcePublicIPv4Pools,
-			TypeName:                "aws_ec2_public_ipv4_pools",
-			Name:                    "Public IPv4 Pools",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceSerialConsoleAccess,
-			TypeName:                "aws_ec2_serial_console_access",
-			Name:                    "Serial Console Access",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceSpotPrice,
-			TypeName:                "aws_ec2_spot_price",
-			Name:                    "Spot Price",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGateway,
-			TypeName:                "aws_ec2_transit_gateway",
-			Name:                    "Transit Gateway",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayAttachment,
-			TypeName:                "aws_ec2_transit_gateway_attachment",
-			Name:                    "Transit Gateway Attachment",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayAttachments,
-			TypeName:                "aws_ec2_transit_gateway_attachments",
-			Name:                    "Transit Gateway Attachments",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayConnect,
-			TypeName:                "aws_ec2_transit_gateway_connect",
-			Name:                    "Transit Gateway Connect",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayConnectPeer,
-			TypeName:                "aws_ec2_transit_gateway_connect_peer",
-			Name:                    "Transit Gateway Connect Peer",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayDxGatewayAttachment,
-			TypeName:                "aws_ec2_transit_gateway_dx_gateway_attachment",
-			Name:                    "Transit Gateway Direct Connect Gateway Attachment",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayMulticastDomain,
-			TypeName:                "aws_ec2_transit_gateway_multicast_domain",
-			Name:                    "Transit Gateway Multicast Domain",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayPeeringAttachment,
-			TypeName:                "aws_ec2_transit_gateway_peering_attachment",
-			Name:                    "Transit Gateway Peering Attachment",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayPeeringAttachments,
-			TypeName:                "aws_ec2_transit_gateway_peering_attachments",
-			Name:                    "Transit Gateway Peering Attachments",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayRouteTable,
-			TypeName:                "aws_ec2_transit_gateway_route_table",
-			Name:                    "Transit Gateway Route Table",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayRouteTableAssociations,
-			TypeName:                "aws_ec2_transit_gateway_route_table_associations",
-			Name:                    "Transit Gateway Route Table Associations",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayRouteTablePropagations,
-			TypeName:                "aws_ec2_transit_gateway_route_table_propagations",
-			Name:                    "Transit Gateway Route Table Propagations",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayRouteTableRoutes,
-			TypeName:                "aws_ec2_transit_gateway_route_table_routes",
-			Name:                    "Transit Gateway Route Table Routes",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayRouteTables,
-			TypeName:                "aws_ec2_transit_gateway_route_tables",
-			Name:                    "Transit Gateway Route Tables",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayVPCAttachment,
-			TypeName:                "aws_ec2_transit_gateway_vpc_attachment",
-			Name:                    "Transit Gateway VPC Attachment",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayVPCAttachments,
-			TypeName:                "aws_ec2_transit_gateway_vpc_attachments",
-			Name:                    "Transit Gateway VPC Attachments",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceTransitGatewayVPNAttachment,
-			TypeName:                "aws_ec2_transit_gateway_vpn_attachment",
-			Name:                    "Transit Gateway VPN Attachment",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEIP,
-			TypeName:                "aws_eip",
-			Name:                    "EIP",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceEIPs,
-			TypeName:                "aws_eips",
-			Name:                    "EIPs",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInstance,
-			TypeName:                "aws_instance",
-			Name:                    "Instance",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInstances,
-			TypeName:                "aws_instances",
-			Name:                    "Instances",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceInternetGateway,
-			TypeName:                "aws_internet_gateway",
-			Name:                    "Internet Gateway",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceKeyPair,
-			TypeName:                "aws_key_pair",
-			Name:                    "Key Pair",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceLaunchTemplate,
-			TypeName:                "aws_launch_template",
-			Name:                    "Launch Template",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNATGateway,
-			TypeName:                "aws_nat_gateway",
-			Name:                    "NAT Gateway",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNATGateways,
-			TypeName:                "aws_nat_gateways",
-			Name:                    "NAT Gateways",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNetworkACLs,
-			TypeName:                "aws_network_acls",
-			Name:                    "Network ACLs",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNetworkInterface,
-			TypeName:                "aws_network_interface",
-			Name:                    "Network Interface",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceNetworkInterfaces,
-			TypeName:                "aws_network_interfaces",
-			Name:                    "Network Interfaces",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourcePrefixList,
-			TypeName:                "aws_prefix_list",
-			Name:                    "Prefix List",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceRoute,
-			TypeName:                "aws_route",
-			Name:                    "Route",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceRouteTable,
-			TypeName:                "aws_route_table",
-			Name:                    "Route Table",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceRouteTables,
-			TypeName:                "aws_route_tables",
-			Name:                    "Route Tables",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceSecurityGroup,
-			TypeName:                "aws_security_group",
-			Name:                    "Security Group",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceSecurityGroups,
-			TypeName:                "aws_security_groups",
-			Name:                    "Security Groups",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceSubnet,
-			TypeName:                "aws_subnet",
-			Name:                    "Subnet",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceSubnets,
-			TypeName:                "aws_subnets",
-			Name:                    "Subnets",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPC,
-			TypeName:                "aws_vpc",
-			Name:                    "VPC",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPCDHCPOptions,
-			TypeName:                "aws_vpc_dhcp_options",
-			Name:                    "DHCP Options",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPCEndpoint,
-			TypeName:                "aws_vpc_endpoint",
-			Name:                    "Endpoint",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPCEndpointService,
-			TypeName:                "aws_vpc_endpoint_service",
-			Name:                    "Endpoint Service",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceIPAMPool,
-			TypeName:                "aws_vpc_ipam_pool",
-			Name:                    "IPAM Pool",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceIPAMPoolCIDRs,
-			TypeName:                "aws_vpc_ipam_pool_cidrs",
-			Name:                    "IPAM Pool CIDRs",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceIPAMPools,
-			TypeName:                "aws_vpc_ipam_pools",
-			Name:                    "IPAM Pools",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceIPAMPreviewNextCIDR,
-			TypeName:                "aws_vpc_ipam_preview_next_cidr",
-			Name:                    "IPAM Preview Next CIDR",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPCPeeringConnection,
-			TypeName:                "aws_vpc_peering_connection",
-			Name:                    "VPC Peering Connection",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPCPeeringConnections,
-			TypeName:                "aws_vpc_peering_connections",
-			Name:                    "VPC Peering Connections",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPCs,
-			TypeName:                "aws_vpcs",
-			Name:                    "VPCs",
-			IsRegionOverrideEnabled: false,
-		},
-		{
-			Factory:                 dataSourceVPNGateway,
-			TypeName:                "aws_vpn_gateway",
-			Name:                    "VPN Gateway",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAMI,
+			TypeName: "aws_ami",
+			Name:     "AMI",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceAMIIDs,
+			TypeName: "aws_ami_ids",
+			Name:     "AMI IDs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceAvailabilityZone,
+			TypeName: "aws_availability_zone",
+			Name:     "Availability Zone",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceAvailabilityZones,
+			TypeName: "aws_availability_zones",
+			Name:     "Availability Zones",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceCustomerGateway,
+			TypeName: "aws_customer_gateway",
+			Name:     "Customer Gateway",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEBSDefaultKMSKey,
+			TypeName: "aws_ebs_default_kms_key",
+			Name:     "EBS Default KMS Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEBSEncryptionByDefault,
+			TypeName: "aws_ebs_encryption_by_default",
+			Name:     "EBS Encryption By Default",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEBSSnapshot,
+			TypeName: "aws_ebs_snapshot",
+			Name:     "EBS Snapshot",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEBSSnapshotIDs,
+			TypeName: "aws_ebs_snapshot_ids",
+			Name:     "EBS Snapshot IDs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEBSVolume,
+			TypeName: "aws_ebs_volume",
+			Name:     "EBS Volume",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEBSVolumes,
+			TypeName: "aws_ebs_volumes",
+			Name:     "EBS Volumes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceClientVPNEndpoint,
+			TypeName: "aws_ec2_client_vpn_endpoint",
+			Name:     "Client VPN Endpoint",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceCoIPPool,
+			TypeName: "aws_ec2_coip_pool",
+			Name:     "COIP Pool",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceCoIPPools,
+			TypeName: "aws_ec2_coip_pools",
+			Name:     "COIP Pools",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceHost,
+			TypeName: "aws_ec2_host",
+			Name:     "Host",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInstanceType,
+			TypeName: "aws_ec2_instance_type",
+			Name:     "Instance Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInstanceTypeOffering,
+			TypeName: "aws_ec2_instance_type_offering",
+			Name:     "Instance Type Offering",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInstanceTypeOfferings,
+			TypeName: "aws_ec2_instance_type_offerings",
+			Name:     "Instance Type Offering",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInstanceTypes,
+			TypeName: "aws_ec2_instance_types",
+			Name:     "Instance Types",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGateway,
+			TypeName: "aws_ec2_local_gateway",
+			Name:     "Local Gateway",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGatewayRouteTable,
+			TypeName: "aws_ec2_local_gateway_route_table",
+			Name:     "Local Gateway Route Table",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGatewayRouteTables,
+			TypeName: "aws_ec2_local_gateway_route_tables",
+			Name:     "Local Gateway Route Table",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGatewayVirtualInterface,
+			TypeName: "aws_ec2_local_gateway_virtual_interface",
+			Name:     "Local Gateway Virtual Interface",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGatewayVirtualInterfaceGroup,
+			TypeName: "aws_ec2_local_gateway_virtual_interface_group",
+			Name:     "Local Gateway Virtual Interface Group",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGatewayVirtualInterfaceGroups,
+			TypeName: "aws_ec2_local_gateway_virtual_interface_groups",
+			Name:     "Local Gateway Virtual Interface Groups",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLocalGateways,
+			TypeName: "aws_ec2_local_gateways",
+			Name:     "Local Gateways",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceManagedPrefixList,
+			TypeName: "aws_ec2_managed_prefix_list",
+			Name:     "Managed Prefix List",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceManagedPrefixLists,
+			TypeName: "aws_ec2_managed_prefix_lists",
+			Name:     "Managed Prefix Lists",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNetworkInsightsAnalysis,
+			TypeName: "aws_ec2_network_insights_analysis",
+			Name:     "Network Insights Analysis",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNetworkInsightsPath,
+			TypeName: "aws_ec2_network_insights_path",
+			Name:     "Network Insights Path",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourcePublicIPv4Pool,
+			TypeName: "aws_ec2_public_ipv4_pool",
+			Name:     "Public IPv4 Pool",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourcePublicIPv4Pools,
+			TypeName: "aws_ec2_public_ipv4_pools",
+			Name:     "Public IPv4 Pools",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceSerialConsoleAccess,
+			TypeName: "aws_ec2_serial_console_access",
+			Name:     "Serial Console Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceSpotPrice,
+			TypeName: "aws_ec2_spot_price",
+			Name:     "Spot Price",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGateway,
+			TypeName: "aws_ec2_transit_gateway",
+			Name:     "Transit Gateway",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayAttachment,
+			TypeName: "aws_ec2_transit_gateway_attachment",
+			Name:     "Transit Gateway Attachment",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayAttachments,
+			TypeName: "aws_ec2_transit_gateway_attachments",
+			Name:     "Transit Gateway Attachments",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayConnect,
+			TypeName: "aws_ec2_transit_gateway_connect",
+			Name:     "Transit Gateway Connect",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayConnectPeer,
+			TypeName: "aws_ec2_transit_gateway_connect_peer",
+			Name:     "Transit Gateway Connect Peer",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayDxGatewayAttachment,
+			TypeName: "aws_ec2_transit_gateway_dx_gateway_attachment",
+			Name:     "Transit Gateway Direct Connect Gateway Attachment",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayMulticastDomain,
+			TypeName: "aws_ec2_transit_gateway_multicast_domain",
+			Name:     "Transit Gateway Multicast Domain",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayPeeringAttachment,
+			TypeName: "aws_ec2_transit_gateway_peering_attachment",
+			Name:     "Transit Gateway Peering Attachment",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayPeeringAttachments,
+			TypeName: "aws_ec2_transit_gateway_peering_attachments",
+			Name:     "Transit Gateway Peering Attachments",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayRouteTable,
+			TypeName: "aws_ec2_transit_gateway_route_table",
+			Name:     "Transit Gateway Route Table",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayRouteTableAssociations,
+			TypeName: "aws_ec2_transit_gateway_route_table_associations",
+			Name:     "Transit Gateway Route Table Associations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayRouteTablePropagations,
+			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
+			Name:     "Transit Gateway Route Table Propagations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayRouteTableRoutes,
+			TypeName: "aws_ec2_transit_gateway_route_table_routes",
+			Name:     "Transit Gateway Route Table Routes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayRouteTables,
+			TypeName: "aws_ec2_transit_gateway_route_tables",
+			Name:     "Transit Gateway Route Tables",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayVPCAttachment,
+			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
+			Name:     "Transit Gateway VPC Attachment",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayVPCAttachments,
+			TypeName: "aws_ec2_transit_gateway_vpc_attachments",
+			Name:     "Transit Gateway VPC Attachments",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceTransitGatewayVPNAttachment,
+			TypeName: "aws_ec2_transit_gateway_vpn_attachment",
+			Name:     "Transit Gateway VPN Attachment",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEIP,
+			TypeName: "aws_eip",
+			Name:     "EIP",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceEIPs,
+			TypeName: "aws_eips",
+			Name:     "EIPs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInstance,
+			TypeName: "aws_instance",
+			Name:     "Instance",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInstances,
+			TypeName: "aws_instances",
+			Name:     "Instances",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceInternetGateway,
+			TypeName: "aws_internet_gateway",
+			Name:     "Internet Gateway",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceKeyPair,
+			TypeName: "aws_key_pair",
+			Name:     "Key Pair",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceLaunchTemplate,
+			TypeName: "aws_launch_template",
+			Name:     "Launch Template",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNATGateway,
+			TypeName: "aws_nat_gateway",
+			Name:     "NAT Gateway",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNATGateways,
+			TypeName: "aws_nat_gateways",
+			Name:     "NAT Gateways",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNetworkACLs,
+			TypeName: "aws_network_acls",
+			Name:     "Network ACLs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNetworkInterface,
+			TypeName: "aws_network_interface",
+			Name:     "Network Interface",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceNetworkInterfaces,
+			TypeName: "aws_network_interfaces",
+			Name:     "Network Interfaces",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourcePrefixList,
+			TypeName: "aws_prefix_list",
+			Name:     "Prefix List",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceRoute,
+			TypeName: "aws_route",
+			Name:     "Route",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceRouteTable,
+			TypeName: "aws_route_table",
+			Name:     "Route Table",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceRouteTables,
+			TypeName: "aws_route_tables",
+			Name:     "Route Tables",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceSecurityGroup,
+			TypeName: "aws_security_group",
+			Name:     "Security Group",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceSecurityGroups,
+			TypeName: "aws_security_groups",
+			Name:     "Security Groups",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceSubnet,
+			TypeName: "aws_subnet",
+			Name:     "Subnet",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceSubnets,
+			TypeName: "aws_subnets",
+			Name:     "Subnets",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPC,
+			TypeName: "aws_vpc",
+			Name:     "VPC",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPCDHCPOptions,
+			TypeName: "aws_vpc_dhcp_options",
+			Name:     "DHCP Options",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPCEndpoint,
+			TypeName: "aws_vpc_endpoint",
+			Name:     "Endpoint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPCEndpointService,
+			TypeName: "aws_vpc_endpoint_service",
+			Name:     "Endpoint Service",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceIPAMPool,
+			TypeName: "aws_vpc_ipam_pool",
+			Name:     "IPAM Pool",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceIPAMPoolCIDRs,
+			TypeName: "aws_vpc_ipam_pool_cidrs",
+			Name:     "IPAM Pool CIDRs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceIPAMPools,
+			TypeName: "aws_vpc_ipam_pools",
+			Name:     "IPAM Pools",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceIPAMPreviewNextCIDR,
+			TypeName: "aws_vpc_ipam_preview_next_cidr",
+			Name:     "IPAM Preview Next CIDR",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPCPeeringConnection,
+			TypeName: "aws_vpc_peering_connection",
+			Name:     "VPC Peering Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPCPeeringConnections,
+			TypeName: "aws_vpc_peering_connections",
+			Name:     "VPC Peering Connections",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPCs,
+			TypeName: "aws_vpcs",
+			Name:     "VPCs",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
+		},
+		{
+			Factory:  dataSourceVPNGateway,
+			TypeName: "aws_vpn_gateway",
+			Name:     "VPN Gateway",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -706,7 +912,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceAMICopy,
@@ -715,7 +923,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceAMIFromInstance,
@@ -724,13 +934,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAMILaunchPermission,
-			TypeName:                "aws_ami_launch_permission",
-			Name:                    "AMI Launch Permission",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAMILaunchPermission,
+			TypeName: "aws_ami_launch_permission",
+			Name:     "AMI Launch Permission",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCustomerGateway,
@@ -739,7 +953,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDefaultNetworkACL,
@@ -748,7 +964,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDefaultRouteTable,
@@ -757,7 +975,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDefaultSecurityGroup,
@@ -766,7 +986,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDefaultSubnet,
@@ -775,7 +997,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDefaultVPC,
@@ -784,7 +1008,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDefaultVPCDHCPOptions,
@@ -793,19 +1019,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEBSDefaultKMSKey,
-			TypeName:                "aws_ebs_default_kms_key",
-			Name:                    "EBS Default KMS Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEBSDefaultKMSKey,
+			TypeName: "aws_ebs_default_kms_key",
+			Name:     "EBS Default KMS Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEBSEncryptionByDefault,
-			TypeName:                "aws_ebs_encryption_by_default",
-			Name:                    "EBS Encryption By Default",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEBSEncryptionByDefault,
+			TypeName: "aws_ebs_encryption_by_default",
+			Name:     "EBS Encryption By Default",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEBSSnapshot,
@@ -814,13 +1046,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEBSSnapshotBlockPublicAccess,
-			TypeName:                "aws_ebs_snapshot_block_public_access",
-			Name:                    "EBS Snapshot Block Public Access",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEBSSnapshotBlockPublicAccess,
+			TypeName: "aws_ebs_snapshot_block_public_access",
+			Name:     "EBS Snapshot Block Public Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEBSSnapshotCopy,
@@ -829,7 +1065,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEBSSnapshotImport,
@@ -838,7 +1076,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEBSVolume,
@@ -847,13 +1087,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAvailabilityZoneGroup,
-			TypeName:                "aws_ec2_availability_zone_group",
-			Name:                    "Availability Zone Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAvailabilityZoneGroup,
+			TypeName: "aws_ec2_availability_zone_group",
+			Name:     "Availability Zone Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCapacityReservation,
@@ -862,7 +1106,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCarrierGateway,
@@ -871,13 +1117,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClientVPNAuthorizationRule,
-			TypeName:                "aws_ec2_client_vpn_authorization_rule",
-			Name:                    "Client VPN Authorization Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClientVPNAuthorizationRule,
+			TypeName: "aws_ec2_client_vpn_authorization_rule",
+			Name:     "Client VPN Authorization Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceClientVPNEndpoint,
@@ -886,19 +1136,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClientVPNNetworkAssociation,
-			TypeName:                "aws_ec2_client_vpn_network_association",
-			Name:                    "Client VPN Network Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClientVPNNetworkAssociation,
+			TypeName: "aws_ec2_client_vpn_network_association",
+			Name:     "Client VPN Network Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClientVPNRoute,
-			TypeName:                "aws_ec2_client_vpn_route",
-			Name:                    "Client VPN Route",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClientVPNRoute,
+			TypeName: "aws_ec2_client_vpn_route",
+			Name:     "Client VPN Route",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceFleet,
@@ -907,7 +1163,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHost,
@@ -916,25 +1174,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceImageBlockPublicAccess,
-			TypeName:                "aws_ec2_image_block_public_access",
-			Name:                    "Image Block Public Access",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceImageBlockPublicAccess,
+			TypeName: "aws_ec2_image_block_public_access",
+			Name:     "Image Block Public Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInstanceState,
-			TypeName:                "aws_ec2_instance_state",
-			Name:                    "Instance State",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInstanceState,
+			TypeName: "aws_ec2_instance_state",
+			Name:     "Instance State",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceLocalGatewayRoute,
-			TypeName:                "aws_ec2_local_gateway_route",
-			Name:                    "Local Gateway Route",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceLocalGatewayRoute,
+			TypeName: "aws_ec2_local_gateway_route",
+			Name:     "Local Gateway Route",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceLocalGatewayRouteTableVPCAssociation,
@@ -943,7 +1209,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceManagedPrefixList,
@@ -952,13 +1220,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceManagedPrefixListEntry,
-			TypeName:                "aws_ec2_managed_prefix_list_entry",
-			Name:                    "Managed Prefix List Entry",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceManagedPrefixListEntry,
+			TypeName: "aws_ec2_managed_prefix_list_entry",
+			Name:     "Managed Prefix List Entry",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNetworkInsightsAnalysis,
@@ -967,7 +1239,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNetworkInsightsPath,
@@ -976,25 +1250,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSerialConsoleAccess,
-			TypeName:                "aws_ec2_serial_console_access",
-			Name:                    "Serial Console Access",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSerialConsoleAccess,
+			TypeName: "aws_ec2_serial_console_access",
+			Name:     "Serial Console Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSubnetCIDRReservation,
-			TypeName:                "aws_ec2_subnet_cidr_reservation",
-			Name:                    "Subnet CIDR Reservation",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSubnetCIDRReservation,
+			TypeName: "aws_ec2_subnet_cidr_reservation",
+			Name:     "Subnet CIDR Reservation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTag,
-			TypeName:                "aws_ec2_tag",
-			Name:                    "EC2 Resource Tag",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTag,
+			TypeName: "aws_ec2_tag",
+			Name:     "EC2 Resource Tag",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTrafficMirrorFilter,
@@ -1003,13 +1285,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTrafficMirrorFilterRule,
-			TypeName:                "aws_ec2_traffic_mirror_filter_rule",
-			Name:                    "Traffic Mirror Filter Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTrafficMirrorFilterRule,
+			TypeName: "aws_ec2_traffic_mirror_filter_rule",
+			Name:     "Traffic Mirror Filter Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTrafficMirrorSession,
@@ -1018,7 +1304,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTrafficMirrorTarget,
@@ -1027,7 +1315,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGateway,
@@ -1036,7 +1326,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayConnect,
@@ -1045,7 +1337,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayConnectPeer,
@@ -1054,7 +1348,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayMulticastDomain,
@@ -1063,25 +1359,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayMulticastDomainAssociation,
-			TypeName:                "aws_ec2_transit_gateway_multicast_domain_association",
-			Name:                    "Transit Gateway Multicast Domain Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayMulticastDomainAssociation,
+			TypeName: "aws_ec2_transit_gateway_multicast_domain_association",
+			Name:     "Transit Gateway Multicast Domain Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayMulticastGroupMember,
-			TypeName:                "aws_ec2_transit_gateway_multicast_group_member",
-			Name:                    "Transit Gateway Multicast Group Member",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayMulticastGroupMember,
+			TypeName: "aws_ec2_transit_gateway_multicast_group_member",
+			Name:     "Transit Gateway Multicast Group Member",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayMulticastGroupSource,
-			TypeName:                "aws_ec2_transit_gateway_multicast_group_source",
-			Name:                    "Transit Gateway Multicast Group Source",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayMulticastGroupSource,
+			TypeName: "aws_ec2_transit_gateway_multicast_group_source",
+			Name:     "Transit Gateway Multicast Group Source",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayPeeringAttachment,
@@ -1090,7 +1394,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayPeeringAttachmentAccepter,
@@ -1099,7 +1405,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayPolicyTable,
@@ -1108,25 +1416,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayPolicyTableAssociation,
-			TypeName:                "aws_ec2_transit_gateway_policy_table_association",
-			Name:                    "Transit Gateway Policy Table Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayPolicyTableAssociation,
+			TypeName: "aws_ec2_transit_gateway_policy_table_association",
+			Name:     "Transit Gateway Policy Table Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayPrefixListReference,
-			TypeName:                "aws_ec2_transit_gateway_prefix_list_reference",
-			Name:                    "Transit Gateway Prefix List Reference",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayPrefixListReference,
+			TypeName: "aws_ec2_transit_gateway_prefix_list_reference",
+			Name:     "Transit Gateway Prefix List Reference",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayRoute,
-			TypeName:                "aws_ec2_transit_gateway_route",
-			Name:                    "Transit Gateway Route",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayRoute,
+			TypeName: "aws_ec2_transit_gateway_route",
+			Name:     "Transit Gateway Route",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTable,
@@ -1135,19 +1451,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayRouteTableAssociation,
-			TypeName:                "aws_ec2_transit_gateway_route_table_association",
-			Name:                    "Transit Gateway Route Table Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayRouteTableAssociation,
+			TypeName: "aws_ec2_transit_gateway_route_table_association",
+			Name:     "Transit Gateway Route Table Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayRouteTablePropagation,
-			TypeName:                "aws_ec2_transit_gateway_route_table_propagation",
-			Name:                    "Transit Gateway Route Table Propagation",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayRouteTablePropagation,
+			TypeName: "aws_ec2_transit_gateway_route_table_propagation",
+			Name:     "Transit Gateway Route Table Propagation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayVPCAttachment,
@@ -1156,7 +1478,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayVPCAttachmentAccepter,
@@ -1165,7 +1489,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEgressOnlyInternetGateway,
@@ -1174,7 +1500,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEIP,
@@ -1183,13 +1511,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEIPAssociation,
-			TypeName:                "aws_eip_association",
-			Name:                    "EIP Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEIPAssociation,
+			TypeName: "aws_eip_association",
+			Name:     "EIP Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceFlowLog,
@@ -1198,7 +1530,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceInstance,
@@ -1207,7 +1541,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceInternetGateway,
@@ -1216,13 +1552,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInternetGatewayAttachment,
-			TypeName:                "aws_internet_gateway_attachment",
-			Name:                    "Internet Gateway Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInternetGatewayAttachment,
+			TypeName: "aws_internet_gateway_attachment",
+			Name:     "Internet Gateway Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceKeyPair,
@@ -1231,7 +1571,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "key_pair_id",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceLaunchTemplate,
@@ -1240,13 +1582,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceMainRouteTableAssociation,
-			TypeName:                "aws_main_route_table_association",
-			Name:                    "Main Route Table Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceMainRouteTableAssociation,
+			TypeName: "aws_main_route_table_association",
+			Name:     "Main Route Table Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNATGateway,
@@ -1255,7 +1601,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNetworkACL,
@@ -1264,19 +1612,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceNetworkACLAssociation,
-			TypeName:                "aws_network_acl_association",
-			Name:                    "Network ACL Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceNetworkACLAssociation,
+			TypeName: "aws_network_acl_association",
+			Name:     "Network ACL Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceNetworkACLRule,
-			TypeName:                "aws_network_acl_rule",
-			Name:                    "Network ACL Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceNetworkACLRule,
+			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNetworkInterface,
@@ -1285,19 +1639,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceNetworkInterfaceAttachment,
-			TypeName:                "aws_network_interface_attachment",
-			Name:                    "Network Interface Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceNetworkInterfaceAttachment,
+			TypeName: "aws_network_interface_attachment",
+			Name:     "Network Interface Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceNetworkInterfaceSGAttachment,
-			TypeName:                "aws_network_interface_sg_attachment",
-			Name:                    "Network Interface SG Attachement",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceNetworkInterfaceSGAttachment,
+			TypeName: "aws_network_interface_sg_attachment",
+			Name:     "Network Interface SG Attachement",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePlacementGroup,
@@ -1306,13 +1666,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "placement_group_id",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRoute,
-			TypeName:                "aws_route",
-			Name:                    "Route",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRoute,
+			TypeName: "aws_route",
+			Name:     "Route",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRouteTable,
@@ -1321,13 +1685,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRouteTableAssociation,
-			TypeName:                "aws_route_table_association",
-			Name:                    "Route Table Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRouteTableAssociation,
+			TypeName: "aws_route_table_association",
+			Name:     "Route Table Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSecurityGroup,
@@ -1336,25 +1704,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSecurityGroupRule,
-			TypeName:                "aws_security_group_rule",
-			Name:                    "Security Group Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSecurityGroupRule,
+			TypeName: "aws_security_group_rule",
+			Name:     "Security Group Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSnapshotCreateVolumePermission,
-			TypeName:                "aws_snapshot_create_volume_permission",
-			Name:                    "EBS Snapshot CreateVolume Permission",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSnapshotCreateVolumePermission,
+			TypeName: "aws_snapshot_create_volume_permission",
+			Name:     "EBS Snapshot CreateVolume Permission",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSpotDataFeedSubscription,
-			TypeName:                "aws_spot_datafeed_subscription",
-			Name:                    "Spot Datafeed Subscription",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSpotDataFeedSubscription,
+			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Datafeed Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSpotFleetRequest,
@@ -1363,7 +1739,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSpotInstanceRequest,
@@ -1372,7 +1750,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSubnet,
@@ -1381,7 +1761,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVerifiedAccessEndpoint,
@@ -1390,7 +1772,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVerifiedAccessGroup,
@@ -1399,7 +1783,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVerifiedAccessInstance,
@@ -1408,19 +1794,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVerifiedAccessInstanceLoggingConfiguration,
-			TypeName:                "aws_verifiedaccess_instance_logging_configuration",
-			Name:                    "Verified Access Instance Logging Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVerifiedAccessInstanceLoggingConfiguration,
+			TypeName: "aws_verifiedaccess_instance_logging_configuration",
+			Name:     "Verified Access Instance Logging Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVerifiedAccessInstanceTrustProviderAttachment,
-			TypeName:                "aws_verifiedaccess_instance_trust_provider_attachment",
-			Name:                    "Verified Access Instance Trust Provider Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVerifiedAccessInstanceTrustProviderAttachment,
+			TypeName: "aws_verifiedaccess_instance_trust_provider_attachment",
+			Name:     "Verified Access Instance Trust Provider Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVerifiedAccessTrustProvider,
@@ -1429,13 +1821,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVolumeAttachment,
-			TypeName:                "aws_volume_attachment",
-			Name:                    "EBS Volume Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVolumeAttachment,
+			TypeName: "aws_volume_attachment",
+			Name:     "EBS Volume Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPC,
@@ -1444,7 +1840,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCDHCPOptions,
@@ -1453,13 +1851,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCDHCPOptionsAssociation,
-			TypeName:                "aws_vpc_dhcp_options_association",
-			Name:                    "VPC DHCP Options Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCDHCPOptionsAssociation,
+			TypeName: "aws_vpc_dhcp_options_association",
+			Name:     "VPC DHCP Options Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCEndpoint,
@@ -1468,37 +1870,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointConnectionAccepter,
-			TypeName:                "aws_vpc_endpoint_connection_accepter",
-			Name:                    "VPC Endpoint Connection Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointConnectionAccepter,
+			TypeName: "aws_vpc_endpoint_connection_accepter",
+			Name:     "VPC Endpoint Connection Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointConnectionNotification,
-			TypeName:                "aws_vpc_endpoint_connection_notification",
-			Name:                    "VPC Endpoint Connection Notification",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointConnectionNotification,
+			TypeName: "aws_vpc_endpoint_connection_notification",
+			Name:     "VPC Endpoint Connection Notification",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointPolicy,
-			TypeName:                "aws_vpc_endpoint_policy",
-			Name:                    "VPC Endpoint Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointPolicy,
+			TypeName: "aws_vpc_endpoint_policy",
+			Name:     "VPC Endpoint Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointRouteTableAssociation,
-			TypeName:                "aws_vpc_endpoint_route_table_association",
-			Name:                    "VPC Endpoint Route Table Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointRouteTableAssociation,
+			TypeName: "aws_vpc_endpoint_route_table_association",
+			Name:     "VPC Endpoint Route Table Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointSecurityGroupAssociation,
-			TypeName:                "aws_vpc_endpoint_security_group_association",
-			Name:                    "VPC Endpoint Security Group Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointSecurityGroupAssociation,
+			TypeName: "aws_vpc_endpoint_security_group_association",
+			Name:     "VPC Endpoint Security Group Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCEndpointService,
@@ -1507,19 +1921,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointServiceAllowedPrincipal,
-			TypeName:                "aws_vpc_endpoint_service_allowed_principal",
-			Name:                    "Endpoint Service Allowed Principal",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointServiceAllowedPrincipal,
+			TypeName: "aws_vpc_endpoint_service_allowed_principal",
+			Name:     "Endpoint Service Allowed Principal",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpointSubnetAssociation,
-			TypeName:                "aws_vpc_endpoint_subnet_association",
-			Name:                    "VPC Endpoint Subnet Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpointSubnetAssociation,
+			TypeName: "aws_vpc_endpoint_subnet_association",
+			Name:     "VPC Endpoint Subnet Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceIPAM,
@@ -1528,13 +1948,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIPAMOrganizationAdminAccount,
-			TypeName:                "aws_vpc_ipam_organization_admin_account",
-			Name:                    "IPAM Organization Admin Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIPAMOrganizationAdminAccount,
+			TypeName: "aws_vpc_ipam_organization_admin_account",
+			Name:     "IPAM Organization Admin Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceIPAMPool,
@@ -1543,25 +1967,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIPAMPoolCIDR,
-			TypeName:                "aws_vpc_ipam_pool_cidr",
-			Name:                    "IPAM Pool CIDR",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIPAMPoolCIDR,
+			TypeName: "aws_vpc_ipam_pool_cidr",
+			Name:     "IPAM Pool CIDR",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIPAMPoolCIDRAllocation,
-			TypeName:                "aws_vpc_ipam_pool_cidr_allocation",
-			Name:                    "IPAM Pool CIDR Allocation",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIPAMPoolCIDRAllocation,
+			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
+			Name:     "IPAM Pool CIDR Allocation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIPAMPreviewNextCIDR,
-			TypeName:                "aws_vpc_ipam_preview_next_cidr",
-			Name:                    "IPAM Preview Next CIDR",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIPAMPreviewNextCIDR,
+			TypeName: "aws_vpc_ipam_preview_next_cidr",
+			Name:     "IPAM Preview Next CIDR",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceIPAMResourceDiscovery,
@@ -1570,7 +2002,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceIPAMResourceDiscoveryAssociation,
@@ -1579,7 +2013,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceIPAMScope,
@@ -1588,25 +2024,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCIPv4CIDRBlockAssociation,
-			TypeName:                "aws_vpc_ipv4_cidr_block_association",
-			Name:                    "VPC IPV4 CIDR Block Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCIPv4CIDRBlockAssociation,
+			TypeName: "aws_vpc_ipv4_cidr_block_association",
+			Name:     "VPC IPV4 CIDR Block Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCIPv6CIDRBlockAssociation,
-			TypeName:                "aws_vpc_ipv6_cidr_block_association",
-			Name:                    "VPC IPV6 CIDR Block Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCIPv6CIDRBlockAssociation,
+			TypeName: "aws_vpc_ipv6_cidr_block_association",
+			Name:     "VPC IPV6 CIDR Block Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceNetworkPerformanceMetricSubscription,
-			TypeName:                "aws_vpc_network_performance_metric_subscription",
-			Name:                    "VPC Network Performance Metric Subscription",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceNetworkPerformanceMetricSubscription,
+			TypeName: "aws_vpc_network_performance_metric_subscription",
+			Name:     "VPC Network Performance Metric Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCPeeringConnection,
@@ -1615,7 +2059,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCPeeringConnectionAccepter,
@@ -1624,13 +2070,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCPeeringConnectionOptions,
-			TypeName:                "aws_vpc_peering_connection_options",
-			Name:                    "VPC Peering Connection Options",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCPeeringConnectionOptions,
+			TypeName: "aws_vpc_peering_connection_options",
+			Name:     "VPC Peering Connection Options",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPNConnection,
@@ -1639,13 +2089,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPNConnectionRoute,
-			TypeName:                "aws_vpn_connection_route",
-			Name:                    "VPN Connection Route",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPNConnectionRoute,
+			TypeName: "aws_vpn_connection_route",
+			Name:     "VPN Connection Route",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPNGateway,
@@ -1654,19 +2108,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPNGatewayAttachment,
-			TypeName:                "aws_vpn_gateway_attachment",
-			Name:                    "VPN Gateway Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPNGatewayAttachment,
+			TypeName: "aws_vpn_gateway_attachment",
+			Name:     "VPN Gateway Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPNGatewayRoutePropagation,
-			TypeName:                "aws_vpn_gateway_route_propagation",
-			Name:                    "VPN Gateway Route Propagation",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPNGatewayRoutePropagation,
+			TypeName: "aws_vpn_gateway_route_propagation",
+			Name:     "VPN Gateway Route Propagation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

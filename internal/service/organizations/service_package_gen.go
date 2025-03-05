@@ -26,76 +26,100 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceDelegatedAdministrators,
-			TypeName:                "aws_organizations_delegated_administrators",
-			Name:                    "Delegated Administrators",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDelegatedAdministrators,
+			TypeName: "aws_organizations_delegated_administrators",
+			Name:     "Delegated Administrators",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceDelegatedServices,
-			TypeName:                "aws_organizations_delegated_services",
-			Name:                    "Delegated Services",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDelegatedServices,
+			TypeName: "aws_organizations_delegated_services",
+			Name:     "Delegated Services",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrganization,
-			TypeName:                "aws_organizations_organization",
-			Name:                    "Organization",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrganization,
+			TypeName: "aws_organizations_organization",
+			Name:     "Organization",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrganizationalUnit,
-			TypeName:                "aws_organizations_organizational_unit",
-			Name:                    "Organizational Unit",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrganizationalUnit,
+			TypeName: "aws_organizations_organizational_unit",
+			Name:     "Organizational Unit",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrganizationalUnitChildAccounts,
-			TypeName:                "aws_organizations_organizational_unit_child_accounts",
-			Name:                    "Organizational Unit Child Accounts",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrganizationalUnitChildAccounts,
+			TypeName: "aws_organizations_organizational_unit_child_accounts",
+			Name:     "Organizational Unit Child Accounts",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrganizationalUnitDescendantAccounts,
-			TypeName:                "aws_organizations_organizational_unit_descendant_accounts",
-			Name:                    "Organizational Unit Descendant Accounts",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrganizationalUnitDescendantAccounts,
+			TypeName: "aws_organizations_organizational_unit_descendant_accounts",
+			Name:     "Organizational Unit Descendant Accounts",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrganizationalUnitDescendantOrganizationalUnits,
-			TypeName:                "aws_organizations_organizational_unit_descendant_organizational_units",
-			Name:                    "Organizational Unit Descendant Organization Units",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrganizationalUnitDescendantOrganizationalUnits,
+			TypeName: "aws_organizations_organizational_unit_descendant_organizational_units",
+			Name:     "Organizational Unit Descendant Organization Units",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrganizationalUnits,
-			TypeName:                "aws_organizations_organizational_units",
-			Name:                    "Organizational Unit",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrganizationalUnits,
+			TypeName: "aws_organizations_organizational_units",
+			Name:     "Organizational Unit",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePolicies,
-			TypeName:                "aws_organizations_policies",
-			Name:                    "Policies",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePolicies,
+			TypeName: "aws_organizations_policies",
+			Name:     "Policies",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePoliciesForTarget,
-			TypeName:                "aws_organizations_policies_for_target",
-			Name:                    "Policies For Target",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePoliciesForTarget,
+			TypeName: "aws_organizations_policies_for_target",
+			Name:     "Policies For Target",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePolicy,
-			TypeName:                "aws_organizations_policy",
-			Name:                    "Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePolicy,
+			TypeName: "aws_organizations_policy",
+			Name:     "Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceResourceTags,
-			TypeName:                "aws_organizations_resource_tags",
-			Name:                    "Resource Tags",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceResourceTags,
+			TypeName: "aws_organizations_resource_tags",
+			Name:     "Resource Tags",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -109,19 +133,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDelegatedAdministrator,
-			TypeName:                "aws_organizations_delegated_administrator",
-			Name:                    "Delegated Administrator",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDelegatedAdministrator,
+			TypeName: "aws_organizations_delegated_administrator",
+			Name:     "Delegated Administrator",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganization,
-			TypeName:                "aws_organizations_organization",
-			Name:                    "Organization",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganization,
+			TypeName: "aws_organizations_organization",
+			Name:     "Organization",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceOrganizationalUnit,
@@ -130,7 +160,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePolicy,
@@ -139,13 +171,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePolicyAttachment,
-			TypeName:                "aws_organizations_policy_attachment",
-			Name:                    "Policy Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePolicyAttachment,
+			TypeName: "aws_organizations_policy_attachment",
+			Name:     "Policy Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceResourcePolicy,
@@ -154,7 +190,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

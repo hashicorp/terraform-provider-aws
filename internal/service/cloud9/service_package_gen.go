@@ -36,13 +36,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEnvironmentMembership,
-			TypeName:                "aws_cloud9_environment_membership",
-			Name:                    "Environment Membership",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEnvironmentMembership,
+			TypeName: "aws_cloud9_environment_membership",
+			Name:     "Environment Membership",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

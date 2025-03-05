@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newAccountSuppressionAttributesResource,
-			TypeName:                "aws_sesv2_account_suppression_attributes",
-			Name:                    "Account Suppression Attributes",
-			IsRegionOverrideEnabled: false,
+			Factory:  newAccountSuppressionAttributesResource,
+			TypeName: "aws_sesv2_account_suppression_attributes",
+			Name:     "Account Suppression Attributes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -39,7 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceDedicatedIPPool,
@@ -48,7 +52,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceEmailIdentity,
@@ -57,13 +63,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceEmailIdentityMailFromAttributes,
-			TypeName:                "aws_sesv2_email_identity_mail_from_attributes",
-			Name:                    "Email Identity Mail From Attributes",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceEmailIdentityMailFromAttributes,
+			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
+			Name:     "Email Identity Mail From Attributes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -71,10 +81,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAccountVDMAttributes,
-			TypeName:                "aws_sesv2_account_vdm_attributes",
-			Name:                    "Account VDM Attributes",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccountVDMAttributes,
+			TypeName: "aws_sesv2_account_vdm_attributes",
+			Name:     "Account VDM Attributes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConfigurationSet,
@@ -83,13 +95,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationSetEventDestination,
-			TypeName:                "aws_sesv2_configuration_set_event_destination",
-			Name:                    "Configuration Set Event Destination",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationSetEventDestination,
+			TypeName: "aws_sesv2_configuration_set_event_destination",
+			Name:     "Configuration Set Event Destination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceContactList,
@@ -98,13 +114,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDedicatedIPAssignment,
-			TypeName:                "aws_sesv2_dedicated_ip_assignment",
-			Name:                    "Dedicated IP Assignment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDedicatedIPAssignment,
+			TypeName: "aws_sesv2_dedicated_ip_assignment",
+			Name:     "Dedicated IP Assignment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDedicatedIPPool,
@@ -113,7 +133,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEmailIdentity,
@@ -122,25 +144,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEmailIdentityFeedbackAttributes,
-			TypeName:                "aws_sesv2_email_identity_feedback_attributes",
-			Name:                    "Email Identity Feedback Attributes",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEmailIdentityFeedbackAttributes,
+			TypeName: "aws_sesv2_email_identity_feedback_attributes",
+			Name:     "Email Identity Feedback Attributes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEmailIdentityMailFromAttributes,
-			TypeName:                "aws_sesv2_email_identity_mail_from_attributes",
-			Name:                    "Email Identity Mail From Attributes",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEmailIdentityMailFromAttributes,
+			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
+			Name:     "Email Identity Mail From Attributes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEmailIdentityPolicy,
-			TypeName:                "aws_sesv2_email_identity_policy",
-			Name:                    "Email Identity Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEmailIdentityPolicy,
+			TypeName: "aws_sesv2_email_identity_policy",
+			Name:     "Email Identity Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

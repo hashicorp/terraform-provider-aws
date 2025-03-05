@@ -30,22 +30,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAlternateContact,
-			TypeName:                "aws_account_alternate_contact",
-			Name:                    "Alternate Contact",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAlternateContact,
+			TypeName: "aws_account_alternate_contact",
+			Name:     "Alternate Contact",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePrimaryContact,
-			TypeName:                "aws_account_primary_contact",
-			Name:                    "Primary Contact",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePrimaryContact,
+			TypeName: "aws_account_primary_contact",
+			Name:     "Primary Contact",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRegion,
-			TypeName:                "aws_account_region",
-			Name:                    "Region",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRegion,
+			TypeName: "aws_account_region",
+			Name:     "Region",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

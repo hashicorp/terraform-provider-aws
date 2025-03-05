@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceAccessPolicy,
-			TypeName:                "aws_opensearchserverless_access_policy",
-			Name:                    "Access Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceAccessPolicy,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newDataSourceCollection,
@@ -30,19 +32,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceLifecyclePolicy,
-			TypeName:                "aws_opensearchserverless_lifecycle_policy",
-			Name:                    "Lifecycle Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceLifecyclePolicy,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceSecurityConfig,
-			TypeName:                "aws_opensearchserverless_security_config",
-			Name:                    "Security Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceSecurityConfig,
+			TypeName: "aws_opensearchserverless_security_config",
+			Name:     "Security Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -50,10 +58,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceAccessPolicy,
-			TypeName:                "aws_opensearchserverless_access_policy",
-			Name:                    "Access Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceAccessPolicy,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceCollection,
@@ -62,31 +72,41 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceLifecyclePolicy,
-			TypeName:                "aws_opensearchserverless_lifecycle_policy",
-			Name:                    "Lifecycle Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceLifecyclePolicy,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceSecurityConfig,
-			TypeName:                "aws_opensearchserverless_security_config",
-			Name:                    "Security Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceSecurityConfig,
+			TypeName: "aws_opensearchserverless_security_config",
+			Name:     "Security Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceSecurityPolicy,
-			TypeName:                "aws_opensearchserverless_security_policy",
-			Name:                    "Security Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceSecurityPolicy,
+			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newVPCEndpointResource,
-			TypeName:                "aws_opensearchserverless_vpc_endpoint",
-			Name:                    "VPC Endpoint",
-			IsRegionOverrideEnabled: false,
+			Factory:  newVPCEndpointResource,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -94,16 +114,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceSecurityPolicy,
-			TypeName:                "aws_opensearchserverless_security_policy",
-			Name:                    "Security Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceSecurityPolicy,
+			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceVPCEndpoint,
-			TypeName:                "aws_opensearchserverless_vpc_endpoint",
-			Name:                    "VPC Endpoint",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceVPCEndpoint,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

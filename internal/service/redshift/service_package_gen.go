@@ -18,16 +18,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceDataShares,
-			TypeName:                "aws_redshift_data_shares",
-			Name:                    "Data Shares",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceDataShares,
+			TypeName: "aws_redshift_data_shares",
+			Name:     "Data Shares",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceProducerDataShares,
-			TypeName:                "aws_redshift_producer_data_shares",
-			Name:                    "Producer Data Shares",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceProducerDataShares,
+			TypeName: "aws_redshift_producer_data_shares",
+			Name:     "Producer Data Shares",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,28 +39,36 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceDataShareAuthorization,
-			TypeName:                "aws_redshift_data_share_authorization",
-			Name:                    "Data Share Authorization",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceDataShareAuthorization,
+			TypeName: "aws_redshift_data_share_authorization",
+			Name:     "Data Share Authorization",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceDataShareConsumerAssociation,
-			TypeName:                "aws_redshift_data_share_consumer_association",
-			Name:                    "Data Share Consumer Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceDataShareConsumerAssociation,
+			TypeName: "aws_redshift_data_share_consumer_association",
+			Name:     "Data Share Consumer Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceLogging,
-			TypeName:                "aws_redshift_logging",
-			Name:                    "Logging",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceLogging,
+			TypeName: "aws_redshift_logging",
+			Name:     "Logging",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceSnapshotCopy,
-			TypeName:                "aws_redshift_snapshot_copy",
-			Name:                    "Snapshot Copy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceSnapshotCopy,
+			TypeName: "aws_redshift_snapshot_copy",
+			Name:     "Snapshot Copy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -64,36 +76,46 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCluster,
-			TypeName:                "aws_redshift_cluster",
-			Name:                    "Cluster",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCluster,
+			TypeName: "aws_redshift_cluster",
+			Name:     "Cluster",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceClusterCredentials,
-			TypeName:                "aws_redshift_cluster_credentials",
-			Name:                    "Cluster Credentials",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceClusterCredentials,
+			TypeName: "aws_redshift_cluster_credentials",
+			Name:     "Cluster Credentials",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOrderableCluster,
-			TypeName:                "aws_redshift_orderable_cluster",
-			Name:                    "Orderable Cluster",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOrderableCluster,
+			TypeName: "aws_redshift_orderable_cluster",
+			Name:     "Orderable Cluster",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceServiceAccount,
-			TypeName:                "aws_redshift_service_account",
-			Name:                    "Service Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceServiceAccount,
+			TypeName: "aws_redshift_service_account",
+			Name:     "Service Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSubnetGroup,
-			TypeName:                "aws_redshift_subnet_group",
-			Name:                    "Subnet Group",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSubnetGroup,
+			TypeName: "aws_redshift_subnet_group",
+			Name:     "Subnet Group",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -101,10 +123,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAuthenticationProfile,
-			TypeName:                "aws_redshift_authentication_profile",
-			Name:                    "Authentication Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAuthenticationProfile,
+			TypeName: "aws_redshift_authentication_profile",
+			Name:     "Authentication Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCluster,
@@ -113,13 +137,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClusterIAMRoles,
-			TypeName:                "aws_redshift_cluster_iam_roles",
-			Name:                    "Cluster IAM Roles",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClusterIAMRoles,
+			TypeName: "aws_redshift_cluster_iam_roles",
+			Name:     "Cluster IAM Roles",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceClusterSnapshot,
@@ -128,19 +156,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEndpointAccess,
-			TypeName:                "aws_redshift_endpoint_access",
-			Name:                    "Endpoint Access",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEndpointAccess,
+			TypeName: "aws_redshift_endpoint_access",
+			Name:     "Endpoint Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEndpointAuthorization,
-			TypeName:                "aws_redshift_endpoint_authorization",
-			Name:                    "Endpoint Authorization",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEndpointAuthorization,
+			TypeName: "aws_redshift_endpoint_authorization",
+			Name:     "Endpoint Authorization",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEventSubscription,
@@ -149,7 +183,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHSMClientCertificate,
@@ -158,7 +194,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHSMConfiguration,
@@ -167,7 +205,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceParameterGroup,
@@ -176,25 +216,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePartner,
-			TypeName:                "aws_redshift_partner",
-			Name:                    "Partner",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePartner,
+			TypeName: "aws_redshift_partner",
+			Name:     "Partner",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResourcePolicy,
-			TypeName:                "aws_redshift_resource_policy",
-			Name:                    "Resource Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResourcePolicy,
+			TypeName: "aws_redshift_resource_policy",
+			Name:     "Resource Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceScheduledAction,
-			TypeName:                "aws_redshift_scheduled_action",
-			Name:                    "Scheduled Action",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceScheduledAction,
+			TypeName: "aws_redshift_scheduled_action",
+			Name:     "Scheduled Action",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSnapshotCopyGrant,
@@ -203,7 +251,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSnapshotSchedule,
@@ -212,13 +262,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSnapshotScheduleAssociation,
-			TypeName:                "aws_redshift_snapshot_schedule_association",
-			Name:                    "Snapshot Schedule Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSnapshotScheduleAssociation,
+			TypeName: "aws_redshift_snapshot_schedule_association",
+			Name:     "Snapshot Schedule Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSubnetGroup,
@@ -227,7 +281,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceUsageLimit,
@@ -236,7 +292,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -31,28 +31,36 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceCluster,
-			TypeName:                "aws_route53recoverycontrolconfig_cluster",
-			Name:                    "Cluster",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCluster,
+			TypeName: "aws_route53recoverycontrolconfig_cluster",
+			Name:     "Cluster",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceControlPanel,
-			TypeName:                "aws_route53recoverycontrolconfig_control_panel",
-			Name:                    "Control Panel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceControlPanel,
+			TypeName: "aws_route53recoverycontrolconfig_control_panel",
+			Name:     "Control Panel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRoutingControl,
-			TypeName:                "aws_route53recoverycontrolconfig_routing_control",
-			Name:                    "Routing Control",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRoutingControl,
+			TypeName: "aws_route53recoverycontrolconfig_routing_control",
+			Name:     "Routing Control",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSafetyRule,
-			TypeName:                "aws_route53recoverycontrolconfig_safety_rule",
-			Name:                    "Safety Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSafetyRule,
+			TypeName: "aws_route53recoverycontrolconfig_safety_rule",
+			Name:     "Safety Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

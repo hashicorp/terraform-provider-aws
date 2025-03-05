@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceDevEnvironment,
-			TypeName:                "aws_codecatalyst_dev_environment",
-			Name:                    "Dev Environment",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceDevEnvironment,
+			TypeName: "aws_codecatalyst_dev_environment",
+			Name:     "Dev Environment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -37,22 +39,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 ResourceDevEnvironment,
-			TypeName:                "aws_codecatalyst_dev_environment",
-			Name:                    "DevEnvironment",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceDevEnvironment,
+			TypeName: "aws_codecatalyst_dev_environment",
+			Name:     "DevEnvironment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceProject,
-			TypeName:                "aws_codecatalyst_project",
-			Name:                    "Project",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceProject,
+			TypeName: "aws_codecatalyst_project",
+			Name:     "Project",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceSourceRepository,
-			TypeName:                "aws_codecatalyst_source_repository",
-			Name:                    "Source Repository",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceSourceRepository,
+			TypeName: "aws_codecatalyst_source_repository",
+			Name:     "Source Repository",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

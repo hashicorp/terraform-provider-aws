@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceProfiles,
-			TypeName:                "aws_route53profiles_profiles",
-			Name:                    "Profiles",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceProfiles,
+			TypeName: "aws_route53profiles_profiles",
+			Name:     "Profiles",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,7 +37,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceProfile,
@@ -44,13 +48,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceResourceAssociation,
-			TypeName:                "aws_route53profiles_resource_association",
-			Name:                    "ResourceAssociation",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceResourceAssociation,
+			TypeName: "aws_route53profiles_resource_association",
+			Name:     "ResourceAssociation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

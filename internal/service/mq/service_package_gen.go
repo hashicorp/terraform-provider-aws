@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceBroker,
-			TypeName:                "aws_mq_broker",
-			Name:                    "Broker",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBroker,
+			TypeName: "aws_mq_broker",
+			Name:     "Broker",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceBrokerEngineTypes,
-			TypeName:                "aws_mq_broker_engine_types",
-			Name:                    "Broker Engine Types",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBrokerEngineTypes,
+			TypeName: "aws_mq_broker_engine_types",
+			Name:     "Broker Engine Types",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceBrokerInstanceTypeOfferings,
-			TypeName:                "aws_mq_broker_instance_type_offerings",
-			Name:                    "Broker Instance Type Offerings",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBrokerInstanceTypeOfferings,
+			TypeName: "aws_mq_broker_instance_type_offerings",
+			Name:     "Broker Instance Type Offerings",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -55,7 +61,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConfiguration,
@@ -64,7 +72,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

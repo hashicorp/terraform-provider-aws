@@ -36,43 +36,57 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceVoiceConnectorGroup,
-			TypeName:                "aws_chime_voice_connector_group",
-			Name:                    "Voice Connector Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceVoiceConnectorGroup,
+			TypeName: "aws_chime_voice_connector_group",
+			Name:     "Voice Connector Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceVoiceConnectorLogging,
-			TypeName:                "aws_chime_voice_connector_logging",
-			Name:                    "Voice Connector Logging",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceVoiceConnectorLogging,
+			TypeName: "aws_chime_voice_connector_logging",
+			Name:     "Voice Connector Logging",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceVoiceConnectorOrigination,
-			TypeName:                "aws_chime_voice_connector_origination",
-			Name:                    "Voice Connector Origination",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceVoiceConnectorOrigination,
+			TypeName: "aws_chime_voice_connector_origination",
+			Name:     "Voice Connector Origination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceVoiceConnectorStreaming,
-			TypeName:                "aws_chime_voice_connector_streaming",
-			Name:                    "Voice Connector Streaming",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceVoiceConnectorStreaming,
+			TypeName: "aws_chime_voice_connector_streaming",
+			Name:     "Voice Connector Streaming",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceVoiceConnectorTermination,
-			TypeName:                "aws_chime_voice_connector_termination",
-			Name:                    "Voice Connector Termination",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceVoiceConnectorTermination,
+			TypeName: "aws_chime_voice_connector_termination",
+			Name:     "Voice Connector Termination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceVoiceConnectorTerminationCredentials,
-			TypeName:                "aws_chime_voice_connector_termination_credentials",
-			Name:                    "Voice Connector Termination Credentials",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceVoiceConnectorTerminationCredentials,
+			TypeName: "aws_chime_voice_connector_termination_credentials",
+			Name:     "Voice Connector Termination Credentials",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

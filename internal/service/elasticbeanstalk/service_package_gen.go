@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceApplication,
-			TypeName:                "aws_elastic_beanstalk_application",
-			Name:                    "Application",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceApplication,
+			TypeName: "aws_elastic_beanstalk_application",
+			Name:     "Application",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceHostedZone,
-			TypeName:                "aws_elastic_beanstalk_hosted_zone",
-			Name:                    "Hosted Zone",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceHostedZone,
+			TypeName: "aws_elastic_beanstalk_hosted_zone",
+			Name:     "Hosted Zone",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSolutionStack,
-			TypeName:                "aws_elastic_beanstalk_solution_stack",
-			Name:                    "Solution Stack",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSolutionStack,
+			TypeName: "aws_elastic_beanstalk_solution_stack",
+			Name:     "Solution Stack",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -55,7 +61,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceApplicationVersion,
@@ -64,13 +72,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationTemplate,
-			TypeName:                "aws_elastic_beanstalk_configuration_template",
-			Name:                    "Configuration Template",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationTemplate,
+			TypeName: "aws_elastic_beanstalk_configuration_template",
+			Name:     "Configuration Template",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceEnvironment,
@@ -79,7 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

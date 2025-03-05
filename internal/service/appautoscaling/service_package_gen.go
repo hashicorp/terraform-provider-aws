@@ -30,16 +30,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourcePolicy,
-			TypeName:                "aws_appautoscaling_policy",
-			Name:                    "Scaling Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePolicy,
+			TypeName: "aws_appautoscaling_policy",
+			Name:     "Scaling Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceScheduledAction,
-			TypeName:                "aws_appautoscaling_scheduled_action",
-			Name:                    "Scheduled Action",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceScheduledAction,
+			TypeName: "aws_appautoscaling_scheduled_action",
+			Name:     "Scheduled Action",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTarget,
@@ -48,7 +52,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

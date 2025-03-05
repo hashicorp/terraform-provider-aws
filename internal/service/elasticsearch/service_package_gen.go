@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceDomain,
-			TypeName:                "aws_elasticsearch_domain",
-			Name:                    "Domain",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDomain,
+			TypeName: "aws_elasticsearch_domain",
+			Name:     "Domain",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,25 +45,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainPolicy,
-			TypeName:                "aws_elasticsearch_domain_policy",
-			Name:                    "Domain Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainPolicy,
+			TypeName: "aws_elasticsearch_domain_policy",
+			Name:     "Domain Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainSAMLOptions,
-			TypeName:                "aws_elasticsearch_domain_saml_options",
-			Name:                    "Domain SAML Options",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainSAMLOptions,
+			TypeName: "aws_elasticsearch_domain_saml_options",
+			Name:     "Domain SAML Options",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCEndpoint,
-			TypeName:                "aws_elasticsearch_vpc_endpoint",
-			Name:                    "VPC Endpoint",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCEndpoint,
+			TypeName: "aws_elasticsearch_vpc_endpoint",
+			Name:     "VPC Endpoint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

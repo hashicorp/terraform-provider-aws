@@ -28,7 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -36,70 +38,92 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceConnection,
-			TypeName:                "aws_networkmanager_connection",
-			Name:                    "Connection",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceConnection,
+			TypeName: "aws_networkmanager_connection",
+			Name:     "Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceConnections,
-			TypeName:                "aws_networkmanager_connections",
-			Name:                    "Connections",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceConnections,
+			TypeName: "aws_networkmanager_connections",
+			Name:     "Connections",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceCoreNetworkPolicyDocument,
-			TypeName:                "aws_networkmanager_core_network_policy_document",
-			Name:                    "Core Network Policy Document",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCoreNetworkPolicyDocument,
+			TypeName: "aws_networkmanager_core_network_policy_document",
+			Name:     "Core Network Policy Document",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceDevice,
-			TypeName:                "aws_networkmanager_device",
-			Name:                    "Device",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDevice,
+			TypeName: "aws_networkmanager_device",
+			Name:     "Device",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceDevices,
-			TypeName:                "aws_networkmanager_devices",
-			Name:                    "Devices",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDevices,
+			TypeName: "aws_networkmanager_devices",
+			Name:     "Devices",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceGlobalNetwork,
-			TypeName:                "aws_networkmanager_global_network",
-			Name:                    "Global Network",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGlobalNetwork,
+			TypeName: "aws_networkmanager_global_network",
+			Name:     "Global Network",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceGlobalNetworks,
-			TypeName:                "aws_networkmanager_global_networks",
-			Name:                    "Global Networks",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGlobalNetworks,
+			TypeName: "aws_networkmanager_global_networks",
+			Name:     "Global Networks",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceLink,
-			TypeName:                "aws_networkmanager_link",
-			Name:                    "Link",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLink,
+			TypeName: "aws_networkmanager_link",
+			Name:     "Link",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceLinks,
-			TypeName:                "aws_networkmanager_links",
-			Name:                    "Links",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLinks,
+			TypeName: "aws_networkmanager_links",
+			Name:     "Links",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSite,
-			TypeName:                "aws_networkmanager_site",
-			Name:                    "Site",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSite,
+			TypeName: "aws_networkmanager_site",
+			Name:     "Site",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSites,
-			TypeName:                "aws_networkmanager_sites",
-			Name:                    "Sites",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSites,
+			TypeName: "aws_networkmanager_sites",
+			Name:     "Sites",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -107,10 +131,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAttachmentAccepter,
-			TypeName:                "aws_networkmanager_attachment_accepter",
-			Name:                    "Attachment Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAttachmentAccepter,
+			TypeName: "aws_networkmanager_attachment_accepter",
+			Name:     "Attachment Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConnectAttachment,
@@ -119,7 +145,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConnectPeer,
@@ -128,7 +156,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConnection,
@@ -137,7 +167,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCoreNetwork,
@@ -146,19 +178,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCoreNetworkPolicyAttachment,
-			TypeName:                "aws_networkmanager_core_network_policy_attachment",
-			Name:                    "Core Network Policy Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCoreNetworkPolicyAttachment,
+			TypeName: "aws_networkmanager_core_network_policy_attachment",
+			Name:     "Core Network Policy Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCustomerGatewayAssociation,
-			TypeName:                "aws_networkmanager_customer_gateway_association",
-			Name:                    "Customer Gateway Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCustomerGatewayAssociation,
+			TypeName: "aws_networkmanager_customer_gateway_association",
+			Name:     "Customer Gateway Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDevice,
@@ -167,7 +205,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceGlobalNetwork,
@@ -176,7 +216,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceLink,
@@ -185,13 +227,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceLinkAssociation,
-			TypeName:                "aws_networkmanager_link_association",
-			Name:                    "Link Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceLinkAssociation,
+			TypeName: "aws_networkmanager_link_association",
+			Name:     "Link Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSite,
@@ -200,7 +246,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSiteToSiteVPNAttachment,
@@ -209,13 +257,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayConnectPeerAssociation,
-			TypeName:                "aws_networkmanager_transit_gateway_connect_peer_association",
-			Name:                    "Transit Gateway Connect Peer Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayConnectPeerAssociation,
+			TypeName: "aws_networkmanager_transit_gateway_connect_peer_association",
+			Name:     "Transit Gateway Connect Peer Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayPeering,
@@ -224,13 +276,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTransitGatewayRegistration,
-			TypeName:                "aws_networkmanager_transit_gateway_registration",
-			Name:                    "Transit Gateway Registration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTransitGatewayRegistration,
+			TypeName: "aws_networkmanager_transit_gateway_registration",
+			Name:     "Transit Gateway Registration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTableAttachment,
@@ -239,7 +295,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCAttachment,
@@ -248,7 +306,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -26,16 +26,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceAuthorizationToken,
-			TypeName:                "aws_codeartifact_authorization_token",
-			Name:                    "Authoiration Token",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAuthorizationToken,
+			TypeName: "aws_codeartifact_authorization_token",
+			Name:     "Authoiration Token",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRepositoryEndpoint,
-			TypeName:                "aws_codeartifact_repository_endpoint",
-			Name:                    "Repository Endpoint",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRepositoryEndpoint,
+			TypeName: "aws_codeartifact_repository_endpoint",
+			Name:     "Repository Endpoint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,13 +53,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainPermissionsPolicy,
-			TypeName:                "aws_codeartifact_domain_permissions_policy",
-			Name:                    "Domain Permissions Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainPermissionsPolicy,
+			TypeName: "aws_codeartifact_domain_permissions_policy",
+			Name:     "Domain Permissions Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRepository,
@@ -64,13 +72,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRepositoryPermissionsPolicy,
-			TypeName:                "aws_codeartifact_repository_permissions_policy",
-			Name:                    "Repository Permissions Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRepositoryPermissionsPolicy,
+			TypeName: "aws_codeartifact_repository_permissions_policy",
+			Name:     "Repository Permissions Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

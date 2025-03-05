@@ -36,31 +36,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "graph_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceInvitationAccepter,
-			TypeName:                "aws_detective_invitation_accepter",
-			Name:                    "Invitation Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceInvitationAccepter,
+			TypeName: "aws_detective_invitation_accepter",
+			Name:     "Invitation Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceMember,
-			TypeName:                "aws_detective_member",
-			Name:                    "Member",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceMember,
+			TypeName: "aws_detective_member",
+			Name:     "Member",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceOrganizationAdminAccount,
-			TypeName:                "aws_detective_organization_admin_account",
-			Name:                    "Organization Admin Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceOrganizationAdminAccount,
+			TypeName: "aws_detective_organization_admin_account",
+			Name:     "Organization Admin Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceOrganizationConfiguration,
-			TypeName:                "aws_detective_organization_configuration",
-			Name:                    "Organization Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceOrganizationConfiguration,
+			TypeName: "aws_detective_organization_configuration",
+			Name:     "Organization Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDefaultScraperConfigurationDataSource,
-			TypeName:                "aws_prometheus_default_scraper_configuration",
-			Name:                    "Default Scraper Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDefaultScraperConfigurationDataSource,
+			TypeName: "aws_prometheus_default_scraper_configuration",
+			Name:     "Default Scraper Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,7 +37,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,17 +47,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceWorkspace,
-			TypeName:                "aws_prometheus_workspace",
-			Name:                    "Workspace",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceWorkspace,
+			TypeName: "aws_prometheus_workspace",
+			Name:     "Workspace",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceWorkspaces,
-			TypeName:                "aws_prometheus_workspaces",
-			Name:                    "Workspaces",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceWorkspaces,
+			TypeName: "aws_prometheus_workspaces",
+			Name:     "Workspaces",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,16 +69,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAlertManagerDefinition,
-			TypeName:                "aws_prometheus_alert_manager_definition",
-			Name:                    "Alert Manager Definition",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAlertManagerDefinition,
+			TypeName: "aws_prometheus_alert_manager_definition",
+			Name:     "Alert Manager Definition",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRuleGroupNamespace,
-			TypeName:                "aws_prometheus_rule_group_namespace",
-			Name:                    "Rule Group Namespace",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRuleGroupNamespace,
+			TypeName: "aws_prometheus_rule_group_namespace",
+			Name:     "Rule Group Namespace",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceWorkspace,
@@ -79,7 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

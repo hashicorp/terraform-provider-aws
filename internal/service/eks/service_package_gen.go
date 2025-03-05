@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
 	return []*itypes.ServicePackageEphemeralResource{
 		{
-			Factory:                 newEphemeralClusterAuth,
-			TypeName:                "aws_eks_cluster_auth",
-			Name:                    "ClusterAuth",
-			IsRegionOverrideEnabled: false,
+			Factory:  newEphemeralClusterAuth,
+			TypeName: "aws_eks_cluster_auth",
+			Name:     "ClusterAuth",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -39,7 +41,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "association_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -47,52 +51,68 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceAccessEntry,
-			TypeName:                "aws_eks_access_entry",
-			Name:                    "Access Entry",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAccessEntry,
+			TypeName: "aws_eks_access_entry",
+			Name:     "Access Entry",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceAddon,
-			TypeName:                "aws_eks_addon",
-			Name:                    "Add-On",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAddon,
+			TypeName: "aws_eks_addon",
+			Name:     "Add-On",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceAddonVersion,
-			TypeName:                "aws_eks_addon_version",
-			Name:                    "Add-On Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAddonVersion,
+			TypeName: "aws_eks_addon_version",
+			Name:     "Add-On Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceCluster,
-			TypeName:                "aws_eks_cluster",
-			Name:                    "Cluster",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCluster,
+			TypeName: "aws_eks_cluster",
+			Name:     "Cluster",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceClusterAuth,
-			TypeName:                "aws_eks_cluster_auth",
-			Name:                    "Cluster Authentication Token",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceClusterAuth,
+			TypeName: "aws_eks_cluster_auth",
+			Name:     "Cluster Authentication Token",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceClusters,
-			TypeName:                "aws_eks_clusters",
-			Name:                    "Clusters",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceClusters,
+			TypeName: "aws_eks_clusters",
+			Name:     "Clusters",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceNodeGroup,
-			TypeName:                "aws_eks_node_group",
-			Name:                    "Node Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceNodeGroup,
+			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceNodeGroups,
-			TypeName:                "aws_eks_node_groups",
-			Name:                    "Node Groups",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceNodeGroups,
+			TypeName: "aws_eks_node_groups",
+			Name:     "Node Groups",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -106,13 +126,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "access_entry_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAccessPolicyAssociation,
-			TypeName:                "aws_eks_access_policy_association",
-			Name:                    "Access Policy Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccessPolicyAssociation,
+			TypeName: "aws_eks_access_policy_association",
+			Name:     "Access Policy Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceAddon,
@@ -121,7 +145,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCluster,
@@ -130,7 +156,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceFargateProfile,
@@ -139,7 +167,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceIdentityProviderConfig,
@@ -148,7 +178,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNodeGroup,
@@ -157,7 +189,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

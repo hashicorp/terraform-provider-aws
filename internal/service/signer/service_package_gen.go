@@ -26,16 +26,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceSigningJob,
-			TypeName:                "aws_signer_signing_job",
-			Name:                    "Signing Job",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceSigningJob,
+			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourceSigningProfile,
-			TypeName:                "aws_signer_signing_profile",
-			Name:                    "Signing Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceSigningProfile,
+			TypeName: "aws_signer_signing_profile",
+			Name:     "Signing Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,10 +47,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 ResourceSigningJob,
-			TypeName:                "aws_signer_signing_job",
-			Name:                    "Signing Job",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceSigningJob,
+			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceSigningProfile,
@@ -55,13 +61,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceSigningProfilePermission,
-			TypeName:                "aws_signer_signing_profile_permission",
-			Name:                    "Signing Profile Permission",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceSigningProfilePermission,
+			TypeName: "aws_signer_signing_profile_permission",
+			Name:     "Signing Profile Permission",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

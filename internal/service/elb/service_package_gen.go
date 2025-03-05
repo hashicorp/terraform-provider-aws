@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceLoadBalancer,
-			TypeName:                "aws_elb",
-			Name:                    "Classic Load Balancer",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLoadBalancer,
+			TypeName: "aws_elb",
+			Name:     "Classic Load Balancer",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceHostedZoneID,
-			TypeName:                "aws_elb_hosted_zone_id",
-			Name:                    "Hosted Zone ID",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceHostedZoneID,
+			TypeName: "aws_elb_hosted_zone_id",
+			Name:     "Hosted Zone ID",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceServiceAccount,
-			TypeName:                "aws_elb_service_account",
-			Name:                    "Service Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceServiceAccount,
+			TypeName: "aws_elb_service_account",
+			Name:     "Service Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,10 +55,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAppCookieStickinessPolicy,
-			TypeName:                "aws_app_cookie_stickiness_policy",
-			Name:                    "App Cookie Stickiness Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAppCookieStickinessPolicy,
+			TypeName: "aws_app_cookie_stickiness_policy",
+			Name:     "App Cookie Stickiness Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceLoadBalancer,
@@ -61,49 +69,65 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAttachment,
-			TypeName:                "aws_elb_attachment",
-			Name:                    "Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAttachment,
+			TypeName: "aws_elb_attachment",
+			Name:     "Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCookieStickinessPolicy,
-			TypeName:                "aws_lb_cookie_stickiness_policy",
-			Name:                    "LB Cookie Stickiness Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCookieStickinessPolicy,
+			TypeName: "aws_lb_cookie_stickiness_policy",
+			Name:     "LB Cookie Stickiness Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSSLNegotiationPolicy,
-			TypeName:                "aws_lb_ssl_negotiation_policy",
-			Name:                    "SSL Negotiation Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSSLNegotiationPolicy,
+			TypeName: "aws_lb_ssl_negotiation_policy",
+			Name:     "SSL Negotiation Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBackendServerPolicy,
-			TypeName:                "aws_load_balancer_backend_server_policy",
-			Name:                    "Backend Server Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBackendServerPolicy,
+			TypeName: "aws_load_balancer_backend_server_policy",
+			Name:     "Backend Server Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceListenerPolicy,
-			TypeName:                "aws_load_balancer_listener_policy",
-			Name:                    "Listener Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceListenerPolicy,
+			TypeName: "aws_load_balancer_listener_policy",
+			Name:     "Listener Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePolicy,
-			TypeName:                "aws_load_balancer_policy",
-			Name:                    "Load Balancer Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePolicy,
+			TypeName: "aws_load_balancer_policy",
+			Name:     "Load Balancer Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceProxyProtocolPolicy,
-			TypeName:                "aws_proxy_protocol_policy",
-			Name:                    "Proxy Protocol Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceProxyProtocolPolicy,
+			TypeName: "aws_proxy_protocol_policy",
+			Name:     "Proxy Protocol Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

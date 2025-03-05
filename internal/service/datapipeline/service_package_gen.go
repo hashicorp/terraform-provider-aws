@@ -26,17 +26,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourcePipeline,
-			TypeName:                "aws_datapipeline_pipeline",
-			Name:                    "Pipeline",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePipeline,
+			TypeName: "aws_datapipeline_pipeline",
+			Name:     "Pipeline",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourcePipelineDefinition,
-			TypeName:                "aws_datapipeline_pipeline_definition",
-			Name:                    "Pipeline Definition",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourcePipelineDefinition,
+			TypeName: "aws_datapipeline_pipeline_definition",
+			Name:     "Pipeline Definition",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -51,13 +55,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Pipeline",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourcePipelineDefinition,
-			TypeName:                "aws_datapipeline_pipeline_definition",
-			Name:                    "Pipeline Definition",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourcePipelineDefinition,
+			TypeName: "aws_datapipeline_pipeline_definition",
+			Name:     "Pipeline Definition",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

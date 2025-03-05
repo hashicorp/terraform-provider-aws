@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceVoices,
-			TypeName:                "aws_polly_voices",
-			Name:                    "Voices",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceVoices,
+			TypeName: "aws_polly_voices",
+			Name:     "Voices",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

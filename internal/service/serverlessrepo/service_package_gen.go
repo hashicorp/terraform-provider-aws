@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceApplication,
-			TypeName:                "aws_serverlessapplicationrepository_application",
-			Name:                    "Application",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceApplication,
+			TypeName: "aws_serverlessapplicationrepository_application",
+			Name:     "Application",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -37,11 +39,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 ResourceCloudFormationStack,
-			TypeName:                "aws_serverlessapplicationrepository_cloudformation_stack",
-			Name:                    "CloudFormation Stack",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceCloudFormationStack,
+			TypeName: "aws_serverlessapplicationrepository_cloudformation_stack",
+			Name:     "CloudFormation Stack",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

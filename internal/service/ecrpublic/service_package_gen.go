@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 DataSourceAuthorizationToken,
-			TypeName:                "aws_ecrpublic_authorization_token",
-			Name:                    "Authorization Token",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceAuthorizationToken,
+			TypeName: "aws_ecrpublic_authorization_token",
+			Name:     "Authorization Token",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,13 +45,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceRepositoryPolicy,
-			TypeName:                "aws_ecrpublic_repository_policy",
-			Name:                    "Repository Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceRepositoryPolicy,
+			TypeName: "aws_ecrpublic_repository_policy",
+			Name:     "Repository Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

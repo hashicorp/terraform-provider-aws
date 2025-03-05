@@ -28,13 +28,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceKeyAlias,
-			TypeName:                "aws_paymentcryptography_key_alias",
-			Name:                    "Key Alias",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceKeyAlias,
+			TypeName: "aws_paymentcryptography_key_alias",
+			Name:     "Key Alias",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

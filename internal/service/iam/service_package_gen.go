@@ -22,46 +22,60 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceGroupPoliciesExclusive,
-			TypeName:                "aws_iam_group_policies_exclusive",
-			Name:                    "Group Policies Exclusive",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceGroupPoliciesExclusive,
+			TypeName: "aws_iam_group_policies_exclusive",
+			Name:     "Group Policies Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceGroupPolicyAttachmentsExclusive,
-			TypeName:                "aws_iam_group_policy_attachments_exclusive",
-			Name:                    "Group Policy Attachments Exclusive",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceGroupPolicyAttachmentsExclusive,
+			TypeName: "aws_iam_group_policy_attachments_exclusive",
+			Name:     "Group Policy Attachments Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newOrganizationsFeaturesResource,
-			TypeName:                "aws_iam_organizations_features",
-			Name:                    "Organizations Features",
-			IsRegionOverrideEnabled: false,
+			Factory:  newOrganizationsFeaturesResource,
+			TypeName: "aws_iam_organizations_features",
+			Name:     "Organizations Features",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceRolePoliciesExclusive,
-			TypeName:                "aws_iam_role_policies_exclusive",
-			Name:                    "Role Policies Exclusive",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceRolePoliciesExclusive,
+			TypeName: "aws_iam_role_policies_exclusive",
+			Name:     "Role Policies Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceRolePolicyAttachmentsExclusive,
-			TypeName:                "aws_iam_role_policy_attachments_exclusive",
-			Name:                    "Role Policy Attachments Exclusive",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceRolePolicyAttachmentsExclusive,
+			TypeName: "aws_iam_role_policy_attachments_exclusive",
+			Name:     "Role Policy Attachments Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceUserPoliciesExclusive,
-			TypeName:                "aws_iam_user_policies_exclusive",
-			Name:                    "User Policies Exclusive",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceUserPoliciesExclusive,
+			TypeName: "aws_iam_user_policies_exclusive",
+			Name:     "User Policies Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceUserPolicyAttachmentsExclusive,
-			TypeName:                "aws_iam_user_policy_attachments_exclusive",
-			Name:                    "User Policy Attachments Exclusive",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceUserPolicyAttachmentsExclusive,
+			TypeName: "aws_iam_user_policy_attachments_exclusive",
+			Name:     "User Policy Attachments Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -69,110 +83,144 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceAccessKeys,
-			TypeName:                "aws_iam_access_keys",
-			Name:                    "Access Keys",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAccessKeys,
+			TypeName: "aws_iam_access_keys",
+			Name:     "Access Keys",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceAccountAlias,
-			TypeName:                "aws_iam_account_alias",
-			Name:                    "Account Alias",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAccountAlias,
+			TypeName: "aws_iam_account_alias",
+			Name:     "Account Alias",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceGroup,
-			TypeName:                "aws_iam_group",
-			Name:                    "Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGroup,
+			TypeName: "aws_iam_group",
+			Name:     "Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInstanceProfile,
-			TypeName:                "aws_iam_instance_profile",
-			Name:                    "Instance Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInstanceProfile,
+			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInstanceProfiles,
-			TypeName:                "aws_iam_instance_profiles",
-			Name:                    "Instance Profiles",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInstanceProfiles,
+			TypeName: "aws_iam_instance_profiles",
+			Name:     "Instance Profiles",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOpenIDConnectProvider,
-			TypeName:                "aws_iam_openid_connect_provider",
-			Name:                    "OIDC Provider",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOpenIDConnectProvider,
+			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePolicy,
-			TypeName:                "aws_iam_policy",
-			Name:                    "Policy",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePolicy,
+			TypeName: "aws_iam_policy",
+			Name:     "Policy",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePolicyDocument,
-			TypeName:                "aws_iam_policy_document",
-			Name:                    "Policy Document",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePolicyDocument,
+			TypeName: "aws_iam_policy_document",
+			Name:     "Policy Document",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePrincipalPolicySimulation,
-			TypeName:                "aws_iam_principal_policy_simulation",
-			Name:                    "Principal Policy Simulation",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePrincipalPolicySimulation,
+			TypeName: "aws_iam_principal_policy_simulation",
+			Name:     "Principal Policy Simulation",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRole,
-			TypeName:                "aws_iam_role",
-			Name:                    "Role",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRole,
+			TypeName: "aws_iam_role",
+			Name:     "Role",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRoles,
-			TypeName:                "aws_iam_roles",
-			Name:                    "Roles",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRoles,
+			TypeName: "aws_iam_roles",
+			Name:     "Roles",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSAMLProvider,
-			TypeName:                "aws_iam_saml_provider",
-			Name:                    "SAML Provider",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSAMLProvider,
+			TypeName: "aws_iam_saml_provider",
+			Name:     "SAML Provider",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceServerCertificate,
-			TypeName:                "aws_iam_server_certificate",
-			Name:                    "Server Certificate",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceServerCertificate,
+			TypeName: "aws_iam_server_certificate",
+			Name:     "Server Certificate",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSessionContext,
-			TypeName:                "aws_iam_session_context",
-			Name:                    "Session Context",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSessionContext,
+			TypeName: "aws_iam_session_context",
+			Name:     "Session Context",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceUser,
-			TypeName:                "aws_iam_user",
-			Name:                    "User",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceUser,
+			TypeName: "aws_iam_user",
+			Name:     "User",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceUserSSHKey,
-			TypeName:                "aws_iam_user_ssh_key",
-			Name:                    "User SSH Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceUserSSHKey,
+			TypeName: "aws_iam_user_ssh_key",
+			Name:     "User SSH Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceUsers,
-			TypeName:                "aws_iam_users",
-			Name:                    "Users",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceUsers,
+			TypeName: "aws_iam_users",
+			Name:     "Users",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -180,46 +228,60 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAccessKey,
-			TypeName:                "aws_iam_access_key",
-			Name:                    "Access Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccessKey,
+			TypeName: "aws_iam_access_key",
+			Name:     "Access Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAccountAlias,
-			TypeName:                "aws_iam_account_alias",
-			Name:                    "Account Alias",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccountAlias,
+			TypeName: "aws_iam_account_alias",
+			Name:     "Account Alias",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAccountPasswordPolicy,
-			TypeName:                "aws_iam_account_password_policy",
-			Name:                    "Account Password Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccountPasswordPolicy,
+			TypeName: "aws_iam_account_password_policy",
+			Name:     "Account Password Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGroup,
-			TypeName:                "aws_iam_group",
-			Name:                    "Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGroup,
+			TypeName: "aws_iam_group",
+			Name:     "Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGroupMembership,
-			TypeName:                "aws_iam_group_membership",
-			Name:                    "Group Membership",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGroupMembership,
+			TypeName: "aws_iam_group_membership",
+			Name:     "Group Membership",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGroupPolicy,
-			TypeName:                "aws_iam_group_policy",
-			Name:                    "Group Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGroupPolicy,
+			TypeName: "aws_iam_group_policy",
+			Name:     "Group Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGroupPolicyAttachment,
-			TypeName:                "aws_iam_group_policy_attachment",
-			Name:                    "Group Policy Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGroupPolicyAttachment,
+			TypeName: "aws_iam_group_policy_attachment",
+			Name:     "Group Policy Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceInstanceProfile,
@@ -229,7 +291,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "InstanceProfile",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceOpenIDConnectProvider,
@@ -239,7 +303,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "OIDCProvider",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePolicy,
@@ -249,13 +315,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Policy",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePolicyAttachment,
-			TypeName:                "aws_iam_policy_attachment",
-			Name:                    "Policy Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePolicyAttachment,
+			TypeName: "aws_iam_policy_attachment",
+			Name:     "Policy Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRole,
@@ -265,19 +335,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRolePolicy,
-			TypeName:                "aws_iam_role_policy",
-			Name:                    "Role Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRolePolicy,
+			TypeName: "aws_iam_role_policy",
+			Name:     "Role Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRolePolicyAttachment,
-			TypeName:                "aws_iam_role_policy_attachment",
-			Name:                    "Role Policy Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRolePolicyAttachment,
+			TypeName: "aws_iam_role_policy_attachment",
+			Name:     "Role Policy Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceSAMLProvider,
@@ -287,13 +363,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "SAMLProvider",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSecurityTokenServicePreferences,
-			TypeName:                "aws_iam_security_token_service_preferences",
-			Name:                    "Security Token Service Preferences",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSecurityTokenServicePreferences,
+			TypeName: "aws_iam_security_token_service_preferences",
+			Name:     "Security Token Service Preferences",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceServerCertificate,
@@ -303,7 +383,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "ServerCertificate",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceServiceLinkedRole,
@@ -313,19 +395,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ServiceLinkedRole",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceServiceSpecificCredential,
-			TypeName:                "aws_iam_service_specific_credential",
-			Name:                    "Service Specific Credential",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceServiceSpecificCredential,
+			TypeName: "aws_iam_service_specific_credential",
+			Name:     "Service Specific Credential",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSigningCertificate,
-			TypeName:                "aws_iam_signing_certificate",
-			Name:                    "Signing Certificate",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSigningCertificate,
+			TypeName: "aws_iam_signing_certificate",
+			Name:     "Signing Certificate",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceUser,
@@ -335,37 +423,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "User",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUserGroupMembership,
-			TypeName:                "aws_iam_user_group_membership",
-			Name:                    "User Group Membership",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUserGroupMembership,
+			TypeName: "aws_iam_user_group_membership",
+			Name:     "User Group Membership",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUserLoginProfile,
-			TypeName:                "aws_iam_user_login_profile",
-			Name:                    "User Login Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUserLoginProfile,
+			TypeName: "aws_iam_user_login_profile",
+			Name:     "User Login Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUserPolicy,
-			TypeName:                "aws_iam_user_policy",
-			Name:                    "User Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUserPolicy,
+			TypeName: "aws_iam_user_policy",
+			Name:     "User Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUserPolicyAttachment,
-			TypeName:                "aws_iam_user_policy_attachment",
-			Name:                    "User Policy Attachment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUserPolicyAttachment,
+			TypeName: "aws_iam_user_policy_attachment",
+			Name:     "User Policy Attachment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUserSSHKey,
-			TypeName:                "aws_iam_user_ssh_key",
-			Name:                    "User SSH Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUserSSHKey,
+			TypeName: "aws_iam_user_ssh_key",
+			Name:     "User SSH Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVirtualMFADevice,
@@ -375,7 +475,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "VirtualMFADevice",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

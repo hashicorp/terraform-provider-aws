@@ -26,34 +26,44 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceIPSet,
-			TypeName:                "aws_wafregional_ipset",
-			Name:                    "IPSet",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRateBasedRule,
-			TypeName:                "aws_wafregional_rate_based_rule",
-			Name:                    "Rate Based Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+			Name:     "Rate Based Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRule,
-			TypeName:                "aws_wafregional_rule",
-			Name:                    "Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRule,
+			TypeName: "aws_wafregional_rule",
+			Name:     "Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSubscribedRuleGroup,
-			TypeName:                "aws_wafregional_subscribed_rule_group",
-			Name:                    "Subscribed Rule Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSubscribedRuleGroup,
+			TypeName: "aws_wafregional_subscribed_rule_group",
+			Name:     "Subscribed Rule Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceWebACL,
-			TypeName:                "aws_wafregional_web_acl",
-			Name:                    "Web ACL",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+			Name:     "Web ACL",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,22 +71,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceByteMatchSet,
-			TypeName:                "aws_wafregional_byte_match_set",
-			Name:                    "Byte Match Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceByteMatchSet,
+			TypeName: "aws_wafregional_byte_match_set",
+			Name:     "Byte Match Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGeoMatchSet,
-			TypeName:                "aws_wafregional_geo_match_set",
-			Name:                    "Geo Match Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGeoMatchSet,
+			TypeName: "aws_wafregional_geo_match_set",
+			Name:     "Geo Match Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIPSet,
-			TypeName:                "aws_wafregional_ipset",
-			Name:                    "IPSet",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRateBasedRule,
@@ -85,19 +101,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRegexMatchSet,
-			TypeName:                "aws_wafregional_regex_match_set",
-			Name:                    "Regex Match Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRegexMatchSet,
+			TypeName: "aws_wafregional_regex_match_set",
+			Name:     "Regex Match Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRegexPatternSet,
-			TypeName:                "aws_wafregional_regex_pattern_set",
-			Name:                    "Regex Pattern Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRegexPatternSet,
+			TypeName: "aws_wafregional_regex_pattern_set",
+			Name:     "Regex Pattern Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRule,
@@ -106,7 +128,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRuleGroup,
@@ -115,19 +139,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSizeConstraintSet,
-			TypeName:                "aws_wafregional_size_constraint_set",
-			Name:                    "Size Constraint Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSizeConstraintSet,
+			TypeName: "aws_wafregional_size_constraint_set",
+			Name:     "Size Constraint Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSQLInjectionMatchSet,
-			TypeName:                "aws_wafregional_sql_injection_match_set",
-			Name:                    "SQL Injection Match Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSQLInjectionMatchSet,
+			TypeName: "aws_wafregional_sql_injection_match_set",
+			Name:     "SQL Injection Match Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceWebACL,
@@ -136,19 +166,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceWebACLAssociation,
-			TypeName:                "aws_wafregional_web_acl_association",
-			Name:                    "Web ACL Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceWebACLAssociation,
+			TypeName: "aws_wafregional_web_acl_association",
+			Name:     "Web ACL Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceXSSMatchSet,
-			TypeName:                "aws_wafregional_xss_match_set",
-			Name:                    "XSS Match Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceXSSMatchSet,
+			TypeName: "aws_wafregional_xss_match_set",
+			Name:     "XSS Match Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

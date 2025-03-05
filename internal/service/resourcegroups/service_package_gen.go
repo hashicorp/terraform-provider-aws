@@ -36,13 +36,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResource,
-			TypeName:                "aws_resourcegroups_resource",
-			Name:                    "Resource",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResource,
+			TypeName: "aws_resourcegroups_resource",
+			Name:     "Resource",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

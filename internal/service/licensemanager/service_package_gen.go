@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceGrants,
-			TypeName:                "aws_licensemanager_grants",
-			Name:                    "Grants",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceGrants,
+			TypeName: "aws_licensemanager_grants",
+			Name:     "Grants",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceReceivedLicense,
-			TypeName:                "aws_licensemanager_received_license",
-			Name:                    "Received License",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceReceivedLicense,
+			TypeName: "aws_licensemanager_received_license",
+			Name:     "Received License",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceReceivedLicenses,
-			TypeName:                "aws_licensemanager_received_licenses",
-			Name:                    "Received Licenses",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceReceivedLicenses,
+			TypeName: "aws_licensemanager_received_licenses",
+			Name:     "Received Licenses",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,22 +55,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAssociation,
-			TypeName:                "aws_licensemanager_association",
-			Name:                    "Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAssociation,
+			TypeName: "aws_licensemanager_association",
+			Name:     "Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGrant,
-			TypeName:                "aws_licensemanager_grant",
-			Name:                    "Grant",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGrant,
+			TypeName: "aws_licensemanager_grant",
+			Name:     "Grant",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGrantAccepter,
-			TypeName:                "aws_licensemanager_grant_accepter",
-			Name:                    "Grant Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGrantAccepter,
+			TypeName: "aws_licensemanager_grant_accepter",
+			Name:     "Grant Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceLicenseConfiguration,
@@ -73,7 +85,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

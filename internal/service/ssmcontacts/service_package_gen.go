@@ -24,7 +24,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -38,7 +40,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -52,19 +56,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourceContactChannel,
-			TypeName:                "aws_ssmcontacts_contact_channel",
-			Name:                    "Contact Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourceContactChannel,
+			TypeName: "aws_ssmcontacts_contact_channel",
+			Name:     "Contact Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 DataSourcePlan,
-			TypeName:                "aws_ssmcontacts_plan",
-			Name:                    "Plan",
-			IsRegionOverrideEnabled: false,
+			Factory:  DataSourcePlan,
+			TypeName: "aws_ssmcontacts_plan",
+			Name:     "Plan",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -78,19 +88,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceContactChannel,
-			TypeName:                "aws_ssmcontacts_contact_channel",
-			Name:                    "Contact Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceContactChannel,
+			TypeName: "aws_ssmcontacts_contact_channel",
+			Name:     "Contact Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourcePlan,
-			TypeName:                "aws_ssmcontacts_plan",
-			Name:                    "Plan",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourcePlan,
+			TypeName: "aws_ssmcontacts_plan",
+			Name:     "Plan",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

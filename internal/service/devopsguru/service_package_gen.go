@@ -18,16 +18,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceNotificationChannel,
-			TypeName:                "aws_devopsguru_notification_channel",
-			Name:                    "Notification Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceNotificationChannel,
+			TypeName: "aws_devopsguru_notification_channel",
+			Name:     "Notification Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceResourceCollection,
-			TypeName:                "aws_devopsguru_resource_collection",
-			Name:                    "Resource Collection",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceResourceCollection,
+			TypeName: "aws_devopsguru_resource_collection",
+			Name:     "Resource Collection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,28 +39,36 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceEventSourcesConfig,
-			TypeName:                "aws_devopsguru_event_sources_config",
-			Name:                    "Event Sources Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceEventSourcesConfig,
+			TypeName: "aws_devopsguru_event_sources_config",
+			Name:     "Event Sources Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceNotificationChannel,
-			TypeName:                "aws_devopsguru_notification_channel",
-			Name:                    "Notification Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceNotificationChannel,
+			TypeName: "aws_devopsguru_notification_channel",
+			Name:     "Notification Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceResourceCollection,
-			TypeName:                "aws_devopsguru_resource_collection",
-			Name:                    "Resource Collection",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceResourceCollection,
+			TypeName: "aws_devopsguru_resource_collection",
+			Name:     "Resource Collection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceServiceIntegration,
-			TypeName:                "aws_devopsguru_service_integration",
-			Name:                    "Service Integration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceServiceIntegration,
+			TypeName: "aws_devopsguru_service_integration",
+			Name:     "Service Integration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -36,13 +36,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVaultLock,
-			TypeName:                "aws_glacier_vault_lock",
-			Name:                    "Vault Lock",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVaultLock,
+			TypeName: "aws_glacier_vault_lock",
+			Name:     "Vault Lock",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newStandardsControlAssociationsDataSource,
-			TypeName:                "aws_securityhub_standards_control_associations",
-			Name:                    "Standards Control Associations",
-			IsRegionOverrideEnabled: false,
+			Factory:  newStandardsControlAssociationsDataSource,
+			TypeName: "aws_securityhub_standards_control_associations",
+			Name:     "Standards Control Associations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -35,13 +37,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newStandardsControlAssociationResource,
-			TypeName:                "aws_securityhub_standards_control_association",
-			Name:                    "Standards Control Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newStandardsControlAssociationResource,
+			TypeName: "aws_securityhub_standards_control_association",
+			Name:     "Standards Control Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -53,82 +59,108 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAccount,
-			TypeName:                "aws_securityhub_account",
-			Name:                    "Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccount,
+			TypeName: "aws_securityhub_account",
+			Name:     "Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceActionTarget,
-			TypeName:                "aws_securityhub_action_target",
-			Name:                    "Action Target",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceActionTarget,
+			TypeName: "aws_securityhub_action_target",
+			Name:     "Action Target",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationPolicy,
-			TypeName:                "aws_securityhub_configuration_policy",
-			Name:                    "Configuration Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationPolicy,
+			TypeName: "aws_securityhub_configuration_policy",
+			Name:     "Configuration Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationPolicyAssociation,
-			TypeName:                "aws_securityhub_configuration_policy_association",
-			Name:                    "Configuration Policy Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationPolicyAssociation,
+			TypeName: "aws_securityhub_configuration_policy_association",
+			Name:     "Configuration Policy Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceFindingAggregator,
-			TypeName:                "aws_securityhub_finding_aggregator",
-			Name:                    "Finding Aggregator",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceFindingAggregator,
+			TypeName: "aws_securityhub_finding_aggregator",
+			Name:     "Finding Aggregator",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInsight,
-			TypeName:                "aws_securityhub_insight",
-			Name:                    "Insight",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInsight,
+			TypeName: "aws_securityhub_insight",
+			Name:     "Insight",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInviteAccepter,
-			TypeName:                "aws_securityhub_invite_accepter",
-			Name:                    "Invite Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInviteAccepter,
+			TypeName: "aws_securityhub_invite_accepter",
+			Name:     "Invite Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceMember,
-			TypeName:                "aws_securityhub_member",
-			Name:                    "Member",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceMember,
+			TypeName: "aws_securityhub_member",
+			Name:     "Member",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationAdminAccount,
-			TypeName:                "aws_securityhub_organization_admin_account",
-			Name:                    "Organization Admin Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationAdminAccount,
+			TypeName: "aws_securityhub_organization_admin_account",
+			Name:     "Organization Admin Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationConfiguration,
-			TypeName:                "aws_securityhub_organization_configuration",
-			Name:                    "Organization Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationConfiguration,
+			TypeName: "aws_securityhub_organization_configuration",
+			Name:     "Organization Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceProductSubscription,
-			TypeName:                "aws_securityhub_product_subscription",
-			Name:                    "Product Subscription",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceProductSubscription,
+			TypeName: "aws_securityhub_product_subscription",
+			Name:     "Product Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceStandardsControl,
-			TypeName:                "aws_securityhub_standards_control",
-			Name:                    "Standards Control",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStandardsControl,
+			TypeName: "aws_securityhub_standards_control",
+			Name:     "Standards Control",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceStandardsSubscription,
-			TypeName:                "aws_securityhub_standards_subscription",
-			Name:                    "Standards Subscription",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceStandardsSubscription,
+			TypeName: "aws_securityhub_standards_subscription",
+			Name:     "Standards Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

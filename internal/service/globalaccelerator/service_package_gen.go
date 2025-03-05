@@ -19,10 +19,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newAcceleratorDataSource,
-			TypeName:                "aws_globalaccelerator_accelerator",
-			Name:                    "Accelerator",
-			IsRegionOverrideEnabled: false,
+			Factory:  newAcceleratorDataSource,
+			TypeName: "aws_globalaccelerator_accelerator",
+			Name:     "Accelerator",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -36,7 +38,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -44,10 +48,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCustomRoutingAccelerator,
-			TypeName:                "aws_globalaccelerator_custom_routing_accelerator",
-			Name:                    "Custom Routing Accelerator",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCustomRoutingAccelerator,
+			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
+			Name:     "Custom Routing Accelerator",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,7 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCustomRoutingAccelerator,
@@ -70,31 +78,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCustomRoutingEndpointGroup,
-			TypeName:                "aws_globalaccelerator_custom_routing_endpoint_group",
-			Name:                    "Custom Routing Endpoint Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCustomRoutingEndpointGroup,
+			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
+			Name:     "Custom Routing Endpoint Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceCustomRoutingListener,
-			TypeName:                "aws_globalaccelerator_custom_routing_listener",
-			Name:                    "Custom Routing Listener",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCustomRoutingListener,
+			TypeName: "aws_globalaccelerator_custom_routing_listener",
+			Name:     "Custom Routing Listener",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEndpointGroup,
-			TypeName:                "aws_globalaccelerator_endpoint_group",
-			Name:                    "Endpoint Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEndpointGroup,
+			TypeName: "aws_globalaccelerator_endpoint_group",
+			Name:     "Endpoint Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceListener,
-			TypeName:                "aws_globalaccelerator_listener",
-			Name:                    "Listener",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceListener,
+			TypeName: "aws_globalaccelerator_listener",
+			Name:     "Listener",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

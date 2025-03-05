@@ -26,10 +26,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceResources,
-			TypeName:                "aws_resourcegroupstaggingapi_resources",
-			Name:                    "Resources",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceResources,
+			TypeName: "aws_resourcegroupstaggingapi_resources",
+			Name:     "Resources",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

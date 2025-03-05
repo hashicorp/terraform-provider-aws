@@ -32,13 +32,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrURL,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceQueues,
-			TypeName:                "aws_sqs_queues",
-			Name:                    "Queues",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceQueues,
+			TypeName: "aws_sqs_queues",
+			Name:     "Queues",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -52,25 +56,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceQueuePolicy,
-			TypeName:                "aws_sqs_queue_policy",
-			Name:                    "Queue Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceQueuePolicy,
+			TypeName: "aws_sqs_queue_policy",
+			Name:     "Queue Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceQueueRedriveAllowPolicy,
-			TypeName:                "aws_sqs_queue_redrive_allow_policy",
-			Name:                    "Queue Redrive Allow Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceQueueRedriveAllowPolicy,
+			TypeName: "aws_sqs_queue_redrive_allow_policy",
+			Name:     "Queue Redrive Allow Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceQueueRedrivePolicy,
-			TypeName:                "aws_sqs_queue_redrive_policy",
-			Name:                    "Queue Redrive Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceQueueRedrivePolicy,
+			TypeName: "aws_sqs_queue_redrive_policy",
+			Name:     "Queue Redrive Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -26,28 +26,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceActivity,
-			TypeName:                "aws_sfn_activity",
-			Name:                    "Activity",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceActivity,
+			TypeName: "aws_sfn_activity",
+			Name:     "Activity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceAlias,
-			TypeName:                "aws_sfn_alias",
-			Name:                    "Alias",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceAlias,
+			TypeName: "aws_sfn_alias",
+			Name:     "Alias",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceStateMachine,
-			TypeName:                "aws_sfn_state_machine",
-			Name:                    "State Machine",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceStateMachine,
+			TypeName: "aws_sfn_state_machine",
+			Name:     "State Machine",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceStateMachineVersions,
-			TypeName:                "aws_sfn_state_machine_versions",
-			Name:                    "State Machine Versions",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceStateMachineVersions,
+			TypeName: "aws_sfn_state_machine_versions",
+			Name:     "State Machine Versions",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,13 +69,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAlias,
-			TypeName:                "aws_sfn_alias",
-			Name:                    "Alias",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAlias,
+			TypeName: "aws_sfn_alias",
+			Name:     "Alias",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceStateMachine,
@@ -76,7 +88,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

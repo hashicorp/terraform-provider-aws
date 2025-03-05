@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newRetentionConfigurationResource,
-			TypeName:                "aws_config_retention_configuration",
-			Name:                    "Retention Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newRetentionConfigurationResource,
+			TypeName: "aws_config_retention_configuration",
+			Name:     "Retention Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,7 +45,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConfigRule,
@@ -52,7 +56,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceConfigurationAggregator,
@@ -61,61 +67,81 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationRecorder,
-			TypeName:                "aws_config_configuration_recorder",
-			Name:                    "Configuration Recorder",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationRecorder,
+			TypeName: "aws_config_configuration_recorder",
+			Name:     "Configuration Recorder",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationRecorderStatus,
-			TypeName:                "aws_config_configuration_recorder_status",
-			Name:                    "Configuration Recorder Status",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationRecorderStatus,
+			TypeName: "aws_config_configuration_recorder_status",
+			Name:     "Configuration Recorder Status",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConformancePack,
-			TypeName:                "aws_config_conformance_pack",
-			Name:                    "Conformance Pack",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConformancePack,
+			TypeName: "aws_config_conformance_pack",
+			Name:     "Conformance Pack",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDeliveryChannel,
-			TypeName:                "aws_config_delivery_channel",
-			Name:                    "Delivery Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDeliveryChannel,
+			TypeName: "aws_config_delivery_channel",
+			Name:     "Delivery Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationConformancePack,
-			TypeName:                "aws_config_organization_conformance_pack",
-			Name:                    "Organization Conformance Pack",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationConformancePack,
+			TypeName: "aws_config_organization_conformance_pack",
+			Name:     "Organization Conformance Pack",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationCustomPolicyRule,
-			TypeName:                "aws_config_organization_custom_policy_rule",
-			Name:                    "Organization Custom Policy Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationCustomPolicyRule,
+			TypeName: "aws_config_organization_custom_policy_rule",
+			Name:     "Organization Custom Policy Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationCustomRule,
-			TypeName:                "aws_config_organization_custom_rule",
-			Name:                    "Organization Custom Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationCustomRule,
+			TypeName: "aws_config_organization_custom_rule",
+			Name:     "Organization Custom Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationManagedRule,
-			TypeName:                "aws_config_organization_managed_rule",
-			Name:                    "Organization Managed Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationManagedRule,
+			TypeName: "aws_config_organization_managed_rule",
+			Name:     "Organization Managed Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRemediationConfiguration,
-			TypeName:                "aws_config_remediation_configuration",
-			Name:                    "Remediation Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRemediationConfiguration,
+			TypeName: "aws_config_remediation_configuration",
+			Name:     "Remediation Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -28,37 +28,49 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceBotLocale,
-			TypeName:                "aws_lexv2models_bot_locale",
-			Name:                    "Bot Locale",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceBotLocale,
+			TypeName: "aws_lexv2models_bot_locale",
+			Name:     "Bot Locale",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceBotVersion,
-			TypeName:                "aws_lexv2models_bot_version",
-			Name:                    "Bot Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceBotVersion,
+			TypeName: "aws_lexv2models_bot_version",
+			Name:     "Bot Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceIntent,
-			TypeName:                "aws_lexv2models_intent",
-			Name:                    "Intent",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceIntent,
+			TypeName: "aws_lexv2models_intent",
+			Name:     "Intent",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceSlot,
-			TypeName:                "aws_lexv2models_slot",
-			Name:                    "Slot",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceSlot,
+			TypeName: "aws_lexv2models_slot",
+			Name:     "Slot",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceSlotType,
-			TypeName:                "aws_lexv2models_slot_type",
-			Name:                    "Slot Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceSlotType,
+			TypeName: "aws_lexv2models_slot_type",
+			Name:     "Slot Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -30,10 +30,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 ResourceGlobalSettings,
-			TypeName:                "aws_chimesdkvoice_global_settings",
-			Name:                    "Global Settings",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceGlobalSettings,
+			TypeName: "aws_chimesdkvoice_global_settings",
+			Name:     "Global Settings",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceSipMediaApplication,
@@ -42,13 +44,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceSipRule,
-			TypeName:                "aws_chimesdkvoice_sip_rule",
-			Name:                    "Sip Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceSipRule,
+			TypeName: "aws_chimesdkvoice_sip_rule",
+			Name:     "Sip Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  ResourceVoiceProfileDomain,
@@ -57,7 +63,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

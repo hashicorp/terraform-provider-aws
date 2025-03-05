@@ -19,16 +19,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newRecordsDataSource,
-			TypeName:                "aws_route53_records",
-			Name:                    "Records",
-			IsRegionOverrideEnabled: false,
+			Factory:  newRecordsDataSource,
+			TypeName: "aws_route53_records",
+			Name:     "Records",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newZonesDataSource,
-			TypeName:                "aws_route53_zones",
-			Name:                    "Zones",
-			IsRegionOverrideEnabled: false,
+			Factory:  newZonesDataSource,
+			TypeName: "aws_route53_zones",
+			Name:     "Zones",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -36,16 +40,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newCIDRCollectionResource,
-			TypeName:                "aws_route53_cidr_collection",
-			Name:                    "CIDR Collection",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCIDRCollectionResource,
+			TypeName: "aws_route53_cidr_collection",
+			Name:     "CIDR Collection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newCIDRLocationResource,
-			TypeName:                "aws_route53_cidr_location",
-			Name:                    "CIDR Location",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCIDRLocationResource,
+			TypeName: "aws_route53_cidr_location",
+			Name:     "CIDR Location",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -53,22 +61,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceDelegationSet,
-			TypeName:                "aws_route53_delegation_set",
-			Name:                    "Reusable Delegation Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDelegationSet,
+			TypeName: "aws_route53_delegation_set",
+			Name:     "Reusable Delegation Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceTrafficPolicyDocument,
-			TypeName:                "aws_route53_traffic_policy_document",
-			Name:                    "Traffic Policy Document",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceTrafficPolicyDocument,
+			TypeName: "aws_route53_traffic_policy_document",
+			Name:     "Traffic Policy Document",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceZone,
-			TypeName:                "aws_route53_zone",
-			Name:                    "Hosted Zone",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceZone,
+			TypeName: "aws_route53_zone",
+			Name:     "Hosted Zone",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -76,10 +90,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceDelegationSet,
-			TypeName:                "aws_route53_delegation_set",
-			Name:                    "Reusable Delegation Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDelegationSet,
+			TypeName: "aws_route53_delegation_set",
+			Name:     "Reusable Delegation Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceHealthCheck,
@@ -89,49 +105,65 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "healthcheck",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceHostedZoneDNSSEC,
-			TypeName:                "aws_route53_hosted_zone_dnssec",
-			Name:                    "Hosted Zone DNSSEC",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceHostedZoneDNSSEC,
+			TypeName: "aws_route53_hosted_zone_dnssec",
+			Name:     "Hosted Zone DNSSEC",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceKeySigningKey,
-			TypeName:                "aws_route53_key_signing_key",
-			Name:                    "Key Signing Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceKeySigningKey,
+			TypeName: "aws_route53_key_signing_key",
+			Name:     "Key Signing Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceQueryLog,
-			TypeName:                "aws_route53_query_log",
-			Name:                    "Query Logging Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceQueryLog,
+			TypeName: "aws_route53_query_log",
+			Name:     "Query Logging Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRecord,
-			TypeName:                "aws_route53_record",
-			Name:                    "Record",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRecord,
+			TypeName: "aws_route53_record",
+			Name:     "Record",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTrafficPolicy,
-			TypeName:                "aws_route53_traffic_policy",
-			Name:                    "Traffic Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTrafficPolicy,
+			TypeName: "aws_route53_traffic_policy",
+			Name:     "Traffic Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTrafficPolicyInstance,
-			TypeName:                "aws_route53_traffic_policy_instance",
-			Name:                    "Traffic Policy Instance",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTrafficPolicyInstance,
+			TypeName: "aws_route53_traffic_policy_instance",
+			Name:     "Traffic Policy Instance",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVPCAssociationAuthorization,
-			TypeName:                "aws_route53_vpc_association_authorization",
-			Name:                    "VPC Association Authorization",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVPCAssociationAuthorization,
+			TypeName: "aws_route53_vpc_association_authorization",
+			Name:     "VPC Association Authorization",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceZone,
@@ -141,13 +173,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceZoneAssociation,
-			TypeName:                "aws_route53_zone_association",
-			Name:                    "Zone Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceZoneAssociation,
+			TypeName: "aws_route53_zone_association",
+			Name:     "Zone Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

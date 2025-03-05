@@ -28,7 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newRestoreTestingPlanResource,
@@ -37,13 +39,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newRestoreTestingSelectionResource,
-			TypeName:                "aws_backup_restore_testing_selection",
-			Name:                    "Restore Testing Plan Selection",
-			IsRegionOverrideEnabled: false,
+			Factory:  newRestoreTestingSelectionResource,
+			TypeName: "aws_backup_restore_testing_selection",
+			Name:     "Restore Testing Plan Selection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -57,7 +63,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourcePlan,
@@ -66,7 +74,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceReportPlan,
@@ -75,13 +85,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSelection,
-			TypeName:                "aws_backup_selection",
-			Name:                    "Selection",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSelection,
+			TypeName: "aws_backup_selection",
+			Name:     "Selection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceVault,
@@ -90,7 +104,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -104,13 +120,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGlobalSettings,
-			TypeName:                "aws_backup_global_settings",
-			Name:                    "Global Settings",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGlobalSettings,
+			TypeName: "aws_backup_global_settings",
+			Name:     "Global Settings",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePlan,
@@ -119,13 +139,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRegionSettings,
-			TypeName:                "aws_backup_region_settings",
-			Name:                    "Region Settings",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRegionSettings,
+			TypeName: "aws_backup_region_settings",
+			Name:     "Region Settings",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceReportPlan,
@@ -134,13 +158,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSelection,
-			TypeName:                "aws_backup_selection",
-			Name:                    "Selection",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSelection,
+			TypeName: "aws_backup_selection",
+			Name:     "Selection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVault,
@@ -149,25 +177,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVaultLockConfiguration,
-			TypeName:                "aws_backup_vault_lock_configuration",
-			Name:                    "Vault Lock Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVaultLockConfiguration,
+			TypeName: "aws_backup_vault_lock_configuration",
+			Name:     "Vault Lock Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVaultNotifications,
-			TypeName:                "aws_backup_vault_notifications",
-			Name:                    "Vault Notifications",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVaultNotifications,
+			TypeName: "aws_backup_vault_notifications",
+			Name:     "Vault Notifications",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceVaultPolicy,
-			TypeName:                "aws_backup_vault_policy",
-			Name:                    "Vault Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceVaultPolicy,
+			TypeName: "aws_backup_vault_policy",
+			Name:     "Vault Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

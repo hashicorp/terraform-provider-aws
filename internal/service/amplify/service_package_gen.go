@@ -36,13 +36,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBackendEnvironment,
-			TypeName:                "aws_amplify_backend_environment",
-			Name:                    "Backend Environment",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBackendEnvironment,
+			TypeName: "aws_amplify_backend_environment",
+			Name:     "Backend Environment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceBranch,
@@ -51,19 +55,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainAssociation,
-			TypeName:                "aws_amplify_domain_association",
-			Name:                    "Domain Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainAssociation,
+			TypeName: "aws_amplify_domain_association",
+			Name:     "Domain Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceWebhook,
-			TypeName:                "aws_amplify_webhook",
-			Name:                    "Webhook",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceWebhook,
+			TypeName: "aws_amplify_webhook",
+			Name:     "Webhook",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

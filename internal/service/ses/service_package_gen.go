@@ -26,22 +26,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceActiveReceiptRuleSet,
-			TypeName:                "aws_ses_active_receipt_rule_set",
-			Name:                    "Active Receipt Rule Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceActiveReceiptRuleSet,
+			TypeName: "aws_ses_active_receipt_rule_set",
+			Name:     "Active Receipt Rule Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceDomainIdentity,
-			TypeName:                "aws_ses_domain_identity",
-			Name:                    "Domain Identity",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDomainIdentity,
+			TypeName: "aws_ses_domain_identity",
+			Name:     "Domain Identity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceEmailIdentity,
-			TypeName:                "aws_ses_email_identity",
-			Name:                    "Email Identity",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceEmailIdentity,
+			TypeName: "aws_ses_email_identity",
+			Name:     "Email Identity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -49,88 +55,116 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceActiveReceiptRuleSet,
-			TypeName:                "aws_ses_active_receipt_rule_set",
-			Name:                    "Active Receipt Rule Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceActiveReceiptRuleSet,
+			TypeName: "aws_ses_active_receipt_rule_set",
+			Name:     "Active Receipt Rule Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfigurationSet,
-			TypeName:                "aws_ses_configuration_set",
-			Name:                    "Configuration Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfigurationSet,
+			TypeName: "aws_ses_configuration_set",
+			Name:     "Configuration Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainDKIM,
-			TypeName:                "aws_ses_domain_dkim",
-			Name:                    "Domain DKIM",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainDKIM,
+			TypeName: "aws_ses_domain_dkim",
+			Name:     "Domain DKIM",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainIdentity,
-			TypeName:                "aws_ses_domain_identity",
-			Name:                    "Domain Identity",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainIdentity,
+			TypeName: "aws_ses_domain_identity",
+			Name:     "Domain Identity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainIdentityVerification,
-			TypeName:                "aws_ses_domain_identity_verification",
-			Name:                    "Domain Identity Verification",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainIdentityVerification,
+			TypeName: "aws_ses_domain_identity_verification",
+			Name:     "Domain Identity Verification",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainMailFrom,
-			TypeName:                "aws_ses_domain_mail_from",
-			Name:                    "MAIL FROM Domain",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainMailFrom,
+			TypeName: "aws_ses_domain_mail_from",
+			Name:     "MAIL FROM Domain",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEmailIdentity,
-			TypeName:                "aws_ses_email_identity",
-			Name:                    "Email Identity",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEmailIdentity,
+			TypeName: "aws_ses_email_identity",
+			Name:     "Email Identity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEventDestination,
-			TypeName:                "aws_ses_event_destination",
-			Name:                    "Configuration Set Event Destination",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEventDestination,
+			TypeName: "aws_ses_event_destination",
+			Name:     "Configuration Set Event Destination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIdentityNotificationTopic,
-			TypeName:                "aws_ses_identity_notification_topic",
-			Name:                    "Identity Notification Topic",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIdentityNotificationTopic,
+			TypeName: "aws_ses_identity_notification_topic",
+			Name:     "Identity Notification Topic",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceIdentityPolicy,
-			TypeName:                "aws_ses_identity_policy",
-			Name:                    "Identity Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceIdentityPolicy,
+			TypeName: "aws_ses_identity_policy",
+			Name:     "Identity Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceReceiptFilter,
-			TypeName:                "aws_ses_receipt_filter",
-			Name:                    "Receipt Filter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceReceiptFilter,
+			TypeName: "aws_ses_receipt_filter",
+			Name:     "Receipt Filter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceReceiptRule,
-			TypeName:                "aws_ses_receipt_rule",
-			Name:                    "Receipt Rule",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceReceiptRule,
+			TypeName: "aws_ses_receipt_rule",
+			Name:     "Receipt Rule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceReceiptRuleSet,
-			TypeName:                "aws_ses_receipt_rule_set",
-			Name:                    "Receipt Rule Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceReceiptRuleSet,
+			TypeName: "aws_ses_receipt_rule_set",
+			Name:     "Receipt Rule Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTemplate,
-			TypeName:                "aws_ses_template",
-			Name:                    "Template",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTemplate,
+			TypeName: "aws_ses_template",
+			Name:     "Template",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

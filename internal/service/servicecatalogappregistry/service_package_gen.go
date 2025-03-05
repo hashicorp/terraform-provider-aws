@@ -24,7 +24,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newDataSourceAttributeGroup,
@@ -33,13 +35,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDataSourceAttributeGroupAssociations,
-			TypeName:                "aws_servicecatalogappregistry_attribute_group_associations",
-			Name:                    "Attribute Group Associations",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceAttributeGroupAssociations,
+			TypeName: "aws_servicecatalogappregistry_attribute_group_associations",
+			Name:     "Attribute Group Associations",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -53,7 +59,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceAttributeGroup,
@@ -62,13 +70,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceAttributeGroupAssociation,
-			TypeName:                "aws_servicecatalogappregistry_attribute_group_association",
-			Name:                    "Attribute Group Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceAttributeGroupAssociation,
+			TypeName: "aws_servicecatalogappregistry_attribute_group_association",
+			Name:     "Attribute Group Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

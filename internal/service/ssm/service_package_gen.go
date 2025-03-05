@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
 	return []*itypes.ServicePackageEphemeralResource{
 		{
-			Factory:                 newEphemeralParameter,
-			TypeName:                "aws_ssm_parameter",
-			Name:                    "Parameter",
-			IsRegionOverrideEnabled: false,
+			Factory:  newEphemeralParameter,
+			TypeName: "aws_ssm_parameter",
+			Name:     "Parameter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -29,10 +31,12 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourcePatchBaselines,
-			TypeName:                "aws_ssm_patch_baselines",
-			Name:                    "Patch Baselines",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourcePatchBaselines,
+			TypeName: "aws_ssm_patch_baselines",
+			Name:     "Patch Baselines",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -44,40 +48,52 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceDocument,
-			TypeName:                "aws_ssm_document",
-			Name:                    "Document",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDocument,
+			TypeName: "aws_ssm_document",
+			Name:     "Document",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceInstances,
-			TypeName:                "aws_ssm_instances",
-			Name:                    "Instances",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceInstances,
+			TypeName: "aws_ssm_instances",
+			Name:     "Instances",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceMaintenanceWindows,
-			TypeName:                "aws_ssm_maintenance_windows",
-			Name:                    "Maintenance Windows",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceMaintenanceWindows,
+			TypeName: "aws_ssm_maintenance_windows",
+			Name:     "Maintenance Windows",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceParameter,
-			TypeName:                "aws_ssm_parameter",
-			Name:                    "Parameter",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceParameter,
+			TypeName: "aws_ssm_parameter",
+			Name:     "Parameter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceParametersByPath,
-			TypeName:                "aws_ssm_parameters_by_path",
-			Name:                    "Parameters By Path",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceParametersByPath,
+			TypeName: "aws_ssm_parameters_by_path",
+			Name:     "Parameters By Path",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourcePatchBaseline,
-			TypeName:                "aws_ssm_patch_baseline",
-			Name:                    "Patch Baseline",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourcePatchBaseline,
+			TypeName: "aws_ssm_patch_baseline",
+			Name:     "Patch Baseline",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -85,11 +101,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceActivation,
-			TypeName:                "aws_ssm_activation",
-			Name:                    "Activation",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceActivation,
+			TypeName: "aws_ssm_activation",
+			Name:     "Activation",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceAssociation,
@@ -99,13 +117,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Association",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDefaultPatchBaseline,
-			TypeName:                "aws_ssm_default_patch_baseline",
-			Name:                    "Default Patch Baseline",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDefaultPatchBaseline,
+			TypeName: "aws_ssm_default_patch_baseline",
+			Name:     "Default Patch Baseline",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDocument,
@@ -115,7 +137,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Document",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceMaintenanceWindow,
@@ -125,19 +149,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "MaintenanceWindow",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceMaintenanceWindowTarget,
-			TypeName:                "aws_ssm_maintenance_window_target",
-			Name:                    "Maintenance Window Target",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceMaintenanceWindowTarget,
+			TypeName: "aws_ssm_maintenance_window_target",
+			Name:     "Maintenance Window Target",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceMaintenanceWindowTask,
-			TypeName:                "aws_ssm_maintenance_window_task",
-			Name:                    "Maintenance Window Task",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceMaintenanceWindowTask,
+			TypeName: "aws_ssm_maintenance_window_task",
+			Name:     "Maintenance Window Task",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceParameter,
@@ -147,7 +177,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Parameter",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourcePatchBaseline,
@@ -157,25 +189,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "PatchBaseline",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePatchGroup,
-			TypeName:                "aws_ssm_patch_group",
-			Name:                    "Patch Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePatchGroup,
+			TypeName: "aws_ssm_patch_group",
+			Name:     "Patch Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResourceDataSync,
-			TypeName:                "aws_ssm_resource_data_sync",
-			Name:                    "Resource Data Sync",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResourceDataSync,
+			TypeName: "aws_ssm_resource_data_sync",
+			Name:     "Resource Data Sync",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceServiceSetting,
-			TypeName:                "aws_ssm_service_setting",
-			Name:                    "Service Setting",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceServiceSetting,
+			TypeName: "aws_ssm_service_setting",
+			Name:     "Service Setting",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

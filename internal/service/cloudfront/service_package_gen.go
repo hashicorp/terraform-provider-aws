@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceOriginAccessControl,
-			TypeName:                "aws_cloudfront_origin_access_control",
-			Name:                    "Origin Access Control",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -29,16 +31,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newContinuousDeploymentPolicyResource,
-			TypeName:                "aws_cloudfront_continuous_deployment_policy",
-			Name:                    "Continuous Deployment Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newContinuousDeploymentPolicyResource,
+			TypeName: "aws_cloudfront_continuous_deployment_policy",
+			Name:     "Continuous Deployment Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newKeyValueStoreResource,
-			TypeName:                "aws_cloudfront_key_value_store",
-			Name:                    "Key Value Store",
-			IsRegionOverrideEnabled: false,
+			Factory:  newKeyValueStoreResource,
+			TypeName: "aws_cloudfront_key_value_store",
+			Name:     "Key Value Store",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newVPCOriginResource,
@@ -47,7 +53,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -55,10 +63,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCachePolicy,
-			TypeName:                "aws_cloudfront_cache_policy",
-			Name:                    "Cache Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCachePolicy,
+			TypeName: "aws_cloudfront_cache_policy",
+			Name:     "Cache Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceDistribution,
@@ -67,49 +77,65 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceFunction,
-			TypeName:                "aws_cloudfront_function",
-			Name:                    "Function",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceFunction,
+			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceLogDeliveryCanonicalUserID,
-			TypeName:                "aws_cloudfront_log_delivery_canonical_user_id",
-			Name:                    "Log Delivery Canonical User ID",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceLogDeliveryCanonicalUserID,
+			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
+			Name:     "Log Delivery Canonical User ID",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOriginAccessIdentities,
-			TypeName:                "aws_cloudfront_origin_access_identities",
-			Name:                    "Origin Access Identities",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOriginAccessIdentities,
+			TypeName: "aws_cloudfront_origin_access_identities",
+			Name:     "Origin Access Identities",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOriginAccessIdentity,
-			TypeName:                "aws_cloudfront_origin_access_identity",
-			Name:                    "Origin Access Identity",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOriginAccessIdentity,
+			TypeName: "aws_cloudfront_origin_access_identity",
+			Name:     "Origin Access Identity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceOriginRequestPolicy,
-			TypeName:                "aws_cloudfront_origin_request_policy",
-			Name:                    "Origin Request Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceOriginRequestPolicy,
+			TypeName: "aws_cloudfront_origin_request_policy",
+			Name:     "Origin Request Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRealtimeLogConfig,
-			TypeName:                "aws_cloudfront_realtime_log_config",
-			Name:                    "Real-time Log Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRealtimeLogConfig,
+			TypeName: "aws_cloudfront_realtime_log_config",
+			Name:     "Real-time Log Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceResponseHeadersPolicy,
-			TypeName:                "aws_cloudfront_response_headers_policy",
-			Name:                    "Response Headers Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceResponseHeadersPolicy,
+			TypeName: "aws_cloudfront_response_headers_policy",
+			Name:     "Response Headers Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -117,10 +143,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceCachePolicy,
-			TypeName:                "aws_cloudfront_cache_policy",
-			Name:                    "Cache Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceCachePolicy,
+			TypeName: "aws_cloudfront_cache_policy",
+			Name:     "Cache Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDistribution,
@@ -129,73 +157,97 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceFieldLevelEncryptionConfig,
-			TypeName:                "aws_cloudfront_field_level_encryption_config",
-			Name:                    "Field-level Encryption Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceFieldLevelEncryptionConfig,
+			TypeName: "aws_cloudfront_field_level_encryption_config",
+			Name:     "Field-level Encryption Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceFieldLevelEncryptionProfile,
-			TypeName:                "aws_cloudfront_field_level_encryption_profile",
-			Name:                    "Field-level Encryption Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceFieldLevelEncryptionProfile,
+			TypeName: "aws_cloudfront_field_level_encryption_profile",
+			Name:     "Field-level Encryption Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceFunction,
-			TypeName:                "aws_cloudfront_function",
-			Name:                    "Function",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceFunction,
+			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceKeyGroup,
-			TypeName:                "aws_cloudfront_key_group",
-			Name:                    "Key Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceKeyGroup,
+			TypeName: "aws_cloudfront_key_group",
+			Name:     "Key Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceMonitoringSubscription,
-			TypeName:                "aws_cloudfront_monitoring_subscription",
-			Name:                    "Monitoring Subscription",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceMonitoringSubscription,
+			TypeName: "aws_cloudfront_monitoring_subscription",
+			Name:     "Monitoring Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOriginAccessControl,
-			TypeName:                "aws_cloudfront_origin_access_control",
-			Name:                    "Origin Access Control",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOriginAccessIdentity,
-			TypeName:                "aws_cloudfront_origin_access_identity",
-			Name:                    "Origin Access Identity",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOriginAccessIdentity,
+			TypeName: "aws_cloudfront_origin_access_identity",
+			Name:     "Origin Access Identity",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOriginRequestPolicy,
-			TypeName:                "aws_cloudfront_origin_request_policy",
-			Name:                    "Origin Request Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOriginRequestPolicy,
+			TypeName: "aws_cloudfront_origin_request_policy",
+			Name:     "Origin Request Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePublicKey,
-			TypeName:                "aws_cloudfront_public_key",
-			Name:                    "Public Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePublicKey,
+			TypeName: "aws_cloudfront_public_key",
+			Name:     "Public Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRealtimeLogConfig,
-			TypeName:                "aws_cloudfront_realtime_log_config",
-			Name:                    "Real-time Log Config",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRealtimeLogConfig,
+			TypeName: "aws_cloudfront_realtime_log_config",
+			Name:     "Real-time Log Config",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResponseHeadersPolicy,
-			TypeName:                "aws_cloudfront_response_headers_policy",
-			Name:                    "Response Headers Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResponseHeadersPolicy,
+			TypeName: "aws_cloudfront_response_headers_policy",
+			Name:     "Response Headers Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

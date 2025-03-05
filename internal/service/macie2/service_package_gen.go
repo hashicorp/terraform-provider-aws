@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newOrganizationConfigurationResource,
-			TypeName:                "aws_macie2_organization_configuration",
-			Name:                    "Organization Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newOrganizationConfigurationResource,
+			TypeName: "aws_macie2_organization_configuration",
+			Name:     "Organization Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -37,16 +39,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAccount,
-			TypeName:                "aws_macie2_account",
-			Name:                    "Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccount,
+			TypeName: "aws_macie2_account",
+			Name:     "Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClassificationExportConfiguration,
-			TypeName:                "aws_macie2_classification_export_configuration",
-			Name:                    "Classification Export Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClassificationExportConfiguration,
+			TypeName: "aws_macie2_classification_export_configuration",
+			Name:     "Classification Export Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceClassificationJob,
@@ -55,7 +61,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCustomDataIdentifier,
@@ -64,7 +72,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceFindingsFilter,
@@ -73,13 +83,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceInvitationAccepter,
-			TypeName:                "aws_macie2_invitation_accepter",
-			Name:                    "Invitation Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceInvitationAccepter,
+			TypeName: "aws_macie2_invitation_accepter",
+			Name:     "Invitation Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceMember,
@@ -88,13 +102,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceOrganizationAdminAccount,
-			TypeName:                "aws_macie2_organization_admin_account",
-			Name:                    "Organization Admin Account",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceOrganizationAdminAccount,
+			TypeName: "aws_macie2_organization_admin_account",
+			Name:     "Organization Admin Account",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

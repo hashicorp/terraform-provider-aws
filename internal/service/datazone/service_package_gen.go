@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDataSourceEnvironmentBlueprint,
-			TypeName:                "aws_datazone_environment_blueprint",
-			Name:                    "Environment Blueprint",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDataSourceEnvironmentBlueprint,
+			TypeName: "aws_datazone_environment_blueprint",
+			Name:     "Environment Blueprint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -29,10 +31,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceAssetType,
-			TypeName:                "aws_datazone_asset_type",
-			Name:                    "Asset Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceAssetType,
+			TypeName: "aws_datazone_asset_type",
+			Name:     "Asset Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceDomain,
@@ -41,55 +45,73 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceEnvironment,
-			TypeName:                "aws_datazone_environment",
-			Name:                    "Environment",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceEnvironment,
+			TypeName: "aws_datazone_environment",
+			Name:     "Environment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceEnvironmentBlueprintConfiguration,
-			TypeName:                "aws_datazone_environment_blueprint_configuration",
-			Name:                    "Environment Blueprint Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceEnvironmentBlueprintConfiguration,
+			TypeName: "aws_datazone_environment_blueprint_configuration",
+			Name:     "Environment Blueprint Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceEnvironmentProfile,
-			TypeName:                "aws_datazone_environment_profile",
-			Name:                    "Environment Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceEnvironmentProfile,
+			TypeName: "aws_datazone_environment_profile",
+			Name:     "Environment Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceFormType,
-			TypeName:                "aws_datazone_form_type",
-			Name:                    "Form Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceFormType,
+			TypeName: "aws_datazone_form_type",
+			Name:     "Form Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceGlossary,
-			TypeName:                "aws_datazone_glossary",
-			Name:                    "Glossary",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceGlossary,
+			TypeName: "aws_datazone_glossary",
+			Name:     "Glossary",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceGlossaryTerm,
-			TypeName:                "aws_datazone_glossary_term",
-			Name:                    "Glossary Term",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceGlossaryTerm,
+			TypeName: "aws_datazone_glossary_term",
+			Name:     "Glossary Term",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceProject,
-			TypeName:                "aws_datazone_project",
-			Name:                    "Project",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceProject,
+			TypeName: "aws_datazone_project",
+			Name:     "Project",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceUserProfile,
-			TypeName:                "aws_datazone_user_profile",
-			Name:                    "User Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceUserProfile,
+			TypeName: "aws_datazone_user_profile",
+			Name:     "User Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -18,40 +18,52 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newCustomModelDataSource,
-			TypeName:                "aws_bedrock_custom_model",
-			Name:                    "Custom Model",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCustomModelDataSource,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom Model",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newCustomModelsDataSource,
-			TypeName:                "aws_bedrock_custom_models",
-			Name:                    "Custom Models",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCustomModelsDataSource,
+			TypeName: "aws_bedrock_custom_models",
+			Name:     "Custom Models",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newFoundationModelDataSource,
-			TypeName:                "aws_bedrock_foundation_model",
-			Name:                    "Foundation Model",
-			IsRegionOverrideEnabled: false,
+			Factory:  newFoundationModelDataSource,
+			TypeName: "aws_bedrock_foundation_model",
+			Name:     "Foundation Model",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newFoundationModelsDataSource,
-			TypeName:                "aws_bedrock_foundation_models",
-			Name:                    "Foundation Models",
-			IsRegionOverrideEnabled: false,
+			Factory:  newFoundationModelsDataSource,
+			TypeName: "aws_bedrock_foundation_models",
+			Name:     "Foundation Models",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newInferenceProfileDataSource,
-			TypeName:                "aws_bedrock_inference_profile",
-			Name:                    "Inference Profile",
-			IsRegionOverrideEnabled: false,
+			Factory:  newInferenceProfileDataSource,
+			TypeName: "aws_bedrock_inference_profile",
+			Name:     "Inference Profile",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newInferenceProfilesDataSource,
-			TypeName:                "aws_bedrock_inference_profiles",
-			Name:                    "Inference Profiles",
-			IsRegionOverrideEnabled: false,
+			Factory:  newInferenceProfilesDataSource,
+			TypeName: "aws_bedrock_inference_profiles",
+			Name:     "Inference Profiles",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -65,7 +77,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceGuardrail,
@@ -74,13 +88,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "guardrail_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newGuardrailVersionResource,
-			TypeName:                "aws_bedrock_guardrail_version",
-			Name:                    "Guardrail Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  newGuardrailVersionResource,
+			TypeName: "aws_bedrock_guardrail_version",
+			Name:     "Guardrail Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceInferenceProfile,
@@ -89,13 +107,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newModelInvocationLoggingConfigurationResource,
-			TypeName:                "aws_bedrock_model_invocation_logging_configuration",
-			Name:                    "Model Invocation Logging Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newModelInvocationLoggingConfigurationResource,
+			TypeName: "aws_bedrock_model_invocation_logging_configuration",
+			Name:     "Model Invocation Logging Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newProvisionedModelThroughputResource,
@@ -104,7 +126,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: "provisioned_model_arn",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

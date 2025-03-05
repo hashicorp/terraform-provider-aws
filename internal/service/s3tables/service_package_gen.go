@@ -22,34 +22,44 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceNamespace,
-			TypeName:                "aws_s3tables_namespace",
-			Name:                    "Namespace",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceNamespace,
+			TypeName: "aws_s3tables_namespace",
+			Name:     "Namespace",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceTable,
-			TypeName:                "aws_s3tables_table",
-			Name:                    "Table",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceTable,
+			TypeName: "aws_s3tables_table",
+			Name:     "Table",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceTableBucket,
-			TypeName:                "aws_s3tables_table_bucket",
-			Name:                    "Table Bucket",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceTableBucket,
+			TypeName: "aws_s3tables_table_bucket",
+			Name:     "Table Bucket",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceTableBucketPolicy,
-			TypeName:                "aws_s3tables_table_bucket_policy",
-			Name:                    "Table Bucket Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceTableBucketPolicy,
+			TypeName: "aws_s3tables_table_bucket_policy",
+			Name:     "Table Bucket Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newResourceTablePolicy,
-			TypeName:                "aws_s3tables_table_policy",
-			Name:                    "Table Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceTablePolicy,
+			TypeName: "aws_s3tables_table_policy",
+			Name:     "Table Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

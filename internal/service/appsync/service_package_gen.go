@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newSourceAPIAssociationResource,
-			TypeName:                "aws_appsync_source_api_association",
-			Name:                    "Source API Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newSourceAPIAssociationResource,
+			TypeName: "aws_appsync_source_api_association",
+			Name:     "Source API Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -37,40 +39,52 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAPICache,
-			TypeName:                "aws_appsync_api_cache",
-			Name:                    "API Cache",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPICache,
+			TypeName: "aws_appsync_api_cache",
+			Name:     "API Cache",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAPIKey,
-			TypeName:                "aws_appsync_api_key",
-			Name:                    "API Key",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPIKey,
+			TypeName: "aws_appsync_api_key",
+			Name:     "API Key",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDataSource,
-			TypeName:                "aws_appsync_datasource",
-			Name:                    "Data Source",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDataSource,
+			TypeName: "aws_appsync_datasource",
+			Name:     "Data Source",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainName,
-			TypeName:                "aws_appsync_domain_name",
-			Name:                    "Domain Name",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainName,
+			TypeName: "aws_appsync_domain_name",
+			Name:     "Domain Name",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceDomainNameAPIAssociation,
-			TypeName:                "aws_appsync_domain_name_api_association",
-			Name:                    "Domain Name API Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceDomainNameAPIAssociation,
+			TypeName: "aws_appsync_domain_name_api_association",
+			Name:     "Domain Name API Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceFunction,
-			TypeName:                "aws_appsync_function",
-			Name:                    "Function",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceFunction,
+			TypeName: "aws_appsync_function",
+			Name:     "Function",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceGraphQLAPI,
@@ -79,19 +93,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResolver,
-			TypeName:                "aws_appsync_resolver",
-			Name:                    "Resolver",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResolver,
+			TypeName: "aws_appsync_resolver",
+			Name:     "Resolver",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceType,
-			TypeName:                "aws_appsync_type",
-			Name:                    "Type",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceType,
+			TypeName: "aws_appsync_type",
+			Name:     "Type",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -36,13 +36,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 ResourceContainerPolicy,
-			TypeName:                "aws_media_store_container_policy",
-			Name:                    "Container Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  ResourceContainerPolicy,
+			TypeName: "aws_media_store_container_policy",
+			Name:     "Container Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newCustomDomainAssociationResource,
-			TypeName:                "aws_redshiftserverless_custom_domain_association",
-			Name:                    "Custom Domain Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newCustomDomainAssociationResource,
+			TypeName: "aws_redshiftserverless_custom_domain_association",
+			Name:     "Custom Domain Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -33,22 +35,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCredentials,
-			TypeName:                "aws_redshiftserverless_credentials",
-			Name:                    "Credentials",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCredentials,
+			TypeName: "aws_redshiftserverless_credentials",
+			Name:     "Credentials",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceNamespace,
-			TypeName:                "aws_redshiftserverless_namespace",
-			Name:                    "Namespace",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceNamespace,
+			TypeName: "aws_redshiftserverless_namespace",
+			Name:     "Namespace",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceWorkgroup,
-			TypeName:                "aws_redshiftserverless_workgroup",
-			Name:                    "Workgroup",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceWorkgroup,
+			TypeName: "aws_redshiftserverless_workgroup",
+			Name:     "Workgroup",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -56,10 +64,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceEndpointAccess,
-			TypeName:                "aws_redshiftserverless_endpoint_access",
-			Name:                    "Endpoint Access",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEndpointAccess,
+			TypeName: "aws_redshiftserverless_endpoint_access",
+			Name:     "Endpoint Access",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceNamespace,
@@ -68,25 +78,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceResourcePolicy,
-			TypeName:                "aws_redshiftserverless_resource_policy",
-			Name:                    "Resource Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceResourcePolicy,
+			TypeName: "aws_redshiftserverless_resource_policy",
+			Name:     "Resource Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSnapshot,
-			TypeName:                "aws_redshiftserverless_snapshot",
-			Name:                    "Snapshot",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSnapshot,
+			TypeName: "aws_redshiftserverless_snapshot",
+			Name:     "Snapshot",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceUsageLimit,
-			TypeName:                "aws_redshiftserverless_usage_limit",
-			Name:                    "Usage Limit",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceUsageLimit,
+			TypeName: "aws_redshiftserverless_usage_limit",
+			Name:     "Usage Limit",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceWorkgroup,
@@ -95,7 +113,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

@@ -36,13 +36,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceApplicationSnapshot,
-			TypeName:                "aws_kinesisanalyticsv2_application_snapshot",
-			Name:                    "Application Snapshot",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceApplicationSnapshot,
+			TypeName: "aws_kinesisanalyticsv2_application_snapshot",
+			Name:     "Application Snapshot",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

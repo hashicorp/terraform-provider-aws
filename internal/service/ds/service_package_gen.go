@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newTrustResource,
-			TypeName:                "aws_directory_service_trust",
-			Name:                    "Trust",
-			IsRegionOverrideEnabled: false,
+			Factory:  newTrustResource,
+			TypeName: "aws_directory_service_trust",
+			Name:     "Trust",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -33,10 +35,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceDirectory,
-			TypeName:                "aws_directory_service_directory",
-			Name:                    "Directory",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceDirectory,
+			TypeName: "aws_directory_service_directory",
+			Name:     "Directory",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -44,10 +48,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceConditionalForwarder,
-			TypeName:                "aws_directory_service_conditional_forwarder",
-			Name:                    "Conditional Forwarder",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConditionalForwarder,
+			TypeName: "aws_directory_service_conditional_forwarder",
+			Name:     "Conditional Forwarder",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceDirectory,
@@ -56,38 +62,50 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceLogSubscription,
-			TypeName:                "aws_directory_service_log_subscription",
-			Name:                    "Log Subscription",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceLogSubscription,
+			TypeName: "aws_directory_service_log_subscription",
+			Name:     "Log Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRadiusSettings,
-			TypeName:                "aws_directory_service_radius_settings",
-			Name:                    "RADIUS Settings",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRadiusSettings,
+			TypeName: "aws_directory_service_radius_settings",
+			Name:     "RADIUS Settings",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceRegion,
-			TypeName:                "aws_directory_service_region",
-			Name:                    "Region",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceRegion,
+			TypeName: "aws_directory_service_region",
+			Name:     "Region",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSharedDirectory,
-			TypeName:                "aws_directory_service_shared_directory",
-			Name:                    "Shared Directory",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSharedDirectory,
+			TypeName: "aws_directory_service_shared_directory",
+			Name:     "Shared Directory",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSharedDirectoryAccepter,
-			TypeName:                "aws_directory_service_shared_directory_accepter",
-			Name:                    "Shared Directory Accepter",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSharedDirectoryAccepter,
+			TypeName: "aws_directory_service_shared_directory_accepter",
+			Name:     "Shared Directory Accepter",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

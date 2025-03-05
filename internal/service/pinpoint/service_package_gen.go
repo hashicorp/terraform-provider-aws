@@ -28,7 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -40,34 +42,44 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceADMChannel,
-			TypeName:                "aws_pinpoint_adm_channel",
-			Name:                    "ADM Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceADMChannel,
+			TypeName: "aws_pinpoint_adm_channel",
+			Name:     "ADM Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAPNSChannel,
-			TypeName:                "aws_pinpoint_apns_channel",
-			Name:                    "APNS Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPNSChannel,
+			TypeName: "aws_pinpoint_apns_channel",
+			Name:     "APNS Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAPNSSandboxChannel,
-			TypeName:                "aws_pinpoint_apns_sandbox_channel",
-			Name:                    "APNS Sandbox Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPNSSandboxChannel,
+			TypeName: "aws_pinpoint_apns_sandbox_channel",
+			Name:     "APNS Sandbox Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAPNSVoIPChannel,
-			TypeName:                "aws_pinpoint_apns_voip_channel",
-			Name:                    "APNS VoIP Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPNSVoIPChannel,
+			TypeName: "aws_pinpoint_apns_voip_channel",
+			Name:     "APNS VoIP Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceAPNSVoIPSandboxChannel,
-			TypeName:                "aws_pinpoint_apns_voip_sandbox_channel",
-			Name:                    "APNS VoIP Sandbox Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPNSVoIPSandboxChannel,
+			TypeName: "aws_pinpoint_apns_voip_sandbox_channel",
+			Name:     "APNS VoIP Sandbox Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceApp,
@@ -76,37 +88,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBaiduChannel,
-			TypeName:                "aws_pinpoint_baidu_channel",
-			Name:                    "Baidu Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBaiduChannel,
+			TypeName: "aws_pinpoint_baidu_channel",
+			Name:     "Baidu Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEmailChannel,
-			TypeName:                "aws_pinpoint_email_channel",
-			Name:                    "Email Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEmailChannel,
+			TypeName: "aws_pinpoint_email_channel",
+			Name:     "Email Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEventStream,
-			TypeName:                "aws_pinpoint_event_stream",
-			Name:                    "Event Stream",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEventStream,
+			TypeName: "aws_pinpoint_event_stream",
+			Name:     "Event Stream",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGCMChannel,
-			TypeName:                "aws_pinpoint_gcm_channel",
-			Name:                    "GCM Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGCMChannel,
+			TypeName: "aws_pinpoint_gcm_channel",
+			Name:     "GCM Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSMSChannel,
-			TypeName:                "aws_pinpoint_sms_channel",
-			Name:                    "SMS Channel",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSMSChannel,
+			TypeName: "aws_pinpoint_sms_channel",
+			Name:     "SMS Channel",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

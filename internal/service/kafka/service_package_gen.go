@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newSingleSCRAMSecretAssociationResource,
-			TypeName:                "aws_msk_single_scram_secret_association",
-			Name:                    "Single SCRAM Secret Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  newSingleSCRAMSecretAssociationResource,
+			TypeName: "aws_msk_single_scram_secret_association",
+			Name:     "Single SCRAM Secret Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -33,41 +35,53 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceBootstrapBrokers,
-			TypeName:                "aws_msk_bootstrap_brokers",
-			Name:                    "Bootstrap Brokers",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBootstrapBrokers,
+			TypeName: "aws_msk_bootstrap_brokers",
+			Name:     "Bootstrap Brokers",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceBrokerNodes,
-			TypeName:                "aws_msk_broker_nodes",
-			Name:                    "Broker Nodes",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBrokerNodes,
+			TypeName: "aws_msk_broker_nodes",
+			Name:     "Broker Nodes",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceCluster,
-			TypeName:                "aws_msk_cluster",
-			Name:                    "Cluster",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCluster,
+			TypeName: "aws_msk_cluster",
+			Name:     "Cluster",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceConfiguration,
-			TypeName:                "aws_msk_configuration",
-			Name:                    "Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceConfiguration,
+			TypeName: "aws_msk_configuration",
+			Name:     "Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceKafkaVersion,
-			TypeName:                "aws_msk_kafka_version",
-			Name:                    "Kafka Version",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceKafkaVersion,
+			TypeName: "aws_msk_kafka_version",
+			Name:     "Kafka Version",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceVPCConnection,
-			TypeName:                "aws_msk_vpc_connection",
-			Name:                    "VPC Connection",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceVPCConnection,
+			TypeName: "aws_msk_vpc_connection",
+			Name:     "VPC Connection",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -81,19 +95,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClusterPolicy,
-			TypeName:                "aws_msk_cluster_policy",
-			Name:                    "Cluster Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClusterPolicy,
+			TypeName: "aws_msk_cluster_policy",
+			Name:     "Cluster Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConfiguration,
-			TypeName:                "aws_msk_configuration",
-			Name:                    "Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConfiguration,
+			TypeName: "aws_msk_configuration",
+			Name:     "Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceReplicator,
@@ -102,13 +122,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceSCRAMSecretAssociation,
-			TypeName:                "aws_msk_scram_secret_association",
-			Name:                    "SCRAM Secret Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceSCRAMSecretAssociation,
+			TypeName: "aws_msk_scram_secret_association",
+			Name:     "SCRAM Secret Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceServerlessCluster,
@@ -117,7 +141,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceVPCConnection,
@@ -126,7 +152,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

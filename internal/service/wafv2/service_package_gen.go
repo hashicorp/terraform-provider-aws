@@ -26,28 +26,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceIPSet,
-			TypeName:                "aws_wafv2_ip_set",
-			Name:                    "IP Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceIPSet,
+			TypeName: "aws_wafv2_ip_set",
+			Name:     "IP Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRegexPatternSet,
-			TypeName:                "aws_wafv2_regex_pattern_set",
-			Name:                    "Regex Pattern Set",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRegexPatternSet,
+			TypeName: "aws_wafv2_regex_pattern_set",
+			Name:     "Regex Pattern Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRuleGroup,
-			TypeName:                "aws_wafv2_rule_group",
-			Name:                    "Rule Group",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRuleGroup,
+			TypeName: "aws_wafv2_rule_group",
+			Name:     "Rule Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceWebACL,
-			TypeName:                "aws_wafv2_web_acl",
-			Name:                    "Web ACL",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceWebACL,
+			TypeName: "aws_wafv2_web_acl",
+			Name:     "Web ACL",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -61,7 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRegexPatternSet,
@@ -70,7 +80,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRuleGroup,
@@ -79,7 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceWebACL,
@@ -88,19 +102,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceWebACLAssociation,
-			TypeName:                "aws_wafv2_web_acl_association",
-			Name:                    "Web ACL Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceWebACLAssociation,
+			TypeName: "aws_wafv2_web_acl_association",
+			Name:     "Web ACL Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceWebACLLoggingConfiguration,
-			TypeName:                "aws_wafv2_web_acl_logging_configuration",
-			Name:                    "Web ACL Logging Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceWebACLLoggingConfiguration,
+			TypeName: "aws_wafv2_web_acl_logging_configuration",
+			Name:     "Web ACL Logging Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

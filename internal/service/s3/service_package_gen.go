@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newDirectoryBucketsDataSource,
-			TypeName:                "aws_s3_directory_buckets",
-			Name:                    "Directory Buckets",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDirectoryBucketsDataSource,
+			TypeName: "aws_s3_directory_buckets",
+			Name:     "Directory Buckets",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -29,16 +31,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourceBucketLifecycleConfiguration,
-			TypeName:                "aws_s3_bucket_lifecycle_configuration",
-			Name:                    "Bucket Lifecycle Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourceBucketLifecycleConfiguration,
+			TypeName: "aws_s3_bucket_lifecycle_configuration",
+			Name:     "Bucket Lifecycle Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 newDirectoryBucketResource,
-			TypeName:                "aws_s3_directory_bucket",
-			Name:                    "Directory Bucket",
-			IsRegionOverrideEnabled: false,
+			Factory:  newDirectoryBucketResource,
+			TypeName: "aws_s3_directory_bucket",
+			Name:     "Directory Bucket",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -46,16 +52,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCanonicalUserID,
-			TypeName:                "aws_canonical_user_id",
-			Name:                    "Canonical User ID",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCanonicalUserID,
+			TypeName: "aws_canonical_user_id",
+			Name:     "Canonical User ID",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceBucket,
-			TypeName:                "aws_s3_bucket",
-			Name:                    "Bucket",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBucket,
+			TypeName: "aws_s3_bucket",
+			Name:     "Bucket",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceBucketObject,
@@ -65,19 +75,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "BucketObject",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceBucketObjects,
-			TypeName:                "aws_s3_bucket_objects",
-			Name:                    "Bucket Objects",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBucketObjects,
+			TypeName: "aws_s3_bucket_objects",
+			Name:     "Bucket Objects",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceBucketPolicy,
-			TypeName:                "aws_s3_bucket_policy",
-			Name:                    "Bucket Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBucketPolicy,
+			TypeName: "aws_s3_bucket_policy",
+			Name:     "Bucket Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceObject,
@@ -87,13 +103,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Object",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceObjects,
-			TypeName:                "aws_s3_objects",
-			Name:                    "Objects",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceObjects,
+			TypeName: "aws_s3_objects",
+			Name:     "Objects",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -108,61 +128,81 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrBucket,
 				ResourceType:        "Bucket",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketAccelerateConfiguration,
-			TypeName:                "aws_s3_bucket_accelerate_configuration",
-			Name:                    "Bucket Accelerate Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketAccelerateConfiguration,
+			TypeName: "aws_s3_bucket_accelerate_configuration",
+			Name:     "Bucket Accelerate Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketACL,
-			TypeName:                "aws_s3_bucket_acl",
-			Name:                    "Bucket ACL",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketACL,
+			TypeName: "aws_s3_bucket_acl",
+			Name:     "Bucket ACL",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketAnalyticsConfiguration,
-			TypeName:                "aws_s3_bucket_analytics_configuration",
-			Name:                    "Bucket Analytics Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketAnalyticsConfiguration,
+			TypeName: "aws_s3_bucket_analytics_configuration",
+			Name:     "Bucket Analytics Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketCorsConfiguration,
-			TypeName:                "aws_s3_bucket_cors_configuration",
-			Name:                    "Bucket CORS Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketCorsConfiguration,
+			TypeName: "aws_s3_bucket_cors_configuration",
+			Name:     "Bucket CORS Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketIntelligentTieringConfiguration,
-			TypeName:                "aws_s3_bucket_intelligent_tiering_configuration",
-			Name:                    "Bucket Intelligent-Tiering Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketIntelligentTieringConfiguration,
+			TypeName: "aws_s3_bucket_intelligent_tiering_configuration",
+			Name:     "Bucket Intelligent-Tiering Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketInventory,
-			TypeName:                "aws_s3_bucket_inventory",
-			Name:                    "Bucket Inventory",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketInventory,
+			TypeName: "aws_s3_bucket_inventory",
+			Name:     "Bucket Inventory",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketLogging,
-			TypeName:                "aws_s3_bucket_logging",
-			Name:                    "Bucket Logging",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketLogging,
+			TypeName: "aws_s3_bucket_logging",
+			Name:     "Bucket Logging",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketMetric,
-			TypeName:                "aws_s3_bucket_metric",
-			Name:                    "Bucket Metric",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketMetric,
+			TypeName: "aws_s3_bucket_metric",
+			Name:     "Bucket Metric",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketNotification,
-			TypeName:                "aws_s3_bucket_notification",
-			Name:                    "Bucket Notification",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketNotification,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceBucketObject,
@@ -172,61 +212,81 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "BucketObject",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketObjectLockConfiguration,
-			TypeName:                "aws_s3_bucket_object_lock_configuration",
-			Name:                    "Bucket Object Lock Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketObjectLockConfiguration,
+			TypeName: "aws_s3_bucket_object_lock_configuration",
+			Name:     "Bucket Object Lock Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketOwnershipControls,
-			TypeName:                "aws_s3_bucket_ownership_controls",
-			Name:                    "Bucket Ownership Controls",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketOwnershipControls,
+			TypeName: "aws_s3_bucket_ownership_controls",
+			Name:     "Bucket Ownership Controls",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketPolicy,
-			TypeName:                "aws_s3_bucket_policy",
-			Name:                    "Bucket Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketPolicy,
+			TypeName: "aws_s3_bucket_policy",
+			Name:     "Bucket Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketPublicAccessBlock,
-			TypeName:                "aws_s3_bucket_public_access_block",
-			Name:                    "Bucket Public Access Block",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketPublicAccessBlock,
+			TypeName: "aws_s3_bucket_public_access_block",
+			Name:     "Bucket Public Access Block",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketReplicationConfiguration,
-			TypeName:                "aws_s3_bucket_replication_configuration",
-			Name:                    "Bucket Replication Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketReplicationConfiguration,
+			TypeName: "aws_s3_bucket_replication_configuration",
+			Name:     "Bucket Replication Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketRequestPaymentConfiguration,
-			TypeName:                "aws_s3_bucket_request_payment_configuration",
-			Name:                    "Bucket Request Payment Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketRequestPaymentConfiguration,
+			TypeName: "aws_s3_bucket_request_payment_configuration",
+			Name:     "Bucket Request Payment Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketServerSideEncryptionConfiguration,
-			TypeName:                "aws_s3_bucket_server_side_encryption_configuration",
-			Name:                    "Bucket Server-side Encryption Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketServerSideEncryptionConfiguration,
+			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
+			Name:     "Bucket Server-side Encryption Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketVersioning,
-			TypeName:                "aws_s3_bucket_versioning",
-			Name:                    "Bucket Versioning",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketVersioning,
+			TypeName: "aws_s3_bucket_versioning",
+			Name:     "Bucket Versioning",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBucketWebsiteConfiguration,
-			TypeName:                "aws_s3_bucket_website_configuration",
-			Name:                    "Bucket Website Configuration",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBucketWebsiteConfiguration,
+			TypeName: "aws_s3_bucket_website_configuration",
+			Name:     "Bucket Website Configuration",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceObject,
@@ -236,7 +296,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Object",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceObjectCopy,
@@ -246,7 +308,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "ObjectCopy",
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

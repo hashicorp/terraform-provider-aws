@@ -26,16 +26,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceApprovalRuleTemplate,
-			TypeName:                "aws_codecommit_approval_rule_template",
-			Name:                    "Approval Rule Template",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceApprovalRuleTemplate,
+			TypeName: "aws_codecommit_approval_rule_template",
+			Name:     "Approval Rule Template",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceRepository,
-			TypeName:                "aws_codecommit_repository",
-			Name:                    "Repository",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceRepository,
+			TypeName: "aws_codecommit_repository",
+			Name:     "Repository",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -43,16 +47,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceApprovalRuleTemplate,
-			TypeName:                "aws_codecommit_approval_rule_template",
-			Name:                    "Approval Rule Template",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceApprovalRuleTemplate,
+			TypeName: "aws_codecommit_approval_rule_template",
+			Name:     "Approval Rule Template",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceApprovalRuleTemplateAssociation,
-			TypeName:                "aws_codecommit_approval_rule_template_association",
-			Name:                    "Approval Rule Template Association",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceApprovalRuleTemplateAssociation,
+			TypeName: "aws_codecommit_approval_rule_template_association",
+			Name:     "Approval Rule Template Association",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRepository,
@@ -61,13 +69,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTrigger,
-			TypeName:                "aws_codecommit_trigger",
-			Name:                    "Trigger",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTrigger,
+			TypeName: "aws_codecommit_trigger",
+			Name:     "Trigger",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

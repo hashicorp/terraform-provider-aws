@@ -22,10 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:                 newResourcePolicyResource,
-			TypeName:                "aws_dynamodb_resource_policy",
-			Name:                    "Resource Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_dynamodb_resource_policy",
+			Name:     "Resource Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -39,13 +41,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceTableItem,
-			TypeName:                "aws_dynamodb_table_item",
-			Name:                    "Table Item",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceTableItem,
+			TypeName: "aws_dynamodb_table_item",
+			Name:     "Table Item",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -53,22 +59,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceContributorInsights,
-			TypeName:                "aws_dynamodb_contributor_insights",
-			Name:                    "Contributor Insights",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceContributorInsights,
+			TypeName: "aws_dynamodb_contributor_insights",
+			Name:     "Contributor Insights",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceGlobalTable,
-			TypeName:                "aws_dynamodb_global_table",
-			Name:                    "Global Table",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceGlobalTable,
+			TypeName: "aws_dynamodb_global_table",
+			Name:     "Global Table",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceKinesisStreamingDestination,
-			TypeName:                "aws_dynamodb_kinesis_streaming_destination",
-			Name:                    "Kinesis Streaming Destination",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceKinesisStreamingDestination,
+			TypeName: "aws_dynamodb_kinesis_streaming_destination",
+			Name:     "Kinesis Streaming Destination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTable,
@@ -77,19 +89,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTableExport,
-			TypeName:                "aws_dynamodb_table_export",
-			Name:                    "Table Export",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTableExport,
+			TypeName: "aws_dynamodb_table_export",
+			Name:     "Table Export",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTableItem,
-			TypeName:                "aws_dynamodb_table_item",
-			Name:                    "Table Item",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTableItem,
+			TypeName: "aws_dynamodb_table_item",
+			Name:     "Table Item",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTableReplica,
@@ -98,13 +116,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTag,
-			TypeName:                "aws_dynamodb_tag",
-			Name:                    "DynamoDB Resource Tag",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTag,
+			TypeName: "aws_dynamodb_tag",
+			Name:     "DynamoDB Resource Tag",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

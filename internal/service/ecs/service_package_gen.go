@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newClustersDataSource,
-			TypeName:                "aws_ecs_clusters",
-			Name:                    "Clusters",
-			IsRegionOverrideEnabled: false,
+			Factory:  newClustersDataSource,
+			TypeName: "aws_ecs_clusters",
+			Name:     "Clusters",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -33,36 +35,46 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceCluster,
-			TypeName:                "aws_ecs_cluster",
-			Name:                    "Cluster",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceCluster,
+			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceContainerDefinition,
-			TypeName:                "aws_ecs_container_definition",
-			Name:                    "Container Definition",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceContainerDefinition,
+			TypeName: "aws_ecs_container_definition",
+			Name:     "Container Definition",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceService,
-			TypeName:                "aws_ecs_service",
-			Name:                    "Service",
-			Tags:                    &itypes.ServicePackageResourceTags{},
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceService,
+			TypeName: "aws_ecs_service",
+			Name:     "Service",
+			Tags:     &itypes.ServicePackageResourceTags{},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceTaskDefinition,
-			TypeName:                "aws_ecs_task_definition",
-			Name:                    "Task Definition",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceTaskDefinition,
+			TypeName: "aws_ecs_task_definition",
+			Name:     "Task Definition",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceTaskExecution,
-			TypeName:                "aws_ecs_task_execution",
-			Name:                    "Task Execution",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceTaskExecution,
+			TypeName: "aws_ecs_task_execution",
+			Name:     "Task Execution",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -70,10 +82,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAccountSettingDefault,
-			TypeName:                "aws_ecs_account_setting_default",
-			Name:                    "Account Setting Default",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAccountSettingDefault,
+			TypeName: "aws_ecs_account_setting_default",
+			Name:     "Account Setting Default",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCapacityProvider,
@@ -82,7 +96,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceCluster,
@@ -91,13 +107,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceClusterCapacityProviders,
-			TypeName:                "aws_ecs_cluster_capacity_providers",
-			Name:                    "Cluster Capacity Providers",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceClusterCapacityProviders,
+			TypeName: "aws_ecs_cluster_capacity_providers",
+			Name:     "Cluster Capacity Providers",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceService,
@@ -106,13 +126,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTag,
-			TypeName:                "aws_ecs_tag",
-			Name:                    "ECS Resource Tag",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTag,
+			TypeName: "aws_ecs_tag",
+			Name:     "ECS Resource Tag",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTaskDefinition,
@@ -121,7 +145,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTaskSet,
@@ -130,7 +156,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }

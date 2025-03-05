@@ -18,10 +18,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:                 newEventBusesDataSource,
-			TypeName:                "aws_cloudwatch_event_buses",
-			Name:                    "Event Buses",
-			IsRegionOverrideEnabled: false,
+			Factory:  newEventBusesDataSource,
+			TypeName: "aws_cloudwatch_event_buses",
+			Name:     "Event Buses",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -33,22 +35,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:                 dataSourceBus,
-			TypeName:                "aws_cloudwatch_event_bus",
-			Name:                    "Event Bus",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceBus,
+			TypeName: "aws_cloudwatch_event_bus",
+			Name:     "Event Bus",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceConnection,
-			TypeName:                "aws_cloudwatch_event_connection",
-			Name:                    "Connection",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceConnection,
+			TypeName: "aws_cloudwatch_event_connection",
+			Name:     "Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 dataSourceSource,
-			TypeName:                "aws_cloudwatch_event_source",
-			Name:                    "Source",
-			IsRegionOverrideEnabled: false,
+			Factory:  dataSourceSource,
+			TypeName: "aws_cloudwatch_event_source",
+			Name:     "Source",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -56,16 +64,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:                 resourceAPIDestination,
-			TypeName:                "aws_cloudwatch_event_api_destination",
-			Name:                    "API Destination",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceAPIDestination,
+			TypeName: "aws_cloudwatch_event_api_destination",
+			Name:     "API Destination",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceArchive,
-			TypeName:                "aws_cloudwatch_event_archive",
-			Name:                    "Archive",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceArchive,
+			TypeName: "aws_cloudwatch_event_archive",
+			Name:     "Archive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceBus,
@@ -74,31 +86,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceBusPolicy,
-			TypeName:                "aws_cloudwatch_event_bus_policy",
-			Name:                    "Event Bus Policy",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceBusPolicy,
+			TypeName: "aws_cloudwatch_event_bus_policy",
+			Name:     "Event Bus Policy",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceConnection,
-			TypeName:                "aws_cloudwatch_event_connection",
-			Name:                    "Connection",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceConnection,
+			TypeName: "aws_cloudwatch_event_connection",
+			Name:     "Connection",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceEndpoint,
-			TypeName:                "aws_cloudwatch_event_endpoint",
-			Name:                    "Global Endpoint",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceEndpoint,
+			TypeName: "aws_cloudwatch_event_endpoint",
+			Name:     "Global Endpoint",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourcePermission,
-			TypeName:                "aws_cloudwatch_event_permission",
-			Name:                    "Permission",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourcePermission,
+			TypeName: "aws_cloudwatch_event_permission",
+			Name:     "Permission",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceRule,
@@ -107,13 +129,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			IsRegionOverrideEnabled: false,
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 		{
-			Factory:                 resourceTarget,
-			TypeName:                "aws_cloudwatch_event_target",
-			Name:                    "Target",
-			IsRegionOverrideEnabled: false,
+			Factory:  resourceTarget,
+			TypeName: "aws_cloudwatch_event_target",
+			Name:     "Target",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
