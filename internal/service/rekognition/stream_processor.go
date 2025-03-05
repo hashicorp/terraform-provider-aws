@@ -213,7 +213,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 					},
 					Blocks: map[string]schema.Block{
-						"bounding_box": schema.SingleNestedBlock{
+						"bounding_box": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
 							Description: "The box representing a region of interest on screen.",
 							Validators: []validator.Object{

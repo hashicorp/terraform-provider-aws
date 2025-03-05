@@ -73,7 +73,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "override_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"override_policy_documents": {
 					Type:     schema.TypeList,
@@ -92,7 +93,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "source_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"source_policy_documents": {
 					Type:     schema.TypeList,

@@ -488,7 +488,7 @@ func resourceDomain() *schema.Resource {
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "use 'dashboard_endpoint' attribute instead",
+				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,

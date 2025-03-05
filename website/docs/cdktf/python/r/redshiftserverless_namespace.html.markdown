@@ -12,6 +12,8 @@ description: |-
 
 Creates a new Amazon Redshift Serverless Namespace.
 
+-> **Note:** Write-Only argument `admin_password_wo` is available to use in place of `admin_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```python
@@ -87,4 +89,4 @@ Using `terraform import`, import Redshift Serverless Namespaces using the `names
 % terraform import aws_redshiftserverless_namespace.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e3909fc1160e85448137b386ddc38f00c4488a1302e2588e73d0a2b3d97c0619 -->
+<!-- cache-key: cdktf-0.20.8 input-a7fa84b26a505d053ab1a264484c942dfcffb8ab785d1ec48be4868cb5fe59bf -->

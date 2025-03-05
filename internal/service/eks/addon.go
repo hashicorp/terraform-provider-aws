@@ -113,7 +113,7 @@ func resourceAddon() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				Deprecated:       `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
+				Deprecated:       `resolve_conflicts is deprecated. The resolve_conflicts attribute can't be set to "PRESERVE" on initial resource creation. Use resolve_conflicts_on_create and/or resolve_conflicts_on_update instead.`,
 			},
 			"resolve_conflicts_on_create": {
 				Type:     schema.TypeString,
