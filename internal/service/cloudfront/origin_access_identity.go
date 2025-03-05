@@ -34,6 +34,10 @@ func resourceOriginAccessIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,6 +102,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Identity (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
@@ -187,6 +192,11 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 	}
 
 	return apiObject
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "origin-access-identity/"+id)
 }
 
 // See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
