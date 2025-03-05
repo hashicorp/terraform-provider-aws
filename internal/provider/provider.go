@@ -319,7 +319,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.IsRegionOverrideEnabled && getAttribute != nil {
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
 						if v, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = v.(string)
 						}
@@ -406,7 +406,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.IsRegionOverrideEnabled && getAttribute != nil {
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
 						if v, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = v.(string)
 						}

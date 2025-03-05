@@ -203,7 +203,7 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
-	// Look first for per-resource annotations such as tagging and Region override.
+	// Look first for per-resource annotations such as tagging and Region.
 	d := ResourceDatum{
 		RegionOverrideEnabled: false, // TODO Default to true.
 	}
@@ -213,10 +213,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
-			case "RegionOverride":
-				if attr, ok := args.Keyword["enabled"]; ok {
+			case "Region":
+				if attr, ok := args.Keyword["overrideEnabled"]; ok {
 					if enabled, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid RegionOverride/enabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.RegionOverrideEnabled = enabled
 					}
@@ -368,7 +368,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "RegionOverride", "Tags":
+			case "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.

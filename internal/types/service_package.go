@@ -12,6 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ServicePackageResourceRegion represents resource-level Region information.
+type ServicePackageResourceRegion struct {
+	IsGlobal          bool // Is the resource global?
+	IsOverrideEnabled bool // Is per-resource Region override supported?
+}
+
 // ServicePackageResourceTags represents resource-level tagging information.
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
@@ -21,48 +27,48 @@ type ServicePackageResourceTags struct {
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
 // implemented by a service package.
 type ServicePackageEphemeralResource struct {
-	Factory                 func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
-	TypeName                string
-	Name                    string
-	IsRegionOverrideEnabled bool // Does the ephemeral resource support per-resource Region override?
+	Factory  func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
 // implemented by a service package.
 type ServicePackageFrameworkDataSource struct {
-	Factory                 func(context.Context) (datasource.DataSourceWithConfigure, error)
-	TypeName                string
-	Name                    string
-	Tags                    *ServicePackageResourceTags
-	IsRegionOverrideEnabled bool // Does the data source support per-resource Region override?
+	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
 // implemented by a service package.
 type ServicePackageFrameworkResource struct {
-	Factory                 func(context.Context) (resource.ResourceWithConfigure, error)
-	TypeName                string
-	Name                    string
-	Tags                    *ServicePackageResourceTags
-	IsRegionOverrideEnabled bool // Does the resource support per-resource Region override?
+	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
 // implemented by a service package.
 type ServicePackageSDKDataSource struct {
-	Factory                 func() *schema.Resource
-	TypeName                string
-	Name                    string
-	Tags                    *ServicePackageResourceTags
-	IsRegionOverrideEnabled bool // Does the data source support per-resource Region override?
+	Factory  func() *schema.Resource
+	TypeName string
+	Name     string
+	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageSDKResource represents a Terraform Plugin SDK resource
 // implemented by a service package.
 type ServicePackageSDKResource struct {
-	Factory                 func() *schema.Resource
-	TypeName                string
-	Name                    string
-	Tags                    *ServicePackageResourceTags
-	IsRegionOverrideEnabled bool // Does the resource support per-resource Region override?
+	Factory  func() *schema.Resource
+	TypeName string
+	Name     string
+	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
