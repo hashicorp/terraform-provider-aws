@@ -341,7 +341,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          gh $GH_CLI_SUBCOMMAND comment $ITEM_URL --body "> [!WARNING]
+          gh $GH_CLI_SUBCOMMAND comment $ISSUE_URL --body "> [!WARNING]
           > This Issue has been closed, meaning that any additional comments are much easier for the maintainers to miss. Please assume that the maintainers will not see them.
           >
           > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed."
