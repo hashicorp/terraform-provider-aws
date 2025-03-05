@@ -25,6 +25,18 @@ func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) boo
 	return false
 }
 
+// validationExceptionMessageContains returns true if the error matches all these conditions:
+//   - err is of type networkmanager.ValidationException
+//   - ValidationException.Reason equals reason
+//   - ValidationException.Message contains message
+func validationExceptionMessageContains(err error, reason awstypes.ValidationExceptionReason, message string) bool {
+	if err, ok := errs.As[*awstypes.ValidationException](err); ok && err.Reason == reason {
+		return strings.Contains(aws.ToString(err.Message), message)
+	}
+
+	return false
+}
+
 // validationExceptionFieldsMessageContains returns true if the error matches all these conditions:
 //   - err is of type awstypes.ValidationException
 //   - ValidationException.Reason equals reason

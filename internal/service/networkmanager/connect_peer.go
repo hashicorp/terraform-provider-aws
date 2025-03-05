@@ -5,9 +5,7 @@ package networkmanager
 
 import (
 	"context"
-	"errors"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -233,7 +231,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 			//   Message_: "Connect attachment state is invalid. attachment id: attachment-06cb63ed3fe0008df",
 			//   Reason: "Other"
 			// }
-			if validationExceptionMessage_Contains(err, awstypes.ValidationExceptionReasonOther, "Connect attachment state is invalid") {
+			if validationExceptionMessageContains(err, awstypes.ValidationExceptionReasonOther, "Connect attachment state is invalid") {
 				return true, err
 			}
 
@@ -455,22 +453,6 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 	}
 
 	return nil, err
-}
-
-// validationExceptionMessage_Contains returns true if the error matches all these conditions:
-//   - err is of type networkmanager.ValidationException
-//   - ValidationException.Reason equals reason
-//   - ValidationException.Message_ contains message
-func validationExceptionMessage_Contains(err error, reason awstypes.ValidationExceptionReason, message string) bool {
-	var validationException *awstypes.ValidationException
-
-	if errors.As(err, &validationException) && validationException.Reason == reason {
-		if strings.Contains(aws.ToString(validationException.Message), message) {
-			return true
-		}
-	}
-
-	return false
 }
 
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsnetworkmanager.html#awsnetworkmanager-resources-for-iam-policies.
