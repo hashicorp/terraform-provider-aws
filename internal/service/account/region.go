@@ -91,6 +91,11 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		timeout = d.Timeout(schema.TimeoutUpdate)
 	}
 
+	status, err := findRegionOptStatus(ctx, conn, accountID, region)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Account Region status: %s", err)
+	}
+
 	if v := d.Get(names.AttrEnabled).(bool); v {
 		input := account.EnableRegionInput{
 			RegionName: aws.String(region),
@@ -99,10 +104,11 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AccountId = aws.String(accountID)
 		}
 
-		_, err := conn.EnableRegion(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		if !skipRegionUpdate(status.RegionOptStatus, true) {
+			_, err := conn.EnableRegion(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+			}
 		}
 
 		if _, err := waitRegionEnabled(ctx, conn, accountID, region, timeout); err != nil {
@@ -116,10 +122,11 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AccountId = aws.String(accountID)
 		}
 
-		_, err := conn.DisableRegion(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		if !skipRegionUpdate(status.RegionOptStatus, false) {
+			_, err := conn.DisableRegion(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling Account Region (%s): %s", id, err)
+			}
 		}
 
 		if _, err := waitRegionDisabled(ctx, conn, accountID, region, timeout); err != nil {
@@ -238,4 +245,11 @@ func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, re
 	}
 
 	return nil, err
+}
+
+func skipRegionUpdate(status types.RegionOptStatus, enable bool) bool {
+	if enable {
+		return status == types.RegionOptStatusEnabled || status == types.RegionOptStatusEnabledByDefault
+	}
+	return status == types.RegionOptStatusDisabled
 }
