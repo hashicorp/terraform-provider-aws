@@ -373,8 +373,8 @@ github.com/aws/aws-sdk-go-v2/service/mwaa v1.34.1 h1:xrE8sUeFos1jPyt14khpmnL+N83
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.34.1/go.mod h1:+xHea+IFoSOxPuhE2N2+oBHHiZe3duHcomiap/OjImo=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.36.1 h1:pefQNBwylG7VyrLHhllVvbS9ePcHeilCrds3mU4RyJc=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.36.1/go.mod h1:YMZFVwN7YhwN5uZ1J+wgj8yrmHrksC/OTJScxa6bjdY=
-github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.0 h1:7CDBLj6alSNK9MadwUxmy8O6vUYLG6oj/HewwOo2uaI=
-github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.0/go.mod h1:y+/vnOi8XZPLM7+4s+70LnVB5I7PK+we8XvjcDvf82Q=
+github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.1 h1:iYRN+AN4+xmGzgISulhiFUtAcFNWO8QWCtIODW9IEfM=
+github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.1/go.mod h1:y+/vnOi8XZPLM7+4s+70LnVB5I7PK+we8XvjcDvf82Q=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.46.0 h1:Oz6hGJtp0+++ayMXJGlgaql5Aik1BW7iVgkuqX1/9bw=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.46.0/go.mod h1:hffD6JfzixDLvqjd04wInnfXHkxquWl3whXOQrL0HVE=
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.33.0 h1:wpxttIv8RB0zqicxD3Ri7OQa7T93zydw05ittSiOF9w=
