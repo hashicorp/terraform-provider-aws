@@ -2646,7 +2646,6 @@ func testAccDomainConfig_dedicatedCoordinator(rName string, enabled bool) string
         type    = "m5.large.search"
       }
     }`
-
 	}
 
 	return fmt.Sprintf(`
