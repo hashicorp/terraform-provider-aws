@@ -207,24 +207,24 @@ A `stage` block supports the following arguments:
 
 A `before_entry` block supports the following arguments:
 
-* `conditions` - (Required) The conditions that are configured as entry condition. Defined as a `conditions` block below.
+* `condition` - (Required) The conditions that are configured as entry condition. Defined as a `condition` block below.
 
 A `on_success` block supports the following arguments:
 
-* `conditions` - (Required) The conditions that are success conditions. Defined as a `conditions` block below.
+* `condition` - (Required) The conditions that are success conditions. Defined as a `condition` block below.
 
 A `on_failure` block supports the following arguments:
 
-* `conditions` - (Optional) The conditions that are failure conditions. Defined as a `conditions` block below.
+* `condition` - (Optional) The conditions that are failure conditions. Defined as a `condition` block below.
 * `result` - (Optional) The conditions that are configured as failure conditions. Possible values are `ROLLBACK`,  `FAIL`, `RETRY` and `SKIP`.
 * `retry_configuration` - (Optional) The retry configuration specifies automatic retry for a failed stage, along with the configured retry mode. Defined as a `retry_configuration` block below.
 
-A `conditions` block supports the following arguments:
+A `condition` block supports the following arguments:
 
 * `result` - (Optional) The action to be done when the condition is met. For example, rolling back an execution for a failure condition. Possible values are `ROLLBACK`, `FAIL`, `RETRY` and `SKIP`.
-* `rules` - (Optional) The rules that make up the condition. Defined as a `rules` block below.
+* `rule` - (Optional) The rules that make up the condition. Defined as a `rule` block below.
 
-A `rules` block supports the following arguments:
+A `rule` block supports the following arguments:
 
 * `name` - (Required) The name of the rule that is created for the condition, such as `VariableCheck`.
 * `rule_type_id` - (Required) The ID for the rule type, which is made up of the combined values for `category`, `owner`, `provider`, and `version`. Defined as an `rule_type_id` block below.

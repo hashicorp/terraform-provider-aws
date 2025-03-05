@@ -47,7 +47,7 @@ func resourcePipeline() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.Result](),
 			},
-			"rules": {
+			"rule": {
 				Type:     schema.TypeList,
 				MinItems: 1,
 				MaxItems: 5,
@@ -322,7 +322,7 @@ func resourcePipeline() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"conditions": {
+									"condition": {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem:     conditionsSchemaElem,
@@ -336,7 +336,7 @@ func resourcePipeline() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"conditions": {
+									"condition": {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem:     conditionsSchemaElem,
@@ -350,7 +350,7 @@ func resourcePipeline() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"conditions": {
+									"condition": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     conditionsSchemaElem,
@@ -1533,7 +1533,7 @@ func expandCondition(tfMap map[string]interface{}) *types.Condition {
 		apiObject.Result = types.Result(v)
 	}
 
-	if v, ok := tfMap["rules"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Rules = expandConditionRules(v)
 	}
 
@@ -1572,7 +1572,7 @@ func expandBeforeEntryDeclaration(tfMap map[string]interface{}) *types.BeforeEnt
 
 	apiObject := &types.BeforeEntryConditions{}
 
-	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
 	}
 
@@ -1586,7 +1586,7 @@ func expandOnSuccessDeclaration(tfMap map[string]interface{}) *types.SuccessCond
 
 	apiObject := &types.SuccessConditions{}
 
-	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
 	}
 
@@ -1614,7 +1614,7 @@ func expandOnFailureDeclaration(tfMap map[string]interface{}) *types.FailureCond
 
 	apiObject := &types.FailureConditions{}
 
-	if v, ok := tfMap["conditions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
 	}
 
@@ -1762,7 +1762,7 @@ func flattenCondition(apiObject types.Condition) map[string]interface{} {
 	}
 
 	if v := apiObject.Rules; v != nil {
-		tfMap["rules"] = flattenConditionRules(v)
+		tfMap["rule"] = flattenConditionRules(v)
 	}
 
 	return tfMap
@@ -1786,7 +1786,7 @@ func flattenBeforeEntryDeclaration(apiObject *types.BeforeEntryConditions) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["conditions"] = flattenConditions(v)
+		tfMap["condition"] = flattenConditions(v)
 	}
 
 	return tfMap
@@ -1796,7 +1796,7 @@ func flattenOnSuccessDeclaration(apiObject *types.SuccessConditions) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["conditions"] = flattenConditions(v)
+		tfMap["condition"] = flattenConditions(v)
 	}
 
 	return tfMap
@@ -1816,7 +1816,7 @@ func flattenOnFailureDeclaration(apiObject *types.FailureConditions) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["conditions"] = flattenConditions(v)
+		tfMap["condition"] = flattenConditions(v)
 	}
 
 	if v := apiObject.Result; v != "" {
