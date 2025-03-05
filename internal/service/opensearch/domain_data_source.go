@@ -164,11 +164,11 @@ func dataSourceDomain() *schema.Resource {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},

@@ -300,11 +300,11 @@ func resourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1434,12 +1434,12 @@ func expandNodeConfig(tfMap map[string]interface{}) *awstypes.NodeConfig {
 
 	apiObject := &awstypes.NodeConfig{}
 
-	isEnabled := tfMap["enabled"].(bool)
+	isEnabled := tfMap[names.AttrEnabled].(bool)
 	apiObject.Enabled = aws.Bool(isEnabled)
 
 	if isEnabled {
 		apiObject.Count = aws.Int32(int32(tfMap["count"].(int)))
-		apiObject.Type = awstypes.OpenSearchPartitionInstanceType(tfMap["type"].(string))
+		apiObject.Type = awstypes.OpenSearchPartitionInstanceType(tfMap[names.AttrType].(string))
 	}
 
 	return apiObject
@@ -1532,7 +1532,7 @@ func flattenNodeOptions(apiObjects []awstypes.NodeOption) []interface{} {
 
 func flattenNodeConfig(apiObject *awstypes.NodeConfig) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": aws.ToBool(apiObject.Enabled),
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 	}
 
 	if apiObject.Count != nil {
@@ -1540,7 +1540,7 @@ func flattenNodeConfig(apiObject *awstypes.NodeConfig) []interface{} {
 	}
 
 	if apiObject.Type != "" {
-		tfMap["type"] = apiObject.Type
+		tfMap[names.AttrType] = apiObject.Type
 	}
 
 	return []interface{}{tfMap}
