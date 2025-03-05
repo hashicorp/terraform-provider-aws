@@ -22,6 +22,7 @@ import (
 // @SDKResource("aws_opsworks_rds_db_instance", name="RDS DB Instance")
 func resourceRDSDBInstance() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceRDSDBInstanceCreate,
 		UpdateWithoutTimeout: resourceRDSDBInstanceUpdate,
 		DeleteWithoutTimeout: resourceRDSDBInstanceDelete,
