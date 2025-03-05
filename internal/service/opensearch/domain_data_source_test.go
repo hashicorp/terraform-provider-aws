@@ -287,6 +287,7 @@ POLICY
   }
 
   cluster_config {
+    instance_type            = "t2.small.search"
     instance_count           = 2
     dedicated_master_enabled = false
 
