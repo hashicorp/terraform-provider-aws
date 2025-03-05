@@ -33,8 +33,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.17.62 h1:fvtQY3zFzYJ9CfixuAQ96IxDrBa
 github.com/aws/aws-sdk-go-v2/credentials v1.17.62/go.mod h1:ElETBxIQqcxej++Cs8GyPBbgMys5DgQPTwo7cUPDKt8=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 h1:x793wxmUWVDhshP8WW2mlnXuFrO4cOd3HLBroh1paFw=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30/go.mod h1:Jpne2tDnYiFascUEs2AWHJL9Yp7A5ZVy3TNyxaAjD6M=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.64 h1:RTko0AQ0i1vWXDM97DkuW6zskgOxFxm4RqC0kmBJFkE=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.64/go.mod h1:ty968MpOa5CoQ/ALWNB8Gmfoehof2nRHDR/DZDPfimE=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.65 h1:03zF9oWZyXvw08Say761JGpE9PbeGPd4FAmdpgDAm/I=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.65/go.mod h1:hBobvLKm46Igpcw6tkq9hFUmU14iAOrC5KL6EyYYckA=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 h1:ZK5jHhnrioRkUNOc+hOgQKlUL5JeC3S6JgLxtQ+Rm0Q=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34/go.mod h1:p4VfIceZokChbA9FzMbRGz5OV+lekcVtHlPKEO0gSZY=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.34 h1:SZwFm17ZUNNg5Np0ioo/gq8Mn6u9w19Mri8DnJ15Jf0=
@@ -455,8 +455,8 @@ github.com/aws/aws-sdk-go-v2/service/route53resolver v1.35.0 h1:Kx39JPoBBj8sdcvX
 github.com/aws/aws-sdk-go-v2/service/route53resolver v1.35.0/go.mod h1:0xjGNqPmjnmstn6DD5RTVfp6Ds1t2L0UbHndl/PIxfE=
 github.com/aws/aws-sdk-go-v2/service/rum v1.23.0 h1:T39yoSbiz/131mZIZcezYhyiPxqtNqJLWZjABRdxx0M=
 github.com/aws/aws-sdk-go-v2/service/rum v1.23.0/go.mod h1:epo2m9j8JQQdXVfSa6kRCu7U5reVhgdq/MsbZR/ouPg=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.78.0 h1:EBm8lXevBWe+kK9VOU/IBeOI189WPRwPUc3LvJK9GOs=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.78.0/go.mod h1:4qzsZSzB/KiX2EzDjs9D7A8rI/WGJxZceVJIHqtJjIU=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1 h1:1M0gSbyP6q06gl3384wpoKPaH9G16NPqZFieEhLboSU=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1/go.mod h1:4qzsZSzB/KiX2EzDjs9D7A8rI/WGJxZceVJIHqtJjIU=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.54.0 h1:b+KYCgKouHeiOChS9fu61DeIQsfMs2d1wEaKv0plXM8=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.54.0/go.mod h1:hqimoWPQe+lvweuYZ2c1Fn4q3UyAFhbjSoABSl8Y7Pw=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.0 h1:wt+/2npNzRYaUMLNvgjaS4o6jtArmd9ArKFJoCngeTg=
