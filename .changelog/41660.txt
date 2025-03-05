@@ -29,3 +29,7 @@ resource/aws_cloudfront_continuous_deployment_policy: Add `arn` attribute
 ```release-note:enhancement
 resource/aws_cloudfront_field_level_encryption_config: Add `arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_cloudfront_field_level_encryption_profile: Add `arn` attribute
+```
