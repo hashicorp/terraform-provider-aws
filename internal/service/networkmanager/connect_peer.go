@@ -449,6 +449,8 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateconf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
+		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+
 		return output, err
 	}
 

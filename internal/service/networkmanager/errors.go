@@ -44,7 +44,7 @@ func attachmentError(apiObject *awstypes.AttachmentError) error {
 		return nil
 	}
 
-	return fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), fmt.Errorf("%s: %s", aws.ToString((*string)(&apiObject.Code)), aws.ToString(apiObject.Message)))
+	return fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), fmt.Errorf("%s: %s", apiObject.Code, aws.ToString(apiObject.Message)))
 }
 
 func attachmentsError(apiObjects []awstypes.AttachmentError) error {
@@ -52,6 +52,26 @@ func attachmentsError(apiObjects []awstypes.AttachmentError) error {
 
 	for _, apiObject := range apiObjects {
 		if err := attachmentError(&apiObject); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), err))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func connectPeerError(apiObject *awstypes.ConnectPeerError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), fmt.Errorf("%s: %s", apiObject.Code, aws.ToString(apiObject.Message)))
+}
+
+func connectPeersError(apiObjects []awstypes.ConnectPeerError) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := connectPeerError(&apiObject); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), err))
 		}
 	}
