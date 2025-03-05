@@ -49,3 +49,11 @@ resource/aws_cloudfront_origin_access_identity: Add `arn` attribute
 ```release-note:enhancement
 data-source/aws_cloudfront_origin_access_identity: Add `arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_cloudfront_origin_request_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_origin_request_policy: Add `arn` attribute
+```
