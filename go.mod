@@ -215,7 +215,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rum v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.54.1
-	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.0
+	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.180.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.0
