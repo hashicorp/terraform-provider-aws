@@ -50,7 +50,7 @@ func resourceNotebookInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"accelerator_types": {
-				Deprecated: "This field is deprecated and will be removed in a future version. Use `instance_type` instead.",
+				Deprecated: "accelerator_types is deprecated and will be removed in a future version. Use instance_type instead.",
 				Type:       schema.TypeSet,
 				Optional:   true,
 				Elem: &schema.Schema{

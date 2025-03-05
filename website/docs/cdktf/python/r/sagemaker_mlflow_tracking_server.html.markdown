@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_mlflow_tracking_server"
 description: |-
