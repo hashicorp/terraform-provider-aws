@@ -429,6 +429,8 @@ func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
+		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+
 		return output, err
 	}
 

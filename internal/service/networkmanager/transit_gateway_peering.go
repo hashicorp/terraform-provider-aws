@@ -229,6 +229,8 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeering); ok {
+		tfresource.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -246,6 +248,8 @@ func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeering); ok {
+		tfresource.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
+
 		return output, err
 	}
 

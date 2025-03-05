@@ -90,3 +90,23 @@ func connectPeersError(apiObjects []awstypes.ConnectPeerError) error {
 
 	return errors.Join(errs...)
 }
+
+func peeringError(apiObject *awstypes.PeeringError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), fmt.Errorf("%s: %s", apiObject.Code, aws.ToString(apiObject.Message)))
+}
+
+func peeringsError(apiObjects []awstypes.PeeringError) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := peeringError(&apiObject); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), err))
+		}
+	}
+
+	return errors.Join(errs...)
+}
