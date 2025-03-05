@@ -137,8 +137,8 @@ github.com/aws/aws-sdk-go-v2/service/codeartifact v1.34.1 h1:7kG4zaTjHxWRkU+CZSg
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.34.1/go.mod h1:QPTNJjlY2i7XZhMDb7vX3Hxg2YtLucSU4kzDYxXm3k4=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.55.1 h1:Z3y7Qfv4F7F/cKjZS/ZsA7sxxx0wbQHHO9GIxgpdMMY=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.55.1/go.mod h1:13SjlSpfNt71ZBZZqLMSy08j9jSPA9D5179dKV9RRz4=
-github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.17 h1:ws0HGcXYr/venGlLVnTqPHg/rM5DnuQjzmuhzVcLkjs=
-github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.17/go.mod h1:7jiV/Fo5iU17sXIwWc7I1wmTr6yfZvFI5O0pI/lmpi8=
+github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.18 h1:iDd+8Qej6hT8fJBxy0QPYuoOP9gBjGHg0zz0Zb6J7qY=
+github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.18/go.mod h1:7jiV/Fo5iU17sXIwWc7I1wmTr6yfZvFI5O0pI/lmpi8=
 github.com/aws/aws-sdk-go-v2/service/codecommit v1.28.0 h1:fLw6vvLf8FvAZjne8taShMSIM8gsN6OB2KJCz/qMtyU=
 github.com/aws/aws-sdk-go-v2/service/codecommit v1.28.0/go.mod h1:JsdLne5QNlqJdCQFm2DbHLNmNfEWSU7HnTuvi8SIl+E=
 github.com/aws/aws-sdk-go-v2/service/codeconnections v1.6.0 h1:Ku/L4jBTDBVx/ec8gaEEBSZ2rScdo7bqkbw1xWzE394=
