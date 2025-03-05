@@ -181,8 +181,9 @@ func dataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 						},
 						"inference_accelerator_overrides": {
-							Type:     schema.TypeSet,
-							Optional: true,
+							Deprecated: "inference_accelerator_overrides is deprecated. AWS no longer supports the Elastic Inference service.",
+							Type:       schema.TypeSet,
+							Optional:   true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrDeviceName: {
