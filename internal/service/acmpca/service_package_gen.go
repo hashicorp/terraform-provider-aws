@@ -30,6 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_acmpca_certificate",
 			Name:     "Certificate",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -41,6 +42,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -54,6 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_acmpca_certificate",
 			Name:     "Certificate",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -65,6 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -73,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_acmpca_certificate_authority_certificate",
 			Name:     "Certificate Authority Certificate",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -81,6 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_acmpca_permission",
 			Name:     "Permission",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -89,6 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_acmpca_policy",
 			Name:     "Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},

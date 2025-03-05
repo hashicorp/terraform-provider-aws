@@ -37,6 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -45,6 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_chime_voice_connector_group",
 			Name:     "Voice Connector Group",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -53,6 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_chime_voice_connector_logging",
 			Name:     "Voice Connector Logging",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -61,6 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_chime_voice_connector_origination",
 			Name:     "Voice Connector Origination",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -69,6 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_chime_voice_connector_streaming",
 			Name:     "Voice Connector Streaming",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -77,6 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_chime_voice_connector_termination",
 			Name:     "Voice Connector Termination",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -85,6 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_chime_voice_connector_termination_credentials",
 			Name:     "Voice Connector Termination Credentials",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},

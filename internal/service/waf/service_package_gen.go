@@ -30,6 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_waf_ipset",
 			Name:     "IPSet",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -38,6 +39,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_waf_rate_based_rule",
 			Name:     "Rate Based Rule",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -46,6 +48,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_waf_rule",
 			Name:     "Rule",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -54,6 +57,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_waf_subscribed_rule_group",
 			Name:     "Subscribed Rule Group",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -62,6 +66,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_waf_web_acl",
 			Name:     "Web ACL",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -75,6 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_byte_match_set",
 			Name:     "ByteMatchSet",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -83,6 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_geo_match_set",
 			Name:     "GeoMatchSet",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -91,6 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_ipset",
 			Name:     "IPSet",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -102,6 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -110,6 +119,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_regex_match_set",
 			Name:     "Regex Match Set",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -118,6 +128,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_regex_pattern_set",
 			Name:     "Regex Pattern Set",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -129,6 +140,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -140,6 +152,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -148,6 +161,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_size_constraint_set",
 			Name:     "Size Constraint Set",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -156,6 +170,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_sql_injection_match_set",
 			Name:     "SqlInjectionMatchSet",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -167,6 +182,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -175,6 +191,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_waf_xss_match_set",
 			Name:     "XSS Match Set",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},

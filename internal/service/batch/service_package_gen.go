@@ -23,6 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Name:     "Job Definition",
 			Tags:     &itypes.ServicePackageResourceTags{},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -39,6 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -53,6 +55,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Compute Environment",
 			Tags:     &itypes.ServicePackageResourceTags{},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -62,6 +65,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Job Queue",
 			Tags:     &itypes.ServicePackageResourceTags{},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -71,6 +75,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Scheduling Policy",
 			Tags:     &itypes.ServicePackageResourceTags{},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -87,6 +92,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -98,6 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -109,6 +116,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},

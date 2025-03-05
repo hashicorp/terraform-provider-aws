@@ -22,6 +22,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_transfer_connector",
 			Name:     "Connector",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -42,6 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -55,6 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_transfer_access",
 			Name:     "Access",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -66,6 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -77,6 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -88,6 +93,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -99,6 +105,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -110,6 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -118,6 +126,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_transfer_ssh_key",
 			Name:     "SSH Key",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -126,6 +135,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_transfer_tag",
 			Name:     "Transfer Resource Tag",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -137,6 +147,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -148,6 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},

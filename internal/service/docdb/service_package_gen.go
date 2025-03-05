@@ -30,6 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_docdb_engine_version",
 			Name:     "Engine Version",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -38,6 +39,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_docdb_orderable_db_instance",
 			Name:     "Orderable DB Instance",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -54,6 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -65,6 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -76,6 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -84,6 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_docdb_cluster_snapshot",
 			Name:     "Cluster Snapshot",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -95,6 +101,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -103,6 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_docdb_global_cluster",
 			Name:     "Global Cluster",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -114,6 +122,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
 		},

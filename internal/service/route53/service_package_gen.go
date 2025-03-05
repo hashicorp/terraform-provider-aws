@@ -23,6 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_route53_records",
 			Name:     "Records",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -31,6 +32,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_route53_zones",
 			Name:     "Zones",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -44,6 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_route53_cidr_collection",
 			Name:     "CIDR Collection",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -52,6 +55,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_route53_cidr_location",
 			Name:     "CIDR Location",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -65,6 +69,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_route53_delegation_set",
 			Name:     "Reusable Delegation Set",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -73,6 +78,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_route53_traffic_policy_document",
 			Name:     "Traffic Policy Document",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -81,6 +87,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -94,6 +101,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_delegation_set",
 			Name:     "Reusable Delegation Set",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -106,6 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				ResourceType:        "healthcheck",
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -114,6 +123,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_hosted_zone_dnssec",
 			Name:     "Hosted Zone DNSSEC",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -122,6 +132,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_key_signing_key",
 			Name:     "Key Signing Key",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -130,6 +141,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_query_log",
 			Name:     "Query Logging Config",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -138,6 +150,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_record",
 			Name:     "Record",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -146,6 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_traffic_policy",
 			Name:     "Traffic Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -154,6 +168,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_traffic_policy_instance",
 			Name:     "Traffic Policy Instance",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -162,6 +177,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_vpc_association_authorization",
 			Name:     "VPC Association Authorization",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -174,6 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				ResourceType:        "hostedzone",
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -182,6 +199,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_route53_zone_association",
 			Name:     "Zone Association",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},

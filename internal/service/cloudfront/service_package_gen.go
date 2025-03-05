@@ -22,6 +22,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -35,6 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
 			Name:     "Continuous Deployment Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -43,6 +45,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -54,6 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -67,6 +71,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -78,6 +83,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -86,6 +92,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -94,6 +101,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
 			Name:     "Log Delivery Canonical User ID",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -102,6 +110,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_origin_access_identities",
 			Name:     "Origin Access Identities",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -110,6 +119,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -118,6 +128,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -126,6 +137,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -134,6 +146,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -147,6 +160,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -158,6 +172,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -166,6 +181,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_field_level_encryption_config",
 			Name:     "Field-level Encryption Config",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -174,6 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
 			Name:     "Field-level Encryption Profile",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -182,6 +199,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -190,6 +208,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_key_group",
 			Name:     "Key Group",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -198,6 +217,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_monitoring_subscription",
 			Name:     "Monitoring Subscription",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -206,6 +226,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -214,6 +235,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -222,6 +244,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -230,6 +253,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_public_key",
 			Name:     "Public Key",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -238,6 +262,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -246,6 +271,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},

@@ -34,6 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_account_alternate_contact",
 			Name:     "Alternate Contact",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -42,6 +43,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_account_primary_contact",
 			Name:     "Primary Contact",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
@@ -50,6 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_account_region",
 			Name:     "Region",
 			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
 		},
