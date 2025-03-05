@@ -325,6 +325,7 @@ func resourcePipeline() *schema.Resource {
 									"condition": {
 										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 1,
 										Elem:     conditionsSchemaElem,
 									},
 								},
@@ -339,6 +340,7 @@ func resourcePipeline() *schema.Resource {
 									"condition": {
 										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 1,
 										Elem:     conditionsSchemaElem,
 									},
 								},
@@ -353,6 +355,7 @@ func resourcePipeline() *schema.Resource {
 									"condition": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem:     conditionsSchemaElem,
 									},
 									"result": {
