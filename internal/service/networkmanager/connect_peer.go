@@ -6,14 +6,12 @@ package networkmanager
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -190,12 +188,10 @@ func resourceConnectPeer() *schema.Resource {
 
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
 	peerAddress := d.Get("peer_address").(string)
-
 	input := &networkmanager.CreateConnectPeerInput{
 		ConnectAttachmentId: aws.String(connectAttachmentID),
 		PeerAddress:         aws.String(peerAddress),
@@ -259,7 +255,6 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	connectPeer, err := findConnectPeerByID(ctx, conn, d.Id())
@@ -274,16 +269,10 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Peer (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "networkmanager",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("connect-peer/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
-	bgpOptions := map[string]interface{}{}
-	bgpOptions["peer_asn"] = connectPeer.Configuration.BgpConfigurations[0].PeerAsn
-	d.Set("bgp_options", []interface{}{bgpOptions})
+	d.Set(names.AttrARN, connectPeerARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("bgp_options", []interface{}{map[string]interface{}{
+		"peer_asn": connectPeer.Configuration.BgpConfigurations[0].PeerAsn,
+	}})
 	d.Set(names.AttrConfiguration, []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
@@ -311,7 +300,6 @@ func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Peer: %s", d.Id())
@@ -481,4 +469,9 @@ func validationExceptionMessage_Contains(err error, reason awstypes.ValidationEx
 	}
 
 	return false
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsnetworkmanager.html#awsnetworkmanager-resources-for-iam-policies.
+func connectPeerARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "networkmanager", "connect-peer/"+id)
 }
