@@ -273,8 +273,8 @@ github.com/aws/aws-sdk-go-v2/service/groundstation v1.32.1 h1:G1Qq27lcqXip9e0vQo
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.32.1/go.mod h1:gmoZJr+4d1MubKvn7QiIsffTBlNMyyZyJ4GmF2UJCCU=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.54.1 h1:mlUdEGpNH7FASFMzL0zQvH88BDv80n1nHQ8TSP9q1uo=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.54.1/go.mod h1:wkoiUwZWKpLDnd+m3aY7dJV/IptW/FToDzYYEkd67gw=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.30.0 h1:8Jb1N0li85IH8lWH8+i6fC4tS9JpZJ0GRbImfcO1WOg=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.30.0/go.mod h1:JzL32pq/fBeWRbEOAl6IHbnqhyln8GlD92JSk72tjl4=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.30.1 h1:yAx1IQB3Vqbnnl6g9yi0xzvIyiUEJnbavtpOhYVg+qM=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.30.1/go.mod h1:JzL32pq/fBeWRbEOAl6IHbnqhyln8GlD92JSk72tjl4=
 github.com/aws/aws-sdk-go-v2/service/iam v1.40.0 h1:1J1gm1qZfD7w7GOp7vXKapD7rRlhBM+kf3pTJZMQATc=
 github.com/aws/aws-sdk-go-v2/service/iam v1.40.0/go.mod h1:mPJkGQzeCoPs82ElNILor2JzZgYENr4UaSKUT8K27+c=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.28.0 h1:U50KFHnRYu6KS/jM7kOLeiqunLV6f+ckn7vCQANDW6c=
