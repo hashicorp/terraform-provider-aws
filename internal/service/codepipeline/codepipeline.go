@@ -1472,8 +1472,10 @@ func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 		apiObject.RuleTypeId = expandConditionRuleTypeId(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["commands"].([]string); ok && len(v) > 0 {
-		apiObject.Commands = v
+	if v, ok := tfMap["commands"].([]interface{}); ok && len(v) > 0 {
+		for _, command := range v {
+			apiObject.Commands = append(apiObject.Commands, command.(string))
+		}
 	}
 
 	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && v != nil {
@@ -1717,7 +1719,11 @@ func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]interface
 	}
 
 	if v := apiObjects.Commands; v != nil {
-		tfMap["commands"] = v
+		var tfList []interface{}
+		for _, command := range apiObjects.Commands {
+			tfList = append(tfList, command)
+		}
+		tfMap["commands"] = tfList
 	}
 
 	if v := apiObjects.Configuration; v != nil {
