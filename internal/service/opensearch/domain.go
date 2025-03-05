@@ -287,33 +287,39 @@ func resourceDomain() *schema.Resource {
 						"node_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"node_config": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"count": {
 													Type:         schema.TypeInt,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
 												names.AttrEnabled: {
 													Type:     schema.TypeBool,
-													Required: true,
+													Optional: true,
+													Computed: true,
 												},
 												names.AttrType: {
 													Type:     schema.TypeString,
 													Optional: true,
+													Computed: true,
 												},
 											},
 										},
 									},
 									"node_type": {
 										Type:             schema.TypeString,
-										Required:         true,
+										Optional:         true,
+										Computed:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.NodeOptionsNodeType](),
 									},
 								},
