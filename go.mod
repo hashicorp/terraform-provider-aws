@@ -189,7 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.19.1
-	github.com/aws/aws-sdk-go-v2/service/polly v1.47.0
+	github.com/aws/aws-sdk-go-v2/service/polly v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.26.0
