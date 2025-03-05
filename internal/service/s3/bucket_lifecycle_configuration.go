@@ -116,7 +116,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							DeprecationMessage: "Use filter instead",
 							Validators: []validator.String{
 								warnExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("filter"),
+									path.MatchRelative().AtParent().AtName(names.AttrFilter),
 								),
 							},
 						},
