@@ -91,6 +91,12 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		timeout = d.Timeout(schema.TimeoutUpdate)
 	}
 
+	output, err := findRegionOptStatus(ctx, conn, accountID, region)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	status := output.RegionOptStatus
+
 	if v := d.Get(names.AttrEnabled).(bool); v {
 		input := account.EnableRegionInput{
 			RegionName: aws.String(region),
@@ -99,10 +105,15 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AccountId = aws.String(accountID)
 		}
 
-		_, err := conn.EnableRegion(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		// if opt-in status is enabled or enabling, skip calling EnableRegion
+		switch status {
+		case types.RegionOptStatusEnabled, types.RegionOptStatusEnabling:
+		// No-op
+		default:
+			_, err := conn.EnableRegion(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+			}
 		}
 
 		if _, err := waitRegionEnabled(ctx, conn, accountID, region, timeout); err != nil {
@@ -116,10 +127,15 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AccountId = aws.String(accountID)
 		}
 
-		_, err := conn.DisableRegion(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		// if opt-in status is disabled or disabling, skip calling DisableRegion
+		switch status {
+		case types.RegionOptStatusDisabled, types.RegionOptStatusDisabling:
+		// No-op
+		default:
+			_, err := conn.DisableRegion(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling Account Region (%s): %s", id, err)
+			}
 		}
 
 		if _, err := waitRegionDisabled(ctx, conn, accountID, region, timeout); err != nil {
@@ -208,7 +224,6 @@ func waitRegionEnabled(ctx context.Context, conn *account.Client, accountID, reg
 		Target:       enum.Slice(types.RegionOptStatusEnabled),
 		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
 		Timeout:      timeout,
-		Delay:        1 * time.Minute,
 		PollInterval: 30 * time.Second,
 	}
 
@@ -227,7 +242,6 @@ func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, re
 		Target:       enum.Slice(types.RegionOptStatusDisabled),
 		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
 		Timeout:      timeout,
-		Delay:        1 * time.Minute,
 		PollInterval: 30 * time.Second,
 	}
 
