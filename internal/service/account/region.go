@@ -251,5 +251,5 @@ func skipRegionUpdate(status types.RegionOptStatus, enable bool) bool {
 	if enable {
 		return status == types.RegionOptStatusEnabled || status == types.RegionOptStatusEnabledByDefault
 	}
-	return status == types.RegionOptStatusDisabled
+	return status == types.RegionOptStatusDisabled || status == types.RegionOptStatusDisabling
 }
