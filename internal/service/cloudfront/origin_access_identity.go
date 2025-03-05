@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -104,7 +103,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("iam_arn", originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("iam_arn", originAccessIdentityIAMUserARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
 	return diags
@@ -190,11 +189,7 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 	return apiObject
 }
 
-func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "iam",
-		AccountID: "cloudfront",
-		Resource:  "user/CloudFront Origin Access Identity " + originAccessControlID,
-	}.String()
+// See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
+func originAccessIdentityIAMUserARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
+	return c.GlobalARNWithAccount(ctx, "iam", "cloudfront", "user/CloudFront Origin Access Identity "+originAccessControlID)
 }
