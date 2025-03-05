@@ -3174,7 +3174,7 @@ resource "aws_opensearch_domain" "test" {
   }
 
   tags = {
-    bar = "complex"
+    Name = %[1]q
   }
 }
 `, rName)
