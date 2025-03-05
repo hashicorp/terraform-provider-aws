@@ -5,3 +5,7 @@ resource/aws_waf_byte_match_set: Add `arn` attribute
 ```release-note:enhancement
 resource/aws_waf_sql_injection_match_set: Add `arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_route53_traffic_policy: Add `arn` attribute
+```
