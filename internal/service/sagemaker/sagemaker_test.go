@@ -23,9 +23,9 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-// Tests are serialized as SageMaker Domain resources are limited to 1 per account by default.
-// SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
-// SageMaker Workteam tests must also be serialized
+// Tests are serialized as SageMaker AI Domain resources are limited to 1 per account by default.
+// SageMaker AI UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
+// SageMaker AI Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
 	t.Parallel()
 

@@ -80,11 +80,11 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 		Tags:                         getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Studio Lifecycle Config : %#v", input)
+	log.Printf("[DEBUG] Creating SageMaker AI Studio Lifecycle Config : %#v", input)
 	_, err := conn.CreateStudioLifecycleConfig(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Studio Lifecycle Config (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Studio Lifecycle Config (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -99,13 +99,13 @@ func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceDa
 	image, err := findStudioLifecycleConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Studio Lifecycle Config (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Studio Lifecycle Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Studio Lifecycle Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Studio Lifecycle Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("studio_lifecycle_config_name", image.StudioLifecycleConfigName)
@@ -132,13 +132,13 @@ func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.Resource
 		StudioLifecycleConfigName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting SageMaker Studio Lifecycle Config: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Studio Lifecycle Config: (%s)", d.Id())
 	if _, err := conn.DeleteStudioLifecycleConfig(ctx, input); err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Studio Lifecycle Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Studio Lifecycle Config (%s): %s", d.Id(), err)
 	}
 
 	return diags

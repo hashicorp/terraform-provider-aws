@@ -259,13 +259,13 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreateEndpoint(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) create: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) create: %s", name, err)
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
@@ -278,13 +278,13 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	endpoint, err := findEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Endpoint (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Endpoint (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, endpoint.EndpointArn)
@@ -314,11 +314,11 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateEndpoint(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Endpoint (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -329,7 +329,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Endpoint: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint: %s", d.Id())
 	_, err := conn.DeleteEndpoint(ctx, &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	})
@@ -339,11 +339,11 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

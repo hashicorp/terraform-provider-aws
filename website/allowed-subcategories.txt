@@ -223,7 +223,7 @@ SSO Admin
 SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
-SageMaker
+SageMaker AI
 Secrets Manager
 Security Hub
 Security Lake

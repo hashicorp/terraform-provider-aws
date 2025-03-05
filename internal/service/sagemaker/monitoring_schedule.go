@@ -112,12 +112,12 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 
 	_, err := conn.CreateMonitoringSchedule(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Monitoring Schedule (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 	if err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMonitoringScheduleRead(ctx, d, meta)...)
@@ -130,20 +130,20 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 	monitoringSchedule, err := findMonitoringScheduleByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Monitoring Schedule (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Monitoring Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, monitoringSchedule.MonitoringScheduleArn)
 	d.Set(names.AttrName, monitoringSchedule.MonitoringScheduleName)
 
 	if err := d.Set("monitoring_schedule_config", flattenMonitoringScheduleConfig(monitoringSchedule.MonitoringScheduleConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -164,10 +164,10 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 
 		log.Printf("[INFO] Modifying monitoring_schedule_config attribute for %s: %#v", d.Id(), modifyOpts)
 		if _, err := conn.UpdateMonitoringSchedule(ctx, modifyOpts); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 		}
 		if err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
 		}
 	}
 
@@ -181,7 +181,7 @@ func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceDat
 	deleteOpts := &sagemaker.DeleteMonitoringScheduleInput{
 		MonitoringScheduleName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker Monitoring Schedule : %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Monitoring Schedule : %s", d.Id())
 
 	_, err := conn.DeleteMonitoringSchedule(ctx, deleteOpts)
 
@@ -190,11 +190,11 @@ func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMonitoringScheduleNotFound(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Monitoring Schedule (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Monitoring Schedule (%s) to delete: %s", d.Id(), err)
 	}
 	return diags
 }

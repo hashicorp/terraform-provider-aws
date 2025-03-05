@@ -288,7 +288,7 @@ provider "aws" {
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
