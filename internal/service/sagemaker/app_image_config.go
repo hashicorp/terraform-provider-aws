@@ -24,8 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_app_image_config", name="App Image Config")
-// @Tags(identifierAttribute="arn")
 func resourceAppImageConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppImageConfigCreate,
@@ -84,31 +82,7 @@ func resourceAppImageConfig() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_gid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntInSlice([]int{0, 100}),
-									},
-									"default_uid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1000,
-										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
-									},
-									"mount_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/home/sagemaker-user",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
-										),
-									},
-								},
-							},
+							Elem:     fileSystemConfigSchema(),
 						},
 					},
 				},
@@ -147,31 +121,7 @@ func resourceAppImageConfig() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_gid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntInSlice([]int{0, 100}),
-									},
-									"default_uid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1000,
-										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
-									},
-									"mount_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/home/sagemaker-user",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
-										),
-									},
-								},
-							},
+							Elem:     fileSystemConfigSchema(),
 						},
 					},
 				},
@@ -186,31 +136,7 @@ func resourceAppImageConfig() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_gid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntInSlice([]int{0, 100}),
-									},
-									"default_uid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1000,
-										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
-									},
-									"mount_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/home/sagemaker-user",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
-										),
-									},
-								},
-							},
+							Elem:     fileSystemConfigSchema(),
 						},
 						"kernel_spec": {
 							Type:     schema.TypeList,
@@ -305,6 +231,34 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+func fileSystemConfigSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"default_gid": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      100,
+				ValidateFunc: validation.IntInSlice([]int{100}), // Remove 0 as it's not supported
+			},
+			"default_uid": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1000,
+				ValidateFunc: validation.IntInSlice([]int{1000}), // Remove 0 as it's not supported
+			},
+			"mount_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "/home/sagemaker-user",
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 1024),
+					validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
+				),
+			},
+		},
+	}
 }
 
 func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
