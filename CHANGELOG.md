@@ -40,12 +40,15 @@ ENHANCEMENTS:
 * resource/aws_opensearch_domain: Add `cluster_config.node_options` configuration block in support of [dedicated coordinator nodes](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/Dedicated-coordinator-nodes.html) ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
 * resource/aws_prometheus_rule_group_namespace: Add `arn` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
 * resource/aws_prometheus_rule_group_namespace: Add `tags` argument and `tags_all` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
+* resource/aws_s3_bucket_lifecycle_configuration: Adds warning validation to require exactly one of the elements of `rule.filter` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
 * resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required. Technically this is a breaking change, but failure to configure this attribute would have led to `InvalidArgument` or `MalformedXML` errors ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
 
 BUG FIXES:
 
 * ephemeral/aws_secrets_manager_random_password: Change `exclude_characters` from `Bool` to `String` ([#41546](https://github.com/hashicorp/terraform-provider-aws/issues/41546))
 * resource/aws_ecs_service: Fix removal of all `vpc_lattice_configurations` blocks ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix error when converting `rule` configuration from `filter.prefix` to `filter.and.prefix` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix error when converting `rule` configuration from `prefix` to `filter.prefix` or  `filter.and.prefix` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
 * resource/aws_sagemaker_mlflow_tracking_server: Increased the timeout from 30 to 45 minutes ([#41463](https://github.com/hashicorp/terraform-provider-aws/issues/41463))
 * resource/aws_vpclattice_target_group: Retry `ConflictException` errors on delete ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
 
