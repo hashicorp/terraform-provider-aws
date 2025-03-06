@@ -36,9 +36,9 @@ type dataSourceDataZoneDomain struct {
 func (d *dataSourceDataZoneDomain) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 		},
