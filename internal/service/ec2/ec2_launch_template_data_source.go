@@ -178,8 +178,9 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 			},
 			"elastic_gpu_specifications": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
+				Type:       schema.TypeList,
+				Computed:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -190,8 +191,9 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				},
 			},
 			"elastic_inference_accelerator": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
+				Type:       schema.TypeList,
+				Computed:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
