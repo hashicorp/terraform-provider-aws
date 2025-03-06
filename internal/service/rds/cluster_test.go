@@ -676,6 +676,44 @@ func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 	})
 }
 
+// Test that setting storage_type to empty string correctly reverts to default (internally "aurora") for Aurora clusters
+func TestAccRDSCluster_storageTypeEmptyRevertsToDefault(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeCustom := "aurora-iopt1"
+	storageTypeEmpty := ""
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeCustom),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeCustom),
+				),
+			},
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeEmpty),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_storageTypeAuroraIopt1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
