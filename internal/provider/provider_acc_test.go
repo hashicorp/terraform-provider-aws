@@ -8,14 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/smithy-go/middleware"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -110,6 +110,32 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 	})
 }
 
+func TestAccProvider_DefaultTagsTags_envVars(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p *schema.Provider
+
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test1", "envValue1")
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test2", "envValue2")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &p),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigDefaultTags_Tags1("test1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &p, map[string]string{
+						"test1": "value1",
+						"test2": "envValue2",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
@@ -126,32 +152,6 @@ func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{}),
 					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{}),
 					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccProvider_endpoints(t *testing.T) {
-	ctx := acctest.Context(t)
-	var provider *schema.Provider
-	var endpoints strings.Builder
-
-	// Initialize each endpoint configuration with matching name and value
-	for _, serviceKey := range names.ProviderPackages() {
-		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProviderConfig_endpoints(endpoints.String()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpoints(ctx, &provider),
 				),
 			},
 		},
@@ -190,8 +190,7 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 	unusual1 := unusualEndpoint{"es", "elasticsearch", "http://notarealendpoint"}
-	unusual2 := unusualEndpoint{"databasemigration", "dms", "http://alsonotarealendpoint"}
-	unusual3 := unusualEndpoint{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
+	unusual2 := unusualEndpoint{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -200,11 +199,10 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3),
+				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual1),
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual2),
-					testAccCheckUnusualEndpoints(ctx, &provider, unusual3),
 				),
 			},
 		},
@@ -394,7 +392,98 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	})
 }
 
+func TestAccProvider_IgnoreTagsKeys_envVarOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(tftags.IgnoreTagsKeysEnvVar, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeys0(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeys_envVarMerged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(tftags.IgnoreTagsKeysEnvVar, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeys2("test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test1", "test2", "test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeyPrefixes_envVarOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(tftags.IgnoreTagsKeyPrefixesEnvVar, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes0(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{"test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeyPrefixes_envVarMerged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(tftags.IgnoreTagsKeyPrefixesEnvVar, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes2("test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{"test1", "test2", "test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccProvider_Region_c2s(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -418,6 +507,9 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 }
 
 func TestAccProvider_Region_china(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -441,6 +533,9 @@ func TestAccProvider_Region_china(t *testing.T) {
 }
 
 func TestAccProvider_Region_commercial(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -464,6 +559,9 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 }
 
 func TestAccProvider_Region_govCloud(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -487,6 +585,9 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 }
 
 func TestAccProvider_Region_sc2s(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -510,6 +611,9 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 }
 
 func TestAccProvider_Region_stsRegion(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -531,8 +635,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 	})
 }
 
+// For historical reasons, ignore a single empty `assume_role` block
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
@@ -542,7 +648,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 			{
 				Config: testAccProviderConfig_assumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID(ctx, "data.aws_caller_identity.current"),
 				),
 			},
 		},
@@ -572,7 +678,7 @@ func testAccCheckPartition(ctx context.Context, t *testing.T, p **schema.Provide
 			return fmt.Errorf("provider not initialized")
 		}
 
-		providerPartition := (*p).Meta().(*conns.AWSClient).Partition
+		providerPartition := (*p).Meta().(*conns.AWSClient).Partition(ctx)
 
 		if providerPartition != expectedPartition {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
@@ -604,7 +710,7 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 			return fmt.Errorf("provider not initialized")
 		}
 
-		if got := (*p).Meta().(*conns.AWSClient).Region; got != expectedRegion {
+		if got := (*p).Meta().(*conns.AWSClient).Region(ctx); got != expectedRegion {
 			return fmt.Errorf("expected Region (%s), got: %s", expectedRegion, got)
 		}
 
@@ -621,8 +727,9 @@ func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provide
 		var stsRegion string
 
 		stsClient := (*p).Meta().(*conns.AWSClient).STSClient(ctx)
-		_, err := stsClient.GetCallerIdentity(ctx, &sts_sdkv2.GetCallerIdentityInput{},
-			func(opts *sts_sdkv2.Options) {
+		input := sts.GetCallerIdentityInput{}
+		_, err := stsClient.GetCallerIdentity(ctx, &input,
+			func(opts *sts.Options) {
 				opts.APIOptions = append(opts.APIOptions,
 					addRegionRetrieverMiddleware(&stsRegion),
 					addCancelRequestMiddleware(),
@@ -704,7 +811,7 @@ func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **sc
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.KeyPrefixes == nil {
 			if len(expectedKeyPrefixes) != 0 {
@@ -761,7 +868,7 @@ func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Pr
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.Keys == nil {
 			if len(expectedKeys) != 0 {
@@ -818,7 +925,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		defaultTagsConfig := providerClient.DefaultTagsConfig
+		defaultTagsConfig := providerClient.DefaultTagsConfig(ctx)
 
 		if defaultTagsConfig == nil || len(defaultTagsConfig.Tags) == 0 {
 			if len(expectedTags) != 0 {
@@ -838,7 +945,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 			var found bool
 
 			for _, actualElement := range actualTags {
-				if aws.StringValue(actualElement.Value) == expectedElement {
+				if aws.ToString(actualElement.Value) == expectedElement {
 					found = true
 					break
 				}
@@ -853,7 +960,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 			var found bool
 
 			for _, expectedElement := range expectedTags {
-				if aws.StringValue(actualElement.Value) == expectedElement {
+				if aws.ToString(actualElement.Value) == expectedElement {
 					found = true
 					break
 				}
@@ -861,55 +968,6 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 
 			if !found {
 				return fmt.Errorf("unexpected tags element: %s", actualElement)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
-			return fmt.Errorf("provider not initialized")
-		}
-
-		providerClient := (*p).Meta().(*conns.AWSClient)
-
-		for _, serviceKey := range names.Aliases() {
-			methodName := serviceConn(serviceKey)
-			method := reflect.ValueOf(providerClient).MethodByName(methodName)
-			if !method.IsValid() {
-				continue
-			}
-			if method.Kind() != reflect.Func {
-				return fmt.Errorf("value %q is not a function", methodName)
-			}
-			if !funcHasConnFuncSignature(method) {
-				return fmt.Errorf("function %q does not match expected signature", methodName)
-			}
-
-			result := method.Call([]reflect.Value{
-				reflect.ValueOf(context.Background()),
-			})
-			if l := len(result); l != 1 {
-				return fmt.Errorf("expected 1 result, got %d", l)
-			}
-			providerClientField := result[0]
-
-			if !providerClientField.IsValid() {
-				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
-			}
-
-			if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
-				continue // currently unknown how to do this check for v2 clients
-			}
-
-			actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-			expectedEndpoint := fmt.Sprintf("http://%s", serviceKey)
-
-			if actualEndpoint != expectedEndpoint {
-				return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", serviceKey, expectedEndpoint, actualEndpoint)
 			}
 		}
 
@@ -925,7 +983,7 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		methodName := serviceConn(unusual.thing)
+		methodName := serviceClient(unusual.thing)
 		method := reflect.ValueOf(providerClient).MethodByName(methodName)
 		if method.Kind() != reflect.Func {
 			return fmt.Errorf("value %q is not a function", methodName)
@@ -944,6 +1002,10 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		if !providerClientField.IsValid() {
 			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual.thing)
+		}
+
+		if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
+			return nil // currently unknown how to do this check for v2 clients
 		}
 
 		actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
@@ -969,14 +1031,14 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 	return typ.In(0) == ftyp.In(0)
 }
 
-func serviceConn(key string) string {
-	serviceUpper := ""
+func serviceClient(key string) string {
+	var serviceUpper string
 	var err error
 	if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 		return ""
 	}
 
-	return fmt.Sprintf("%sConn", serviceUpper)
+	return fmt.Sprintf("%sClient", serviceUpper)
 }
 
 const testAccProviderConfig_assumeRoleEmpty = `
@@ -998,21 +1060,6 @@ data "aws_service" "provider_test" {
 }
 `
 
-func testAccProviderConfig_endpoints(endpoints string) string {
-	//lintignore:AT004
-	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
-provider "aws" {
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-
-  endpoints {
-    %[1]s
-  }
-}
-`, endpoints))
-}
-
 func testAccProviderConfig_customS3Endpoint(endpoint, rName string) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
@@ -1029,7 +1076,7 @@ resource "aws_s3_bucket" "test" {
 `, endpoint, rName))
 }
 
-func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 unusualEndpoint) string {
+func testAccProviderConfig_unusualEndpoints(unusual1, unusual2 unusualEndpoint) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
@@ -1040,10 +1087,9 @@ provider "aws" {
   endpoints {
     %[1]s = %[2]q
     %[3]s = %[4]q
-    %[5]s = %[6]q
   }
 }
-`, unusual1.fieldName, unusual1.url, unusual2.fieldName, unusual2.url, unusual3.fieldName, unusual3.url))
+`, unusual1.fieldName, unusual1.url, unusual2.fieldName, unusual2.url))
 }
 
 func testAccProviderConfig_useFipsEndpointFlag(rName string) string {

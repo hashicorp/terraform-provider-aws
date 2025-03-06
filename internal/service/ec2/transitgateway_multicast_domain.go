@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,8 +35,6 @@ func resourceTransitGatewayMulticastDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -96,7 +93,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 			Igmpv2Support:                awstypes.Igmpv2SupportValue(d.Get("igmpv2_support").(string)),
 			StaticSourcesSupport:         awstypes.StaticSourcesSupportValue(d.Get("static_sources_support").(string)),
 		},
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayMulticastDomain),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayMulticastDomain),
 		TransitGatewayId:  aws.String(d.Get(names.AttrTransitGatewayID).(string)),
 	}
 
@@ -140,7 +137,7 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	d.Set("static_sources_support", multicastDomain.Options.StaticSourcesSupport)
 	d.Set(names.AttrTransitGatewayID, multicastDomain.TransitGatewayId)
 
-	setTagsOutV2(ctx, multicastDomain.Tags)
+	setTagsOut(ctx, multicastDomain.Tags)
 
 	return diags
 }
@@ -212,9 +209,10 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayMulticastDomain(ctx, &ec2.DeleteTransitGatewayMulticastDomainInput{
+	input := ec2.DeleteTransitGatewayMulticastDomainInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteTransitGatewayMulticastDomain(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return diags

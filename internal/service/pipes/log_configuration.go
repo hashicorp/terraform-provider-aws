@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -18,11 +19,6 @@ func logConfigurationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"level": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: enum.Validate[types.LogLevel](),
-				},
 				"cloudwatch_logs_log_destination": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -48,6 +44,19 @@ func logConfigurationSchema() *schema.Schema {
 							},
 						},
 					},
+				},
+				"include_execution_data": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.IncludeExecutionDataOption](),
+					},
+				},
+				"level": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.LogLevel](),
 				},
 				"s3_log_destination": {
 					Type:     schema.TypeList,
@@ -87,16 +96,20 @@ func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.P
 
 	apiObject := &types.PipeLogConfigurationParameters{}
 
-	if v, ok := tfMap["level"].(string); ok && v != "" {
-		apiObject.Level = types.LogLevel(v)
-	}
-
 	if v, ok := tfMap["cloudwatch_logs_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudwatchLogsLogDestination = expandCloudWatchLogsLogDestinationParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["firehose_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.FirehoseLogDestination = expandFirehoseLogDestinationParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["include_execution_data"].(*schema.Set); ok && v != nil {
+		apiObject.IncludeExecutionData = flex.ExpandStringyValueSet[types.IncludeExecutionDataOption](v)
+	}
+
+	if v, ok := tfMap["level"].(string); ok && v != "" {
+		apiObject.Level = types.LogLevel(v)
 	}
 
 	if v, ok := tfMap["s3_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -167,16 +180,20 @@ func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Level; v != "" {
-		tfMap["level"] = v
-	}
-
 	if v := apiObject.CloudwatchLogsLogDestination; v != nil {
 		tfMap["cloudwatch_logs_log_destination"] = []interface{}{flattenCloudWatchLogsLogDestination(v)}
 	}
 
 	if v := apiObject.FirehoseLogDestination; v != nil {
 		tfMap["firehose_log_destination"] = []interface{}{flattenFirehoseLogDestination(v)}
+	}
+
+	if v := apiObject.IncludeExecutionData; v != nil {
+		tfMap["include_execution_data"] = flex.FlattenStringyValueList(v)
+	}
+
+	if v := apiObject.Level; v != "" {
+		tfMap["level"] = v
 	}
 
 	if v := apiObject.S3LogDestination; v != nil {

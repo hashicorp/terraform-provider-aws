@@ -12,9 +12,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -395,6 +395,15 @@ func resourceFlow() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
+																		"prefix_hierarchy": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Schema{
+																				Type:             schema.TypeString,
+																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
+																			},
+																		},
 																		"prefix_format": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
@@ -632,6 +641,15 @@ func resourceFlow() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
+																		"prefix_hierarchy": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Schema{
+																				Type:             schema.TypeString,
+																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
+																			},
+																		},
 																		"prefix_format": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
@@ -930,6 +948,11 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 											},
 										},
 									},
@@ -943,6 +966,34 @@ func resourceFlow() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+												"pagination_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_page_size": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 10000),
+															},
+														},
+													},
+												},
+												"parallelism_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_page_size": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 10),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -1259,9 +1310,39 @@ func resourceFlow() *schema.Resource {
 					},
 				},
 			},
+			"metadata_catalog_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"glue_data_catalog": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrDatabaseName: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									names.AttrRoleARN: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+									"table_prefix": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1278,6 +1359,10 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
+	}
+
+	if v, ok := d.GetOk("metadata_catalog_config"); ok {
+		input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1348,6 +1433,14 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("trigger_config", nil)
 	}
 
+	if output.MetadataCatalogConfig != nil {
+		if err := d.Set("metadata_catalog_config", flattenMetadataCatalogConfig(output.MetadataCatalogConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting metadata_catalog_config: %s", err)
+		}
+	} else {
+		d.Set("metadata_catalog_config", nil)
+	}
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -1365,6 +1458,10 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 			Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 			TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
+		}
+
+		if v, ok := d.GetOk("metadata_catalog_config"); ok {
+			input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
 		}
 
 		// always send description when updating a task
@@ -1388,9 +1485,10 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
-	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
+	input := appflow.DeleteFlowInput{
 		FlowName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteFlow(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -1527,6 +1625,10 @@ func expandPrefixConfig(tfMap map[string]interface{}) *types.PrefixConfig {
 
 	if v, ok := tfMap["prefix_type"].(string); ok && v != "" {
 		a.PrefixType = types.PrefixType(v)
+	}
+
+	if v, ok := tfMap["prefix_hierarchy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.PathPrefixHierarchy = flex.ExpandStringyValueList[types.PathPrefix](v)
 	}
 
 	return a
@@ -2272,6 +2374,38 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.Sales
 		a.Object = aws.String(v)
 	}
 
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
+	}
+
+	return a
+}
+
+func expandSAPODataPaginationConfigProperties(tfMap map[string]interface{}) *types.SAPODataPaginationConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SAPODataPaginationConfig{}
+
+	if v, ok := tfMap["max_page_size"].(int); ok && v != 0 {
+		a.MaxPageSize = aws.Int32(int32(v))
+	}
+
+	return a
+}
+
+func expandSAPODataParallelismConfigProperties(tfMap map[string]interface{}) *types.SAPODataParallelismConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SAPODataParallelismConfig{}
+
+	if v, ok := tfMap["max_parallelism"].(int); ok && v != 0 {
+		a.MaxParallelism = aws.Int32(int32(v))
+	}
+
 	return a
 }
 
@@ -2284,6 +2418,14 @@ func expandSAPODataSourceProperties(tfMap map[string]interface{}) *types.SAPODat
 
 	if v, ok := tfMap["object_path"].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
+	}
+
+	if v, ok := tfMap["pagination_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.PaginationConfig = expandSAPODataPaginationConfigProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["parallelism_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.ParallelismConfig = expandSAPODataParallelismConfigProperties(v[0].(map[string]interface{}))
 	}
 
 	return a
@@ -2602,6 +2744,70 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.Sched
 	return a
 }
 
+func expandMetadataCatalogConfig(tfList []any) *types.MetadataCatalogConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+
+	a := &types.MetadataCatalogConfig{}
+
+	if v, ok := m["glue_data_catalog"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.GlueDataCatalog = expandGlueDataCatalog(v[0].(map[string]any))
+	}
+
+	return a
+}
+
+func expandGlueDataCatalog(tfMap map[string]interface{}) *types.GlueDataCatalogConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.GlueDataCatalogConfig{}
+
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+		a.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		a.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["table_prefix"].(string); ok && v != "" {
+		a.TablePrefix = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenMetadataCatalogConfig(in *types.MetadataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"glue_data_catalog": flattenGlueDataCatalog(in.GlueDataCatalog),
+	}
+
+	return []any{m}
+}
+
+func flattenGlueDataCatalog(in *types.GlueDataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		names.AttrDatabaseName: in.DatabaseName,
+		names.AttrRoleARN:      in.RoleArn,
+		"table_prefix":         in.TablePrefix,
+	}
+
+	return []any{m}
+}
+
 func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) map[string]interface{} {
 	if errorHandlingConfig == nil {
 		return nil
@@ -2631,6 +2837,7 @@ func flattenPrefixConfig(prefixConfig *types.PrefixConfig) map[string]interface{
 
 	m["prefix_format"] = prefixConfig.PrefixFormat
 	m["prefix_type"] = prefixConfig.PrefixType
+	m["prefix_hierarchy"] = flex.FlattenStringyValueList(prefixConfig.PathPrefixHierarchy)
 
 	return m
 }
@@ -3339,12 +3546,41 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 
 	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
+	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 
 	if v := salesforceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
 	}
 
 	return m
+}
+
+func flattenSAPODataPaginationConfigProperties(sapoDataPaginationConfig *types.SAPODataPaginationConfig) []any {
+	if sapoDataPaginationConfig == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := sapoDataPaginationConfig.MaxPageSize; v != nil {
+		m["max_page_size"] = aws.ToInt32(v)
+	}
+
+	return []any{m}
+}
+
+func flattenSAPODataParallelismConfigProperties(sapoDataParallelismConfig *types.SAPODataParallelismConfig) []any {
+	if sapoDataParallelismConfig == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := sapoDataParallelismConfig.MaxParallelism; v != nil {
+		m["max_parallelism"] = aws.ToInt32(v)
+	}
+
+	return []any{m}
 }
 
 func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSourceProperties) map[string]interface{} {
@@ -3356,6 +3592,14 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSou
 
 	if v := sapoDataSourceProperties.ObjectPath; v != nil {
 		m["object_path"] = aws.ToString(v)
+	}
+
+	if v := sapoDataSourceProperties.PaginationConfig; v != nil {
+		m["pagination_config"] = flattenSAPODataPaginationConfigProperties(v)
+	}
+
+	if v := sapoDataSourceProperties.ParallelismConfig; v != nil {
+		m["pagination_config"] = flattenSAPODataParallelismConfigProperties(v)
 	}
 
 	return m
@@ -3496,7 +3740,7 @@ func flattenTask(task types.Task) map[string]interface{} {
 	}
 
 	if v := task.TaskProperties; v != nil {
-		m["task_properties"] = v
+		m["task_properties"] = flex.FlattenStringValueMap(v)
 	}
 
 	m["task_type"] = task.TaskType

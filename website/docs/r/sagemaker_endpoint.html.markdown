@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint"
 description: |-
-  Provides a SageMaker Endpoint resource.
+  Provides a SageMaker AI Endpoint resource.
 ---
 
 # Resource: aws_sagemaker_endpoint
 
-Provides a SageMaker Endpoint resource.
+Provides a SageMaker AI Endpoint resource.
 
 ## Example Usage
 
@@ -36,9 +36,9 @@ This resource supports the following arguments:
 
 ### Deployment Config
 
-* `blue_green_update_policy` - (Optional) Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. SageMaker flips traffic to the new fleet according to the specified traffic routing configuration. Only one update policy should be used in the deployment configuration. If no update policy is specified, SageMaker uses a blue/green deployment strategy with all at once traffic shifting by default. See [Blue Green Update Config](#blue-green-update-config).
+* `blue_green_update_policy` - (Optional) Update policy for a blue/green deployment. If this update policy is specified, SageMaker AI creates a new fleet during the deployment while maintaining the old fleet. SageMaker AI flips traffic to the new fleet according to the specified traffic routing configuration. Only one update policy should be used in the deployment configuration. If no update policy is specified, SageMaker AI uses a blue/green deployment strategy with all at once traffic shifting by default. See [Blue Green Update Config](#blue-green-update-config).
 * `auto_rollback_configuration` - (Optional) Automatic rollback configuration for handling endpoint deployment failures and recovery. See [Auto Rollback Configuration](#auto-rollback-configuration).
-* `rolling_update_policy` - (Optional) Specifies a rolling deployment strategy for updating a SageMaker endpoint. See [Rolling Update Policy](#rolling-update-policy).
+* `rolling_update_policy` - (Optional) Specifies a rolling deployment strategy for updating a SageMaker AI endpoint. See [Rolling Update Policy](#rolling-update-policy).
 
 #### Blue Green Update Config
 
@@ -51,7 +51,7 @@ This resource supports the following arguments:
 * `maximum_batch_size` - (Required) Batch size for each rolling step to provision capacity and turn on traffic on the new endpoint fleet, and terminate capacity on the old endpoint fleet. Value must be between 5% to 50% of the variant's total instance count. See [Maximum Batch Size](#maximum-batch-size).
 * `maximum_execution_timeout_in_seconds` - (Optional) The time limit for the total deployment. Exceeding this limit causes a timeout. Valid values are between `600` and `14400`.
 * `rollback_maximum_batch_size` - (Optional) Batch size for rollback to the old endpoint fleet. Each rolling step to provision capacity and turn on traffic on the old endpoint fleet, and terminate capacity on the new endpoint fleet. If this field is absent, the default value will be set to 100% of total capacity which means to bring up the whole capacity of the old fleet at once during rollback. See [Rollback Maximum Batch Size](#rollback-maximum-batch-size).
-* `wait_interval_in_seconds` - (Required) The length of the baking period, during which SageMaker monitors alarms for each batch on the new fleet. Valid values are between `0` and `3600`.
+* `wait_interval_in_seconds` - (Required) The length of the baking period, during which SageMaker AI monitors alarms for each batch on the new fleet. Valid values are between `0` and `3600`.
 
 ##### Traffic Routing Configuration
 
@@ -82,7 +82,7 @@ This resource supports the following arguments:
 
 #### Auto Rollback Configuration
 
-* `alarms` - (Required) List of CloudWatch alarms in your account that are configured to monitor metrics on an endpoint. If any alarms are tripped during a deployment, SageMaker rolls back the deployment. See [Alarms](#alarms).
+* `alarms` - (Required) List of CloudWatch alarms in your account that are configured to monitor metrics on an endpoint. If any alarms are tripped during a deployment, SageMaker AI rolls back the deployment. See [Alarms](#alarms).
 
 ##### Alarms
 

@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_internet_gateway")
-func DataSourceInternetGateway() *schema.Resource {
+// @SDKDataSource("aws_internet_gateway", name="Internet Gateway")
+func dataSourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInternetGatewayRead,
 
@@ -67,8 +68,8 @@ func DataSourceInternetGateway() *schema.Resource {
 
 func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
@@ -89,19 +90,19 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		filter.(*schema.Set),
 	)...)
 
-	igw, err := FindInternetGateway(ctx, conn, input)
+	igw, err := findInternetGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Internet Gateway", err))
 	}
 
-	d.SetId(aws.StringValue(igw.InternetGatewayId))
+	d.SetId(aws.ToString(igw.InternetGatewayId))
 
-	ownerID := aws.StringValue(igw.OwnerId)
+	ownerID := aws.ToString(igw.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()
@@ -114,19 +115,19 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags
 }
 
-func flattenInternetGatewayAttachments(igwAttachments []*ec2.InternetGatewayAttachment) []map[string]interface{} {
+func flattenInternetGatewayAttachments(igwAttachments []awstypes.InternetGatewayAttachment) []map[string]interface{} {
 	attachments := make([]map[string]interface{}, 0, len(igwAttachments))
 	for _, a := range igwAttachments {
 		m := make(map[string]interface{})
-		m[names.AttrState] = aws.StringValue(a.State)
-		m[names.AttrVPCID] = aws.StringValue(a.VpcId)
+		m[names.AttrState] = string(a.State)
+		m[names.AttrVPCID] = aws.ToString(a.VpcId)
 		attachments = append(attachments, m)
 	}
 

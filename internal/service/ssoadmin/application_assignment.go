@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Assignment")
+// @FrameworkResource("aws_ssoadmin_application_assignment", name="Application Assignment")
 func newResourceApplicationAssignment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAssignment{}, nil
 }
@@ -40,10 +40,6 @@ const (
 
 type resourceApplicationAssignment struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplicationAssignment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_assignment"
 }
 
 func (r *resourceApplicationAssignment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -156,8 +152,8 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 	}
 
 	in := &ssoadmin.DeleteApplicationAssignmentInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
-		PrincipalId:    aws.String(state.PrincipalID.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
+		PrincipalId:    state.PrincipalID.ValueStringPointer(),
 		PrincipalType:  awstypes.PrincipalType(state.PrincipalType.ValueString()),
 	}
 

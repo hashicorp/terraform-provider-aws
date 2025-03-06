@@ -35,7 +35,7 @@ const (
 )
 
 // @SDKResource("aws_iam_policy", name="Policy")
-// @Tags(identifierAttribute="id", resourceType="Policy")
+// @Tags(identifierAttribute="arn", resourceType="Policy")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Policy")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
@@ -102,8 +102,6 @@ func resourcePolicy() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -128,7 +126,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := conn.CreatePolicy(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 

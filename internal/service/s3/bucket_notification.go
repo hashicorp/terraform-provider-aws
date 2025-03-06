@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -147,7 +148,11 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	var eventbridgeConfig *types.EventBridgeConfiguration
 	if d.Get("eventbridge").(bool) {
@@ -320,7 +325,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		d.SetId(bucket)
 
 		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-			return findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
+			return findBucketNotificationConfiguration(ctx, conn, bucket, "")
 		})
 
 		if err != nil {
@@ -335,7 +340,12 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	output, err := findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	output, err := findBucketNotificationConfiguration(ctx, conn, bucket, "")
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Notification (%s) not found, removing from state", d.Id())
@@ -347,7 +357,7 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrBucket, bucket)
 	d.Set("eventbridge", output.EventBridgeConfiguration != nil)
 	if err := d.Set("lambda_function", flattenLambdaFunctionConfigurations(output.LambdaFunctionConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_function: %s", err)
@@ -356,7 +366,7 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting queue: %s", err)
 	}
 	if err := d.Set("topic", flattenTopicConfigurations(output.TopicConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting queue: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting topic: %s", err)
 	}
 
 	return diags
@@ -366,8 +376,13 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketNotificationConfigurationInput{
-		Bucket:                    aws.String(d.Id()),
+		Bucket:                    aws.String(bucket),
 		NotificationConfiguration: &types.NotificationConfiguration{},
 	}
 
@@ -408,7 +423,7 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 		return nil, err
 	}
 
-	if output == nil {
+	if itypes.IsZero(output) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

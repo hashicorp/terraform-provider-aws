@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -32,6 +33,8 @@ import (
 )
 
 const (
+	ResNameStackSetInstance = "Stack Set Instance"
+
 	stackSetInstanceResourceIDPartCount = 3
 )
 
@@ -76,13 +79,40 @@ func resourceStackSetInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"organizational_unit_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							MinItems:      1,
+							ConflictsWith: []string{names.AttrAccountID},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
 							},
+						},
+						"account_filter_type": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
+							ConflictsWith: []string{names.AttrAccountID},
+						},
+						"accounts": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							MinItems:      1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidAccountID,
+							},
+						},
+						"accounts_url": {
+							Type:          schema.TypeString,
+							ForceNew:      true,
+							Optional:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
 						},
 					},
 				},
@@ -117,6 +147,11 @@ func resourceStackSetInstance() *schema.Resource {
 							Optional:      true,
 							ValidateFunc:  validation.IntBetween(1, 100),
 							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+						},
+						"concurrency_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
 						},
 						"region_concurrency_type": {
 							Type:             schema.TypeString,
@@ -195,7 +230,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
@@ -206,7 +241,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		StackSetName: aws.String(stackSetName),
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -217,7 +252,9 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
-		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
+		if len(dt.OrganizationalUnitIds) > 0 {
+			accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
+		}
 		input.DeploymentTargets = dt
 	} else {
 		d.Set(names.AttrAccountID, accountID)
@@ -237,68 +274,28 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
-	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+	id, err := flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false)
+	if err != nil {
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
+	}
+
+	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
+		func() (*cloudformation.CreateStackInstancesOutput, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
-			output, err := conn.CreateStackInstances(ctx, input)
-
-			if err != nil {
-				return nil, err
-			}
-
-			d.SetId(id)
-
-			operation, err := waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
-
-			if err != nil {
-				return nil, fmt.Errorf("waiting for create: %w", err)
-			}
-
-			return operation, nil
+			return conn.CreateStackInstances(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if err == nil {
-				return false, nil
-			}
-
-			message := err.Error()
-
-			// IAM eventual consistency
-			if strings.Contains(message, "AccountGate check failed") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
-			if strings.Contains(message, "is not authorized") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// XXX role has insufficient YYY permissions
-			if strings.Contains(message, "role has insufficient") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// Account XXX should have YYY role with trust relationship to Role ZZZ
-			if strings.Contains(message, "role with trust relationship") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			if strings.Contains(message, "The security token included in the request is invalid") {
-				return true, err
-			}
-
-			return false, err
-		},
+		isRetryableIAMPropagationErr,
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s) Instance: %s", stackSetName, err)
+	}
+
+	d.SetId(id)
+
+	_, err = waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s) Instance: waiting for completion: %s", stackSetName, err)
 	}
 
 	return append(diags, resourceStackSetInstanceRead(ctx, d, meta)...)
@@ -357,7 +354,6 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("deployment_targets", flattenDeploymentTargetsFromSlice(orgIDs))
 		d.Set("stack_instance_summaries", flattenStackInstanceSummaries(summaries))
 	}
 
@@ -368,7 +364,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
+	if d.HasChanges("parameter_overrides", "operation_preferences") {
 		parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -386,13 +382,6 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		callAs := d.Get("call_as").(string)
 		if v, ok := d.GetOk("call_as"); ok {
 			input.CallAs = awstypes.CallAs(v.(string))
-		}
-
-		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			dt := expandDeploymentTargets(v.([]interface{}))
-			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
-			input.Accounts = nil
-			input.DeploymentTargets = dt
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -446,6 +435,10 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		// the organizational unit must be provided;
 		input.Accounts = nil
 		input.DeploymentTargets = dt
+	}
+
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
@@ -560,24 +553,17 @@ func expandDeploymentTargets(tfList []interface{}) *awstypes.DeploymentTargets {
 	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
 		dt.OrganizationalUnitIds = flex.ExpandStringValueSet(v)
 	}
+	if v, ok := tfMap["account_filter_type"].(string); ok && len(v) > 0 {
+		dt.AccountFilterType = awstypes.AccountFilterType(v)
+	}
+	if v, ok := tfMap["accounts"].(*schema.Set); ok && v.Len() > 0 {
+		dt.Accounts = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["accounts_url"].(string); ok && len(v) > 0 {
+		dt.AccountsUrl = aws.String(v)
+	}
 
 	return dt
-}
-
-// flattenDeployment targets converts a list of organizational units (typically
-// parsed from the resource ID) into the Terraform representation of the
-// deployment_targets attribute.
-func flattenDeploymentTargetsFromSlice(orgIDs []string) []interface{} {
-	tfList := []interface{}{}
-	for _, ou := range orgIDs {
-		tfList = append(tfList, ou)
-	}
-
-	m := map[string]interface{}{
-		"organizational_unit_ids": tfList,
-	}
-
-	return []interface{}{m}
 }
 
 func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []interface{} {

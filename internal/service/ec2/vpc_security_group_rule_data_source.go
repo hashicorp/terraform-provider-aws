@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,10 +27,6 @@ func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithC
 
 type securityGroupRuleDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*securityGroupRuleDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rule"
 }
 
 func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -89,15 +85,15 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 		return
 	}
 
-	conn := d.Meta().EC2Conn(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	conn := d.Meta().EC2Client(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
 		Filters: newCustomFilterListFramework(ctx, data.Filters),
 	}
 
 	if !data.SecurityGroupRuleID.IsNull() {
-		input.SecurityGroupRuleIds = []*string{flex.StringFromFramework(ctx, data.SecurityGroupRuleID)}
+		input.SecurityGroupRuleIds = []string{flex.StringValueFromFramework(ctx, data.SecurityGroupRuleID)}
 	}
 
 	if len(input.Filters) == 0 {
@@ -105,7 +101,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroupRule(ctx, conn, input)
+	output, err := findSecurityGroupRule(ctx, conn, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Security Group Rules", tfresource.SingularDataSourceFindError("Security Group Rule", err).Error())
@@ -118,21 +114,21 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
 	data.Description = flex.StringToFramework(ctx, output.Description)
-	data.FromPort = flex.Int64ToFramework(ctx, output.FromPort)
+	data.FromPort = flex.Int32ToFrameworkInt64(ctx, output.FromPort)
 	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
 	data.IsEgress = flex.BoolToFramework(ctx, output.IsEgress)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID)
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID(ctx))
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-	data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
+	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.ToPort = flex.Int32ToFrameworkInt64(ctx, output.ToPort)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (d *securityGroupRuleDataSource) securityGroupRuleARN(_ context.Context, id string) types.String {
-	return types.StringValue(d.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
+func (d *securityGroupRuleDataSource) securityGroupRuleARN(ctx context.Context, id string) types.String {
+	return types.StringValue(d.Meta().RegionalARN(ctx, names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
 type securityGroupRuleDataSourceModel struct {
@@ -149,6 +145,6 @@ type securityGroupRuleDataSourceModel struct {
 	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
 	SecurityGroupID           types.String `tfsdk:"security_group_id"`
 	SecurityGroupRuleID       types.String `tfsdk:"security_group_rule_id"`
-	Tags                      types.Map    `tfsdk:"tags"`
+	Tags                      tftags.Map   `tfsdk:"tags"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
 }

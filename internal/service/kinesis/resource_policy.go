@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Policy")
+// @FrameworkResource("aws_kinesis_resource_policy", name="Resource Policy")
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -36,10 +36,6 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 type resourcePolicyResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_kinesis_resource_policy"
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

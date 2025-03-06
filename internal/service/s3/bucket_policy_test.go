@@ -454,11 +454,12 @@ func TestAccS3BucketPolicy_directoryBucket(t *testing.T) {
 func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_policy" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
@@ -499,8 +500,8 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		}
 
 		// Policy text must be generated inside a resource.TestCheckFunc in order for
-		// the acctest.AccountID() helper to function properly.
-		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(), acctest.Partition(), bucketName)
+		// the acctest.AccountID(ctx) helper to function properly.
+		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(ctx), acctest.Partition(), bucketName)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(policy, expectedPolicyText)
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
@@ -591,6 +592,9 @@ data "aws_iam_policy_document" "policy" {
 func testAccBucketPolicyIAMRoleOrderConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "test1" {
   name = "%[1]s-sultan"
@@ -600,7 +604,7 @@ resource "aws_iam_role" "test1" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "s3.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -615,7 +619,7 @@ resource "aws_iam_role" "test2" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "s3.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -630,7 +634,7 @@ resource "aws_iam_role" "test3" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "s3.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -645,7 +649,7 @@ resource "aws_iam_role" "test4" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "s3.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -660,7 +664,7 @@ resource "aws_iam_role" "test5" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "s3.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.current.name
       }
     }]
     Version = "2012-10-17"
@@ -940,7 +944,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 func testAccBucketPolicyConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 

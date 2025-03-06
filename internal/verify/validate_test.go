@@ -413,7 +413,6 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.Value, func(t *testing.T) {
 			t.Parallel()
 
@@ -807,7 +806,6 @@ func TestMapKeyNoMatch(t *testing.T) {
 	}
 	f := MapKeyNoMatch(regexache.MustCompile(`^.*\d$`), "must not end with a digit")
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -848,7 +846,6 @@ func TestMapSizeAtMost(t *testing.T) {
 	}
 	f := MapSizeAtMost(4)
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -896,7 +893,6 @@ func TestMapSizeBetween(t *testing.T) {
 	}
 	f := MapSizeBetween(2, 4)
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -933,7 +929,6 @@ func TestMapKeysAre(t *testing.T) {
 	}
 	f := MapKeysAre(validation.ToDiagFunc(validation.StringInSlice([]string{"K1", "K2"}, false)))
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

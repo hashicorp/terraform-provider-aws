@@ -157,7 +157,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamU
 			return err
 		}
 
-		user, err := tfappstream.FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
+		user, err := tfappstream.FindUserByTwoPartKey(ctx, conn, userName, authType)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("AppStream User %q does not exist", rs.Primary.ID)
 		}
@@ -185,7 +185,8 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			resp, err := conn.DescribeUsers(ctx, &appstream.DescribeUsersInput{AuthenticationType: awstypes.AuthenticationType(authType)})
+			input := appstream.DescribeUsersInput{AuthenticationType: awstypes.AuthenticationType(authType)}
+			resp, err := conn.DescribeUsers(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

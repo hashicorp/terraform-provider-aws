@@ -4,15 +4,15 @@
 package elasticsearch
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
-	options := &elasticsearch.CognitoOptions{
+func expandCognitoOptions(c []interface{}) *awstypes.CognitoOptions {
+	options := &awstypes.CognitoOptions{
 		Enabled: aws.Bool(false),
 	}
 	if len(c) < 1 {
@@ -40,20 +40,20 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 	return options
 }
 
-func expandDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointOptions {
+func expandDomainEndpointOptions(l []interface{}) *awstypes.DomainEndpointOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
-	domainEndpointOptions := &elasticsearch.DomainEndpointOptions{}
+	domainEndpointOptions := &awstypes.DomainEndpointOptions{}
 
 	if v, ok := m["enforce_https"].(bool); ok {
 		domainEndpointOptions.EnforceHTTPS = aws.Bool(v)
 	}
 
 	if v, ok := m["tls_security_policy"].(string); ok {
-		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
+		domainEndpointOptions.TLSSecurityPolicy = awstypes.TLSSecurityPolicy(v)
 	}
 
 	if customEndpointEnabled, ok := m["custom_endpoint_enabled"]; ok {
@@ -73,26 +73,26 @@ func expandDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointO
 	return domainEndpointOptions
 }
 
-func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
-	options := elasticsearch.EBSOptions{}
+func expandEBSOptions(m map[string]interface{}) *awstypes.EBSOptions {
+	options := awstypes.EBSOptions{}
 
 	if ebsEnabled, ok := m["ebs_enabled"]; ok {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
 			if v, ok := m[names.AttrVolumeSize]; ok && v.(int) > 0 {
-				options.VolumeSize = aws.Int64(int64(v.(int)))
+				options.VolumeSize = aws.Int32(int32(v.(int)))
 			}
 			var volumeType string
 			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
 				volumeType = v.(string)
-				options.VolumeType = aws.String(volumeType)
+				options.VolumeType = awstypes.VolumeType(volumeType)
 			}
-			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
-				options.Iops = aws.Int64(int64(v.(int)))
+			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && ebsVolumeTypePermitsIopsInput(volumeType) {
+				options.Iops = aws.Int32(int32(v.(int)))
 			}
-			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
-				options.Throughput = aws.Int64(int64(v.(int)))
+			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && ebsVolumeTypePermitsThroughputInput(volumeType) {
+				options.Throughput = aws.Int32(int32(v.(int)))
 			}
 		}
 	}
@@ -100,8 +100,8 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
-func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.EncryptionAtRestOptions {
-	options := elasticsearch.EncryptionAtRestOptions{}
+func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.EncryptionAtRestOptions {
+	options := awstypes.EncryptionAtRestOptions{}
 
 	if v, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
@@ -113,85 +113,83 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.Encrypt
 	return &options
 }
 
-func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+func expandVPCOptions(m map[string]interface{}) *awstypes.VPCOptions {
 	if m == nil {
 		return nil
 	}
 
-	options := elasticsearch.VPCOptions{}
+	options := awstypes.VPCOptions{}
 
 	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
-		options.SecurityGroupIds = flex.ExpandStringSet(v)
+		options.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
-		options.SubnetIds = flex.ExpandStringSet(v)
+		options.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return &options
 }
 
-func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
+func flattenCognitoOptions(c *awstypes.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m[names.AttrEnabled] = aws.BoolValue(c.Enabled)
+	m[names.AttrEnabled] = aws.ToBool(c.Enabled)
 
-	if aws.BoolValue(c.Enabled) {
-		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
-		m[names.AttrUserPoolID] = aws.StringValue(c.UserPoolId)
-		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
+	if aws.ToBool(c.Enabled) {
+		m["identity_pool_id"] = aws.ToString(c.IdentityPoolId)
+		m[names.AttrUserPoolID] = aws.ToString(c.UserPoolId)
+		m[names.AttrRoleARN] = aws.ToString(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEndpointOptions) []interface{} {
+func flattenDomainEndpointOptions(domainEndpointOptions *awstypes.DomainEndpointOptions) []interface{} {
 	if domainEndpointOptions == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"enforce_https":           aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
-		"tls_security_policy":     aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
-		"custom_endpoint_enabled": aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled),
+		"enforce_https":           aws.ToBool(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy":     string(domainEndpointOptions.TLSSecurityPolicy),
+		"custom_endpoint_enabled": aws.ToBool(domainEndpointOptions.CustomEndpointEnabled),
 	}
-	if aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled) {
+	if aws.ToBool(domainEndpointOptions.CustomEndpointEnabled) {
 		if domainEndpointOptions.CustomEndpoint != nil {
-			m["custom_endpoint"] = aws.StringValue(domainEndpointOptions.CustomEndpoint)
+			m["custom_endpoint"] = aws.ToString(domainEndpointOptions.CustomEndpoint)
 		}
 		if domainEndpointOptions.CustomEndpointCertificateArn != nil {
-			m["custom_endpoint_certificate_arn"] = aws.StringValue(domainEndpointOptions.CustomEndpointCertificateArn)
+			m["custom_endpoint_certificate_arn"] = aws.ToString(domainEndpointOptions.CustomEndpointCertificateArn)
 		}
 	}
 
 	return []interface{}{m}
 }
 
-func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
+func flattenEBSOptions(o *awstypes.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if o.EBSEnabled != nil {
-		m["ebs_enabled"] = aws.BoolValue(o.EBSEnabled)
+		m["ebs_enabled"] = aws.ToBool(o.EBSEnabled)
 	}
 
-	if aws.BoolValue(o.EBSEnabled) {
+	if aws.ToBool(o.EBSEnabled) {
 		if o.Iops != nil {
-			m[names.AttrIOPS] = aws.Int64Value(o.Iops)
+			m[names.AttrIOPS] = aws.ToInt32(o.Iops)
 		}
 		if o.Throughput != nil {
-			m[names.AttrThroughput] = aws.Int64Value(o.Throughput)
+			m[names.AttrThroughput] = aws.ToInt32(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)
+			m[names.AttrVolumeSize] = aws.ToInt32(o.VolumeSize)
 		}
-		if o.VolumeType != nil {
-			m[names.AttrVolumeType] = aws.StringValue(o.VolumeType)
-		}
+		m[names.AttrVolumeType] = string(o.VolumeType)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map[string]interface{} {
+func flattenEncryptAtRestOptions(o *awstypes.EncryptionAtRestOptions) []map[string]interface{} {
 	if o == nil {
 		return []map[string]interface{}{}
 	}
@@ -199,28 +197,28 @@ func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.ToBool(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(o.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.ToString(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
+func flattenSnapshotOptions(snapshotOptions *awstypes.SnapshotOptions) []map[string]interface{} {
 	if snapshotOptions == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"automated_snapshot_start_hour": int(aws.Int64Value(snapshotOptions.AutomatedSnapshotStartHour)),
+		"automated_snapshot_start_hour": int(aws.ToInt32(snapshotOptions.AutomatedSnapshotStartHour)),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface{} {
+func flattenVPCDerivedInfo(o *awstypes.VPCDerivedInfo) map[string]interface{} {
 	if o == nil {
 		return nil
 	}
@@ -228,16 +226,16 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
-		m[names.AttrAvailabilityZones] = flex.FlattenStringSet(o.AvailabilityZones)
+		m[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
-		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(o.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
-		m[names.AttrSubnetIDs] = flex.FlattenStringSet(o.SubnetIds)
+		m[names.AttrSubnetIDs] = flex.FlattenStringValueSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
-		m[names.AttrVPCID] = aws.StringValue(o.VPCId)
+		m[names.AttrVPCID] = aws.ToString(o.VPCId)
 	}
 
 	return m

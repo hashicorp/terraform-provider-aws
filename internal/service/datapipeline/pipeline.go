@@ -9,23 +9,24 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_datapipeline_pipeline", name="Pipeline")
-// @Tags(identifierAttribute="id")
-func ResourcePipeline() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="Pipeline")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datapipeline/types;awstypes;awstypes.PipelineDescription")
+func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
 		ReadWithoutTimeout:   resourcePipelineRead,
@@ -51,14 +52,12 @@ func ResourcePipeline() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
+	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
 	uniqueID := id.UniqueId()
 	input := datapipeline.CreatePipelineInput{
@@ -71,23 +70,23 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreatePipelineWithContext(ctx, &input)
+	resp, err := conn.CreatePipeline(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating datapipeline: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.PipelineId))
+	d.SetId(aws.ToString(resp.PipelineId))
 
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
+	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
-	v, err := PipelineRetrieve(ctx, d.Id(), conn)
-	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) || v == nil {
+	v, err := findPipeline(ctx, conn, d.Id())
+	if errs.IsA[*awstypes.PipelineNotFoundException](err) || errs.IsA[*awstypes.PipelineDeletedException](err) || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -114,59 +113,55 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
+	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeletePipelineWithContext(ctx, &opts)
-	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
+	_, err := conn.DeletePipeline(ctx, &opts)
+	if errs.IsA[*awstypes.PipelineNotFoundException](err) || errs.IsA[*awstypes.PipelineDeletedException](err) {
 		return diags
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
 
-	if err := WaitForDeletion(ctx, conn, d.Id()); err != nil {
+	if err := waitForDeletion(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
 	return diags
 }
 
-func PipelineRetrieve(ctx context.Context, id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {
+func findPipeline(ctx context.Context, conn *datapipeline.Client, id string) (*awstypes.PipelineDescription, error) {
 	opts := datapipeline.DescribePipelinesInput{
-		PipelineIds: []*string{aws.String(id)},
+		PipelineIds: []string{id},
 	}
 
-	resp, err := conn.DescribePipelinesWithContext(ctx, &opts)
+	resp, err := conn.DescribePipelines(ctx, &opts)
 	if err != nil {
 		return nil, err
 	}
 
-	var pipeline *datapipeline.PipelineDescription
+	var pipeline awstypes.PipelineDescription
 
 	for _, p := range resp.PipelineDescriptionList {
-		if p == nil {
-			continue
-		}
-
-		if aws.StringValue(p.PipelineId) == id {
+		if aws.ToString(p.PipelineId) == id {
 			pipeline = p
 			break
 		}
 	}
 
-	return pipeline, nil
+	return &pipeline, nil
 }
 
-func WaitForDeletion(ctx context.Context, conn *datapipeline.DataPipeline, pipelineID string) error {
+func waitForDeletion(ctx context.Context, conn *datapipeline.Client, pipelineID string) error {
 	params := &datapipeline.DescribePipelinesInput{
-		PipelineIds: []*string{aws.String(pipelineID)},
+		PipelineIds: []string{pipelineID},
 	}
 	return retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
-		_, err := conn.DescribePipelinesWithContext(ctx, params)
-		if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
+		_, err := conn.DescribePipelines(ctx, params)
+		if errs.IsA[*awstypes.PipelineNotFoundException](err) || errs.IsA[*awstypes.PipelineDeletedException](err) {
 			return nil
 		}
 		if err != nil {

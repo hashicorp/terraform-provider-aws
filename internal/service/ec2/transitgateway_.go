@@ -56,7 +56,6 @@ func resourceTransitGateway() *schema.Resource {
 				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == string(awstypes.DefaultRouteTablePropagationValueDisable) && new.(string) == string(awstypes.DefaultRouteTablePropagationValueEnable)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -116,6 +115,12 @@ func resourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_referencing_support": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
@@ -149,14 +154,15 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &awstypes.TransitGatewayRequestOptions{
-			AutoAcceptSharedAttachments:  awstypes.AutoAcceptSharedAttachmentsValue(d.Get("auto_accept_shared_attachments").(string)),
-			DefaultRouteTableAssociation: awstypes.DefaultRouteTableAssociationValue(d.Get("default_route_table_association").(string)),
-			DefaultRouteTablePropagation: awstypes.DefaultRouteTablePropagationValue(d.Get("default_route_table_propagation").(string)),
-			DnsSupport:                   awstypes.DnsSupportValue(d.Get("dns_support").(string)),
-			MulticastSupport:             awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
-			VpnEcmpSupport:               awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
+			AutoAcceptSharedAttachments:     awstypes.AutoAcceptSharedAttachmentsValue(d.Get("auto_accept_shared_attachments").(string)),
+			DefaultRouteTableAssociation:    awstypes.DefaultRouteTableAssociationValue(d.Get("default_route_table_association").(string)),
+			DefaultRouteTablePropagation:    awstypes.DefaultRouteTablePropagationValue(d.Get("default_route_table_propagation").(string)),
+			DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+			MulticastSupport:                awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
+			SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
+			VpnEcmpSupport:                  awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
 		},
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGateway),
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
@@ -214,10 +220,11 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("security_group_referencing_support", transitGateway.Options.SecurityGroupReferencingSupport)
 	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	setTagsOutV2(ctx, transitGateway.Tags)
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }
@@ -256,6 +263,10 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.Options.DnsSupport = awstypes.DnsSupportValue(d.Get("dns_support").(string))
 		}
 
+		if d.HasChange("security_group_referencing_support") {
+			input.Options.SecurityGroupReferencingSupport = awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string))
+		}
+
 		if d.HasChange("transit_gateway_cidr_blocks") {
 			oRaw, nRaw := d.GetChange("transit_gateway_cidr_blocks")
 			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
@@ -290,7 +301,10 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteTransitGateway(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})

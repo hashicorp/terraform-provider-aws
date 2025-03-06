@@ -5,7 +5,6 @@ package sesv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,15 +20,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sesv2_configuration_set", name="Configuration Set")
 // @Tags(identifierAttribute="arn")
-func ResourceConfigurationSet() *schema.Resource {
+func resourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
 		ReadWithoutTimeout:   resourceConfigurationSetRead,
@@ -57,6 +58,11 @@ func ResourceConfigurationSet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"max_delivery_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(300, 50400),
+						},
 						"sending_pool_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -112,7 +118,6 @@ func ResourceConfigurationSet() *schema.Resource {
 						"suppressed_reasons": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[types.SuppressionListReason](),
@@ -132,6 +137,11 @@ func ResourceConfigurationSet() *schema.Resource {
 						"custom_redirect_domain": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"https_policy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.HttpsPolicy](),
 						},
 					},
 				},
@@ -174,58 +184,64 @@ func ResourceConfigurationSet() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 const (
-	ResNameConfigurationSet = "Configuration Set"
+	resNameConfigurationSet = "Configuration Set"
 )
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	in := &sesv2.CreateConfigurationSetInput{
-		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
+	name := d.Get("configuration_set_name").(string)
+	input := &sesv2.CreateConfigurationSetInput{
+		ConfigurationSetName: aws.String(name),
 		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.DeliveryOptions = expandDeliveryOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.DeliveryOptions = expandDeliveryOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("reputation_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.ReputationOptions = expandReputationOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.ReputationOptions = expandReputationOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("sending_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("suppression_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SuppressionOptions = expandSuppressionOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetRawConfig().AsValueMap()["suppression_options"]; ok && v.LengthInt() > 0 {
+		if v, ok := v.Index(cty.NumberIntVal(0)).AsValueMap()["suppressed_reasons"]; ok && !v.IsNull() {
+			tfMap := map[string]interface{}{
+				"suppressed_reasons": []interface{}{},
+			}
+
+			for _, v := range v.AsValueSlice() {
+				tfMap["suppressed_reasons"] = append(tfMap["suppressed_reasons"].([]interface{}), v.AsString())
+			}
+
+			input.SuppressionOptions = expandSuppressionOptions(tfMap)
+		}
 	}
 
 	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	out, err := conn.CreateConfigurationSet(ctx, in)
+	_, err := conn.CreateConfigurationSet(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSet, d.Get("configuration_set_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameConfigurationSet, name, err)
 	}
 
-	if out == nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSet, d.Get("configuration_set_name").(string), errors.New("empty output"))
-	}
-
-	d.SetId(d.Get("configuration_set_name").(string))
+	d.SetId(name)
 
 	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
@@ -234,7 +250,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
+	output, err := findConfigurationSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ConfigurationSet (%s) not found, removing from state", d.Id())
@@ -243,55 +259,49 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameConfigurationSet, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
-	d.Set("configuration_set_name", out.ConfigurationSetName)
-
-	if out.DeliveryOptions != nil {
-		if err := d.Set("delivery_options", []interface{}{flattenDeliveryOptions(out.DeliveryOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	d.Set(names.AttrARN, configurationSetARN(ctx, meta.(*conns.AWSClient), aws.ToString(output.ConfigurationSetName)))
+	d.Set("configuration_set_name", output.ConfigurationSetName)
+	if output.DeliveryOptions != nil {
+		if err := d.Set("delivery_options", []interface{}{flattenDeliveryOptions(output.DeliveryOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting delivery_options: %s", err)
 		}
 	} else {
 		d.Set("delivery_options", nil)
 	}
-
-	if out.ReputationOptions != nil {
-		if err := d.Set("reputation_options", []interface{}{flattenReputationOptions(out.ReputationOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	if output.ReputationOptions != nil {
+		if err := d.Set("reputation_options", []interface{}{flattenReputationOptions(output.ReputationOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting reputation_options: %s", err)
 		}
 	} else {
 		d.Set("reputation_options", nil)
 	}
-
-	if out.SendingOptions != nil {
-		if err := d.Set("sending_options", []interface{}{flattenSendingOptions(out.SendingOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	if output.SendingOptions != nil {
+		if err := d.Set("sending_options", []interface{}{flattenSendingOptions(output.SendingOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting sending_options: %s", err)
 		}
 	} else {
 		d.Set("sending_options", nil)
 	}
-
-	if out.SuppressionOptions != nil {
-		if err := d.Set("suppression_options", []interface{}{flattenSuppressionOptions(out.SuppressionOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	if output.SuppressionOptions != nil {
+		if err := d.Set("suppression_options", []interface{}{flattenSuppressionOptions(output.SuppressionOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting suppression_options: %s", err)
 		}
 	} else {
 		d.Set("suppression_options", nil)
 	}
-
-	if out.TrackingOptions != nil {
-		if err := d.Set("tracking_options", []interface{}{flattenTrackingOptions(out.TrackingOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	if output.TrackingOptions != nil {
+		if err := d.Set("tracking_options", []interface{}{flattenTrackingOptions(output.TrackingOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tracking_options: %s", err)
 		}
 	} else {
 		d.Set("tracking_options", nil)
 	}
-
-	if out.VdmOptions != nil {
-		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(out.VdmOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	if output.VdmOptions != nil {
+		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(output.VdmOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vdm_options: %s", err)
 		}
 	} else {
 		d.Set("vdm_options", nil)
@@ -305,31 +315,35 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	if d.HasChanges("delivery_options") {
-		in := &sesv2.PutConfigurationSetDeliveryOptionsInput{
+		input := &sesv2.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
+			if v, ok := tfMap["max_delivery_seconds"].(int); ok && v != 0 {
+				input.MaxDeliverySeconds = aws.Int64(int64(v))
+			}
+
 			if v, ok := tfMap["sending_pool_name"].(string); ok && v != "" {
-				in.SendingPoolName = aws.String(v)
+				input.SendingPoolName = aws.String(v)
 			}
 
 			if v, ok := tfMap["tls_policy"].(string); ok && v != "" {
-				in.TlsPolicy = types.TlsPolicy(v)
+				input.TlsPolicy = types.TlsPolicy(v)
 			}
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet DeliveryOptions (%s): %#v", d.Id(), in)
-		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, in)
+		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("reputation_options") {
-		in := &sesv2.PutConfigurationSetReputationOptionsInput{
+		input := &sesv2.PutConfigurationSetReputationOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
 		}
 
@@ -337,39 +351,39 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			if v, ok := tfMap["reputation_metrics_enabled"].(bool); ok {
-				in.ReputationMetricsEnabled = v
+				input.ReputationMetricsEnabled = v
 			}
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet ReputationOptions (%s): %#v", d.Id(), in)
-		_, err := conn.PutConfigurationSetReputationOptions(ctx, in)
+		_, err := conn.PutConfigurationSetReputationOptions(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("sending_options") {
+		input := &sesv2.PutConfigurationSetSendingOptionsInput{
+			ConfigurationSetName: aws.String(d.Id()),
+		}
+
 		if v, ok := d.GetOk("sending_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			in := &sesv2.PutConfigurationSetSendingOptionsInput{
-				ConfigurationSetName: aws.String(d.Id()),
-			}
-
 			if v, ok := tfMap["sending_enabled"].(bool); ok {
-				in.SendingEnabled = v
+				input.SendingEnabled = v
 			}
+		}
 
-			log.Printf("[DEBUG] Updating SESV2 ConfigurationSet SendingOptions (%s): %#v", d.Id(), in)
-			_, err := conn.PutConfigurationSetSendingOptions(ctx, in)
-			if err != nil {
-				return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
-			}
+		_, err := conn.PutConfigurationSetSendingOptions(ctx, input)
+
+		if err != nil {
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("suppression_options") {
-		in := &sesv2.PutConfigurationSetSuppressionOptionsInput{
+		input := &sesv2.PutConfigurationSetSuppressionOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
 		}
 
@@ -377,19 +391,19 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok && len(v) > 0 {
-				in.SuppressedReasons = expandSuppressedReasons(v)
+				input.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
 			}
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet SuppressionOptions (%s): %#v", d.Id(), in)
-		_, err := conn.PutConfigurationSetSuppressionOptions(ctx, in)
+		_, err := conn.PutConfigurationSetSuppressionOptions(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("tracking_options") {
-		in := &sesv2.PutConfigurationSetTrackingOptionsInput{
+		input := &sesv2.PutConfigurationSetTrackingOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
 		}
 
@@ -397,30 +411,34 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
-				in.CustomRedirectDomain = aws.String(v)
+				input.CustomRedirectDomain = aws.String(v)
+			}
+
+			if v, ok := tfMap["https_policy"].(string); ok && v != "" {
+				input.HttpsPolicy = types.HttpsPolicy(v)
 			}
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet TrackingOptions (%s): %#v", d.Id(), in)
-		_, err := conn.PutConfigurationSetTrackingOptions(ctx, in)
+		_, err := conn.PutConfigurationSetTrackingOptions(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("vdm_options") {
-		in := &sesv2.PutConfigurationSetVdmOptionsInput{
+		input := &sesv2.PutConfigurationSetVdmOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
+			input.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet VdmOptions (%s): %#v", d.Id(), in)
-		_, err := conn.PutConfigurationSetVdmOptions(ctx, in)
+		_, err := conn.PutConfigurationSetVdmOptions(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
@@ -431,46 +449,49 @@ func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	log.Printf("[INFO] Deleting SESV2 ConfigurationSet %s", d.Id())
-
+	log.Printf("[INFO] Deleting SESV2 ConfigurationSet: %s", d.Id())
 	_, err := conn.DeleteConfigurationSet(ctx, &sesv2.DeleteConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameConfigurationSet, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameConfigurationSet, d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindConfigurationSetByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetConfigurationSetOutput, error) {
-	in := &sesv2.GetConfigurationSetInput{
+func findConfigurationSetByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetConfigurationSetOutput, error) {
+	input := &sesv2.GetConfigurationSetInput{
 		ConfigurationSetName: aws.String(id),
 	}
-	out, err := conn.GetConfigurationSet(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findConfigurationSet(ctx, conn, input)
+}
+
+func findConfigurationSet(ctx context.Context, conn *sesv2.Client, input *sesv2.GetConfigurationSetInput) (*sesv2.GetConfigurationSetOutput, error) {
+	output, err := conn.GetConfigurationSet(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 func flattenDeliveryOptions(apiObject *types.DeliveryOptions) map[string]interface{} {
@@ -478,15 +499,19 @@ func flattenDeliveryOptions(apiObject *types.DeliveryOptions) map[string]interfa
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	if v := apiObject.SendingPoolName; v != nil {
-		m["sending_pool_name"] = aws.ToString(v)
+	tfMap := map[string]interface{}{
+		"tls_policy": apiObject.TlsPolicy,
 	}
 
-	m["tls_policy"] = string(apiObject.TlsPolicy)
+	if v := apiObject.MaxDeliverySeconds; v != nil {
+		tfMap["max_delivery_seconds"] = aws.ToInt64(v)
+	}
 
-	return m
+	if v := apiObject.SendingPoolName; v != nil {
+		tfMap["sending_pool_name"] = aws.ToString(v)
+	}
+
+	return tfMap
 }
 
 func flattenReputationOptions(apiObject *types.ReputationOptions) map[string]interface{} {
@@ -494,15 +519,15 @@ func flattenReputationOptions(apiObject *types.ReputationOptions) map[string]int
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]interface{}{
 		"reputation_metrics_enabled": apiObject.ReputationMetricsEnabled,
 	}
 
 	if v := apiObject.LastFreshStart; v != nil {
-		m["last_fresh_start"] = v.Format(time.RFC3339)
+		tfMap["last_fresh_start"] = v.Format(time.RFC3339)
 	}
 
-	return m
+	return tfMap
 }
 
 func flattenSendingOptions(apiObject *types.SendingOptions) map[string]interface{} {
@@ -510,11 +535,11 @@ func flattenSendingOptions(apiObject *types.SendingOptions) map[string]interface
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]interface{}{
 		"sending_enabled": apiObject.SendingEnabled,
 	}
 
-	return m
+	return tfMap
 }
 
 func flattenSuppressionOptions(apiObject *types.SuppressionOptions) map[string]interface{} {
@@ -522,23 +547,13 @@ func flattenSuppressionOptions(apiObject *types.SuppressionOptions) map[string]i
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SuppressedReasons; v != nil {
-		m["suppressed_reasons"] = flattenSuppressedReasons(apiObject.SuppressedReasons)
+		tfMap["suppressed_reasons"] = apiObject.SuppressedReasons
 	}
 
-	return m
-}
-
-func flattenSuppressedReasons(apiObject []types.SuppressionListReason) []string {
-	var out []string
-
-	for _, v := range apiObject {
-		out = append(out, string(v))
-	}
-
-	return out
+	return tfMap
 }
 
 func flattenTrackingOptions(apiObject *types.TrackingOptions) map[string]interface{} {
@@ -546,13 +561,15 @@ func flattenTrackingOptions(apiObject *types.TrackingOptions) map[string]interfa
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	if v := apiObject.CustomRedirectDomain; v != nil {
-		m["custom_redirect_domain"] = aws.ToString(v)
+	tfMap := map[string]interface{}{
+		"https_policy": apiObject.HttpsPolicy,
 	}
 
-	return m
+	if v := apiObject.CustomRedirectDomain; v != nil {
+		tfMap["custom_redirect_domain"] = aws.ToString(v)
+	}
+
+	return tfMap
 }
 
 func flattenVDMOptions(apiObject *types.VdmOptions) map[string]interface{} {
@@ -560,17 +577,17 @@ func flattenVDMOptions(apiObject *types.VdmOptions) map[string]interface{} {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DashboardOptions; v != nil {
-		m["dashboard_options"] = []interface{}{flattenDashboardOptions(v)}
+		tfMap["dashboard_options"] = []interface{}{flattenDashboardOptions(v)}
 	}
 
 	if v := apiObject.GuardianOptions; v != nil {
-		m["guardian_options"] = []interface{}{flattenGuardianOptions(v)}
+		tfMap["guardian_options"] = []interface{}{flattenGuardianOptions(v)}
 	}
 
-	return m
+	return tfMap
 }
 
 func flattenDashboardOptions(apiObject *types.DashboardOptions) map[string]interface{} {
@@ -578,11 +595,11 @@ func flattenDashboardOptions(apiObject *types.DashboardOptions) map[string]inter
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"engagement_metrics": string(apiObject.EngagementMetrics),
+	tfMap := map[string]interface{}{
+		"engagement_metrics": apiObject.EngagementMetrics,
 	}
 
-	return m
+	return tfMap
 }
 
 func flattenGuardianOptions(apiObject *types.GuardianOptions) map[string]interface{} {
@@ -590,11 +607,11 @@ func flattenGuardianOptions(apiObject *types.GuardianOptions) map[string]interfa
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"optimized_shared_delivery": string(apiObject.OptimizedSharedDelivery),
+	tfMap := map[string]interface{}{
+		"optimized_shared_delivery": apiObject.OptimizedSharedDelivery,
 	}
 
-	return m
+	return tfMap
 }
 
 func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions {
@@ -602,17 +619,21 @@ func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions 
 		return nil
 	}
 
-	a := &types.DeliveryOptions{}
+	apiObject := &types.DeliveryOptions{}
+
+	if v, ok := tfMap["max_delivery_seconds"].(int); ok && v != 0 {
+		apiObject.MaxDeliverySeconds = aws.Int64(int64(v))
+	}
 
 	if v, ok := tfMap["sending_pool_name"].(string); ok && v != "" {
-		a.SendingPoolName = aws.String(v)
+		apiObject.SendingPoolName = aws.String(v)
 	}
 
 	if v, ok := tfMap["tls_policy"].(string); ok && v != "" {
-		a.TlsPolicy = types.TlsPolicy(v)
+		apiObject.TlsPolicy = types.TlsPolicy(v)
 	}
 
-	return a
+	return apiObject
 }
 
 func expandReputationOptions(tfMap map[string]interface{}) *types.ReputationOptions {
@@ -620,13 +641,13 @@ func expandReputationOptions(tfMap map[string]interface{}) *types.ReputationOpti
 		return nil
 	}
 
-	a := &types.ReputationOptions{}
+	apiObject := &types.ReputationOptions{}
 
 	if v, ok := tfMap["reputation_metrics_enabled"].(bool); ok {
-		a.ReputationMetricsEnabled = v
+		apiObject.ReputationMetricsEnabled = v
 	}
 
-	return a
+	return apiObject
 }
 
 func expandSendingOptions(tfMap map[string]interface{}) *types.SendingOptions {
@@ -634,13 +655,13 @@ func expandSendingOptions(tfMap map[string]interface{}) *types.SendingOptions {
 		return nil
 	}
 
-	a := &types.SendingOptions{}
+	apiObject := &types.SendingOptions{}
 
 	if v, ok := tfMap["sending_enabled"].(bool); ok {
-		a.SendingEnabled = v
+		apiObject.SendingEnabled = v
 	}
 
-	return a
+	return apiObject
 }
 
 func expandSuppressionOptions(tfMap map[string]interface{}) *types.SuppressionOptions {
@@ -648,25 +669,17 @@ func expandSuppressionOptions(tfMap map[string]interface{}) *types.SuppressionOp
 		return nil
 	}
 
-	a := &types.SuppressionOptions{}
+	apiObject := &types.SuppressionOptions{}
 
-	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok && len(v) > 0 {
-		a.SuppressedReasons = expandSuppressedReasons(v)
-	}
-
-	return a
-}
-
-func expandSuppressedReasons(tfList []interface{}) []types.SuppressionListReason {
-	var out []types.SuppressionListReason
-
-	for _, v := range tfList {
-		if v, ok := v.(string); ok && v != "" {
-			out = append(out, types.SuppressionListReason(v))
+	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok {
+		if len(v) > 0 {
+			apiObject.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
+		} else {
+			apiObject.SuppressedReasons = make([]types.SuppressionListReason, 0)
 		}
 	}
 
-	return out
+	return apiObject
 }
 
 func expandTrackingOptions(tfMap map[string]interface{}) *types.TrackingOptions {
@@ -674,13 +687,17 @@ func expandTrackingOptions(tfMap map[string]interface{}) *types.TrackingOptions 
 		return nil
 	}
 
-	a := &types.TrackingOptions{}
+	apiObject := &types.TrackingOptions{}
 
 	if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
-		a.CustomRedirectDomain = aws.String(v)
+		apiObject.CustomRedirectDomain = aws.String(v)
 	}
 
-	return a
+	if v, ok := tfMap["https_policy"].(string); ok && v != "" {
+		apiObject.HttpsPolicy = types.HttpsPolicy(v)
+	}
+
+	return apiObject
 }
 
 func expandVDMOptions(tfMap map[string]interface{}) *types.VdmOptions {
@@ -688,17 +705,17 @@ func expandVDMOptions(tfMap map[string]interface{}) *types.VdmOptions {
 		return nil
 	}
 
-	a := &types.VdmOptions{}
+	apiObject := &types.VdmOptions{}
 
 	if v, ok := tfMap["dashboard_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.DashboardOptions = expandDashboardOptions(v[0].(map[string]interface{}))
+		apiObject.DashboardOptions = expandDashboardOptions(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["guardian_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.GuardianOptions = expandGuardianOptions(v[0].(map[string]interface{}))
+		apiObject.GuardianOptions = expandGuardianOptions(v[0].(map[string]interface{}))
 	}
 
-	return a
+	return apiObject
 }
 
 func expandDashboardOptions(tfMap map[string]interface{}) *types.DashboardOptions {
@@ -706,13 +723,13 @@ func expandDashboardOptions(tfMap map[string]interface{}) *types.DashboardOption
 		return nil
 	}
 
-	a := &types.DashboardOptions{}
+	apiObject := &types.DashboardOptions{}
 
 	if v, ok := tfMap["engagement_metrics"].(string); ok && v != "" {
-		a.EngagementMetrics = types.FeatureStatus(v)
+		apiObject.EngagementMetrics = types.FeatureStatus(v)
 	}
 
-	return a
+	return apiObject
 }
 
 func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions {
@@ -720,21 +737,15 @@ func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions 
 		return nil
 	}
 
-	a := &types.GuardianOptions{}
+	apiObject := &types.GuardianOptions{}
 
 	if v, ok := tfMap["optimized_shared_delivery"].(string); ok && v != "" {
-		a.OptimizedSharedDelivery = types.FeatureStatus(v)
+		apiObject.OptimizedSharedDelivery = types.FeatureStatus(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func configurationSetNameToARN(meta interface{}, configurationSetName string) string {
-	return arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("configuration-set/%s", configurationSetName),
-	}.String()
+func configurationSetARN(ctx context.Context, c *conns.AWSClient, configurationSetName string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s", configurationSetName))
 }

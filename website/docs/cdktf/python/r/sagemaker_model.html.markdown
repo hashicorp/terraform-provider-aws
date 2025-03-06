@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model"
 description: |-
@@ -83,6 +83,8 @@ The `primary_container` and `container` block both support:
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
 * `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+* `inference_specification_name` - (Optional) The inference specification name in the model package version.
+* `multi_model_config` - (Optional) Specifies additional configuration for multi-model endpoints. see [Multi Model Config](#multi-model-config).
 
 ### Image Config
 
@@ -102,6 +104,15 @@ The `primary_container` and `container` block both support:
 * `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
 * `s3_data_type` - (Required) The type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
 * `s3_uri` - (Required) The S3 path of model data to deploy.
+* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block]. see [Model Access Config](#model-access-config).
+
+##### Model Access Config
+
+* `accept_eula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The AcceptEula value must be explicitly defined as `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
+
+### Multi Model Config
+
+* `model_cache_setting` - (Optional) Whether to cache models for a multi-model endpoint. By default, multi-model endpoints cache models so that a model does not have to be loaded into memory each time it is invoked. Some use cases do not benefit from model caching. For example, if an endpoint hosts a large number of models that are each invoked infrequently, the endpoint might perform better if you disable model caching. To disable model caching, set the value of this parameter to `Disabled`. Allowed values are: `Enabled` and `Disabled`.
 
 ## Inference Execution Config
 
@@ -140,4 +151,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_model.test_model model-foo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-19ce3f053fc0e6fa1af2c28c5e497e97fb4890e3cc71a468a66b19f56cd52592 -->
+<!-- cache-key: cdktf-0.20.8 input-22db6730e3e40dcfe0c74caa5b3dc9c2acf674b52c6e6fad1308bde7b4f8d0ee -->

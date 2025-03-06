@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,7 +82,7 @@ func resourceAMI() *schema.Resource {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				ValidateFunc:          validation.IsRFC3339Time,
-				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
+				DiffSuppressFunc:      sdkv2.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
 			names.AttrDescription: {
@@ -267,7 +268,7 @@ func resourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  SriovNetSupportSimple,
+				Default:  sriovNetSupportSimple,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -276,6 +277,11 @@ func resourceAMI() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TpmSupportValues](),
+			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"usage_operation": {
 				Type:     schema.TypeString,
@@ -289,8 +295,6 @@ func resourceAMI() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.VirtualizationType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -299,7 +303,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ec2.RegisterImageInput{
+	input := ec2.RegisterImageInput{
 		Architecture:       awstypes.ArchitectureValues(d.Get("architecture").(string)),
 		Description:        aws.String(d.Get(names.AttrDescription).(string)),
 		EnaSupport:         aws.Bool(d.Get("ena_support").(bool)),
@@ -362,7 +366,11 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
-	output, err := conn.RegisterImage(ctx, input)
+	if uefiData := d.Get("uefi_data").(string); uefiData != "" {
+		input.UefiData = aws.String(uefiData)
+	}
+
+	output, err := conn.RegisterImage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): %s", name, err)
@@ -370,7 +378,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.ToString(output.ImageId))
 
-	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
@@ -422,8 +430,8 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("architecture", image.Architecture)
 	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   names.EC2,
 	}.String()
@@ -459,7 +467,15 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	setTagsOutV2(ctx, image.Tags)
+	input := ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &input)
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
+
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
@@ -495,9 +511,10 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
-	_, err := conn.DeregisterImage(ctx, &ec2.DeregisterImageInput{
+	input := ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterImage(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return diags
@@ -511,13 +528,13 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.Get("manage_ebs_snapshots").(bool) {
 		errs := map[string]error{}
 		ebsBlockDevsSet := d.Get("ebs_block_device").(*schema.Set)
-		req := &ec2.DeleteSnapshotInput{}
+		req := ec2.DeleteSnapshotInput{}
 		for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
 			ebsBlockDev := ebsBlockDevI.(map[string]interface{})
 			snapshotId := ebsBlockDev[names.AttrSnapshotID].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
-				_, err := conn.DeleteSnapshot(ctx, req)
+				_, err := conn.DeleteSnapshot(ctx, &req)
 				if err != nil {
 					errs[snapshotId] = err
 				}
@@ -530,7 +547,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 				errParts = append(errParts, fmt.Sprintf("%s: %s", snapshotId, err))
 			}
 			errParts = append(errParts, "These are no longer managed by Terraform and must be deleted manually.")
-			return sdkdiag.AppendErrorf(diags, strings.Join(errParts, "\n"))
+			return sdkdiag.AppendErrorf(diags, "%s", strings.Join(errParts, "\n"))
 		}
 	}
 
@@ -542,14 +559,14 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func updateDescription(ctx context.Context, conn *ec2.Client, id string, description string) error {
-	input := &ec2.ModifyImageAttributeInput{
+	input := ec2.ModifyImageAttributeInput{
 		Description: &awstypes.AttributeValue{
 			Value: aws.String(description),
 		},
 		ImageId: aws.String(id),
 	}
 
-	_, err := conn.ModifyImageAttribute(ctx, input)
+	_, err := conn.ModifyImageAttribute(ctx, &input)
 	if err != nil {
 		return fmt.Errorf("updating description: %s", err)
 	}
@@ -564,12 +581,12 @@ func updateDescription(ctx context.Context, conn *ec2.Client, id string, descrip
 
 func enableImageDeprecation(ctx context.Context, conn *ec2.Client, id string, deprecateAt string) error {
 	v, _ := time.Parse(time.RFC3339, deprecateAt)
-	input := &ec2.EnableImageDeprecationInput{
+	input := ec2.EnableImageDeprecationInput{
 		DeprecateAt: aws.Time(v),
 		ImageId:     aws.String(id),
 	}
 
-	_, err := conn.EnableImageDeprecation(ctx, input)
+	_, err := conn.EnableImageDeprecation(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("enabling deprecation: %w", err)
@@ -585,11 +602,11 @@ func enableImageDeprecation(ctx context.Context, conn *ec2.Client, id string, de
 }
 
 func disableImageDeprecation(ctx context.Context, conn *ec2.Client, id string) error {
-	input := &ec2.DisableImageDeprecationInput{
+	input := ec2.DisableImageDeprecationInput{
 		ImageId: aws.String(id),
 	}
 
-	_, err := conn.DisableImageDeprecation(ctx, input)
+	_, err := conn.DisableImageDeprecation(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("disabling deprecation: %w", err)

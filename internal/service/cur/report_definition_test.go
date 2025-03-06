@@ -42,11 +42,11 @@ func testAccReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 				),
 			},
 			{
@@ -63,11 +63,61 @@ func testAccReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccReportDefinition_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cur_report_definition.test"
+	rName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	s3Prefix := "test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReportDefinitionConfig_tags1(rName, s3BucketName, s3Prefix, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+				},
+			},
+			{
+				Config: testAccReportDefinitionConfig_tags2(rName, s3BucketName, s3Prefix, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccReportDefinitionConfig_tags1(rName, s3BucketName, s3Prefix, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -101,11 +151,11 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
@@ -146,7 +196,7 @@ func testAccReportDefinition_parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
@@ -190,11 +240,11 @@ func testAccReportDefinition_athena(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
@@ -235,11 +285,11 @@ func testAccReportDefinition_refresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
@@ -280,11 +330,11 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
@@ -490,6 +540,133 @@ resource "aws_cur_report_definition" "test" {
 `, reportName, bucketName, bucketPrefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
 }
 
+func testAccReportDefinitionConfig_tags1(reportName, s3BucketName, s3Prefix, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  policy = <<POLICY
+{
+  "Version": "2008-10-17",
+  "Id": "s3policy",
+  "Statement": [
+    {
+      "Sid": "AllowCURBillingACLPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
+    },
+    {
+      "Sid": "AllowCURPutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cur_report_definition" "test" {
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+
+  report_name                = %[1]q
+  time_unit                  = "DAILY"
+  format                     = "textORcsv"
+  compression                = "GZIP"
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
+  s3_bucket                  = aws_s3_bucket.test.id
+  s3_prefix                  = %[3]q
+  s3_region                  = aws_s3_bucket.test.region
+  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+
+  tags = {
+    %[4]q = %[5]q
+  }
+}
+`, reportName, s3BucketName, s3Prefix, tagKey1, tagValue1)
+}
+
+func testAccReportDefinitionConfig_tags2(reportName, s3BucketName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  policy = <<POLICY
+{
+  "Version": "2008-10-17",
+  "Id": "s3policy",
+  "Statement": [
+    {
+      "Sid": "AllowCURBillingACLPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
+    },
+    {
+      "Sid": "AllowCURPutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cur_report_definition" "test" {
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+
+  report_name                = %[1]q
+  time_unit                  = "DAILY"
+  format                     = "textORcsv"
+  compression                = "GZIP"
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
+  s3_bucket                  = aws_s3_bucket.test.id
+  s3_prefix                  = %[3]q
+  s3_region                  = aws_s3_bucket.test.region
+  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+}
+`, reportName, s3BucketName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
 func TestCheckDefinitionPropertyCombination(t *testing.T) {
 	t.Parallel()
 
@@ -688,7 +865,6 @@ func TestCheckDefinitionPropertyCombination(t *testing.T) {
 	}
 
 	for name, tCase := range testCases {
-		tCase := tCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

@@ -14,14 +14,13 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -52,9 +52,9 @@ import (
 
 // @SDKResource("aws_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/rds;rds.DBInstance")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;password")
-func ResourceInstance() *schema.Resource {
+func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
 		ReadWithoutTimeout:   resourceInstanceRead,
@@ -69,18 +69,18 @@ func ResourceInstance() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceInstanceResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: InstanceStateUpgradeV0,
+				Upgrade: instanceStateUpgradeV0,
 				Version: 0,
 			},
 			{
 				Type:    resourceInstanceResourceV1().CoreConfigSchema().ImpliedType(),
-				Upgrade: InstanceStateUpgradeV1,
+				Upgrade: instanceStateUpgradeV1,
 				Version: 1,
 			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(40 * time.Minute),
+			Create: schema.DefaultTimeout(50 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
@@ -260,7 +260,7 @@ func ResourceInstance() *schema.Resource {
 				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"domain_dns_ips": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 2,
 				MaxItems: 2,
@@ -291,7 +291,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
+					ValidateFunc: validation.StringInSlice(instanceExportableLogType_Values(), false),
 				},
 			},
 			names.AttrEndpoint: {
@@ -307,6 +307,12 @@ func ResourceInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
+			},
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -410,7 +416,7 @@ func ResourceInstance() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrPassword},
+				ConflictsWith: []string{names.AttrPassword, "password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -442,7 +448,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
+					if old == "0" && new == strconv.Itoa(d.Get(names.AttrAllocatedStorage).(int)) {
 						return true
 					}
 					return false
@@ -475,7 +481,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			"option_group_name": {
 				Type:     schema.TypeString,
@@ -491,7 +497,20 @@ func ResourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "password_wo"},
+			},
+			"password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password", names.AttrPassword},
+				RequiredWith:  []string{"password_wo_version"},
+			},
+			"password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -524,10 +543,10 @@ func ResourceInstance() *schema.Resource {
 				Default:  false,
 			},
 			"replica_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(rds.ReplicaMode_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ReplicaMode](),
 			},
 			"replicas": {
 				Type:     schema.TypeList,
@@ -535,8 +554,10 @@ func ResourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
+				DiffSuppressOnRefresh: true,
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
@@ -659,6 +680,10 @@ func ResourceInstance() *schema.Resource {
 					"s3_import",
 				},
 			},
+			"upgrade_storage_config": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -675,8 +700,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -687,7 +711,7 @@ func ResourceInstance() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -698,13 +722,27 @@ func ResourceInstance() *schema.Resource {
 				}
 				return nil
 			},
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				source := d.Get("replicate_source_db").(string)
+				if source == "" {
+					return nil
+				}
+
+				rawConfig := d.GetRawConfig()
+				if v := rawConfig.GetAttr("db_subnet_group_name"); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+					if !arn.IsARN(source) {
+						return errors.New(`"replicate_source_db" must be an ARN when "db_subnet_group_name" is set.`)
+					}
+				}
+				return nil
+			},
 		),
 	}
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
 	// RestoreDBInstanceToPointInTime do not support all parameters to
@@ -744,6 +782,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	// get write-only value from configuration
+	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		sourceDBInstanceID := v.(string)
 		input := &rds.CreateDBInstanceReadReplicaInput{
@@ -780,8 +825,32 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk(names.AttrDomain); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -789,7 +858,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrIOPS); ok {
-			input.Iops = aws.Int64(int64(v.(int)))
+			input.Iops = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -800,7 +869,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
-			input.MonitoringInterval = aws.Int64(int64(v.(int)))
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("monitoring_role_arn"); ok {
@@ -826,7 +895,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 				}
-				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region(ctx)
 			}
 			if crossRegion {
 				input.DBParameterGroupName = aws.String(v.(string))
@@ -842,42 +911,50 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+			input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
-			input.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("replica_mode"); ok {
-			input.ReplicaMode = aws.String(v.(string))
+			input.ReplicaMode = types.ReplicaMode(v.(string))
 			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("storage_throughput"); ok {
-			input.StorageThroughput = aws.Int64(int64(v.(int)))
+			input.StorageThroughput = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("upgrade_storage_config"); ok {
+			input.UpgradeStorageConfig = aws.Bool(v.(bool))
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
-				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
-			},
-			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+
+		output, err := dbInstanceCreateReadReplica(ctx, conn, input)
+
+		// Some engines (e.g. PostgreSQL) you cannot specify a custom parameter group for the read replica during creation.
+		// See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html#USER_ReadRepl.XRgn.Cnsdr.
+		if input.DBParameterGroupName != nil && tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "A parameter group can't be specified during Read Replica creation for the following DB engine") {
+			input.DBParameterGroupName = nil
+
+			output, err = dbInstanceCreateReadReplica(ctx, conn, input)
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 		}
 
-		output := outputRaw.(*rds.CreateDBInstanceReadReplicaOutput)
-
-		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
@@ -886,28 +963,28 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
-			if current, desired := aws.Int64Value(output.DBInstance.BackupRetentionPeriod), int64(v.(int)); current != desired {
-				modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(desired)
+			if current, desired := aws.ToInt32(output.DBInstance.BackupRetentionPeriod), int32(v.(int)); current != desired {
+				modifyDbInstanceInput.BackupRetentionPeriod = aws.Int32(desired)
 				requiresModifyDbInstance = true
 			}
 		}
 
 		if v, ok := d.GetOk("backup_window"); ok {
-			if current, desired := aws.StringValue(output.DBInstance.PreferredBackupWindow), v.(string); current != desired {
+			if current, desired := aws.ToString(output.DBInstance.PreferredBackupWindow), v.(string); current != desired {
 				modifyDbInstanceInput.PreferredBackupWindow = aws.String(desired)
 				requiresModifyDbInstance = true
 			}
 		}
 
 		if v, ok := d.GetOk("ca_cert_identifier"); ok {
-			if current, desired := aws.StringValue(output.DBInstance.CACertificateIdentifier), v.(string); current != desired {
+			if current, desired := aws.ToString(output.DBInstance.CACertificateIdentifier), v.(string); current != desired {
 				modifyDbInstanceInput.CACertificateIdentifier = aws.String(desired)
 				requiresModifyDbInstance = true
 			}
 		}
 
 		if v, ok := d.GetOk("maintenance_window"); ok {
-			if current, desired := aws.StringValue(output.DBInstance.PreferredMaintenanceWindow), v.(string); current != desired {
+			if current, desired := aws.ToString(output.DBInstance.PreferredMaintenanceWindow), v.(string); current != desired {
 				modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(desired)
 				requiresModifyDbInstance = true
 			}
@@ -923,15 +1000,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
-			if current, desired := aws.Int64Value(output.DBInstance.MaxAllocatedStorage), int64(v.(int)); current != desired {
-				modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(desired)
+			if current, desired := aws.ToInt32(output.DBInstance.MaxAllocatedStorage), int32(v.(int)); current != desired {
+				modifyDbInstanceInput.MaxAllocatedStorage = aws.Int32(desired)
 				requiresModifyDbInstance = true
 			}
 		}
 
 		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			if len(output.DBInstance.DBParameterGroups) > 0 {
-				if current, desired := aws.StringValue(output.DBInstance.DBParameterGroups[0].DBParameterGroupName), v.(string); current != desired {
+				if current, desired := aws.ToString(output.DBInstance.DBParameterGroups[0].DBParameterGroupName), v.(string); current != desired {
 					modifyDbInstanceInput.DBParameterGroupName = aws.String(desired)
 					requiresModifyDbInstance = true
 					requiresRebootDbInstance = true
@@ -941,6 +1018,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrPassword); ok {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
 			requiresModifyDbInstance = true
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
@@ -959,9 +1041,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceFromS3Input{
-			AllocatedStorage:        aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int))),
+			AllocatedStorage:        aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
-			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
+			BackupRetentionPeriod:   aws.Int32(int32(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
@@ -996,12 +1078,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrIOPS); ok {
-			input.Iops = aws.Int64(int64(v.(int)))
+			input.Iops = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -1025,7 +1111,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
-			input.MonitoringInterval = aws.Int64(int64(v.(int)))
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("monitoring_role_arn"); ok {
@@ -1052,6 +1138,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			input.EnablePerformanceInsights = aws.Bool(v.(bool))
 		}
@@ -1061,15 +1151,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+			input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
-			input.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("storage_throughput"); ok {
-			input.StorageThroughput = aws.Int64(int64(v.(int)))
+			input.StorageThroughput = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -1077,12 +1167,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return conn.RestoreDBInstanceFromS3WithContext(ctx, input)
+				return conn.RestoreDBInstanceFromS3(ctx, input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "ENHANCED_MONITORING") {
@@ -1106,10 +1196,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
+
+		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
@@ -1135,7 +1225,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
-			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.AllocatedStorage = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1150,7 +1240,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOkExists("backup_retention_period"); ok {
-			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1187,8 +1277,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1204,11 +1294,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if engine != "" {
 			input.Engine = aws.String(engine)
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1221,7 +1315,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrIOPS); ok {
-			modifyDbInstanceInput.Iops = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.Iops = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1245,12 +1339,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
-			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
-			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.MonitoringInterval = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1291,6 +1385,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(v.(bool))
 			requiresModifyDbInstance = true
@@ -1300,16 +1399,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
 			}
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
-			input.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("storage_throughput"); ok {
-			modifyDbInstanceInput.StorageThroughput = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.StorageThroughput = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1323,12 +1422,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
+				return conn.RestoreDBInstanceFromDBSnapshot(ctx, input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
@@ -1338,6 +1437,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
+		var output *rds.RestoreDBInstanceFromDBSnapshotOutput
+
+		if err == nil {
+			output = outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
+		}
 
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
@@ -1351,17 +1456,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
+			output, err = conn.RestoreDBInstanceFromDBSnapshot(ctx, input)
 		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from snapshot) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
@@ -1444,16 +1547,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngine); ok {
 			input.Engine = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1461,7 +1568,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrIOPS); ok {
-			input.Iops = aws.Int64(int64(v.(int)))
+			input.Iops = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("license_model"); ok {
@@ -1469,7 +1576,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
-			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+			input.MaxAllocatedStorage = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("manage_master_user_password"); ok {
@@ -1483,7 +1590,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
-			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(v.(int)))
+			modifyDbInstanceInput.MonitoringInterval = aws.Int32(int32(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1509,8 +1616,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
-			input.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -1526,12 +1638,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return conn.RestoreDBInstanceToPointInTimeWithContext(ctx, input)
+				return conn.RestoreDBInstanceToPointInTime(ctx, input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
@@ -1541,14 +1653,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
+
+		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1564,9 +1677,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input := &rds.CreateDBInstanceInput{
-			AllocatedStorage:        aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int))),
+			AllocatedStorage:        aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
-			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
+			BackupRetentionPeriod:   aws.Int32(int32(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
@@ -1620,8 +1733,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1637,7 +1750,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1645,7 +1762,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk(names.AttrIOPS); ok {
-			input.Iops = aws.Int64(int64(v.(int)))
+			input.Iops = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -1669,11 +1786,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
-			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+			input.MaxAllocatedStorage = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
-			input.MonitoringInterval = aws.Int64(int64(v.(int)))
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("monitoring_role_arn"); ok {
@@ -1700,6 +1817,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+
 		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
@@ -1713,15 +1834,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+			input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
-			input.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("storage_throughput"); ok {
-			input.StorageThroughput = aws.Int64(int64(v.(int)))
+			input.StorageThroughput = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -1733,12 +1854,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return conn.CreateDBInstanceWithContext(ctx, input)
+				return conn.CreateDBInstance(ctx, input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "ENHANCED_MONITORING") {
@@ -1751,54 +1872,61 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
 
 		output := outputRaw.(*rds.CreateDBInstanceOutput)
-		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+
+		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
-		if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.StringValue(output.DBInstance.CACertificateIdentifier) {
+		if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.ToString(output.DBInstance.CACertificateIdentifier) {
 			modifyDbInstanceInput.CACertificateIdentifier = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
 	}
 
-	var instance *rds.DBInstance
+	var instance *types.DBInstance
 	var err error
-	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if instance, err = waitDBInstanceAvailable(ctx, conn, identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", identifier, err)
 	}
 
 	if resourceID == "" {
-		resourceID = aws.StringValue(instance.DbiResourceId)
+		resourceID = aws.ToString(instance.DbiResourceId)
 	}
 
-	d.SetId(resourceID)
+	if d.Id() == "" {
+		d.SetId(resourceID)
+	}
 
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
 
-		_, err := conn.ModifyDBInstanceWithContext(ctx, modifyDbInstanceInput)
+		_, err := conn.ModifyDBInstance(ctx, modifyDbInstanceInput)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", identifier, err)
 		}
 
-		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", identifier, err)
 		}
 	}
 
 	if requiresRebootDbInstance {
-		_, err := conn.RebootDBInstanceWithContext(ctx, &rds.RebootDBInstanceInput{
+		_, err := conn.RebootDBInstance(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(identifier),
 		})
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rebooting RDS DB Instance (%s): %s", identifier, err)
 		}
 
-		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", identifier, err)
 		}
 	}
@@ -1808,20 +1936,21 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	var (
-		v   *rds.DBInstance
+		v   *types.DBInstance
 		err error
 	)
 
 	if d.IsNewResource() {
-		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+		v, err = findDBInstanceByID(ctx, conn, d.Id())
 	} else {
-		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
-		if tfresource.NotFound(err) {
-			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) {
+		v, err = findDBInstanceByID(ctx, conn, d.Id())
+		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			// Retry with `identifier`
+			v, err = findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
+			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
 				return diags
@@ -1833,8 +1962,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 	}
 
-	d.SetId(aws.StringValue(v.DbiResourceId))
-
+	d.SetId(aws.ToString(v.DbiResourceId))
 	d.Set(names.AttrAllocatedStorage, v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
 	d.Set(names.AttrAutoMinorVersionUpgrade, v.AutoMinorVersionUpgrade)
@@ -1853,11 +1981,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("dedicated_log_volume", v.DedicatedLogVolume)
 	d.Set(names.AttrDeletionProtection, v.DeletionProtection)
-	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
+	if len(v.DomainMemberships) > 0 {
 		v := v.DomainMemberships[0]
 		d.Set(names.AttrDomain, v.Domain)
 		d.Set("domain_auth_secret_arn", v.AuthSecretArn)
-		d.Set("domain_dns_ips", aws.StringValueSlice(v.DnsIps))
+		d.Set("domain_dns_ips", v.DnsIps)
 		d.Set("domain_fqdn", v.FQDN)
 		d.Set("domain_iam_role_name", v.IAMRoleName)
 		d.Set("domain_ou", v.OU)
@@ -1869,16 +1997,17 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("domain_iam_role_name", nil)
 		d.Set("domain_ou", nil)
 	}
-	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
+	d.Set("enabled_cloudwatch_logs_exports", v.EnabledCloudwatchLogsExports)
 	d.Set(names.AttrEngine, v.Engine)
+	d.Set("engine_lifecycle_support", v.EngineLifecycleSupport)
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
-	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.ToString(v.DBInstanceIdentifier)))
 	d.Set("instance_class", v.DBInstanceClass)
 	d.Set(names.AttrIOPS, v.Iops)
 	d.Set(names.AttrKMSKeyID, v.KmsKeyId)
 	if v.LatestRestorableTime != nil {
-		d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
+		d.Set("latest_restorable_time", aws.ToTime(v.LatestRestorableTime).Format(time.RFC3339))
 	} else {
 		d.Set("latest_restorable_time", nil)
 	}
@@ -1909,10 +2038,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("multi_az", v.MultiAZ)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("network_type", v.NetworkType)
-	if len(v.OptionGroupMemberships) > 0 && v.OptionGroupMemberships[0] != nil {
+	if len(v.OptionGroupMemberships) > 0 {
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
-	if len(v.DBParameterGroups) > 0 && v.DBParameterGroups[0] != nil {
+	if len(v.DBParameterGroups) > 0 {
 		d.Set(names.AttrParameterGroupName, v.DBParameterGroups[0].DBParameterGroupName)
 	}
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
@@ -1921,8 +2050,26 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrPort, v.DbInstancePort)
 	d.Set(names.AttrPubliclyAccessible, v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
-	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set("replicas", v.ReadReplicaDBInstanceIdentifiers)
+
+	// The AWS API accepts either the identifier or ARN when setting up a replica in the same region. The AWS Console uses the ARN.
+	// However, if the replica is in the same region, it always returns the identifier.
+	// Store the ARN if the ARN was originally set.
+	var sourceDBIdentifier string
+	if v.ReadReplicaSourceDBInstanceIdentifier != nil {
+		sourceDBIdentifier = aws.ToString(v.ReadReplicaSourceDBInstanceIdentifier)
+		if original, ok := d.GetOk("replicate_source_db"); ok {
+			original := original.(string)
+			if arn.IsARN(original) {
+				if !arn.IsARN(sourceDBIdentifier) {
+					awsClient := meta.(*conns.AWSClient)
+					sourceDBIdentifier = newDBInstanceARNString(ctx, awsClient, sourceDBIdentifier)
+				}
+			}
+		}
+	}
+	d.Set("replicate_source_db", sourceDBIdentifier)
+
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set(names.AttrStorageEncrypted, v.StorageEncrypted)
@@ -1930,16 +2077,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
 	d.Set(names.AttrUsername, v.MasterUsername)
-	var vpcSecurityGroupIDs []string
-	for _, v := range v.VpcSecurityGroups {
-		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
-	}
-	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
 
 	if v.Endpoint != nil {
 		d.Set(names.AttrAddress, v.Endpoint.Address)
 		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
-			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
+			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.ToString(v.Endpoint.Address), aws.ToInt32(v.Endpoint.Port)))
 		}
 		d.Set(names.AttrHostedZoneID, v.Endpoint.HostedZoneId)
 		d.Set(names.AttrPort, v.Endpoint.Port)
@@ -1968,7 +2113,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
 		if d.Get("replicate_source_db").(string) == "" {
-			input := &rds_sdkv2.PromoteReadReplicaInput{
+			input := &rds.PromoteReadReplicaInput{
 				BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
 				DBInstanceIdentifier:  aws.String(d.Get(names.AttrIdentifier).(string)),
 			}
@@ -1978,11 +2123,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			_, err := conn.PromoteReadReplica(ctx, input)
+
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
+			if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 		} else {
@@ -2041,106 +2187,114 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				// Ensure that the Blue/Green Deployment is always cleaned up
-				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+				input := &rds.DeleteBlueGreenDeploymentInput{
 					BlueGreenDeploymentIdentifier: deploymentIdentifier,
 				}
-				if aws.StringValue(dep.Status) != "SWITCHOVER_COMPLETED" {
+				if aws.ToString(dep.Status) != "SWITCHOVER_COMPLETED" {
 					input.DeleteTarget = aws.Bool(true)
 				}
+
 				_, err = conn.DeleteBlueGreenDeployment(ctx, input)
+
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: %s", d.Get(names.AttrIdentifier).(string), err)
 					return
 				}
 
-				orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
-					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
-					if err != nil {
+				orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds.Client, optFns ...tfresource.OptionsFunc) {
+					if _, err := waitBlueGreenDeploymentDeleted(ctx, conn, aws.ToString(deploymentIdentifier), deadline.Remaining(), optFns...); err != nil {
 						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Get(names.AttrIdentifier).(string), err)
 					}
 				})
 			}()
 
-			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
+			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.ToString(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			targetARN, err := parseDBInstanceARN(aws.StringValue(dep.Target))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
-			}
-			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, deadline.Remaining())
+			targetARN, err := parseDBInstanceARN(aws.ToString(dep.Target))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			err = handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string)))
-			if err != nil {
+			if _, err := waitDBInstanceAvailable(ctx, conn, targetARN.Identifier, deadline.Remaining()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			if err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string))); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
 
-			dep, err = orchestrator.Switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
+			dep, err = orchestrator.Switchover(ctx, aws.ToString(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			target, err := findDBInstanceByIDSDKv2(ctx, conn, d.Get(names.AttrIdentifier).(string))
+			target, err := findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
 			// id changes here
-			d.SetId(aws.StringValue(target.DbiResourceId))
+			d.SetId(aws.ToString(target.DbiResourceId))
 			d.Set(names.AttrResourceID, target.DbiResourceId)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment source", d.Get(names.AttrIdentifier).(string))
 
-			sourceARN, err := parseDBInstanceARN(aws.StringValue(dep.Source))
+			sourceARN, err := parseDBInstanceARN(aws.ToString(dep.Source))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
+
 			if d.Get(names.AttrDeletionProtection).(bool) {
-				input := &rds_sdkv2.ModifyDBInstanceInput{
+				input := &rds.ModifyDBInstanceInput{
 					ApplyImmediately:     aws.Bool(true),
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 					DeletionProtection:   aws.Bool(false),
 				}
+
 				err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
+
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Get(names.AttrIdentifier).(string), err)
 				}
 			}
-			deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
+
+			input := &rds.DeleteDBInstanceInput{
 				DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 				SkipFinalSnapshot:    aws.Bool(true),
 			}
-			_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
+
+			const (
+				timeout = 5 * time.Minute
+			)
+			_, err = tfresource.RetryWhen(ctx, timeout,
 				func() (any, error) {
-					return conn.DeleteDBInstance(ctx, deleteInput)
+					return conn.DeleteDBInstance(ctx, input)
 				},
 				func(err error) (bool, error) {
 					// Retry for IAM eventual consistency.
-					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 						return true, err
 					}
 
-					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 						return true, err
 					}
 
 					return false, err
 				},
 			)
+
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), sourceARN.Identifier, deadline.Remaining(), optFns...)
-				if err != nil {
+			orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds.Client, optFns ...tfresource.OptionsFunc) {
+				if _, err := waitDBInstanceDeleted(ctx, conn, sourceARN.Identifier, deadline.Remaining(), optFns...); err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get(names.AttrIdentifier).(string), err)
 				}
 			})
@@ -2156,7 +2310,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			applyImmediately := d.Get(names.AttrApplyImmediately).(bool)
-			input := &rds_sdkv2.ModifyDBInstanceInput{
+			input := &rds.ModifyDBInstanceInput{
 				ApplyImmediately:     aws.Bool(applyImmediately),
 				DBInstanceIdentifier: aws.String(oldID),
 			}
@@ -2180,7 +2334,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
+
 			if err != nil {
+				// Handle virtual attribute
+				if input.ManageMasterUserPassword != nil {
+					// Attempted change, but update error as it's a stopped instance, so revert to original value
+					old, _ := d.GetChange("manage_master_user_password")
+					d.Set("manage_master_user_password", old.(bool))
+				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 		}
@@ -2189,7 +2350,107 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.ResourceData) bool {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+	input := &rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier:   aws.String(d.Get(names.AttrIdentifier).(string)),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+	}
+
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	} else {
+		input.SkipFinalSnapshot = aws.Bool(false)
+
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
+		} else {
+			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Get(names.AttrIdentifier).(string))
+	_, err := conn.DeleteDBInstance(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
+		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
+			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstance(ctx, &rds.ModifyDBInstanceInput{
+						ApplyImmediately:     aws.Bool(true),
+						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
+						DeletionProtection:   aws.Bool(false),
+					})
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if errs.IsAErrorMessageContains[*types.InvalidDBInstanceStateFault](err, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if ierr != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			if _, ierr := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Get(names.AttrIdentifier).(string), ierr)
+			}
+
+			_, err = conn.DeleteDBInstance(ctx, input)
+		}
+	}
+
+	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
+		return diags
+	}
+
+	if err != nil && !errs.IsAErrorMessageContains[*types.InvalidDBInstanceStateFault](err, "is already being deleted") {
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	return diags
+}
+
+func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
+	// from any API call, so we need to default skip_final_snapshot to true so
+	// that final_snapshot_identifier is not required.
+	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
+	return []*schema.ResourceData{d}, nil
+}
+
+func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateDBInstanceReadReplica(ctx, input)
+		},
+		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*rds.CreateDBInstanceReadReplicaOutput), nil
+}
+
+func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	needsModify := false
 
 	if d.HasChanges(names.AttrAllocatedStorage, names.AttrIOPS) {
@@ -2256,8 +2517,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
 		needsModify = true
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
@@ -2364,6 +2625,18 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
+	if d.HasChange("password_wo_version") {
+		passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+	}
+
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		needsModify = true
 		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
@@ -2409,7 +2682,14 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		needsModify = true
 		input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 
-		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
+		// Need to send the iops and allocated_size if migrating to a gp3 volume that's larger than the threshold.
+		if aws.ToString(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+		}
+
+		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.ToString(input.StorageType)) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
@@ -2421,21 +2701,21 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	return needsModify
+	return needsModify, diags
 }
 
-func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID string, input *rds_sdkv2.ModifyDBInstanceInput, timeout time.Duration) error {
+func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
 	_, err := tfresource.RetryWhen(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		},
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 				return true, err
 			}
 
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "previous storage change is being optimized") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "previous storage change is being optimized") {
 				return true, err
 			}
 
@@ -2446,99 +2726,16 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 			return false, err
 		},
 	)
+
 	if err != nil {
 		return err
 	}
 
-	if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, resourceID, timeout); err != nil {
+	if _, err := waitDBInstanceAvailable(ctx, conn, resourceID, timeout); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
+
 	return nil
-}
-
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-
-	input := &rds.DeleteDBInstanceInput{
-		DBInstanceIdentifier:   aws.String(d.Get(names.AttrIdentifier).(string)),
-		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
-	}
-
-	if d.Get("skip_final_snapshot").(bool) {
-		input.SkipFinalSnapshot = aws.Bool(true)
-	} else {
-		input.SkipFinalSnapshot = aws.Bool(false)
-
-		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
-			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
-		} else {
-			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
-		}
-	}
-
-	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Get(names.AttrIdentifier).(string))
-	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
-			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (interface{}, error) {
-					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
-						ApplyImmediately:     aws.Bool(true),
-						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
-						DeletionProtection:   aws.Bool(false),
-					})
-				},
-				func(err error) (bool, error) {
-					// Retry for IAM eventual consistency.
-					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
-						return true, err
-					}
-
-					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
-					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
-						return true, err
-					}
-
-					return false, err
-				},
-			)
-
-			if ierr != nil {
-				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-			}
-
-			if _, ierr := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Get(names.AttrIdentifier).(string), ierr)
-			}
-
-			_, err = conn.DeleteDBInstanceWithContext(ctx, input)
-		}
-	}
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return diags
-	}
-
-	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-	}
-
-	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
-	}
-
-	return diags
-}
-
-func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
-	// from any API call, so we need to default skip_final_snapshot to true so
-	// that final_snapshot_identifier is not required.
-	d.Set("skip_final_snapshot", true)
-	d.Set("delete_automated_backups", true)
-	return []*schema.ResourceData{d}, nil
 }
 
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
@@ -2559,14 +2756,18 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 	return false
 }
 
-func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
+func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *types.DBInstance) {
 	oldVersion := d.Get(names.AttrEngineVersion).(string)
-	newVersion := aws.StringValue(c.EngineVersion)
+	newVersion := aws.ToString(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {
-		pendingVersion = aws.StringValue(c.PendingModifiedValues.EngineVersion)
+		pendingVersion = aws.ToString(c.PendingModifiedValues.EngineVersion)
 	}
 	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
+}
+
+func newDBInstanceARNString(ctx context.Context, client *conns.AWSClient, identifier string) string {
+	return client.RegionalARN(ctx, "rds", "db:"+identifier)
 }
 
 type dbInstanceARN struct {
@@ -2594,90 +2795,14 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 	return result, nil
 }
 
-// findDBInstanceByIDSDKv1 in general should be called with a DbiResourceId of the form
+// findDBInstanceByID in general should be called with a DbiResourceId of the form
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
-func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	idLooksLikeDbiResourceId := regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id)
+func findDBInstanceByID(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) (*types.DBInstance, error) {
+	idLooksLikeDbiResourceID := regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id)
 	input := &rds.DescribeDBInstancesInput{}
 
-	if idLooksLikeDbiResourceId {
-		input.Filters = []*rds.Filter{
-			{
-				Name:   aws.String("dbi-resource-id"),
-				Values: aws.StringSlice([]string{id}),
-			},
-		}
-	} else {
-		input.DBInstanceIdentifier = aws.String(id)
-	}
-
-	output, err := findDBInstanceSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
-
-	// in case a DB has an *identifier* starting with "db-""
-	if idLooksLikeDbiResourceId && tfresource.NotFound(err) {
-		input := &rds.DescribeDBInstancesInput{
-			DBInstanceIdentifier: aws.String(id),
-		}
-
-		output, err = findDBInstanceSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func findDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*rds.DBInstance]) (*rds.DBInstance, error) {
-	output, err := findDBInstancesSDKv1(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*rds.DBInstance]) ([]*rds.DBInstance, error) {
-	var output []*rds.DBInstance
-
-	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.DBInstances {
-			if v != nil && filter(v) {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-// findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
-// "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
-// the identifier is available, and can be used.
-func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
-	input := &rds_sdkv2.DescribeDBInstancesInput{}
-
-	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
+	if idLooksLikeDbiResourceID {
 		input.Filters = []types.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
@@ -2688,37 +2813,65 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := conn.DescribeDBInstances(ctx, input)
+	output, err := findDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstance](), optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
-		input = &rds_sdkv2.DescribeDBInstancesInput{
+	if idLooksLikeDbiResourceID && tfresource.NotFound(err) {
+		input = &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
-		output, err = conn.DescribeDBInstances(ctx, input)
-	}
 
-	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		output, err = findDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstance](), optFns...)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.DBInstances)
+	return output, nil
 }
 
-func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+func findDBInstance(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*types.DBInstance], optFns ...func(*rds.Options)) (*types.DBInstance, error) {
+	output, err := findDBInstances(ctx, conn, input, filter, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*types.DBInstance], optFns ...func(*rds.Options)) ([]types.DBInstance, error) {
+	var output []types.DBInstance
+
+	pages := rds.NewDescribeDBInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if errs.IsA[*types.DBInstanceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBInstances {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusDBInstance(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
+		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2728,27 +2881,11 @@ func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.DBInstanceStatus), nil
+		return output, aws.ToString(output.DBInstanceStatus), nil
 	}
 }
 
-func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.DBInstanceStatus), nil
-	}
-}
-
-func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
+func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,
@@ -2760,81 +2897,74 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			InstanceStatusBackingUp,
-			InstanceStatusConfiguringEnhancedMonitoring,
-			InstanceStatusConfiguringIAMDatabaseAuth,
-			InstanceStatusConfiguringLogExports,
-			InstanceStatusCreating,
-			InstanceStatusMaintenance,
-			InstanceStatusModifying,
-			InstanceStatusMovingToVPC,
-			InstanceStatusRebooting,
-			InstanceStatusRenaming,
-			InstanceStatusResettingMasterCredentials,
-			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusStorageFull,
-			InstanceStatusUpgrading,
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringIAMDatabaseAuth,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusMaintenance,
+			instanceStatusModifying,
+			instanceStatusMovingToVPC,
+			instanceStatusRebooting,
+			instanceStatusRenaming,
+			instanceStatusResettingMasterCredentials,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageFull,
+			instanceStatusUpgrading,
 		},
-		Target:  []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
-		Refresh: statusDBInstanceSDKv1(ctx, conn, id),
+		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
+		Refresh: statusDBInstance(ctx, conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
+	if output, ok := outputRaw.(*types.DBInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
-	options := tfresource.Options{
-		PollInterval:              10 * time.Second,
-		Delay:                     1 * time.Minute,
-		ContinuousTargetOccurence: 3,
-	}
-	for _, fn := range optFns {
-		fn(&options)
-	}
-
+func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			InstanceStatusBackingUp,
-			InstanceStatusConfiguringEnhancedMonitoring,
-			InstanceStatusConfiguringIAMDatabaseAuth,
-			InstanceStatusConfiguringLogExports,
-			InstanceStatusCreating,
-			InstanceStatusMaintenance,
-			InstanceStatusModifying,
-			InstanceStatusMovingToVPC,
-			InstanceStatusRebooting,
-			InstanceStatusRenaming,
-			InstanceStatusResettingMasterCredentials,
-			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusStorageFull,
-			InstanceStatusUpgrading,
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringIAMDatabaseAuth,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusMaintenance,
+			instanceStatusModifying,
+			instanceStatusMovingToVPC,
+			instanceStatusRebooting,
+			instanceStatusRenaming,
+			instanceStatusResettingMasterCredentials,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageFull,
+			instanceStatusUpgrading,
 		},
-		Target:  []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
-		Refresh: statusDBInstanceSDKv2(ctx, conn, id),
-		Timeout: timeout,
+		Target:                    []string{instanceStatusStopped},
+		Refresh:                   statusDBInstance(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+		Delay:                     10 * time.Second,
+		MinTimeout:                3 * time.Second,
 	}
-	options.Apply(stateConf)
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
+	if output, ok := outputRaw.(*types.DBInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
+func waitDBInstanceDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,
@@ -2846,71 +2976,99 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			InstanceStatusAvailable,
-			InstanceStatusBackingUp,
-			InstanceStatusConfiguringEnhancedMonitoring,
-			InstanceStatusConfiguringLogExports,
-			InstanceStatusCreating,
-			InstanceStatusDeletePreCheck,
-			InstanceStatusDeleting,
-			InstanceStatusIncompatibleParameters,
-			InstanceStatusIncompatibleRestore,
-			InstanceStatusModifying,
-			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusStorageFull,
-			InstanceStatusStorageOptimization,
+			instanceStatusAvailable,
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusDeletePreCheck,
+			instanceStatusDeleting,
+			instanceStatusIncompatibleParameters,
+			instanceStatusIncompatibleRestore,
+			instanceStatusModifying,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageFull,
+			instanceStatusStorageOptimization,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstanceSDKv1(ctx, conn, id),
+		Refresh: statusDBInstance(ctx, conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
+	if output, ok := outputRaw.(*types.DBInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.BlueGreenDeployment, error) {
-	input := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id string) (*types.BlueGreenDeployment, error) {
+	input := &rds.DescribeBlueGreenDeploymentsInput{
 		BlueGreenDeploymentIdentifier: aws.String(id),
 	}
 
-	output, err := conn.DescribeBlueGreenDeployments(ctx, input)
+	output, err := findBlueGreenDeployment(ctx, conn, input, tfslices.PredicateTrue[*types.BlueGreenDeployment]())
 
-	if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.BlueGreenDeployments) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	deployment := output.BlueGreenDeployments[0]
-
-	if aws.StringValue(deployment.BlueGreenDeploymentIdentifier) != id {
+	// Eventual consistency check.
+	if aws.ToString(output.BlueGreenDeploymentIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	return &deployment, nil
+	return output, nil
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
+func findBlueGreenDeployment(ctx context.Context, conn *rds.Client, input *rds.DescribeBlueGreenDeploymentsInput, filter tfslices.Predicate[*types.BlueGreenDeployment]) (*types.BlueGreenDeployment, error) {
+	output, err := findBlueGreenDeployments(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.DescribeBlueGreenDeploymentsInput, filter tfslices.Predicate[*types.BlueGreenDeployment]) ([]types.BlueGreenDeployment, error) {
+	var output []types.BlueGreenDeployment
+
+	pages := rds.NewDescribeBlueGreenDeploymentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.BlueGreenDeployments {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -2918,11 +3076,11 @@ func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id s
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
+func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
 		PollInterval: 10 * time.Second,
 		Delay:        1 * time.Minute,
@@ -2948,7 +3106,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Clien
 	return nil, err
 }
 
-func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
+func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
 		PollInterval: 10 * time.Second,
 		Delay:        1 * time.Minute,
@@ -2968,8 +3126,8 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
-		if status := aws.StringValue(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusDetails)))
+		if status := aws.ToString(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
 		}
 
 		return output, err
@@ -2978,7 +3136,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 	return nil, err
 }
 
-func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
+func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
 		PollInterval: 10 * time.Second,
 		Delay:        1 * time.Minute,
@@ -3012,7 +3170,7 @@ func dbInstanceValidBlueGreenEngines() []string {
 	}
 }
 
-func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
+func flattenEndpoint(apiObject *types.Endpoint) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3020,16 +3178,78 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap[names.AttrAddress] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.ToString(v)
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap[names.AttrHostedZoneID] = aws.StringValue(v)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap[names.AttrPort] = aws.Int64Value(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	return tfMap
+}
+
+func startInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	var err error
+
+	tflog.Info(ctx, "Starting RDS Instance", map[string]any{
+		"rds_instance_id": id,
+	})
+	_, err = conn.StartDBInstance(ctx, &rds.StartDBInstanceInput{
+		DBInstanceIdentifier: &id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting RDS Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitDBInstanceAvailable(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Instance (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	tflog.Info(ctx, "Stopping RDS Instance", map[string]any{
+		"rds_instance_id": id,
+	})
+	_, err := conn.StopDBInstance(ctx, &rds.StopDBInstanceInput{
+		DBInstanceIdentifier: &id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("stopping RDS Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitDBInstanceStopped(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Instance (%s) stop: %w", id, err)
+	}
+
+	return nil
+}
+
+func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.ResourceData) bool {
+	// Ideally, we'd be able to check the partition, region, and accountID, but that's not available in SDK
+	if arn.IsARN(old) {
+		if new != "" && !arn.IsARN(new) {
+			if oldARN, err := parseDBInstanceARN(old); err != nil {
+				return false
+			} else {
+				return oldARN.Identifier == new
+			}
+		}
+	} else if arn.IsARN(new) {
+		if old != "" && !arn.IsARN(old) {
+			if newARN, err := parseDBInstanceARN(new); err != nil {
+				return false
+			} else {
+				return newARN.Identifier == old
+			}
+		}
+	}
+	return false
 }

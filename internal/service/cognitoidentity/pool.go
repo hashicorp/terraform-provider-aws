@@ -122,8 +122,6 @@ func resourcePool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -172,9 +170,10 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-	ip, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+	input := cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	ip, err := conn.DescribeIdentityPool(ctx, &input)
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
 		d.SetId("")
@@ -186,10 +185,10 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "cognito-identity",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -248,19 +247,20 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
-	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
-	_, err := conn.DeleteIdentityPool(ctx, &cognitoidentity.DeleteIdentityPoolInput{
+	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
+	input := cognitoidentity.DeleteIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIdentityPool(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[DEBUG] Resource Pool already deleted: %s", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Identity Pool (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }

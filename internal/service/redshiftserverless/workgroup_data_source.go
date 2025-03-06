@@ -119,11 +119,11 @@ func dataSourceWorkgroup() *schema.Resource {
 
 func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	workgroupName := d.Get("workgroup_name").(string)
 
-	resource, err := FindWorkgroupByName(ctx, conn, workgroupName)
+	resource, err := findWorkgroupByName(ctx, conn, workgroupName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Workgroup (%s): %s", workgroupName, err)

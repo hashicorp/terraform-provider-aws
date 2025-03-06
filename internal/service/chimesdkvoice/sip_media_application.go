@@ -68,7 +68,6 @@ func ResourceSipMediaApplication() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -104,6 +103,10 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 		log.Printf("[WARN] Chime Sip Media Application %s not found", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Chime Sip Media Application (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, resp.SipMediaApplicationArn)

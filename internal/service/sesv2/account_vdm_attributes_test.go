@@ -5,7 +5,6 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,7 +90,7 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.0.engagement_metrics", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -103,7 +102,7 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.0.engagement_metrics", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -124,7 +123,7 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.0.optimized_shared_delivery", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -136,7 +135,7 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.0.optimized_shared_delivery", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -153,16 +152,21 @@ func testAccCheckAccountVDMAttributesDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			out, err := tfsesv2.FindAccountVDMAttributes(ctx, conn)
+			output, err := tfsesv2.FindAccountVDMAttributes(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			if out.VdmEnabled == types.FeatureStatusDisabled {
-				return nil
+			if output.VdmEnabled == types.FeatureStatusDisabled {
+				continue
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameAccountVDMAttributes, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Account VDM Attributes %s still exists", rs.Primary.ID)
 		}
 
 		return nil

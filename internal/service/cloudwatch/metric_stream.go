@@ -47,8 +47,6 @@ func resourceMetricStream() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -229,7 +227,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.PutMetricStream(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = conn.PutMetricStream(ctx, input)
@@ -250,7 +248,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		err := createTags(ctx, conn, aws.ToString(output.Arn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 		}
 
@@ -351,9 +349,10 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
-	_, err := conn.DeleteMetricStream(ctx, &cloudwatch.DeleteMetricStreamInput{
+	input := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMetricStream(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicequotas_service")
+// @SDKDataSource("aws_servicequotas_service", name="Service)
 func DataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
@@ -51,7 +51,6 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		for _, s := range page.Services {
-			s := s
 			if aws.ToString(s.ServiceName) == serviceName {
 				service = &s
 				break

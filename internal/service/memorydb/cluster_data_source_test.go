@@ -35,6 +35,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_tiering", resourceName, "data_tiering"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_patch_version", resourceName, "engine_patch_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "maintenance_window", resourceName, "maintenance_window"),
@@ -44,13 +45,13 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "num_shards", resourceName, "num_shards"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrParameterGroupName, resourceName, names.AttrParameterGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
-					resource.TestCheckResourceAttr(dataSourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "security_group_ids.*", resourceName, "security_group_ids.0"),
-					resource.TestCheckResourceAttr(dataSourceName, "shards.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "shards.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.name", resourceName, "shards.0.name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.num_nodes", resourceName, "shards.0.num_nodes"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.slots", resourceName, "shards.0.slots"),
-					resource.TestCheckResourceAttr(dataSourceName, "shards.0.nodes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "shards.0.nodes.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.nodes.0.availability_zone", resourceName, "shards.0.nodes.0.availability_zone"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.nodes.0.create_time", resourceName, "shards.0.nodes.0.create_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.nodes.0.name", resourceName, "shards.0.nodes.0.name"),
@@ -60,7 +61,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "snapshot_window", resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSNSTopicARN, resourceName, names.AttrSNSTopicARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_group_name", resourceName, "subnet_group_name"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", "test"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tls_enabled", resourceName, "tls_enabled"),
 				),
@@ -72,7 +73,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseNetwork(rName),
-		testAccClusterConfigBaseUserAndACL(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name        = %[1]q

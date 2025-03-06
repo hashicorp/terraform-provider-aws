@@ -104,7 +104,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("iam_arn", originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
 	return diags
@@ -133,10 +133,11 @@ func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
+	input := cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchCloudFrontOriginAccessIdentity](err) {
 		return diags
@@ -189,9 +190,9 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 	return apiObject
 }
 
-func originAccessIdentityARN(c *conns.AWSClient, originAccessControlID string) string {
+func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
 	return arn.ARN{
-		Partition: c.Partition,
+		Partition: c.Partition(ctx),
 		Service:   "iam",
 		AccountID: "cloudfront",
 		Resource:  "user/CloudFront Origin Access Identity " + originAccessControlID,

@@ -9,6 +9,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
     },
+    "autoflex" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to AutoFlex."
+    },
     "aws-sdk-go-migration" = {
       color       = "844fba", # color:terraform (main)
       description = "Issues that are related to the providers migration to AWS SDK for Go v2."
@@ -96,6 +100,10 @@ variable "workflow_labels" {
     "new-data-source" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
+    },
+    "new-ephemeral-resource" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new ephemeral resource."
     },
     "new-function" = {
       color       = "ac72f0", # color:terraform (link on black)
@@ -188,6 +196,10 @@ variable "workflow_labels" {
     "technical-debt" = {
       color       = "d1ebff", # color:terraform accent
       description = "Addresses areas of the codebase that need refactoring or redesign."
+    },
+    "terraform-plugin-migration" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues that are related to the providers migration to Terraform Plugin Framework."
     },
     "tests" = {
       color       = "60dea9", # color:nomad

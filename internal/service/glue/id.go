@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 )
 
 func readPartitionID(id string) (string, string, string, []string, error) {
@@ -47,14 +47,14 @@ func stringifyPartition(partValues []interface{}) string {
 	return vals
 }
 
-func createRegistryID(id string) *glue.RegistryId {
-	return &glue.RegistryId{
+func createRegistryID(id string) *awstypes.RegistryId {
+	return &awstypes.RegistryId{
 		RegistryArn: aws.String(id),
 	}
 }
 
-func createSchemaID(id string) *glue.SchemaId {
-	return &glue.SchemaId{
+func createSchemaID(id string) *awstypes.SchemaId {
+	return &awstypes.SchemaId{
 		SchemaArn: aws.String(id),
 	}
 }

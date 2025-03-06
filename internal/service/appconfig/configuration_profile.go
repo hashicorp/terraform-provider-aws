@@ -74,7 +74,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"retrieval_role_arn": {
 				Type:         schema.TypeString,
@@ -115,7 +115,6 @@ func ResourceConfigurationProfile() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -212,9 +211,9 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appID, confProfID),
 		Service:   "appconfig",
 	}.String()
@@ -279,10 +278,11 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Deleting AppConfig Configuration Profile: %s", d.Id())
-	_, err = conn.DeleteConfigurationProfile(ctx, &appconfig.DeleteConfigurationProfileInput{
+	input := appconfig.DeleteConfigurationProfileInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-	})
+	}
+	_, err = conn.DeleteConfigurationProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -11,24 +11,25 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sesv2_contact_list", name="Contact List")
 // @Tags(identifierAttribute="arn")
-func ResourceContactList() *schema.Resource {
+// @Testing(serialize=true)
+func resourceContactList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactListCreate,
 		ReadWithoutTimeout:   resourceContactListRead,
@@ -89,13 +90,11 @@ func ResourceContactList() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 const (
-	ResNameContactList = "Contact List"
+	resNameContactList = "Contact List"
 )
 
 func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -117,11 +116,11 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := conn.CreateContactList(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameContactList, d.Get("contact_list_name").(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameContactList, d.Get("contact_list_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("contact_list_name").(string))
@@ -133,7 +132,7 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindContactListByID(ctx, conn, d.Id())
+	out, err := findContactListByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ContactList (%s) not found, removing from state", d.Id())
@@ -142,14 +141,14 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameContactList, d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("contact-list/%s", d.Id()),
 	}.String()
 
@@ -160,7 +159,7 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("last_updated_timestamp", aws.ToTime(out.LastUpdatedTimestamp).Format(time.RFC3339))
 
 	if err := d.Set("topic", flattenTopics(out.Topics)); err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameContactList, d.Id(), err)
 	}
 
 	return diags
@@ -180,7 +179,7 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		log.Printf("[DEBUG] Updating SESV2 ContactList (%s): %#v", d.Id(), in)
 		if _, err := conn.UpdateContactList(ctx, in); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameContactList, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameContactList, d.Id(), err)
 		}
 	}
 
@@ -197,40 +196,44 @@ func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta
 		ContactListName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameContactList, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameContactList, d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindContactListByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetContactListOutput, error) {
-	in := &sesv2.GetContactListInput{
+func findContactListByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetContactListOutput, error) {
+	input := &sesv2.GetContactListInput{
 		ContactListName: aws.String(id),
 	}
-	out, err := conn.GetContactList(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findContactList(ctx, conn, input)
+}
+
+func findContactList(ctx context.Context, conn *sesv2.Client, input *sesv2.GetContactListInput) (*sesv2.GetContactListOutput, error) {
+	output, err := conn.GetContactList(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 func expandTopics(tfList []interface{}) []types.Topic {

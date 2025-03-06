@@ -111,7 +111,7 @@ func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.Res
 
 	input := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
 		DestinationConfigurations: expandCustomRoutingDestinationConfigurations(d.Get("destination_configuration").(*schema.Set).List()),
-		EndpointGroupRegion:       aws.String(meta.(*conns.AWSClient).Region),
+		EndpointGroupRegion:       aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		IdempotencyToken:          aws.String(id.UniqueId()),
 		ListenerArn:               aws.String(d.Get("listener_arn").(string)),
 	}

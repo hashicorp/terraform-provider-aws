@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Deployment")
+// @FrameworkResource("aws_apprunner_deployment", name="Deployment")
 func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deploymentResource{}
 
@@ -43,10 +43,6 @@ type deploymentResource struct {
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
-}
-
-func (r *deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_deployment"
 }
 
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

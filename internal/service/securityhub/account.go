@@ -5,7 +5,6 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -96,7 +95,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	autoEnableControls := d.Get("auto_enable_controls").(bool)
 	inputU := &securityhub.UpdateSecurityHubConfigurationInput{
@@ -109,7 +108,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	arn := accountHubARN(meta.(*conns.AWSClient))
+	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
 	const (
 		timeout = 1 * time.Minute
 	)
@@ -134,7 +133,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	arn := accountHubARN(meta.(*conns.AWSClient))
+	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
 	output, err := findHubByARN(ctx, conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -227,6 +226,6 @@ func findHub(ctx context.Context, conn *securityhub.Client, input *securityhub.D
 }
 
 // Security Hub ARN: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecurityhub.html#awssecurityhub-resources-for-iam-policies
-func accountHubARN(meta *conns.AWSClient) string {
-	return fmt.Sprintf("arn:%s:securityhub:%s:%s:hub/default", meta.Partition, meta.Region, meta.AccountID)
+func accountHubARN(ctx context.Context, c *conns.AWSClient) string {
+	return c.RegionalARN(ctx, "securityhub", "hub/default")
 }

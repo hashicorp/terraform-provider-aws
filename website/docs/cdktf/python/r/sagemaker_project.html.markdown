@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_project"
 description: |-
@@ -91,4 +91,4 @@ Using `terraform import`, import SageMaker Projects using the `project_name`. Fo
 % terraform import aws_sagemaker_project.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5d67b37f736cf104db6893c21c2531fd0183fe8f2dd008b379c345da42e3802b -->
+<!-- cache-key: cdktf-0.20.8 input-5d67b37f736cf104db6893c21c2531fd0183fe8f2dd008b379c345da42e3802b -->

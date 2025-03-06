@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,7 +59,7 @@ func resourceAMIFromInstance() *schema.Resource {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				ValidateFunc:          validation.IsRFC3339Time,
-				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
+				DiffSuppressFunc:      sdkv2.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
 			names.AttrDescription: {
@@ -238,6 +238,10 @@ func resourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -247,8 +251,6 @@ func resourceAMIFromInstance() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -258,15 +260,15 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	instanceID := d.Get("source_instance_id").(string)
 	name := d.Get(names.AttrName).(string)
-	input := &ec2.CreateImageInput{
+	input := ec2.CreateImageInput{
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeImage),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImage),
 	}
 
-	output, err := conn.CreateImage(ctx, input)
+	output, err := conn.CreateImage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from EC2 Instance (%s): %s", name, instanceID, err)

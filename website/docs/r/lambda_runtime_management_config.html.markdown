@@ -12,7 +12,7 @@ Terraform resource for managing an AWS Lambda Runtime Management Config.
 Refer to the [AWS Lambda documentation](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) for supported runtimes.
 
 ~> Deletion of this resource returns the runtime update mode to `Auto` (the default behavior).
-To leave the configured runtime management options in-place, use a [`removed` block](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) withe destroy lifecycle set to `false`.
+To leave the configured runtime management options in-place, use a [`removed` block](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) with the destroy lifecycle set to `false`.
 
 ## Example Usage
 

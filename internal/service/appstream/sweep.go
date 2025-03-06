@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -39,7 +39,7 @@ func RegisterSweepers() {
 
 func sweepDirectoryConfigs(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping AppStream Directory Config sweep for region: %s", region)
 		return nil
 	}
@@ -67,7 +67,7 @@ func sweepDirectoryConfigs(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Directory Config sweep for %s: %s", region, err)
 		return nil
 	}
@@ -87,7 +87,7 @@ func sweepDirectoryConfigs(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping AppStream Fleet sweep for region: %s", region)
 		return nil
 	}
@@ -115,7 +115,7 @@ func sweepFleets(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Fleet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -135,7 +135,7 @@ func sweepFleets(region string) error {
 
 func sweepImageBuilders(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping AppStream Image Builder sweep for region: %s", region)
 		return nil
 	}
@@ -163,7 +163,7 @@ func sweepImageBuilders(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Image Builder sweep for %s: %s", region, err)
 		return nil
 	}
@@ -183,7 +183,7 @@ func sweepImageBuilders(region string) error {
 
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping AppStream Stack sweep for region: %s", region)
 		return nil
 	}
@@ -211,7 +211,7 @@ func sweepStacks(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Stack sweep for %s: %s", region, err)
 		return nil
 	}

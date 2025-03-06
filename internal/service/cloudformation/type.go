@@ -233,9 +233,10 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Type: %s", d.Id())
-	_, err := conn.DeregisterType(ctx, &cloudformation.DeregisterTypeInput{
+	input := cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterType(ctx, &input)
 
 	// Must deregister type if removing final LIVE version. This error can also occur
 	// when the type is already DEPRECATED.
@@ -441,6 +442,9 @@ func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSet
 	}
 	if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
 		apiObject.MaxConcurrentPercentage = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["concurrency_mode"].(string); ok && v != "" {
+		apiObject.ConcurrencyMode = awstypes.ConcurrencyMode(v)
 	}
 	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
 		apiObject.RegionConcurrencyType = awstypes.RegionConcurrencyType(v)

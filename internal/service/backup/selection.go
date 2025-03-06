@@ -4,22 +4,23 @@
 package backup
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,8 +28,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_backup_selection")
-func ResourceSelection() *schema.Resource {
+// @SDKResource("aws_backup_selection", name="Selection")
+func resourceSelection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSelectionCreate,
 		ReadWithoutTimeout:   resourceSelectionRead,
@@ -46,11 +47,6 @@ func ResourceSelection() *schema.Resource {
 					validation.StringLenBetween(1, 50),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, hyphen, underscore, and period characters"),
 				),
-			},
-			"plan_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 			names.AttrCondition: {
 				Type:     schema.TypeSet,
@@ -144,24 +140,34 @@ func ResourceSelection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"not_resources": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"plan_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"selection_tag": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								backup.ConditionTypeStringequals,
-							}, false),
-						},
 						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConditionType](),
 						},
 						names.AttrValue: {
 							Type:     schema.TypeString,
@@ -170,13 +176,6 @@ func ResourceSelection() *schema.Resource {
 						},
 					},
 				},
-			},
-			"not_resources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrResources: {
 				Type:     schema.TypeSet,
@@ -190,104 +189,71 @@ func ResourceSelection() *schema.Resource {
 
 func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	selection := &backup.Selection{
-		Conditions:    expandConditions(d.Get(names.AttrCondition).(*schema.Set).List()),
-		IamRoleArn:    aws.String(d.Get(names.AttrIAMRoleARN).(string)),
-		ListOfTags:    expandConditionTags(d.Get("selection_tag").(*schema.Set).List()),
-		NotResources:  flex.ExpandStringSet(d.Get("not_resources").(*schema.Set)),
-		Resources:     flex.ExpandStringSet(d.Get(names.AttrResources).(*schema.Set)),
-		SelectionName: aws.String(d.Get(names.AttrName).(string)),
-	}
-
+	name := d.Get(names.AttrName).(string)
+	planID := d.Get("plan_id").(string)
 	input := &backup.CreateBackupSelectionInput{
-		BackupPlanId:    aws.String(d.Get("plan_id").(string)),
-		BackupSelection: selection,
+		BackupPlanId: aws.String(planID),
+		BackupSelection: &awstypes.BackupSelection{
+			Conditions:    expandConditions(d.Get(names.AttrCondition).(*schema.Set).List()),
+			IamRoleArn:    aws.String(d.Get(names.AttrIAMRoleARN).(string)),
+			ListOfTags:    expandConditionTags(d.Get("selection_tag").(*schema.Set).List()),
+			NotResources:  flex.ExpandStringValueSet(d.Get("not_resources").(*schema.Set)),
+			Resources:     flex.ExpandStringValueSet(d.Get(names.AttrResources).(*schema.Set)),
+			SelectionName: aws.String(name),
+		},
 	}
 
-	// Retry for IAM eventual consistency
-	var output *backup.CreateBackupSelectionOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		output, err = conn.CreateBackupSelectionWithContext(ctx, input)
+	// Retry for IAM eventual consistency.
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateBackupSelection(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "cannot be assumed") {
+				return true, err
+			}
 
-		// Retry on the following error:
-		// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
-		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException, "cannot be assumed") {
-			log.Printf("[DEBUG] Received %s, retrying create backup selection.", err)
-			return retry.RetryableError(err)
-		}
+			// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX is not authorized to call tag:GetResources
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "is not authorized to call") {
+				return true, err
+			}
 
-		// Retry on the following error:
-		// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX is not authorized to call tag:GetResources
-		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException, "is not authorized to call") {
-			log.Printf("[DEBUG] Received %s, retrying create backup selection.", err)
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateBackupSelectionWithContext(ctx, input)
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Backup Selection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Selection (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.SelectionId))
+	d.SetId(aws.ToString(outputRaw.(*backup.CreateBackupSelectionOutput).SelectionId))
+
+	const (
+		// Maximum amount of time to wait for Backup changes to propagate.
+		timeout = 2 * time.Minute
+	)
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (interface{}, error) {
+		return findSelectionByTwoPartKey(ctx, conn, planID, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Backup Selection (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceSelectionRead(ctx, d, meta)...)
 }
 
 func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	input := &backup.GetBackupSelectionInput{
-		BackupPlanId: aws.String(d.Get("plan_id").(string)),
-		SelectionId:  aws.String(d.Id()),
-	}
+	planID := d.Get("plan_id").(string)
+	output, err := findSelectionByTwoPartKey(ctx, conn, planID, d.Id())
 
-	var resp *backup.GetBackupSelectionOutput
-
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-
-		resp, err = conn.GetBackupSelectionWithContext(ctx, input)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if d.IsNewResource() && tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException, "Cannot find Backup plan") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.GetBackupSelectionWithContext(ctx, input)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Backup Selection (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException, "Cannot find Backup plan") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Selection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -297,47 +263,35 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): empty response", d.Id())
-	}
-
-	d.Set("plan_id", resp.BackupPlanId)
-	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
-	d.Set(names.AttrIAMRoleARN, resp.BackupSelection.IamRoleArn)
-
-	if conditions := resp.BackupSelection.Conditions; conditions != nil {
-		if err := d.Set(names.AttrCondition, flattenConditions(conditions)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting conditions: %s", err)
+	if v := output.Conditions; v != nil {
+		if err := d.Set(names.AttrCondition, flattenConditions(v)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 		}
 	}
+	d.Set(names.AttrIAMRoleARN, output.IamRoleArn)
+	d.Set(names.AttrName, output.SelectionName)
+	if err := d.Set("not_resources", output.NotResources); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
+	}
+	d.Set("plan_id", planID)
+	if err := d.Set(names.AttrResources, output.Resources); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
+	}
+	if v := output.ListOfTags; v != nil {
+		tfList := make([]interface{}, 0)
 
-	if resp.BackupSelection.ListOfTags != nil {
-		tags := make([]map[string]interface{}, 0)
+		for _, v := range v {
+			tfMap := make(map[string]interface{})
 
-		for _, r := range resp.BackupSelection.ListOfTags {
-			m := make(map[string]interface{})
+			tfMap[names.AttrKey] = aws.ToString(v.ConditionKey)
+			tfMap[names.AttrType] = v.ConditionType
+			tfMap[names.AttrValue] = aws.ToString(v.ConditionValue)
 
-			m[names.AttrType] = aws.StringValue(r.ConditionType)
-			m[names.AttrKey] = aws.StringValue(r.ConditionKey)
-			m[names.AttrValue] = aws.StringValue(r.ConditionValue)
-
-			tags = append(tags, m)
+			tfList = append(tfList, tfMap)
 		}
 
-		if err := d.Set("selection_tag", tags); err != nil {
+		if err := d.Set("selection_tag", tfList); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting selection tag: %s", err)
-		}
-	}
-
-	if resp.BackupSelection.Resources != nil {
-		if err := d.Set(names.AttrResources, aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
-		}
-	}
-
-	if resp.BackupSelection.NotResources != nil {
-		if err := d.Set("not_resources", aws.StringValueSlice(resp.BackupSelection.NotResources)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
 		}
 	}
 
@@ -346,16 +300,21 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	input := &backup.DeleteBackupSelectionInput{
+	log.Printf("[DEBUG] Deleting Backup Selection: %s", d.Id())
+	input := backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
 		SelectionId:  aws.String(d.Id()),
 	}
+	_, err := conn.DeleteBackupSelection(ctx, &input)
 
-	_, err := conn.DeleteBackupSelectionWithContext(ctx, input)
+	if errs.IsA[*awstypes.InvalidParameterValueException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Backup Selection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Backup Selection (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -376,116 +335,110 @@ func resourceSelectionImportState(ctx context.Context, d *schema.ResourceData, m
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandConditionTags(tagList []interface{}) []*backup.Condition {
-	conditions := []*backup.Condition{}
-
-	for _, i := range tagList {
-		item := i.(map[string]interface{})
-		tag := &backup.Condition{}
-
-		tag.ConditionType = aws.String(item[names.AttrType].(string))
-		tag.ConditionKey = aws.String(item[names.AttrKey].(string))
-		tag.ConditionValue = aws.String(item[names.AttrValue].(string))
-
-		conditions = append(conditions, tag)
+func findSelectionByTwoPartKey(ctx context.Context, conn *backup.Client, planID, selectionID string) (*awstypes.BackupSelection, error) {
+	input := &backup.GetBackupSelectionInput{
+		BackupPlanId: aws.String(planID),
+		SelectionId:  aws.String(selectionID),
 	}
 
-	return conditions
+	return findSelection(ctx, conn, input)
 }
 
-func expandConditions(conditionsList []interface{}) *backup.Conditions {
-	conditions := &backup.Conditions{}
+func findSelection(ctx context.Context, conn *backup.Client, input *backup.GetBackupSelectionInput) (*awstypes.BackupSelection, error) {
+	output, err := conn.GetBackupSelection(ctx, input)
 
-	for _, condition := range conditionsList {
-		mCondition := condition.(map[string]interface{})
-
-		if vStringEquals := expandConditionParameters(mCondition["string_equals"].(*schema.Set).List()); len(vStringEquals) > 0 {
-			conditions.StringEquals = vStringEquals
-		}
-		if vStringNotEquals := expandConditionParameters(mCondition["string_not_equals"].(*schema.Set).List()); len(vStringNotEquals) > 0 {
-			conditions.StringNotEquals = vStringNotEquals
-		}
-		if vStringLike := expandConditionParameters(mCondition["string_like"].(*schema.Set).List()); len(vStringLike) > 0 {
-			conditions.StringLike = vStringLike
-		}
-		if vStringNotLike := expandConditionParameters(mCondition["string_not_like"].(*schema.Set).List()); len(vStringNotLike) > 0 {
-			conditions.StringNotLike = vStringNotLike
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Cannot find Backup plan") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return conditions
+	if output == nil || output.BackupSelection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.BackupSelection, nil
 }
 
-func expandConditionParameters(conditionParametersList []interface{}) []*backup.ConditionParameter {
-	conditionParameters := []*backup.ConditionParameter{}
+func expandConditionTags(tfList []interface{}) []awstypes.Condition {
+	apiObjects := []awstypes.Condition{}
 
-	for _, i := range conditionParametersList {
-		item := i.(map[string]interface{})
-		conditionParameter := &backup.ConditionParameter{}
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject := awstypes.Condition{}
 
-		conditionParameter.ConditionKey = aws.String(item[names.AttrKey].(string))
-		conditionParameter.ConditionValue = aws.String(item[names.AttrValue].(string))
+		apiObject.ConditionKey = aws.String(tfMap[names.AttrKey].(string))
+		apiObject.ConditionType = awstypes.ConditionType(tfMap[names.AttrType].(string))
+		apiObject.ConditionValue = aws.String(tfMap[names.AttrValue].(string))
 
-		conditionParameters = append(conditionParameters, conditionParameter)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return conditionParameters
+	return apiObjects
 }
 
-func flattenConditions(conditions *backup.Conditions) *schema.Set {
-	var vConditions []interface{}
+func expandConditions(tfList []interface{}) *awstypes.Conditions {
+	apiObject := &awstypes.Conditions{}
 
-	mCondition := map[string]interface{}{}
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
 
-	mCondition["string_equals"] = flattenConditionParameters(conditions.StringEquals)
-	mCondition["string_not_equals"] = flattenConditionParameters(conditions.StringNotEquals)
-	mCondition["string_like"] = flattenConditionParameters(conditions.StringLike)
-	mCondition["string_not_like"] = flattenConditionParameters(conditions.StringNotLike)
+		if v := expandConditionParameters(tfMap["string_equals"].(*schema.Set).List()); len(v) > 0 {
+			apiObject.StringEquals = v
+		}
+		if v := expandConditionParameters(tfMap["string_not_equals"].(*schema.Set).List()); len(v) > 0 {
+			apiObject.StringNotEquals = v
+		}
+		if v := expandConditionParameters(tfMap["string_like"].(*schema.Set).List()); len(v) > 0 {
+			apiObject.StringLike = v
+		}
+		if v := expandConditionParameters(tfMap["string_not_like"].(*schema.Set).List()); len(v) > 0 {
+			apiObject.StringNotLike = v
+		}
+	}
 
-	vConditions = append(vConditions, mCondition)
-
-	return schema.NewSet(conditionsHash, vConditions)
+	return apiObject
 }
 
-func conditionsHash(vCondition interface{}) int {
-	var buf bytes.Buffer
+func expandConditionParameters(tfList []interface{}) []awstypes.ConditionParameter {
+	apiObjects := []awstypes.ConditionParameter{}
 
-	mCondition := vCondition.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject := awstypes.ConditionParameter{}
 
-	if v, ok := mCondition["string_equals"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		apiObject.ConditionKey = aws.String(tfMap[names.AttrKey].(string))
+		apiObject.ConditionValue = aws.String(tfMap[names.AttrValue].(string))
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if v, ok := mCondition["string_not_equals"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-
-	if v, ok := mCondition["string_like"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-
-	if v, ok := mCondition["string_not_like"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-
-	return create.StringHashcode(buf.String())
+	return apiObjects
 }
 
-func flattenConditionParameters(conditionParameters []*backup.ConditionParameter) []interface{} {
-	if len(conditionParameters) == 0 {
+func flattenConditions(apiObject *awstypes.Conditions) []interface{} {
+	tfMap := map[string]interface{}{}
+
+	tfMap["string_equals"] = flattenConditionParameters(apiObject.StringEquals)
+	tfMap["string_not_equals"] = flattenConditionParameters(apiObject.StringNotEquals)
+	tfMap["string_like"] = flattenConditionParameters(apiObject.StringLike)
+	tfMap["string_not_like"] = flattenConditionParameters(apiObject.StringNotLike)
+
+	return []interface{}{tfMap}
+}
+
+func flattenConditionParameters(apiObjects []awstypes.ConditionParameter) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	for _, conditionParameter := range conditionParameters {
-		if conditionParameter == nil {
-			continue
-		}
-
+	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			names.AttrKey:   aws.StringValue(conditionParameter.ConditionKey),
-			names.AttrValue: aws.StringValue(conditionParameter.ConditionValue),
+			names.AttrKey:   aws.ToString(apiObject.ConditionKey),
+			names.AttrValue: aws.ToString(apiObject.ConditionValue),
 		}
 
 		tfList = append(tfList, tfMap)

@@ -10,21 +10,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticsearch_vpc_endpoint")
-func ResourceVPCEndpoint() *schema.Resource {
+// @SDKResource("aws_elasticsearch_vpc_endpoint", name="VPC Endpoint")
+func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
@@ -87,22 +89,22 @@ func ResourceVPCEndpoint() *schema.Resource {
 
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	input := &elasticsearchservice.CreateVpcEndpointInput{
 		DomainArn:  aws.String(d.Get("domain_arn").(string)),
 		VpcOptions: expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
 	}
 
-	output, err := conn.CreateVpcEndpointWithContext(ctx, input)
+	output, err := conn.CreateVpcEndpoint(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elasticsearch VPC Endpoint: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.VpcEndpoint.VpcEndpointId))
+	d.SetId(aws.ToString(output.VpcEndpoint.VpcEndpointId))
 
-	if err := waitVPCEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPCEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch VPC Endpoint (%s) create: %s", d.Id(), err)
 	}
 
@@ -111,7 +113,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	endpoint, err := findVPCEndpointByID(ctx, conn, d.Id())
 
@@ -140,20 +142,20 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	input := &elasticsearchservice.UpdateVpcEndpointInput{
 		VpcOptions:    expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
 		VpcEndpointId: aws.String(d.Id()),
 	}
 
-	_, err := conn.UpdateVpcEndpointWithContext(ctx, input)
+	_, err := conn.UpdateVpcEndpoint(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Elasticsearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := waitVPCEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitVPCEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch VPC Endpoint (%s) update: %s", d.Id(), err)
 	}
 
@@ -162,14 +164,14 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch VPC Endpoint: %s", d.Id())
-	_, err := conn.DeleteVpcEndpointWithContext(ctx, &elasticsearchservice.DeleteVpcEndpointInput{
+	_, err := conn.DeleteVpcEndpoint(ctx, &elasticsearchservice.DeleteVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, elasticsearchservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -177,7 +179,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch VPC Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
@@ -214,23 +216,19 @@ func (e *vpcEndpointNotFoundError) As(target any) bool {
 	return true
 }
 
-func vpcEndpointError(apiObject *elasticsearchservice.VpcEndpointError) error {
-	if apiObject == nil {
-		return nil
-	}
+func vpcEndpointError(apiObject awstypes.VpcEndpointError) error {
+	errorCode := string(apiObject.ErrorCode)
+	innerError := fmt.Errorf("%s: %s", errorCode, aws.ToString(apiObject.ErrorMessage))
+	err := fmt.Errorf("%s: %w", aws.ToString(apiObject.VpcEndpointId), innerError)
 
-	errorCode := aws.StringValue(apiObject.ErrorCode)
-	innerError := fmt.Errorf("%s: %s", errorCode, aws.StringValue(apiObject.ErrorMessage))
-	err := fmt.Errorf("%s: %w", aws.StringValue(apiObject.VpcEndpointId), innerError)
-
-	if errorCode == elasticsearchservice.VpcEndpointErrorCodeEndpointNotFound {
+	if errorCode == string(awstypes.VpcEndpointErrorCodeEndpointNotFound) {
 		err = &vpcEndpointNotFoundError{apiError: err}
 	}
 
 	return err
 }
 
-func vpcEndpointsError(apiObjects []*elasticsearchservice.VpcEndpointError) error {
+func vpcEndpointsError(apiObjects []awstypes.VpcEndpointError) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
@@ -240,26 +238,26 @@ func vpcEndpointsError(apiObjects []*elasticsearchservice.VpcEndpointError) erro
 	return errors.Join(errs...)
 }
 
-func findVPCEndpointByID(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, id string) (*elasticsearchservice.VpcEndpoint, error) {
+func findVPCEndpointByID(ctx context.Context, conn *elasticsearchservice.Client, id string) (*awstypes.VpcEndpoint, error) {
 	input := &elasticsearchservice.DescribeVpcEndpointsInput{
-		VpcEndpointIds: aws.StringSlice([]string{id}),
+		VpcEndpointIds: []string{id},
 	}
 
 	return findVPCEndpoint(ctx, conn, input)
 }
 
-func findVPCEndpoint(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, input *elasticsearchservice.DescribeVpcEndpointsInput) (*elasticsearchservice.VpcEndpoint, error) {
+func findVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Client, input *elasticsearchservice.DescribeVpcEndpointsInput) (*awstypes.VpcEndpoint, error) {
 	output, err := findVPCEndpoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpoints(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, input *elasticsearchservice.DescribeVpcEndpointsInput) ([]*elasticsearchservice.VpcEndpoint, error) {
-	output, err := conn.DescribeVpcEndpointsWithContext(ctx, input)
+func findVPCEndpoints(ctx context.Context, conn *elasticsearchservice.Client, input *elasticsearchservice.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
+	output, err := conn.DescribeVpcEndpoints(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -276,7 +274,7 @@ func findVPCEndpoints(ctx context.Context, conn *elasticsearchservice.Elasticsea
 	return output.VpcEndpoints, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, id string) retry.StateRefreshFunc {
+func statusVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
@@ -288,45 +286,57 @@ func statusVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Elasticse
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitVPCEndpointCreated(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, id string, timeout time.Duration) error {
+func waitVPCEndpointCreated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{elasticsearchservice.VpcEndpointStatusCreating},
-		Target:  []string{elasticsearchservice.VpcEndpointStatusActive},
+		Pending: enum.Slice(awstypes.VpcEndpointStatusCreating),
+		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitVPCEndpointUpdated(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, id string, timeout time.Duration) error {
+func waitVPCEndpointUpdated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{elasticsearchservice.VpcEndpointStatusUpdating},
-		Target:  []string{elasticsearchservice.VpcEndpointStatusActive},
+		Pending: enum.Slice(awstypes.VpcEndpointStatusUpdating),
+		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitVPCEndpointDeleted(ctx context.Context, conn *elasticsearchservice.ElasticsearchService, id string, timeout time.Duration) error {
+func waitVPCEndpointDeleted(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{elasticsearchservice.VpcEndpointStatusDeleting},
+		Pending: enum.Slice(awstypes.VpcEndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }

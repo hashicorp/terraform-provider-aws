@@ -80,7 +80,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
 	destinationCIDR := d.Get("destination_cidr_block").(string)
-	id := ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
+	id := clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
 	input := &ec2.CreateClientVpnRouteInput{
 		ClientToken:          aws.String(sdkid.UniqueId()),
 		ClientVpnEndpointId:  aws.String(endpointID),
@@ -113,7 +113,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
+	endpointID, targetSubnetID, destinationCIDR, err := clientVPNRouteParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -144,17 +144,18 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
+	endpointID, targetSubnetID, destinationCIDR, err := clientVPNRouteParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())
-	_, err = conn.DeleteClientVpnRoute(ctx, &ec2.DeleteClientVpnRouteInput{
+	input := ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
-	})
+	}
+	_, err = conn.DeleteClientVpnRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNRouteNotFound) {
 		return diags
@@ -173,14 +174,14 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 
 const clientVPNRouteIDSeparator = ","
 
-func ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR string) string {
+func clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR string) string {
 	parts := []string{endpointID, targetSubnetID, destinationCIDR}
 	id := strings.Join(parts, clientVPNRouteIDSeparator)
 
 	return id
 }
 
-func ClientVPNRouteParseResourceID(id string) (string, string, string, error) {
+func clientVPNRouteParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, clientVPNRouteIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {

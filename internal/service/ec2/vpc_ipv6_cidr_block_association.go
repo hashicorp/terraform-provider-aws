@@ -8,21 +8,20 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_ipv6_cidr_block_association")
-func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_ipv6_cidr_block_association", name="VPC IPV6 CIDR Block Association")
+func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIPv6CIDRBlockAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCIPv6CIDRBlockAssociationRead,
@@ -43,31 +42,47 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 			return nil
 		},
 		Schema: map[string]*schema.Schema{
-			"ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
+			"assign_generated_ipv6_cidr_block": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
 			},
-			// ipam parameters are not required by the API but other usage mechanisms are not implemented yet. TODO ipv6 options:
-			// --amazon-provided-ipv6-cidr-block
-			// --ipv6-pool
-			"ipv6_ipam_pool_id": {
+			"ip_source": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
+			},
+			"ipv6_address_attribute": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_cidr_block": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validVPCIPv6CIDRBlock,
+			},
+			"ipv6_ipam_pool_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_pool"},
 			},
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
+				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
-				// This RequiredWith setting should be applied once L57 is completed
-				// RequiredWith:  []string{"ipv6_ipam_pool_id"},
+			},
+			"ipv6_pool": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_ipam_pool_id"},
 			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
@@ -85,11 +100,15 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 
 func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcID := d.Get(names.AttrVPCID).(string)
 	input := &ec2.AssociateVpcCidrBlockInput{
 		VpcId: aws.String(vpcID),
+	}
+
+	if v, ok := d.GetOk("assign_generated_ipv6_cidr_block"); ok {
+		input.AmazonProvidedIpv6CidrBlock = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
@@ -101,21 +120,22 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
-		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
+		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC IPv6 CIDR Block Association: %s", input)
-	output, err := conn.AssociateVpcCidrBlockWithContext(ctx, input)
+	if v, ok := d.GetOk("ipv6_pool"); ok {
+		input.Ipv6Pool = aws.String(v.(string))
+	}
+
+	output, err := conn.AssociateVpcCidrBlock(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC (%s) IPv6 CIDR Block Association: %s", vpcID, err)
 	}
 
-	d.SetId(aws.StringValue(output.Ipv6CidrBlockAssociation.AssociationId))
+	d.SetId(aws.ToString(output.Ipv6CidrBlockAssociation.AssociationId))
 
-	_, err = WaitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become associated: %s", vpcID, d.Id(), err)
 	}
 
@@ -124,9 +144,9 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 
 func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcIpv6CidrBlockAssociation, vpc, err := FindVPCIPv6CIDRBlockAssociationByID(ctx, conn, d.Id())
+	vpcIpv6CidrBlockAssociation, vpc, err := findVPCIPv6CIDRBlockAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC IPv6 CIDR Block Association %s not found, removing from state", d.Id())
@@ -138,7 +158,14 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC IPv6 CIDR Block Association (%s): %s", d.Id(), err)
 	}
 
+	ipv6PoolID := aws.ToString(vpcIpv6CidrBlockAssociation.Ipv6Pool)
+	isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
+
+	d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
+	d.Set("ip_source", vpcIpv6CidrBlockAssociation.IpSource)
+	d.Set("ipv6_address_attribute", vpcIpv6CidrBlockAssociation.Ipv6AddressAttribute)
 	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
+	d.Set("ipv6_pool", ipv6PoolID)
 	d.Set(names.AttrVPCID, vpc.VpcId)
 
 	return diags
@@ -146,12 +173,13 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 
 func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting VPC IPv6 CIDR Block Association: %s", d.Id())
-	_, err := conn.DisassociateVpcCidrBlockWithContext(ctx, &ec2.DisassociateVpcCidrBlockInput{
+	input := ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateVpcCidrBlock(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return diags
@@ -161,9 +189,7 @@ func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC IPv6 CIDR Block Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if err := waitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC IPv6 CIDR block (%s) to become disassociated: %s", d.Id(), err)
 	}
 

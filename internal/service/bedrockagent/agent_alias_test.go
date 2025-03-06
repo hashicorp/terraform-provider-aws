@@ -40,8 +40,8 @@ func TestAccBedrockAgentAgentAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -100,9 +100,9 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -119,9 +119,9 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -148,10 +148,10 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test ALias"),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Alias"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -160,17 +160,17 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccagentAliasConfig_routingUpdateTwo(rName, acctest.Ct2),
+				Config: testAccagentAliasConfig_routingUpdateTwo(rName, "2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test ALias"),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Alias"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -193,7 +193,7 @@ func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 				Config: testAccAgentAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 				Config: testAccAgentAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -215,9 +215,47 @@ func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 				Config: testAccAgentAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgentAlias_provisionedThroughput(t *testing.T) {
+	acctest.Skip(t, "Bedrock Provisioned Model Throughput for Antropic Claude 2 has a minimum 1 month commitment and costs > $45K/month")
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_alias.test2"
+	var v awstypes.AgentAlias
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentAliasConfig_provisionedThroughout(rName, "1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Alias"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_configuration.0.provisioned_throughput"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -270,31 +308,46 @@ func testAccCheckAgentAliasExists(ctx context.Context, n string, v *awstypes.Age
 	}
 }
 
+func testAccAgentAliasConfig_provisionedModelThroughputBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_bedrock_foundation_model" "test" {
+  model_id = "anthropic.claude-v2:0:18k"
+}
+
+resource "aws_bedrock_provisioned_model_throughput" "test" {
+  provisioned_model_name = %[1]q
+  model_arn              = data.aws_bedrock_foundation_model.test.model_arn
+  commitment_duration    = "OneMonth"
+  model_units            = 1
+}
+`, rName)
+}
+
 func testAccAgentAliasConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), testAccAgentAliasConfig_alias(rName))
 }
 
-func testAccAgentAliasConfig_alias(name string) string {
+func testAccAgentAliasConfig_alias(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
-  description      = "Test ALias"
+  description      = "Test Alias"
 }
-`, name)
+`, rName)
 }
 
-func testAccAgentAliasConfig_routing(name, version string) string {
+func testAccAgentAliasConfig_routing(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
-  description      = "Test ALias"
+  description      = "Test Alias"
   routing_configuration {
     agent_version = %[2]q
   }
 }
-`, name, version)
+`, rName, version)
 }
 
 func testAccagentAliasConfig_routingUpdateOne(rName string) string {
@@ -305,10 +358,10 @@ func testAccagentAliasConfig_routingUpdateOne(rName string) string {
 resource "aws_bedrockagent_agent_alias" "second" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
-  description      = "Test ALias"
+  description      = "Test Alias"
   depends_on       = [aws_bedrockagent_agent_alias.test]
 }
-`, rName+acctest.Ct2),
+`, rName+"2"),
 	)
 }
 
@@ -334,7 +387,7 @@ func testAccAgentAliasConfig_tags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
-  description      = "Test ALias"
+  description      = "Test Alias"
   tags = {
     %[2]q = %[3]q
   }
@@ -347,11 +400,29 @@ func testAccAgentAliasConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2
 resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
-  description      = "Test ALias"
+  description      = "Test Alias"
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAgentAliasConfig_provisionedThroughout(rName, version string) string {
+	return acctest.ConfigCompose(
+		testAccAgentAliasConfig_provisionedModelThroughputBase(rName),
+		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentAliasConfig_alias(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent_alias" "test2" {
+  agent_alias_name = %[1]q
+  agent_id         = aws_bedrockagent_agent.test.agent_id
+  description      = "Test Alias"
+  routing_configuration {
+    agent_version          = %[2]q
+    provisioned_throughput = aws_bedrock_provisioned_model_throughput.test.provisioned_model_arn
+  }
+}
+`, rName+"2", version))
 }

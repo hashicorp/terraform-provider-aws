@@ -7,13 +7,14 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
@@ -94,13 +95,13 @@ func main() {
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
 	})
 
 	d := g.NewUnformattedFileDestination(servicesAllFile)
 
-	if err := d.WriteTemplate("teamcity", tmpl, td); err != nil {
+	if err := d.BufferTemplate("teamcity", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", servicesAllFile, err)
 	}
 

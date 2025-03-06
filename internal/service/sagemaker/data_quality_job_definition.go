@@ -8,15 +8,17 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -27,7 +29,7 @@ import (
 
 // @SDKResource("aws_sagemaker_data_quality_job_definition", name="Data Quality Job Definition")
 // @Tags(identifierAttribute="arn")
-func ResourceDataQualityJobDefinition() *schema.Resource {
+func resourceDataQualityJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataQualityJobDefinitionCreate,
 		ReadWithoutTimeout:   resourceDataQualityJobDefinitionRead,
@@ -206,18 +208,18 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										),
 									},
 									"s3_data_distribution_type": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3DataDistributionType_Values(), false),
+										Type:             schema.TypeString,
+										ForceNew:         true,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
 									},
 									"s3_input_mode": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3InputMode_Values(), false),
+										Type:             schema.TypeString,
+										ForceNew:         true,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
 									},
 								},
 							},
@@ -246,18 +248,18 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										),
 									},
 									"s3_data_distribution_type": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3DataDistributionType_Values(), false),
+										Type:             schema.TypeString,
+										ForceNew:         true,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
 									},
 									"s3_input_mode": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3InputMode_Values(), false),
+										Type:             schema.TypeString,
+										ForceNew:         true,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
 									},
 								},
 							},
@@ -303,11 +305,11 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													),
 												},
 												"s3_upload_mode": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3UploadMode_Values(), false),
+													Type:             schema.TypeString,
+													ForceNew:         true,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
 												},
 												"s3_uri": {
 													Type:     schema.TypeString,
@@ -348,10 +350,10 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ValidateFunc: validation.IntAtLeast(1),
 									},
 									names.AttrInstanceType: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingInstanceType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ProcessingInstanceType](),
 									},
 									"volume_kms_key_id": {
 										Type:         schema.TypeString,
@@ -450,14 +452,12 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	var name string
 	if v, ok := d.GetOk(names.AttrName); ok {
@@ -493,10 +493,10 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		createOpts.StoppingCondition = expandMonitoringStoppingCondition(v.([]interface{}))
 	}
 
-	_, err := conn.CreateDataQualityJobDefinitionWithContext(ctx, createOpts)
+	_, err := conn.CreateDataQualityJobDefinition(ctx, createOpts)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Data Quality Job Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Data Quality Job Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -506,18 +506,18 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 
 func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	jobDefinition, err := FindDataQualityJobDefinitionByName(ctx, conn, d.Id())
+	jobDefinition, err := findDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		log.Printf("[WARN] SageMaker Data Quality Job Definition (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SageMaker AI Data Quality Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, jobDefinition.JobDefinitionArn)
@@ -525,33 +525,32 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
 
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_baseline_config", flattenDataQualityBaselineConfig(jobDefinition.DataQualityBaselineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_job_input", flattenDataQualityJobInput(jobDefinition.DataQualityJobInput)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_job_output_config", flattenMonitoringOutputConfig(jobDefinition.DataQualityJobOutputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("job_resources", flattenMonitoringResources(jobDefinition.JobResources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("network_config", flattenMonitoringNetworkConfig(jobDefinition.NetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("stopping_condition", flattenMonitoringStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
-
 	return diags
 }
 
@@ -565,32 +564,32 @@ func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.Resou
 
 func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
-	_, err := conn.DeleteDataQualityJobDefinitionWithContext(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{
+	log.Printf("[INFO] Deleting SageMaker AI Data Quality Job Definition: %s", d.Id())
+	_, err := conn.DeleteDataQualityJobDefinition(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeDataQualityJobDefinitionOutput, error) {
+func findDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeDataQualityJobDefinitionOutput, error) {
 	input := &sagemaker.DescribeDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
 	}
 
-	output, err := conn.DescribeDataQualityJobDefinitionWithContext(ctx, input)
+	output, err := conn.DescribeDataQualityJobDefinition(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -608,7 +607,7 @@ func FindDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Sag
 	return output, nil
 }
 
-func flattenDataQualityAppSpecification(config *sagemaker.DataQualityAppSpecification) []map[string]interface{} {
+func flattenDataQualityAppSpecification(config *awstypes.DataQualityAppSpecification) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -616,25 +615,25 @@ func flattenDataQualityAppSpecification(config *sagemaker.DataQualityAppSpecific
 	m := map[string]interface{}{}
 
 	if config.ImageUri != nil {
-		m["image_uri"] = aws.StringValue(config.ImageUri)
+		m["image_uri"] = aws.ToString(config.ImageUri)
 	}
 
 	if config.Environment != nil {
-		m[names.AttrEnvironment] = aws.StringValueMap(config.Environment)
+		m[names.AttrEnvironment] = aws.StringMap(config.Environment)
 	}
 
 	if config.PostAnalyticsProcessorSourceUri != nil {
-		m["post_analytics_processor_source_uri"] = aws.StringValue(config.PostAnalyticsProcessorSourceUri)
+		m["post_analytics_processor_source_uri"] = aws.ToString(config.PostAnalyticsProcessorSourceUri)
 	}
 
 	if config.RecordPreprocessorSourceUri != nil {
-		m["record_preprocessor_source_uri"] = aws.StringValue(config.RecordPreprocessorSourceUri)
+		m["record_preprocessor_source_uri"] = aws.ToString(config.RecordPreprocessorSourceUri)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenDataQualityBaselineConfig(config *sagemaker.DataQualityBaselineConfig) []map[string]interface{} {
+func flattenDataQualityBaselineConfig(config *awstypes.DataQualityBaselineConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -652,7 +651,7 @@ func flattenDataQualityBaselineConfig(config *sagemaker.DataQualityBaselineConfi
 	return []map[string]interface{}{m}
 }
 
-func flattenConstraintsResource(config *sagemaker.MonitoringConstraintsResource) []map[string]interface{} {
+func flattenConstraintsResource(config *awstypes.MonitoringConstraintsResource) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -660,13 +659,13 @@ func flattenConstraintsResource(config *sagemaker.MonitoringConstraintsResource)
 	m := map[string]interface{}{}
 
 	if config.S3Uri != nil {
-		m["s3_uri"] = aws.StringValue(config.S3Uri)
+		m["s3_uri"] = aws.ToString(config.S3Uri)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringStatisticsResource(config *sagemaker.MonitoringStatisticsResource) []map[string]interface{} {
+func flattenMonitoringStatisticsResource(config *awstypes.MonitoringStatisticsResource) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -674,13 +673,13 @@ func flattenMonitoringStatisticsResource(config *sagemaker.MonitoringStatisticsR
 	m := map[string]interface{}{}
 
 	if config.S3Uri != nil {
-		m["s3_uri"] = aws.StringValue(config.S3Uri)
+		m["s3_uri"] = aws.ToString(config.S3Uri)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenDataQualityJobInput(config *sagemaker.DataQualityJobInput) []map[string]interface{} {
+func flattenDataQualityJobInput(config *awstypes.DataQualityJobInput) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -698,7 +697,7 @@ func flattenDataQualityJobInput(config *sagemaker.DataQualityJobInput) []map[str
 	return []map[string]interface{}{m}
 }
 
-func flattenBatchTransformInput(config *sagemaker.BatchTransformInput_) []map[string]interface{} {
+func flattenBatchTransformInput(config *awstypes.BatchTransformInput) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -706,29 +705,25 @@ func flattenBatchTransformInput(config *sagemaker.BatchTransformInput_) []map[st
 	m := map[string]interface{}{}
 
 	if config.LocalPath != nil {
-		m["local_path"] = aws.StringValue(config.LocalPath)
+		m["local_path"] = aws.ToString(config.LocalPath)
 	}
 
 	if config.DataCapturedDestinationS3Uri != nil {
-		m["data_captured_destination_s3_uri"] = aws.StringValue(config.DataCapturedDestinationS3Uri)
+		m["data_captured_destination_s3_uri"] = aws.ToString(config.DataCapturedDestinationS3Uri)
 	}
 
 	if config.DatasetFormat != nil {
 		m["dataset_format"] = flattenMonitoringDatasetFormat(config.DatasetFormat)
 	}
 
-	if config.S3DataDistributionType != nil {
-		m["s3_data_distribution_type"] = aws.StringValue(config.S3DataDistributionType)
-	}
+	m["s3_data_distribution_type"] = config.S3DataDistributionType
 
-	if config.S3InputMode != nil {
-		m["s3_input_mode"] = aws.StringValue(config.S3InputMode)
-	}
+	m["s3_input_mode"] = config.S3InputMode
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringDatasetFormat(config *sagemaker.MonitoringDatasetFormat) []map[string]interface{} {
+func flattenMonitoringDatasetFormat(config *awstypes.MonitoringDatasetFormat) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -746,7 +741,7 @@ func flattenMonitoringDatasetFormat(config *sagemaker.MonitoringDatasetFormat) [
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringCSVDatasetFormat(config *sagemaker.MonitoringCsvDatasetFormat) []map[string]interface{} {
+func flattenMonitoringCSVDatasetFormat(config *awstypes.MonitoringCsvDatasetFormat) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -754,13 +749,13 @@ func flattenMonitoringCSVDatasetFormat(config *sagemaker.MonitoringCsvDatasetFor
 	m := map[string]interface{}{}
 
 	if config.Header != nil {
-		m[names.AttrHeader] = aws.BoolValue(config.Header)
+		m[names.AttrHeader] = aws.ToBool(config.Header)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringJSONDatasetFormat(config *sagemaker.MonitoringJsonDatasetFormat) []map[string]interface{} {
+func flattenMonitoringJSONDatasetFormat(config *awstypes.MonitoringJsonDatasetFormat) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -768,13 +763,13 @@ func flattenMonitoringJSONDatasetFormat(config *sagemaker.MonitoringJsonDatasetF
 	m := map[string]interface{}{}
 
 	if config.Line != nil {
-		m["line"] = aws.BoolValue(config.Line)
+		m["line"] = aws.ToBool(config.Line)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenEndpointInput(config *sagemaker.EndpointInput) []map[string]interface{} {
+func flattenEndpointInput(config *awstypes.EndpointInput) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -782,25 +777,21 @@ func flattenEndpointInput(config *sagemaker.EndpointInput) []map[string]interfac
 	m := map[string]interface{}{}
 
 	if config.EndpointName != nil {
-		m["endpoint_name"] = aws.StringValue(config.EndpointName)
+		m["endpoint_name"] = aws.ToString(config.EndpointName)
 	}
 
 	if config.LocalPath != nil {
-		m["local_path"] = aws.StringValue(config.LocalPath)
+		m["local_path"] = aws.ToString(config.LocalPath)
 	}
 
-	if config.S3DataDistributionType != nil {
-		m["s3_data_distribution_type"] = aws.StringValue(config.S3DataDistributionType)
-	}
+	m["s3_data_distribution_type"] = config.S3DataDistributionType
 
-	if config.S3InputMode != nil {
-		m["s3_input_mode"] = aws.StringValue(config.S3InputMode)
-	}
+	m["s3_input_mode"] = config.S3InputMode
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringOutputConfig(config *sagemaker.MonitoringOutputConfig) []map[string]interface{} {
+func flattenMonitoringOutputConfig(config *awstypes.MonitoringOutputConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -808,7 +799,7 @@ func flattenMonitoringOutputConfig(config *sagemaker.MonitoringOutputConfig) []m
 	m := map[string]interface{}{}
 
 	if config.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
 	if config.MonitoringOutputs != nil {
@@ -818,7 +809,7 @@ func flattenMonitoringOutputConfig(config *sagemaker.MonitoringOutputConfig) []m
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringOutputs(list []*sagemaker.MonitoringOutput) []map[string]interface{} {
+func flattenMonitoringOutputs(list []awstypes.MonitoringOutput) []map[string]interface{} {
 	outputs := make([]map[string]interface{}, 0, len(list))
 
 	for _, lRaw := range list {
@@ -830,7 +821,7 @@ func flattenMonitoringOutputs(list []*sagemaker.MonitoringOutput) []map[string]i
 	return outputs
 }
 
-func flattenMonitoringS3Output(config *sagemaker.MonitoringS3Output) []map[string]interface{} {
+func flattenMonitoringS3Output(config *awstypes.MonitoringS3Output) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -838,21 +829,19 @@ func flattenMonitoringS3Output(config *sagemaker.MonitoringS3Output) []map[strin
 	m := map[string]interface{}{}
 
 	if config.LocalPath != nil {
-		m["local_path"] = aws.StringValue(config.LocalPath)
+		m["local_path"] = aws.ToString(config.LocalPath)
 	}
 
-	if config.S3UploadMode != nil {
-		m["s3_upload_mode"] = aws.StringValue(config.S3UploadMode)
-	}
+	m["s3_upload_mode"] = config.S3UploadMode
 
 	if config.S3Uri != nil {
-		m["s3_uri"] = aws.StringValue(config.S3Uri)
+		m["s3_uri"] = aws.ToString(config.S3Uri)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringResources(config *sagemaker.MonitoringResources) []map[string]interface{} {
+func flattenMonitoringResources(config *awstypes.MonitoringResources) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -866,7 +855,7 @@ func flattenMonitoringResources(config *sagemaker.MonitoringResources) []map[str
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringClusterConfig(config *sagemaker.MonitoringClusterConfig) []map[string]interface{} {
+func flattenMonitoringClusterConfig(config *awstypes.MonitoringClusterConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -874,25 +863,23 @@ func flattenMonitoringClusterConfig(config *sagemaker.MonitoringClusterConfig) [
 	m := map[string]interface{}{}
 
 	if config.InstanceCount != nil {
-		m[names.AttrInstanceCount] = aws.Int64Value(config.InstanceCount)
+		m[names.AttrInstanceCount] = aws.ToInt32(config.InstanceCount)
 	}
 
-	if config.InstanceType != nil {
-		m[names.AttrInstanceType] = aws.StringValue(config.InstanceType)
-	}
+	m[names.AttrInstanceType] = config.InstanceType
 
 	if config.VolumeKmsKeyId != nil {
-		m["volume_kms_key_id"] = aws.StringValue(config.VolumeKmsKeyId)
+		m["volume_kms_key_id"] = aws.ToString(config.VolumeKmsKeyId)
 	}
 
 	if config.VolumeSizeInGB != nil {
-		m["volume_size_in_gb"] = aws.Int64Value(config.VolumeSizeInGB)
+		m["volume_size_in_gb"] = aws.ToInt32(config.VolumeSizeInGB)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) []map[string]interface{} {
+func flattenMonitoringNetworkConfig(config *awstypes.MonitoringNetworkConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -900,11 +887,11 @@ func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) [
 	m := map[string]interface{}{}
 
 	if config.EnableInterContainerTrafficEncryption != nil {
-		m["enable_inter_container_traffic_encryption"] = aws.BoolValue(config.EnableInterContainerTrafficEncryption)
+		m["enable_inter_container_traffic_encryption"] = aws.ToBool(config.EnableInterContainerTrafficEncryption)
 	}
 
 	if config.EnableNetworkIsolation != nil {
-		m["enable_network_isolation"] = aws.BoolValue(config.EnableNetworkIsolation)
+		m["enable_network_isolation"] = aws.ToBool(config.EnableNetworkIsolation)
 	}
 
 	if config.VpcConfig != nil {
@@ -914,7 +901,7 @@ func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) [
 	return []map[string]interface{}{m}
 }
 
-func flattenVPCConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
+func flattenVPCConfig(config *awstypes.VpcConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -922,17 +909,17 @@ func flattenVPCConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if config.SecurityGroupIds != nil {
-		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(config.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(config.SecurityGroupIds)
 	}
 
 	if config.Subnets != nil {
-		m[names.AttrSubnets] = flex.FlattenStringSet(config.Subnets)
+		m[names.AttrSubnets] = flex.FlattenStringValueSet(config.Subnets)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMonitoringStoppingCondition(config *sagemaker.MonitoringStoppingCondition) []map[string]interface{} {
+func flattenMonitoringStoppingCondition(config *awstypes.MonitoringStoppingCondition) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -940,27 +927,27 @@ func flattenMonitoringStoppingCondition(config *sagemaker.MonitoringStoppingCond
 	m := map[string]interface{}{}
 
 	if config.MaxRuntimeInSeconds != nil {
-		m["max_runtime_in_seconds"] = aws.Int64Value(config.MaxRuntimeInSeconds)
+		m["max_runtime_in_seconds"] = aws.ToInt32(config.MaxRuntimeInSeconds)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandDataQualityAppSpecification(configured []interface{}) *sagemaker.DataQualityAppSpecification {
+func expandDataQualityAppSpecification(configured []interface{}) *awstypes.DataQualityAppSpecification {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.DataQualityAppSpecification{}
+	c := &awstypes.DataQualityAppSpecification{}
 
 	if v, ok := m["image_uri"].(string); ok && v != "" {
 		c.ImageUri = aws.String(v)
 	}
 
 	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
-		c.Environment = flex.ExpandStringMap(v)
+		c.Environment = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := m["post_analytics_processor_source_uri"].(string); ok && v != "" {
@@ -974,14 +961,14 @@ func expandDataQualityAppSpecification(configured []interface{}) *sagemaker.Data
 	return c
 }
 
-func expandDataQualityBaselineConfig(configured []interface{}) *sagemaker.DataQualityBaselineConfig {
+func expandDataQualityBaselineConfig(configured []interface{}) *awstypes.DataQualityBaselineConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.DataQualityBaselineConfig{}
+	c := &awstypes.DataQualityBaselineConfig{}
 
 	if v, ok := m["constraints_resource"].([]interface{}); ok && len(v) > 0 {
 		c.ConstraintsResource = expandMonitoringConstraintsResource(v)
@@ -994,14 +981,14 @@ func expandDataQualityBaselineConfig(configured []interface{}) *sagemaker.DataQu
 	return c
 }
 
-func expandMonitoringConstraintsResource(configured []interface{}) *sagemaker.MonitoringConstraintsResource {
+func expandMonitoringConstraintsResource(configured []interface{}) *awstypes.MonitoringConstraintsResource {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringConstraintsResource{}
+	c := &awstypes.MonitoringConstraintsResource{}
 
 	if v, ok := m["s3_uri"].(string); ok && v != "" {
 		c.S3Uri = aws.String(v)
@@ -1010,14 +997,14 @@ func expandMonitoringConstraintsResource(configured []interface{}) *sagemaker.Mo
 	return c
 }
 
-func expandMonitoringStatisticsResource(configured []interface{}) *sagemaker.MonitoringStatisticsResource {
+func expandMonitoringStatisticsResource(configured []interface{}) *awstypes.MonitoringStatisticsResource {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringStatisticsResource{}
+	c := &awstypes.MonitoringStatisticsResource{}
 
 	if v, ok := m["s3_uri"].(string); ok && v != "" {
 		c.S3Uri = aws.String(v)
@@ -1026,14 +1013,14 @@ func expandMonitoringStatisticsResource(configured []interface{}) *sagemaker.Mon
 	return c
 }
 
-func expandDataQualityJobInput(configured []interface{}) *sagemaker.DataQualityJobInput {
+func expandDataQualityJobInput(configured []interface{}) *awstypes.DataQualityJobInput {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.DataQualityJobInput{}
+	c := &awstypes.DataQualityJobInput{}
 
 	if v, ok := m["endpoint_input"].([]interface{}); ok && len(v) > 0 {
 		c.EndpointInput = expandEndpointInput(v)
@@ -1046,14 +1033,14 @@ func expandDataQualityJobInput(configured []interface{}) *sagemaker.DataQualityJ
 	return c
 }
 
-func expandEndpointInput(configured []interface{}) *sagemaker.EndpointInput {
+func expandEndpointInput(configured []interface{}) *awstypes.EndpointInput {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.EndpointInput{}
+	c := &awstypes.EndpointInput{}
 
 	if v, ok := m["endpoint_name"].(string); ok && v != "" {
 		c.EndpointName = aws.String(v)
@@ -1064,24 +1051,24 @@ func expandEndpointInput(configured []interface{}) *sagemaker.EndpointInput {
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
-		c.S3DataDistributionType = aws.String(v)
+		c.S3DataDistributionType = awstypes.ProcessingS3DataDistributionType(v)
 	}
 
 	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
-		c.S3InputMode = aws.String(v)
+		c.S3InputMode = awstypes.ProcessingS3InputMode(v)
 	}
 
 	return c
 }
 
-func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransformInput_ {
+func expandBatchTransformInput(configured []interface{}) *awstypes.BatchTransformInput {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.BatchTransformInput_{}
+	c := &awstypes.BatchTransformInput{}
 
 	if v, ok := m["data_captured_destination_s3_uri"].(string); ok && v != "" {
 		c.DataCapturedDestinationS3Uri = aws.String(v)
@@ -1096,24 +1083,24 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
-		c.S3DataDistributionType = aws.String(v)
+		c.S3DataDistributionType = awstypes.ProcessingS3DataDistributionType(v)
 	}
 
 	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
-		c.S3InputMode = aws.String(v)
+		c.S3InputMode = awstypes.ProcessingS3InputMode(v)
 	}
 
 	return c
 }
 
-func expandMonitoringDatasetFormat(configured []interface{}) *sagemaker.MonitoringDatasetFormat {
+func expandMonitoringDatasetFormat(configured []interface{}) *awstypes.MonitoringDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringDatasetFormat{}
+	c := &awstypes.MonitoringDatasetFormat{}
 
 	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
 		c.Csv = expandMonitoringCSVDatasetFormat(v)
@@ -1126,12 +1113,12 @@ func expandMonitoringDatasetFormat(configured []interface{}) *sagemaker.Monitori
 	return c
 }
 
-func expandMonitoringJSONDatasetFormat(configured []interface{}) *sagemaker.MonitoringJsonDatasetFormat {
+func expandMonitoringJSONDatasetFormat(configured []interface{}) *awstypes.MonitoringJsonDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	c := &sagemaker.MonitoringJsonDatasetFormat{}
+	c := &awstypes.MonitoringJsonDatasetFormat{}
 
 	if configured[0] == nil {
 		return c
@@ -1145,12 +1132,12 @@ func expandMonitoringJSONDatasetFormat(configured []interface{}) *sagemaker.Moni
 	return c
 }
 
-func expandMonitoringCSVDatasetFormat(configured []interface{}) *sagemaker.MonitoringCsvDatasetFormat {
+func expandMonitoringCSVDatasetFormat(configured []interface{}) *awstypes.MonitoringCsvDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	c := &sagemaker.MonitoringCsvDatasetFormat{}
+	c := &awstypes.MonitoringCsvDatasetFormat{}
 
 	if configured[0] == nil {
 		return c
@@ -1164,14 +1151,14 @@ func expandMonitoringCSVDatasetFormat(configured []interface{}) *sagemaker.Monit
 	return c
 }
 
-func expandMonitoringOutputConfig(configured []interface{}) *sagemaker.MonitoringOutputConfig {
+func expandMonitoringOutputConfig(configured []interface{}) *awstypes.MonitoringOutputConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringOutputConfig{}
+	c := &awstypes.MonitoringOutputConfig{}
 
 	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
@@ -1184,13 +1171,13 @@ func expandMonitoringOutputConfig(configured []interface{}) *sagemaker.Monitorin
 	return c
 }
 
-func expandMonitoringOutputs(configured []interface{}) []*sagemaker.MonitoringOutput {
-	containers := make([]*sagemaker.MonitoringOutput, 0, len(configured))
+func expandMonitoringOutputs(configured []interface{}) []awstypes.MonitoringOutput {
+	containers := make([]awstypes.MonitoringOutput, 0, len(configured))
 
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 
-		l := &sagemaker.MonitoringOutput{
+		l := awstypes.MonitoringOutput{
 			S3Output: expandMonitoringS3Output(data["s3_output"].([]interface{})),
 		}
 		containers = append(containers, l)
@@ -1199,21 +1186,21 @@ func expandMonitoringOutputs(configured []interface{}) []*sagemaker.MonitoringOu
 	return containers
 }
 
-func expandMonitoringS3Output(configured []interface{}) *sagemaker.MonitoringS3Output {
+func expandMonitoringS3Output(configured []interface{}) *awstypes.MonitoringS3Output {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringS3Output{}
+	c := &awstypes.MonitoringS3Output{}
 
 	if v, ok := m["local_path"].(string); ok && v != "" {
 		c.LocalPath = aws.String(v)
 	}
 
 	if v, ok := m["s3_upload_mode"].(string); ok && v != "" {
-		c.S3UploadMode = aws.String(v)
+		c.S3UploadMode = awstypes.ProcessingS3UploadMode(v)
 	}
 
 	if v, ok := m["s3_uri"].(string); ok && v != "" {
@@ -1223,14 +1210,14 @@ func expandMonitoringS3Output(configured []interface{}) *sagemaker.MonitoringS3O
 	return c
 }
 
-func expandMonitoringResources(configured []interface{}) *sagemaker.MonitoringResources {
+func expandMonitoringResources(configured []interface{}) *awstypes.MonitoringResources {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringResources{}
+	c := &awstypes.MonitoringResources{}
 
 	if v, ok := m["cluster_config"].([]interface{}); ok && len(v) > 0 {
 		c.ClusterConfig = expandMonitoringClusterConfig(v)
@@ -1239,21 +1226,21 @@ func expandMonitoringResources(configured []interface{}) *sagemaker.MonitoringRe
 	return c
 }
 
-func expandMonitoringClusterConfig(configured []interface{}) *sagemaker.MonitoringClusterConfig {
+func expandMonitoringClusterConfig(configured []interface{}) *awstypes.MonitoringClusterConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringClusterConfig{}
+	c := &awstypes.MonitoringClusterConfig{}
 
 	if v, ok := m[names.AttrInstanceCount].(int); ok && v > 0 {
-		c.InstanceCount = aws.Int64(int64(v))
+		c.InstanceCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := m[names.AttrInstanceType].(string); ok && v != "" {
-		c.InstanceType = aws.String(v)
+		c.InstanceType = awstypes.ProcessingInstanceType(v)
 	}
 
 	if v, ok := m["volume_kms_key_id"].(string); ok && v != "" {
@@ -1261,20 +1248,20 @@ func expandMonitoringClusterConfig(configured []interface{}) *sagemaker.Monitori
 	}
 
 	if v, ok := m["volume_size_in_gb"].(int); ok && v > 0 {
-		c.VolumeSizeInGB = aws.Int64(int64(v))
+		c.VolumeSizeInGB = aws.Int32(int32(v))
 	}
 
 	return c
 }
 
-func expandMonitoringNetworkConfig(configured []interface{}) *sagemaker.MonitoringNetworkConfig {
+func expandMonitoringNetworkConfig(configured []interface{}) *awstypes.MonitoringNetworkConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringNetworkConfig{}
+	c := &awstypes.MonitoringNetworkConfig{}
 
 	if v, ok := m["enable_inter_container_traffic_encryption"]; ok {
 		c.EnableInterContainerTrafficEncryption = aws.Bool(v.(bool))
@@ -1291,37 +1278,37 @@ func expandMonitoringNetworkConfig(configured []interface{}) *sagemaker.Monitori
 	return c
 }
 
-func expandVPCConfig(configured []interface{}) *sagemaker.VpcConfig {
+func expandVPCConfig(configured []interface{}) *awstypes.VpcConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.VpcConfig{}
+	c := &awstypes.VpcConfig{}
 
 	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
-		c.SecurityGroupIds = flex.ExpandStringSet(v)
+		c.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := m[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
-		c.Subnets = flex.ExpandStringSet(v)
+		c.Subnets = flex.ExpandStringValueSet(v)
 	}
 
 	return c
 }
 
-func expandMonitoringStoppingCondition(configured []interface{}) *sagemaker.MonitoringStoppingCondition {
+func expandMonitoringStoppingCondition(configured []interface{}) *awstypes.MonitoringStoppingCondition {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringStoppingCondition{}
+	c := &awstypes.MonitoringStoppingCondition{}
 
 	if v, ok := m["max_runtime_in_seconds"].(int); ok && v > 0 {
-		c.MaxRuntimeInSeconds = aws.Int64(int64(v))
+		c.MaxRuntimeInSeconds = aws.Int32(int32(v))
 	}
 
 	return c

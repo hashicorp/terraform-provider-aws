@@ -6,10 +6,9 @@ package elasticache
 import (
 	"context"
 	"log"
-	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,6 +33,10 @@ func dataSourceReplicationGroup() *schema.Resource {
 			},
 			"automatic_failover_enabled": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"cluster_mode": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"configuration_endpoint_address": {
@@ -124,39 +127,33 @@ func dataSourceReplicationGroup() *schema.Resource {
 
 func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
-	groupID := d.Get("replication_group_id").(string)
-
-	rg, err := findReplicationGroupByID(ctx, conn, groupID)
+	rg, err := findReplicationGroupByID(ctx, conn, d.Get("replication_group_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Replication Group", err))
 	}
 
-	d.SetId(aws.StringValue(rg.ReplicationGroupId))
+	d.SetId(aws.ToString(rg.ReplicationGroupId))
 	d.Set(names.AttrDescription, rg.Description)
 	d.Set(names.AttrARN, rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
-	if rg.AutomaticFailover != nil {
-		switch aws.StringValue(rg.AutomaticFailover) {
-		case elasticache.AutomaticFailoverStatusDisabled, elasticache.AutomaticFailoverStatusDisabling:
-			d.Set("automatic_failover_enabled", false)
-		case elasticache.AutomaticFailoverStatusEnabled, elasticache.AutomaticFailoverStatusEnabling:
-			d.Set("automatic_failover_enabled", true)
-		}
+	switch rg.AutomaticFailover {
+	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
+		d.Set("automatic_failover_enabled", false)
+	case awstypes.AutomaticFailoverStatusEnabled, awstypes.AutomaticFailoverStatusEnabling:
+		d.Set("automatic_failover_enabled", true)
 	}
 
-	if rg.MultiAZ != nil {
-		switch strings.ToLower(aws.StringValue(rg.MultiAZ)) {
-		case elasticache.MultiAZStatusEnabled:
-			d.Set("multi_az_enabled", true)
-		case elasticache.MultiAZStatusDisabled:
-			d.Set("multi_az_enabled", false)
-		default:
-			log.Printf("Unknown MultiAZ state %q", aws.StringValue(rg.MultiAZ))
-		}
+	switch rg.MultiAZ {
+	case awstypes.MultiAZStatusEnabled:
+		d.Set("multi_az_enabled", true)
+	case awstypes.MultiAZStatusDisabled:
+		d.Set("multi_az_enabled", false)
+	default:
+		log.Printf("Unknown MultiAZ state %q", string(rg.MultiAZ))
 	}
 
 	if rg.ConfigurationEndpoint != nil {
@@ -165,7 +162,7 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
-			return sdkdiag.AppendErrorf(diags, "ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
+			return sdkdiag.AppendErrorf(diags, "ElastiCache Replication Group (%s) doesn't have node groups", aws.ToString(rg.ReplicationGroupId))
 		}
 		d.Set(names.AttrPort, rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
@@ -173,12 +170,13 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("num_cache_clusters", len(rg.MemberClusters))
-	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
+	if err := d.Set("member_clusters", flex.FlattenStringValueList(rg.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
 	}
 	d.Set("node_type", rg.CacheNodeType)
 	d.Set("num_node_groups", len(rg.NodeGroups))
 	d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+	d.Set("cluster_mode", rg.ClusterMode)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rg.SnapshotRetentionLimit)

@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_app"
 description: |-
@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `app_name` - (Required) The name of the app.
-* `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway` and `TensorBoard`.
+* `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway`, `TensorBoard`, `CodeEditor`, `JupyterLab`, `DetailedProfiler`, and `Canvas`.
 * `domain_id` - (Required) The domain ID.
 * `resource_spec` - (Optional) The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.See [Resource Spec](#resource-spec) below.
 * `space_name` - (Optional) The name of the space. At least one of `user_profile_name` or `space_name` required.
@@ -89,4 +89,4 @@ Using `terraform import`, import SageMaker Apps using the `id`. For example:
 % terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7ea0ad78f2f6d5e0e0b81afc82a321a001ee721bbfa0a1a97f6b54cf93a225cc -->
+<!-- cache-key: cdktf-0.20.8 input-c8770f5c5bdaa350b78f188c0956e24e0436218e71233211ee24ef6b57b7dc3a -->

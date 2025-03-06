@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route_table_association")
-func ResourceRouteTableAssociation() *schema.Resource {
+// @SDKResource("aws_route_table_association", name="Route Table Association")
+func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceRouteTableAssociationRead,
@@ -220,9 +220,10 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 // routeTableAssociationDelete attempts to delete a route table association.
 func routeTableAssociationDelete(ctx context.Context, conn *ec2.Client, associationID string, timeout time.Duration) error {
 	log.Printf("[INFO] Deleting Route Table Association: %s", associationID)
-	_, err := conn.DisassociateRouteTable(ctx, &ec2.DisassociateRouteTableInput{
+	input := ec2.DisassociateRouteTableInput{
 		AssociationId: aws.String(associationID),
-	})
+	}
+	_, err := conn.DisassociateRouteTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return nil

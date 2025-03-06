@@ -14,11 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Input")
+// @FrameworkDataSource("aws_medialive_input", name="Input")
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func newDataSourceInput(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceInput{}, nil
 }
@@ -29,10 +31,6 @@ const (
 
 type dataSourceInput struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_medialive_input"
 }
 
 func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -88,7 +86,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
 			},
-			names.AttrTags: tags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputType](),
 				Computed:   true,
@@ -121,7 +119,7 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -141,7 +139,7 @@ type dataSourceInputData struct {
 	SecurityGroups    fwtypes.ListValueOf[types.String]                   `tfsdk:"security_groups"`
 	Sources           fwtypes.ListNestedObjectValueOf[dsInputSource]      `tfsdk:"sources"`
 	State             fwtypes.StringEnum[awstypes.InputState]             `tfsdk:"state"`
-	Tags              types.Map                                           `tfsdk:"tags"`
+	Tags              tftags.Map                                          `tfsdk:"tags"`
 	Type              fwtypes.StringEnum[awstypes.InputType]              `tfsdk:"type"`
 }
 

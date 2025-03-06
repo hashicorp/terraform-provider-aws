@@ -65,6 +65,12 @@ class MyConvertedCode extends TerraformStack {
         targetKafkaClusterArn: target.arn,
         topicReplication: [
           {
+            startingPosition: {
+              type: "LATEST",
+            },
+            topicNameConfiguration: {
+              type: "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS",
+            },
             topicsToReplicate: [".*"],
           },
         ],
@@ -107,15 +113,17 @@ The following arguments are required:
 * `targetKafkaClusterArn` - (Required) The ARN of the target Kafka cluster.
 * `targetCompressionType` - (Required) The type of compression to use writing records to target Kafka cluster.
 * `topicReplication` - (Required) Configuration relating to topic replication.
-* `consumerGroupReplication` - (Required) Confguration relating to consumer group replication.
+* `consumerGroupReplication` - (Required) Configuration relating to consumer group replication.
 
 ### topic_replication Argument Reference
 
+* `topicNameConfiguration` - (Optional) Configuration for specifying replicated topic names should be the same as their corresponding upstream topics or prefixed with source cluster alias.
 * `topicsToReplicate` - (Required) List of regular expression patterns indicating the topics to copy.
 * `topicsToExclude` - (Optional) List of regular expression patterns indicating the topics that should not be replica.
 * `detectAndCopyNewTopics` - (Optional) Whether to periodically check for new topics and partitions.
 * `copyAccessControlListsForTopics` - (Optional) Whether to periodically configure remote topic ACLs to match their corresponding upstream topics.
 * `copyTopicConfigurations` - (Optional) Whether to periodically configure remote topics to match their corresponding upstream topics.
+* `startingPosition` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 
 ### consumer_group_replication Argument Reference
 
@@ -123,6 +131,14 @@ The following arguments are required:
 * `consumerGroupsToExclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detectAndCopyNewConsumerGroups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchroniseConsumerGroupOffsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
+
+### topic_name_configuration
+
+* `type` - (optional) The type of topic configuration name. Supports `PREFIXED_WITH_SOURCE_CLUSTER_ALIAS` and `IDENTICAL`.
+
+### starting_position
+
+* `type` - (Optional) The type of replication starting position. Supports `LATEST` and `EARLIEST`.
 
 ## Attribute Reference
 
@@ -170,4 +186,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-63ad67b2d16605e26ce5adafa9257f85ab5b20fe8bf73b9375562f9cc014c260 -->
+<!-- cache-key: cdktf-0.20.8 input-436cbb7d27f263382a3b611462357323f9ced9d92547956bae4cbeb8c5fa9c73 -->

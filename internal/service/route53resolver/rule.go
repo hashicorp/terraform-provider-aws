@@ -10,26 +10,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
-func ResourceRule() *schema.Resource {
+func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
 		ReadWithoutTimeout:   resourceRuleRead,
@@ -72,10 +72,10 @@ func ResourceRule() *schema.Resource {
 				Optional: true,
 			},
 			"rule_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(route53resolver.RuleTypeOption_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
 			},
 			"share_status": {
 				Type:     schema.TypeString,
@@ -90,8 +90,13 @@ func ResourceRule() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"ip": {
 							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsIPAddress,
+							Optional:     true,
+							ValidateFunc: validation.IsIPv4Address,
+						},
+						"ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsIPv6Address,
 						},
 						names.AttrPort: {
 							Type:         schema.TypeInt,
@@ -100,31 +105,28 @@ func ResourceRule() *schema.Resource {
 							ValidateFunc: validation.IntBetween(1, 65535),
 						},
 						names.AttrProtocol: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      route53resolver.ProtocolDo53,
-							ValidateFunc: validation.StringInSlice(route53resolver.Protocol_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.ProtocolDo53,
+							ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 						},
 					},
 				},
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceRuleCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceRuleCustomizeDiff,
 	}
 }
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	input := &route53resolver.CreateResolverRuleInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
 		DomainName:       aws.String(d.Get(names.AttrDomainName).(string)),
-		RuleType:         aws.String(d.Get("rule_type").(string)),
+		RuleType:         awstypes.RuleTypeOption(d.Get("rule_type").(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -140,13 +142,13 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TargetIps = expandRuleTargetIPs(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateResolverRuleWithContext(ctx, input)
+	output, err := conn.CreateResolverRule(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Rule: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ResolverRule.Id))
+	d.SetId(aws.ToString(output.ResolverRule.Id))
 
 	if _, err := waitRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule (%s) create: %s", d.Id(), err)
@@ -157,9 +159,9 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	rule, err := FindResolverRuleByID(ctx, conn, d.Id())
+	rule, err := findResolverRuleByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Rule (%s) not found, removing from state", d.Id())
@@ -171,11 +173,10 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(rule.Arn)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, rule.Arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.StringValue(rule.DomainName)))
+	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
 	d.Set(names.AttrName, rule.Name)
 	d.Set(names.AttrOwnerID, rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
@@ -190,11 +191,11 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	if d.HasChanges(names.AttrName, "resolver_endpoint_id", "target_ip") {
 		input := &route53resolver.UpdateResolverRuleInput{
-			Config:         &route53resolver.ResolverRuleConfig{},
+			Config:         &awstypes.ResolverRuleConfig{},
 			ResolverRuleId: aws.String(d.Id()),
 		}
 
@@ -210,7 +211,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Config.TargetIps = expandRuleTargetIPs(v.(*schema.Set))
 		}
 
-		_, err := conn.UpdateResolverRuleWithContext(ctx, input)
+		_, err := conn.UpdateResolverRule(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Rule (%s): %s", d.Id(), err)
@@ -226,14 +227,14 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule: %s", d.Id())
-	_, err := conn.DeleteResolverRuleWithContext(ctx, &route53resolver.DeleteResolverRuleInput{
+	_, err := conn.DeleteResolverRule(ctx, &route53resolver.DeleteResolverRuleInput{
 		ResolverRuleId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -262,14 +263,14 @@ func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v i
 	return nil
 }
 
-func FindResolverRuleByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRule, error) {
+func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverRule, error) {
 	input := &route53resolver.GetResolverRuleInput{
 		ResolverRuleId: aws.String(id),
 	}
 
-	output, err := conn.GetResolverRuleWithContext(ctx, input)
+	output, err := conn.GetResolverRule(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -287,9 +288,9 @@ func FindResolverRuleByID(ctx context.Context, conn *route53resolver.Route53Reso
 	return output.ResolverRule, nil
 }
 
-func statusRule(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
+func statusRule(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindResolverRuleByID(ctx, conn, id)
+		output, err := findResolverRuleByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -299,22 +300,22 @@ func statusRule(ctx context.Context, conn *route53resolver.Route53Resolver, id s
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitRuleCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRule, error) {
+func waitRuleCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRule, error) {
 	stateConf := &retry.StateChangeConf{
-		Target:  []string{route53resolver.ResolverRuleStatusComplete},
+		Target:  enum.Slice(awstypes.ResolverRuleStatusComplete),
 		Refresh: statusRule(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverRule); ok {
-		if status := aws.StringValue(output.Status); status == route53resolver.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
+		if output.Status == awstypes.ResolverRuleStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -323,19 +324,19 @@ func waitRuleCreated(ctx context.Context, conn *route53resolver.Route53Resolver,
 	return nil, err
 }
 
-func waitRuleUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRule, error) {
+func waitRuleUpdated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRule, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{route53resolver.ResolverRuleStatusUpdating},
-		Target:  []string{route53resolver.ResolverRuleStatusComplete},
+		Pending: enum.Slice(awstypes.ResolverRuleStatusUpdating),
+		Target:  enum.Slice(awstypes.ResolverRuleStatusComplete),
 		Refresh: statusRule(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverRule); ok {
-		if status := aws.StringValue(output.Status); status == route53resolver.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
+		if output.Status == awstypes.ResolverRuleStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -344,9 +345,9 @@ func waitRuleUpdated(ctx context.Context, conn *route53resolver.Route53Resolver,
 	return nil, err
 }
 
-func waitRuleDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRule, error) {
+func waitRuleDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRule, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{route53resolver.ResolverRuleStatusDeleting},
+		Pending: enum.Slice(awstypes.ResolverRuleStatusDeleting),
 		Target:  []string{},
 		Refresh: statusRule(ctx, conn, id),
 		Timeout: timeout,
@@ -354,9 +355,9 @@ func waitRuleDeleted(ctx context.Context, conn *route53resolver.Route53Resolver,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverRule); ok {
-		if status := aws.StringValue(output.Status); status == route53resolver.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
+		if output.Status == awstypes.ResolverRuleStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -365,22 +366,25 @@ func waitRuleDeleted(ctx context.Context, conn *route53resolver.Route53Resolver,
 	return nil, err
 }
 
-func expandRuleTargetIPs(vTargetIps *schema.Set) []*route53resolver.TargetAddress {
-	targetAddresses := []*route53resolver.TargetAddress{}
+func expandRuleTargetIPs(vTargetIps *schema.Set) []awstypes.TargetAddress {
+	targetAddresses := []awstypes.TargetAddress{}
 
 	for _, vTargetIp := range vTargetIps.List() {
-		targetAddress := &route53resolver.TargetAddress{}
+		targetAddress := awstypes.TargetAddress{}
 
 		mTargetIp := vTargetIp.(map[string]interface{})
 
 		if vIp, ok := mTargetIp["ip"].(string); ok && vIp != "" {
 			targetAddress.Ip = aws.String(vIp)
 		}
+		if vIpv6, ok := mTargetIp["ipv6"].(string); ok && vIpv6 != "" {
+			targetAddress.Ipv6 = aws.String(vIpv6)
+		}
 		if vPort, ok := mTargetIp[names.AttrPort].(int); ok {
-			targetAddress.Port = aws.Int64(int64(vPort))
+			targetAddress.Port = aws.Int32(int32(vPort))
 		}
 		if vProtocol, ok := mTargetIp[names.AttrProtocol].(string); ok && vProtocol != "" {
-			targetAddress.Protocol = aws.String(vProtocol)
+			targetAddress.Protocol = awstypes.Protocol(vProtocol)
 		}
 
 		targetAddresses = append(targetAddresses, targetAddress)
@@ -389,7 +393,7 @@ func expandRuleTargetIPs(vTargetIps *schema.Set) []*route53resolver.TargetAddres
 	return targetAddresses
 }
 
-func flattenRuleTargetIPs(targetAddresses []*route53resolver.TargetAddress) []interface{} {
+func flattenRuleTargetIPs(targetAddresses []awstypes.TargetAddress) []interface{} {
 	if targetAddresses == nil {
 		return []interface{}{}
 	}
@@ -398,9 +402,10 @@ func flattenRuleTargetIPs(targetAddresses []*route53resolver.TargetAddress) []in
 
 	for _, targetAddress := range targetAddresses {
 		mTargetIp := map[string]interface{}{
-			"ip":               aws.StringValue(targetAddress.Ip),
-			names.AttrPort:     int(aws.Int64Value(targetAddress.Port)),
-			names.AttrProtocol: aws.StringValue(targetAddress.Protocol),
+			"ip":               aws.ToString(targetAddress.Ip),
+			"ipv6":             aws.ToString(targetAddress.Ipv6),
+			names.AttrPort:     int(aws.ToInt32(targetAddress.Port)),
+			names.AttrProtocol: targetAddress.Protocol,
 		}
 
 		vTargetIps = append(vTargetIps, mTargetIp)
@@ -417,7 +422,7 @@ func trimTrailingPeriod(v interface{}) string {
 	var str string
 	switch value := v.(type) {
 	case *string:
-		str = aws.StringValue(value)
+		str = aws.ToString(value)
 	case string:
 		str = value
 	default:

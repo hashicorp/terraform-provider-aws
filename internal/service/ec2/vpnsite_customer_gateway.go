@@ -86,8 +86,6 @@ func resourceCustomerGateway() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.GatewayType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -95,8 +93,8 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateCustomerGatewayInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCustomerGateway),
+	input := ec2.CreateCustomerGatewayInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCustomerGateway),
 		Type:              awstypes.GatewayType(d.Get(names.AttrType).(string)),
 	}
 
@@ -132,7 +130,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateCustomerGateway(ctx, input)
+	output, err := conn.CreateCustomerGateway(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Customer Gateway: %s", err)
@@ -164,10 +162,10 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -178,7 +176,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrIPAddress, customerGateway.IpAddress)
 	d.Set(names.AttrType, customerGateway.Type)
 
-	setTagsOutV2(ctx, customerGateway.Tags)
+	setTagsOut(ctx, customerGateway.Tags)
 
 	return diags
 }
@@ -193,9 +191,10 @@ func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Customer Gateway: %s", d.Id())
-	_, err := conn.DeleteCustomerGateway(ctx, &ec2.DeleteCustomerGatewayInput{
+	input := ec2.DeleteCustomerGatewayInput{
 		CustomerGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCustomerGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
 		return diags

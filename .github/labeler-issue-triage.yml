@@ -15,8 +15,6 @@ bug:
   #   doesn't support update
   #   Invalid address to set
   - "(\\[Bug\\]:|doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
-crash:
-  - 'panic:'
 sweeper:
   - 'sweeper'
 skaff:
@@ -69,6 +67,8 @@ service/applicationcostprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationcostprofiler_'
 service/applicationinsights:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationinsights_'
+service/applicationsignals:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationsignals_'
 service/appmesh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appmesh_'
 service/apprunner:
@@ -97,6 +97,8 @@ service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/billing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -151,6 +153,8 @@ service/codecatalyst:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
+service/codeconnections:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeconnections_'
 service/codeguruprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeguruprofiler_'
 service/codegurureviewer:
@@ -331,6 +335,8 @@ service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
 service/internetmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
+service/invoicing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_invoicing_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:
@@ -458,7 +464,7 @@ service/mediatailor:
 service/memorydb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_memorydb_'
 service/meta:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$'
 service/mgh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mgh_'
 service/mgn:
@@ -485,6 +491,8 @@ service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
+service/networkmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/oam:
@@ -509,6 +517,8 @@ service/paymentcryptography:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
+service/pcs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcs_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
@@ -523,6 +533,8 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
+service/pinpointsmsvoicev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoicev2_'
 service/pipes:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
@@ -589,6 +601,8 @@ service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
+service/s3tables:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:
@@ -649,6 +663,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmquicksetup:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmquicksetup_'
 service/ssmsap:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:
@@ -667,6 +683,8 @@ service/swf:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_swf_'
 service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
+service/taxsettings:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_taxsettings_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
 service/timestreaminfluxdb:

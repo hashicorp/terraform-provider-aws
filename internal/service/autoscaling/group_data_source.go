@@ -289,6 +289,10 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
+															"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
 															"memory_gib_per_vcpu": {
 																Type:     schema.TypeList,
 																Computed: true,
@@ -563,7 +567,7 @@ func dataSourceGroup() *schema.Resource {
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	groupName := d.Get(names.AttrName).(string)
 	group, err := findGroupByName(ctx, conn, groupName)

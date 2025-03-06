@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -78,6 +79,7 @@ func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
+				Computed:      true,
 				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
@@ -130,7 +132,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	allocationID := aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId)
-	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
+	d.SetId(ipamPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, ipamPoolID)
@@ -147,8 +149,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
-
+	allocationID, poolID, err := ipamPoolCIDRAllocationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -165,9 +166,22 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr", allocation.Cidr)
+	cidr := aws.ToString(allocation.Cidr)
+	d.Set("cidr", cidr)
+	d.Set(names.AttrDescription, allocation.Description)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
+	d.Set("netmask_length", nil)
+	if parts := strings.Split(cidr, "/"); len(parts) == 2 {
+		if v, err := strconv.Atoi(parts[1]); err == nil {
+			d.Set("netmask_length", v)
+		} else {
+			log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidr, err)
+		}
+	} else {
+		log.Printf("[WARN] Invalid CIDR block format: %s", cidr)
+	}
+
 	d.Set(names.AttrResourceID, allocation.ResourceId)
 	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
 	d.Set(names.AttrResourceType, allocation.ResourceType)
@@ -179,18 +193,18 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
-
+	allocationID, poolID, err := ipamPoolCIDRAllocationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR Allocation: %s", d.Id())
-	_, err = conn.ReleaseIpamPoolAllocation(ctx, &ec2.ReleaseIpamPoolAllocationInput{
+	input := ec2.ReleaseIpamPoolAllocationInput{
 		Cidr:                 aws.String(d.Get("cidr").(string)),
 		IpamPoolAllocationId: aws.String(allocationID),
 		IpamPoolId:           aws.String(poolID),
-	})
+	}
+	_, err = conn.ReleaseIpamPoolAllocation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "No allocation found") {
 		return diags
@@ -205,14 +219,14 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 
 const ipamPoolCIDRAllocationIDSeparator = "_"
 
-func IPAMPoolCIDRAllocationCreateResourceID(allocationID, poolID string) string {
+func ipamPoolCIDRAllocationCreateResourceID(allocationID, poolID string) string {
 	parts := []string{allocationID, poolID}
 	id := strings.Join(parts, ipamPoolCIDRAllocationIDSeparator)
 
 	return id
 }
 
-func IPAMPoolCIDRAllocationParseResourceID(id string) (string, string, error) {
+func ipamPoolCIDRAllocationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ipamPoolCIDRAllocationIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

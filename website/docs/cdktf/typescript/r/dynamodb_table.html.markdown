@@ -80,7 +80,7 @@ class MyConvertedCode extends TerraformStack {
       },
       ttl: {
         attributeName: "TimeToExist",
-        enabled: false,
+        enabled: true,
       },
       writeCapacity: 20,
     });
@@ -231,14 +231,16 @@ Optional arguments:
 * `importTable` - (Optional) Import Amazon S3 data into a new table. See below.
 * `globalSecondaryIndex` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
 * `localSecondaryIndex` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
+* `onDemandThroughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `pointInTimeRecovery` - (Optional) Enable point-in-time recovery options. See below.
 * `rangeKey` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `readCapacity` - (Optional) Number of read units for this table. If the `billingMode` is `PROVISIONED`, this field is required.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
 * `restoreDateTime` - (Optional) Time of the point-in-time recovery point to restore.
 * `restoreSourceName` - (Optional) Name of the table to restore. Must match the name of an existing table.
+* `restoreSourceTableArn` - (Optional) ARN of the source table to restore. Must be supplied for cross-region restores.
 * `restoreToLatestTime` - (Optional) If set, restores table to the most recent point-in-time recovery point.
-* `serverSideEncryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. See below.
+* `serverSideEncryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. Must be supplied for cross-region restores. See below.
 * `streamEnabled` - (Optional) Whether Streams are enabled.
 * `streamViewType` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `tableClass` - (Optional) Storage class of the table.
@@ -282,6 +284,7 @@ Optional arguments:
 * `hashKey` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
 * `name` - (Required) Name of the index.
 * `nonKeyAttributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
+* `onDemandThroughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `projectionType` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `nonKeyAttributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `rangeKey` - (Optional) Name of the range key; must be defined
 * `readCapacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
@@ -294,15 +297,28 @@ Optional arguments:
 * `projectionType` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `nonKeyAttributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `rangeKey` - (Required) Name of the range key.
 
+### `onDemandThroughput`
+
+* `maxReadRequestUnits` - (Optional) Maximum number of read request units for the specified table. To specify set the value greater than or equal to 1. To remove set the value to -1.
+* `maxWriteRequestUnits` - (Optional) Maximum number of write request units for the specified table. To specify set the value greater than or equal to 1. To remove set the value to -1.
+
 ### `pointInTimeRecovery`
 
 * `enabled` - (Required) Whether to enable point-in-time recovery. It can take 10 minutes to enable for new tables. If the `pointInTimeRecovery` block is not provided, this defaults to `false`.
 
 ### `replica`
 
-* `kmsKeyArn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
+* `kmsKeyArn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
+  This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`.
+  **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
+  **Note:** Changing this value will recreate the replica.
 * `pointInTimeRecovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
-* `propagateTags` - (Optional) Whether to propagate the global table's tags to a replica. Default is `false`. Changes to tags only move in one direction: from global (source) to replica. In other words, tag drift on a replica will not trigger an update. Tag or replica changes on the global table, whether from drift or configuration changes, are propagated to replicas. Changing from `true` to `false` on a subsequent `apply` means replica tags are left as they were, unmanaged, not deleted.
+* `propagateTags` - (Optional) Whether to propagate the global table's tags to a replica.
+  Default is `false`.
+  Changes to tags only move in one direction: from global (source) to replica.
+  Tag drift on a replica will not trigger an update.
+  Tag changes on the global table are propagated to replicas.
+  Changing from `true` to `false` on a subsequent `apply` leaves replica tags as-is and no longer manages them.
 * `regionName` - (Required) Region name of the replica.
 
 ### `serverSideEncryption`
@@ -312,8 +328,10 @@ Optional arguments:
 
 ### `ttl`
 
-* `enabled` - (Required) Whether TTL is enabled.
-* `attributeName` - (Required) Name of the table attribute to store the TTL timestamp in.
+* `attributeName` - (Optional) Name of the table attribute to store the TTL timestamp in.
+  Required if `enabled` is `true`, must not be set otherwise.
+* `enabled` - (Optional) Whether TTL is enabled.
+  Default value is `false`.
 
 ## Attribute Reference
 
@@ -370,4 +388,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cbc2fa26bfb0676021ad41f620c12f481840c859d070c707ba0ad26685f33d84 -->
+<!-- cache-key: cdktf-0.20.8 input-9988a2557b921a740fa15608db73a4159c7e2e86ead400fdb702755514e2ac96 -->

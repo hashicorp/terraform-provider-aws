@@ -41,8 +41,6 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -161,6 +159,11 @@ func resourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"disconnect_on_session_timeout": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -240,7 +243,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
-		TagSpecifications:    getTagSpecificationsInV2(ctx, awstypes.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    getTagSpecificationsIn(ctx, awstypes.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    awstypes.TransportProtocol(d.Get("transport_protocol").(string)),
 		VpnPort:              aws.Int32(int32(d.Get("vpn_port").(int))),
 	}
@@ -263,6 +266,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("disconnect_on_session_timeout"); ok {
+		input.DisconnectOnSessionTimeout = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("dns_servers"); ok && len(v.([]interface{})) > 0 {
@@ -313,10 +320,10 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -346,6 +353,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("connection_log_options", nil)
 	}
 	d.Set(names.AttrDescription, ep.Description)
+	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
 	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
@@ -362,7 +370,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	setTagsOutV2(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }
@@ -399,6 +407,10 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("disconnect_on_session_timeout") {
+			input.DisconnectOnSessionTimeout = aws.Bool(d.Get("disconnect_on_session_timeout").(bool))
 		}
 
 		if d.HasChange("dns_servers") {
@@ -448,7 +460,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if waitForClientConnectResponseOptionsUpdate {
-			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id()); err != nil {
+			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %s", d.Id(), err)
 			}
 		}
@@ -462,9 +474,10 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
-	_, err := conn.DeleteClientVpnEndpoint(ctx, &ec2.DeleteClientVpnEndpointInput{
+	input := ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteClientVpnEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return diags
@@ -474,7 +487,7 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) delete: %s", d.Id(), err)
 	}
 

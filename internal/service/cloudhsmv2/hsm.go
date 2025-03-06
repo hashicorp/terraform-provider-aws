@@ -163,10 +163,11 @@ func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 HSM: %s", d.Id())
-	_, err := conn.DeleteHsm(ctx, &cloudhsmv2.DeleteHsmInput{
+	input := cloudhsmv2.DeleteHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 		HsmId:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteHsm(ctx, &input)
 
 	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags
@@ -194,8 +195,6 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 
 	for _, v := range output {
 		for _, v := range v.Hsms {
-			v := v
-
 			// CloudHSMv2 HSM instances can be recreated, but the ENI ID will
 			// remain consistent. Without this ENI matching, HSM instances
 			// instances can become orphaned.

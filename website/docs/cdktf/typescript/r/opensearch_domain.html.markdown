@@ -451,6 +451,7 @@ The following arguments are optional:
 * `engineVersion` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
+* `ipAddressType` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encryptAtRest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `logPublishingOptions` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `nodeToNodeEncryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
@@ -594,10 +595,13 @@ AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain.
+* `domainEndpointV2HostedZoneId` -  Dual stack hosted zone ID for the domain.
 * `domainId` - Unique identifier for the domain.
 * `domainName` - Name of the OpenSearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
+* `endpointV2` - V2 domain endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `dashboardEndpoint` - Domain-specific endpoint for Dashboard without https scheme.
+* `dashboardEndpointV2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without https scheme.
 * `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboardEndpoint` attribute instead.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnetIds` were created inside.
@@ -607,7 +611,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
+* `create` - (Default `90m`)
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
@@ -639,4 +643,4 @@ Using `terraform import`, import OpenSearch domains using the `domainName`. For 
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-67cdb16ac2a864835c0cf54ca3a5a6ddd68cbfa0a33beec2dc6e6b98b6a7a9b7 -->
+<!-- cache-key: cdktf-0.20.8 input-e6b148c9a7c92900cd9d50b4727945d4f9e3161b5067e03493d017c7dae1d336 -->

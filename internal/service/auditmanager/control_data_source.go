@@ -25,17 +25,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("aws_auditmanager_control", name="Control")
 func newDataSourceControl(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceControl{}, nil
 }
 
 type dataSourceControl struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceControl) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_auditmanager_control"
 }
 
 func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -175,7 +171,7 @@ type dataSourceControlData struct {
 	Description            types.String `tfsdk:"description"`
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
-	Tags                   types.Map    `tfsdk:"tags"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
 	TestingInformation     types.String `tfsdk:"testing_information"`
 	Type                   types.String `tfsdk:"type"`
 }
@@ -201,9 +197,9 @@ func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *co
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 	rd.Type = types.StringValue(string(out.Type))
 
-	ignoreTagsConfig := meta.IgnoreTagsConfig
+	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	return diags
 }

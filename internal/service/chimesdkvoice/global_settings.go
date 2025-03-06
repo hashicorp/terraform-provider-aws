@@ -26,7 +26,7 @@ const (
 	globalSettingsPropagationTimeout = 20 * time.Second
 )
 
-// @SDKResource("aws_chimesdkvoice_global_settings")
+// @SDKResource("aws_chimesdkvoice_global_settings", name="Global Settings")
 func ResourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
@@ -65,7 +65,8 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	var out *chimesdkvoice.GetGlobalSettingsOutput
 	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func() *retry.RetryError {
 		var getErr error
-		out, getErr = conn.GetGlobalSettings(ctx, &chimesdkvoice.GetGlobalSettingsInput{})
+		input := chimesdkvoice.GetGlobalSettingsInput{}
+		out, getErr = conn.GetGlobalSettings(ctx, &input)
 
 		if getErr != nil {
 			return retry.NonRetryableError(getErr)
@@ -89,7 +90,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionReading, ResNameGlobalSettings, d.Id(), err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	d.Set("voice_connector", flattenVoiceConnectorSettings(out.VoiceConnector))
 
 	return diags
@@ -109,7 +110,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 			return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionUpdating, ResNameGlobalSettings, d.Id(), err)
 		}
 	}
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }
@@ -118,9 +119,10 @@ func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	_, err := conn.UpdateGlobalSettings(ctx, &chimesdkvoice.UpdateGlobalSettingsInput{
+	input := chimesdkvoice.UpdateGlobalSettingsInput{
 		VoiceConnector: &awstypes.VoiceConnectorSettings{},
-	})
+	}
+	_, err := conn.UpdateGlobalSettings(ctx, &input)
 	if err != nil {
 		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionDeleting, ResNameGlobalSettings, d.Id(), err)
 	}

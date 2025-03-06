@@ -76,17 +76,17 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeCustomerGatewaysInput{}
+	input := ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
 		input.CustomerGatewayIds = []string{v.(string)}
 	}
 
-	cgw, err := findCustomerGateway(ctx, conn, input)
+	cgw, err := findCustomerGateway(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))
@@ -95,10 +95,10 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.ToString(cgw.CustomerGatewayId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -129,7 +129,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
-	setTagsOutV2(ctx, cgw.Tags)
+	setTagsOut(ctx, cgw.Tags)
 
 	return diags
 }

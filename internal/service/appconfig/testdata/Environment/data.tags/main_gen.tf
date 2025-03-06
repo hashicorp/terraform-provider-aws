@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_appconfig_environment" "test" {
   application_id = aws_appconfig_application.test.id
   environment_id = aws_appconfig_environment.test.environment_id

@@ -7,9 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -208,7 +209,7 @@ func dataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	rsc, err := findClusterByID(ctx, conn, clusterID)
@@ -220,10 +221,10 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(clusterID)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   redshift.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.Redshift,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -265,8 +266,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set(names.AttrPort, rsc.Endpoint.Port)
 	}
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
-	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v *redshift.ClusterIamRole) string {
-		return aws.StringValue(v.IamRoleArn)
+	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v awstypes.ClusterIamRole) string {
+		return aws.ToString(v.IamRoleArn)
 	}))
 	d.Set(names.AttrKMSKeyID, rsc.KmsKeyId)
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
@@ -282,13 +283,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrPreferredMaintenanceWindow, rsc.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, rsc.PubliclyAccessible)
 	d.Set(names.AttrVPCID, rsc.VpcId)
-	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
-		return aws.StringValue(v.VpcSecurityGroupId)
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
 	}))
 
 	setTagsOut(ctx, rsc.Tags)
 
-	loggingStatus, err := conn.DescribeLoggingStatusWithContext(ctx, &redshift.DescribeLoggingStatusInput{
+	loggingStatus, err := conn.DescribeLoggingStatus(ctx, &redshift.DescribeLoggingStatusInput{
 		ClusterIdentifier: aws.String(clusterID),
 	})
 
@@ -296,11 +297,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s) logging status: %s", d.Id(), err)
 	}
 
-	if loggingStatus != nil && aws.BoolValue(loggingStatus.LoggingEnabled) {
+	if loggingStatus != nil && aws.ToBool(loggingStatus.LoggingEnabled) {
 		d.Set(names.AttrBucketName, loggingStatus.BucketName)
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
-		d.Set("log_exports", aws.StringValueSlice(loggingStatus.LogExports))
+		d.Set("log_exports", loggingStatus.LogExports)
 		d.Set(names.AttrS3KeyPrefix, loggingStatus.S3KeyPrefix)
 	}
 

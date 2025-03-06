@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
+	"golang.org/x/mod/semver"
 )
 
 // @SDKResource("aws_mq_broker", name="Broker")
@@ -374,7 +375,6 @@ func resourceBroker() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
@@ -486,7 +486,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, output.EngineVersion)
+	d.Set(names.AttrEngineVersion, normalizeEngineVersion(string(output.EngineType), aws.ToString(output.EngineVersion), aws.ToBool(output.AutoMinorVersionUpgrade)))
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
@@ -556,11 +556,15 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
+		engineType := d.Get("engine_type").(string)
+		engineVersion := d.Get(names.AttrEngineVersion).(string)
+		autoMinorVersionUpgrade := d.Get(names.AttrAutoMinorVersionUpgrade).(bool)
+
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
-			EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
-			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
+			EngineVersion: aws.String(normalizeEngineVersion(engineType, engineVersion, autoMinorVersionUpgrade)),
+			Logs:          expandLogs(engineType, d.Get("logs").([]interface{})),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
@@ -910,6 +914,40 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 	}
 
 	return cr, di, ur, nil
+}
+
+// normalizeEngineVersion normalizes the engine version depending on whether auto
+// minor version upgrades are enabled
+//
+// Beginning with RabbitMQ 3.13 and ActiveMQ 5.18, brokers with `auto_minor_version_upgrade`
+// set to `true` will automatically receive patch updates during scheduled maintenance
+// windows. To account for automated changes to patch versions, the returned engine
+// value is normalized to only major/minor when these conditions are met.
+//
+// If `auto_minor_version_upgrade` is not enabled, or the engine version is less than
+// the version in which AWS began automatically applying patch upgrades, the engine
+// version is returned unmodified.
+//
+// Ref: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/upgrading-brokers.html
+// func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
+func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVersionUpgrade bool) string {
+	majorMinor := semver.MajorMinor("v" + engineVersion)
+
+	// initial versions where `auto_minor_version_upgrade` triggers automatic
+	// patch updates, and only the major/minor should be supplied to the update API
+	minRabbit := "v3.13"
+	minActive := "v5.18"
+
+	if !autoMinorVersionUpgrade {
+		return engineVersion
+	}
+
+	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinor, minRabbit) >= 0) ||
+		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.Compare(majorMinor, minActive) >= 0) {
+		return majorMinor[1:]
+	}
+
+	return engineVersion
 }
 
 func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {

@@ -3,6 +3,10 @@
 
 package sdkv2
 
+import (
+	"github.com/hashicorp/go-cty/cty"
+)
+
 // ResourceDiffer exposes the interface for accessing changes in a resource
 // Implementations:
 // * schema.ResourceData
@@ -13,7 +17,20 @@ type ResourceDiffer interface {
 	Get(string) interface{}
 	GetChange(string) (interface{}, interface{})
 	GetOk(string) (interface{}, bool)
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
 	HasChange(string) bool
 	HasChanges(...string) bool
 	Id() string
+}
+
+// HasNonZeroValues returns true if any of the keys have non-zero values.
+func HasNonZeroValues(d ResourceDiffer, keys ...string) bool {
+	for _, key := range keys {
+		if _, ok := d.GetOk(key); ok {
+			return true
+		}
+	}
+	return false
 }

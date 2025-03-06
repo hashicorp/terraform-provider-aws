@@ -62,30 +62,6 @@ resource "aws_api_gateway_deployment" "test" {
   }
 }
 
-resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = aws_iam_role.test[0].arn
-}
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  count = 2
-
-  name = "${var.rName}-${count.index}"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "apigateway.amazonaws.com"
-      }
-    }]
-  })
-
-  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"]
-}
-
 variable "rName" {
   description = "Name for resource"
   type        = string

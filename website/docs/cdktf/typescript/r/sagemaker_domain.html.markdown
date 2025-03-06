@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_domain"
 description: |-
@@ -86,9 +86,11 @@ class MyConvertedCode extends TerraformStack {
     const example = new SagemakerAppImageConfig(this, "example", {
       appImageConfigName: "example",
       kernelGatewayImageConfig: {
-        kernelSpec: {
-          name: "example",
-        },
+        kernelSpec: [
+          {
+            name: "example",
+          },
+        ],
       },
     });
     const awsSagemakerImageExample = new SagemakerImage(this, "example_1", {
@@ -151,6 +153,7 @@ The following arguments are optional:
 * `domainSettings` - (Optional) The domain settings. See [`domainSettings` Block](#domain_settings-block) below.
 * `kmsKeyId` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `retentionPolicy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [`retentionPolicy` Block](#retention_policy-block) below.
+* `tag_propagation` - (Optional) Indicates whether custom tag propagation is supported for the domain. Defaults to `DISABLED`. Valid values are: `ENABLED` and `DISABLED`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `defaultSpaceSettings` Block
@@ -159,9 +162,14 @@ The following arguments are optional:
 * `jupyterServerAppSettings` - (Optional) The Jupyter server's app settings. See [`jupyterServerAppSettings` Block](#jupyter_server_app_settings-block) below.
 * `kernelGatewayAppSettings` - (Optional) The kernel gateway app settings. See [`kernelGatewayAppSettings` Block](#kernel_gateway_app_settings-block) below.
 * `securityGroups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
+* `jupyterLabAppSettings` - (Optional) The settings for the JupyterLab application. See [`jupyterLabAppSettings` Block](#jupyter_lab_app_settings-block) below.
+* `spaceStorageSettings` - (Optional) The storage settings for a private space. See [`spaceStorageSettings` Block](#space_storage_settings-block) below.
+* `customPosixUserConfig` - (Optional) Details about the POSIX identity that is used for file system operations. See [`customPosixUserConfig` Block](#custom_posix_user_config-block) below.
+* `customFileSystemConfig` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [`customFileSystemConfig` Block](#custom_file_system_config-block) below.
 
 ### `defaultUserSettings` Block
 
+* `auto_mount_home_efs` - (Optional) Indicates whether auto-mounting of an EFS volume is supported for the user profile. The `DefaultAsDomain` value is only supported for user profiles. Do not use the `DefaultAsDomain` value when setting this parameter for a domain. Valid values are: `Enabled`, `Disabled`, and `DefaultAsDomain`.
 * `canvasAppSettings` - (Optional) The Canvas app settings. See [`canvasAppSettings` Block](#canvas_app_settings-block) below.
 * `codeEditorAppSettings` - (Optional) The Code Editor application settings. See [`codeEditorAppSettings` Block](#code_editor_app_settings-block) below.
 * `customFileSystemConfig` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [`customFileSystemConfig` Block](#custom_file_system_config-block) below.
@@ -178,6 +186,7 @@ The following arguments are optional:
 * `spaceStorageSettings` - (Optional) The storage settings for a private space. See [`spaceStorageSettings` Block](#space_storage_settings-block) below.
 * `studioWebPortal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensorBoardAppSettings` - (Optional) The TensorBoard app settings. See [`tensorBoardAppSettings` Block](#tensor_board_app_settings-block) below.
+* `studioWebPortalSettings` - (Optional) The Studio Web Portal settings. See [`studioWebPortalSettings` Block](#studio_web_portal_settings-block) below.
 
 #### `spaceStorageSettings` Block
 
@@ -201,6 +210,7 @@ The following arguments are optional:
 
 * `directDeploySettings` - (Optional) The model deployment settings for the SageMaker Canvas application. See [`directDeploySettings` Block](#direct_deploy_settings-block) below.
 * `identityProviderOauthSettings` - (Optional) The settings for connecting to an external data source with OAuth. See [`identityProviderOauthSettings` Block](#identity_provider_oauth_settings-block) below.
+* `emr_serverless_settings` - (Optional) The settings for running Amazon EMR Serverless jobs in SageMaker Canvas. See [`emr_serverless_settings` Block](#emr_serverless_settings-block) below.
 * `kendraSettings` - (Optional) The settings for document querying. See [`kendraSettings` Block](#kendra_settings-block) below.
 * `modelRegisterSettings` - (Optional) The model registry settings for the SageMaker Canvas application. See [`modelRegisterSettings` Block](#model_register_settings-block) below.
 * `timeSeriesForecastingSettings` - (Optional) Time series forecast settings for the Canvas app. See [`timeSeriesForecastingSettings` Block](#time_series_forecasting_settings-block) below.
@@ -259,15 +269,27 @@ The following arguments are optional:
 
 #### `jupyterLabAppSettings` Block
 
+* `app_lifecycle_management` - (Optional) Indicates whether idle shutdown is activated for JupyterLab applications. see [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
+* `built_in_lifecycle_config_arn` - (Optional) The lifecycle configuration that runs before the default lifecycle configuration. It can override changes made in the default lifecycle configuration.
 * `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [`codeRepository` Block](#code_repository-block) below.
 * `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a JupyterLab app. see [`customImage` Block](#custom_image-block) below.
 * `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
+* `emr_settings` - (Optional) The configuration parameters that specify the IAM roles assumed by the execution role of SageMaker (assumable roles) and the cluster instances or job execution environments (execution roles or runtime roles) to manage and access resources required for running Amazon EMR clusters or Amazon EMR Serverless applications. see [`emr_settings` Block](#emr_settings-block) below.
 * `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 #### `codeEditorAppSettings` Block
 
+* `app_lifecycle_management` - (Optional) Indicates whether idle shutdown is activated for JupyterLab applications. see [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
+* `built_in_lifecycle_config_arn` - (Optional) The lifecycle configuration that runs before the default lifecycle configuration. It can override changes made in the default lifecycle configuration.
 * `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 * `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [`customImage` Block](#custom_image-block) below.
+
+#### `studioWebPortalSettings` Block
+
+* `hiddenAppTypes` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hidden_instance_types` - (Optional) The instance types you are hiding from the Studio user interface.
+* `hiddenMlTools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
 
 ##### `codeRepository` Block
 
@@ -304,9 +326,15 @@ The following arguments are optional:
 
 ### `domainSettings` Block
 
+* `dockerSettings` - (Optional) A collection of settings that configure the domain’s Docker interaction. see [`dockerSettings` Block](#docker_settings-block) below.
 * `executionRoleIdentityConfig` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `rStudioServerProDomainSettings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`rStudioServerProDomainSettings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `securityGroupIds` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+
+#### `dockerSettings` Block
+
+* `enableDockerAccess` - (Optional) Indicates whether the domain can access Docker. Valid values are `ENABLED` and `DISABLED`.
+* `vpcOnlyTrustedAccounts` - (Optional) The list of Amazon Web Services accounts that are trusted when the domain is created in VPC-only mode.
 
 #### `rStudioServerProDomainSettings` Block
 
@@ -318,6 +346,27 @@ The following arguments are optional:
 ### `retentionPolicy` Block
 
 * `homeEfsFileSystem` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `Retain` or `Delete`.  Default value is `Retain`.
+
+#### `app_lifecycle_management` Block
+
+* `idle_settings` - (Optional) Settings related to idle shutdown of Studio applications. see [`idle_settings` Block](#idle_settings-block) below.
+
+#### `idle_settings` Block
+
+* `idle_timeout_in_minutes` - (Optional) The time that SageMaker waits after the application becomes idle before shutting it down. Valid values are between `60` and `525600`.
+* `lifecycle_management` - (Optional) Indicates whether idle shutdown is activated for the application type. Valid values are `ENABLED` and `DISABLED`.
+* `max_idle_timeout_in_minutes` - (Optional) The maximum value in minutes that custom idle shutdown can be set to by the user. Valid values are between `60` and `525600`.
+* `min_idle_timeout_in_minutes` - (Optional) The minimum value in minutes that custom idle shutdown can be set to by the user. Valid values are between `60` and `525600`.
+
+#### `emr_serverless_settings` Block
+
+* `executionRoleArn` - (Optional) The Amazon Resource Name (ARN) of the AWS IAM role that is assumed for running Amazon EMR Serverless jobs in SageMaker Canvas. This role should have the necessary permissions to read and write data attached and a trust relationship with EMR Serverless.
+* `status` - (Optional) Describes whether Amazon EMR Serverless job capabilities are enabled or disabled in the SageMaker Canvas application. Valid values are: `ENABLED` and `DISABLED`.
+
+#### `emr_settings` Block
+
+* `assumable_role_arns` - (Optional) An array of Amazon Resource Names (ARNs) of the IAM roles that the execution role of SageMaker can assume for performing operations or tasks related to Amazon EMR clusters or Amazon EMR Serverless applications. These roles define the permissions and access policies required when performing Amazon EMR-related operations, such as listing, connecting to, or terminating Amazon EMR clusters or Amazon EMR Serverless applications. They are typically used in cross-account access scenarios, where the Amazon EMR resources (clusters or serverless applications) are located in a different AWS account than the SageMaker domain.
+* `execution_role_arns` - (Optional) An array of Amazon Resource Names (ARNs) of the IAM roles used by the Amazon EMR cluster instances or job execution environments to access other AWS services and resources needed during the runtime of your Amazon EMR or Amazon EMR Serverless workloads, such as Amazon S3 for data access, Amazon CloudWatch for logging, or other AWS services based on the particular workload requirements.
 
 ## Attribute Reference
 
@@ -364,4 +413,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1aef42f588000331a9cbfd58b449907f26fa2c1a99529bd8fe066eea5f20c0de -->
+<!-- cache-key: cdktf-0.20.8 input-a022873fab71290afbf97f30a2884741b91de9b1f1c57103cf67d89e472db803 -->

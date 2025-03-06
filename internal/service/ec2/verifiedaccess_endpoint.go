@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_verifiedaccess_endpoint", name="Verified Access Endpoint")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVerifiedAccessEndpoint() *schema.Resource {
+func resourceVerifiedAccessEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessEndpointCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessEndpointRead,
@@ -180,14 +180,11 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessEndpointInput{
@@ -197,7 +194,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
 		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
-		TagSpecifications:     getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
+		TagSpecifications:     getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
 
@@ -242,7 +239,6 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	ep, err := findVerifiedAccessEndpointByID(ctx, conn, d.Id())
@@ -331,9 +327,14 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChange("policy_document") {
 		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
-			PolicyDocument:           aws.String(d.Get("policy_document").(string)),
-			PolicyEnabled:            aws.Bool(true),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
+		}
+
+		if v := d.Get("policy_document").(string); v != "" {
+			input.PolicyEnabled = aws.Bool(true)
+			input.PolicyDocument = aws.String(v)
+		} else {
+			input.PolicyEnabled = aws.Bool(false)
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
@@ -348,14 +349,14 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &ec2.DeleteVerifiedAccessEndpointInput{
+	input := ec2.DeleteVerifiedAccessEndpointInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessEndpointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
 		return diags
@@ -500,8 +501,8 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs]; ok {
-		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject

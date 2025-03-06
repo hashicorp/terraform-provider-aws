@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -24,11 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/mitchellh/go-homedir"
 )
 
 const canaryMutex = `aws_synthetics_canary`
@@ -114,7 +113,7 @@ func ResourceCanary() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 21),
+					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexache.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
 				),
 			},
@@ -145,9 +144,9 @@ func ResourceCanary() *schema.Resource {
 						},
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
+							Computed:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(3, 14*60),
-							Default:      840,
 						},
 					},
 				},
@@ -267,8 +266,6 @@ func ResourceCanary() *schema.Resource {
 				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_version"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -285,8 +282,11 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:               getTagsIn(ctx),
 	}
 
-	if code, err := expandCanaryCode(d); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Synthetics Canary (%s): %s", name, err)
+	conns.GlobalMutexKV.Lock(canaryMutex)
+	defer conns.GlobalMutexKV.Unlock(canaryMutex)
+
+	if code, err := expandCanaryCodeInput(d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	} else {
 		input.Code = code
 	}
@@ -376,10 +376,10 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	canaryArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "synthetics",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("canary:%s", aws.ToString(canary.Name)),
 	}.String()
 	d.Set(names.AttrARN, canaryArn)
@@ -446,8 +446,11 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChanges("handler", "zip_file", names.AttrS3Bucket, "s3_key", "s3_version") {
-			if code, err := expandCanaryCode(d); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Synthetics Canary (%s): %s", d.Id(), err)
+			conns.GlobalMutexKV.Lock(canaryMutex)
+			defer conns.GlobalMutexKV.Unlock(canaryMutex)
+
+			if code, err := expandCanaryCodeInput(d); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			} else {
 				input.Code = code
 			}
@@ -563,18 +566,17 @@ func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func expandCanaryCode(d *schema.ResourceData) (*awstypes.CanaryCodeInput, error) {
+func expandCanaryCodeInput(d *schema.ResourceData) (*awstypes.CanaryCodeInput, error) {
 	codeConfig := &awstypes.CanaryCodeInput{
 		Handler: aws.String(d.Get("handler").(string)),
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		conns.GlobalMutexKV.Lock(canaryMutex)
-		defer conns.GlobalMutexKV.Unlock(canaryMutex)
-		file, err := loadFileContent(v.(string))
+		file, err := tfio.ReadFileContents(v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("unable to load %q: %w", v.(string), err)
+			return nil, err
 		}
+
 		codeConfig.ZipFile = file
 	} else {
 		codeConfig.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
@@ -694,8 +696,10 @@ func expandCanaryRunConfig(l []interface{}) *awstypes.CanaryRunConfigInput {
 
 	m := l[0].(map[string]interface{})
 
-	codeConfig := &awstypes.CanaryRunConfigInput{
-		TimeoutInSeconds: aws.Int32(int32(m["timeout_in_seconds"].(int))),
+	codeConfig := &awstypes.CanaryRunConfigInput{}
+
+	if v, ok := m["timeout_in_seconds"].(int); ok && v > 0 {
+		codeConfig.TimeoutInSeconds = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["memory_in_mb"].(int); ok && v > 0 {
@@ -824,17 +828,4 @@ func stopCanary(ctx context.Context, name string, conn *synthetics.Client) error
 	}
 
 	return nil
-}
-
-// loadFileContent returns contents of a file in a given path
-func loadFileContent(v string) ([]byte, error) {
-	filename, err := homedir.Expand(v)
-	if err != nil {
-		return nil, err
-	}
-	fileContent, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return fileContent, nil
 }

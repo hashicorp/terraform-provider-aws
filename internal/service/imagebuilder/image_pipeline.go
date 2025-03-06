@@ -8,29 +8,34 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_image_pipeline", name="Image Pipeline")
 // @Tags(identifierAttribute="id")
-func ResourceImagePipeline() *schema.Resource {
+func resourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImagePipelineCreate,
 		ReadWithoutTimeout:   resourceImagePipelineRead,
 		UpdateWithoutTimeout: resourceImagePipelineUpdate,
 		DeleteWithoutTimeout: resourceImagePipelineDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,7 +48,6 @@ func ResourceImagePipeline() *schema.Resource {
 			"container_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
@@ -78,10 +82,14 @@ func ResourceImagePipeline() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"execution_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
@@ -164,10 +172,10 @@ func ResourceImagePipeline() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"pipeline_execution_start_condition": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable,
-							ValidateFunc: validation.StringInSlice(imagebuilder.PipelineExecutionStartCondition_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          string(awstypes.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable),
+							ValidateDiagFunc: enum.Validate[awstypes.PipelineExecutionStartCondition](),
 						},
 						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
@@ -186,22 +194,61 @@ func ResourceImagePipeline() *schema.Resource {
 				},
 			},
 			names.AttrStatus: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      imagebuilder.PipelineStatusEnabled,
-				ValidateFunc: validation.StringInSlice(imagebuilder.PipelineStatus_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(awstypes.PipelineStatusEnabled),
+				ValidateDiagFunc: enum.Validate[awstypes.PipelineStatus](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"workflow": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_failure": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OnWorkflowFailure](),
+						},
+						"parallel_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 100),
+						},
+						names.AttrParameter: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"workflow_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(id.UniqueId()),
@@ -219,6 +266,10 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("distribution_configuration_arn"); ok {
 		input.DistributionConfigurationArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("execution_role"); ok {
+		input.ExecutionRole = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("image_recipe_arn"); ok {
@@ -246,49 +297,39 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk(names.AttrStatus); ok {
-		input.Status = aws.String(v.(string))
+		input.Status = awstypes.PipelineStatus(v.(string))
 	}
 
-	output, err := conn.CreateImagePipelineWithContext(ctx, input)
+	if v, ok := d.GetOk("workflow"); ok && len(v.([]interface{})) > 0 {
+		input.Workflows = expandWorkflowConfigurations(v.([]interface{}))
+	}
+
+	output, err := conn.CreateImagePipeline(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Pipeline: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Pipeline: empty response")
-	}
-
-	d.SetId(aws.StringValue(output.ImagePipelineArn))
+	d.SetId(aws.ToString(output.ImagePipelineArn))
 
 	return append(diags, resourceImagePipelineRead(ctx, d, meta)...)
 }
 
 func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImagePipelineInput{
-		ImagePipelineArn: aws.String(d.Id()),
-	}
+	imagePipeline, err := findImagePipelineByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetImagePipelineWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image Pipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Pipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Pipeline (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ImagePipeline == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Pipeline (%s): empty response", d.Id())
-	}
-
-	imagePipeline := output.ImagePipeline
 
 	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
@@ -299,14 +340,19 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrDescription, imagePipeline.Description)
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
+	d.Set("execution_role", imagePipeline.ExecutionRole)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 	if imagePipeline.ImageScanningConfiguration != nil {
-		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
+		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image scanning configuration: %s", err)
+		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if imagePipeline.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image tests configuration: %s", err)
+		}
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -314,11 +360,16 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)})
+		if err := d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
+		}
 	} else {
 		d.Set(names.AttrSchedule, nil)
 	}
 	d.Set(names.AttrStatus, imagePipeline.Status)
+	if err := d.Set("workflow", flattenWorkflowConfigurations(imagePipeline.Workflows)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
+	}
 
 	setTagsOut(ctx, imagePipeline.Tags)
 
@@ -327,18 +378,9 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	if d.HasChanges(
-		names.AttrDescription,
-		"distribution_configuration_arn",
-		"enhanced_image_metadata_enabled",
-		"image_scanning_configuration",
-		"image_tests_configuration",
-		"infrastructure_configuration_arn",
-		names.AttrSchedule,
-		names.AttrStatus,
-	) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &imagebuilder.UpdateImagePipelineInput{
 			ClientToken:                  aws.String(id.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
@@ -355,6 +397,10 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v, ok := d.GetOk("distribution_configuration_arn"); ok {
 			input.DistributionConfigurationArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("execution_role"); ok {
+			input.ExecutionRole = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("image_recipe_arn"); ok {
@@ -378,10 +424,14 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk(names.AttrStatus); ok {
-			input.Status = aws.String(v.(string))
+			input.Status = awstypes.PipelineStatus(v.(string))
 		}
 
-		_, err := conn.UpdateImagePipelineWithContext(ctx, input)
+		if v, ok := d.GetOk("workflow"); ok && len(v.([]interface{})) > 0 {
+			input.Workflows = expandWorkflowConfigurations(v.([]interface{}))
+		}
+
+		_, err := conn.UpdateImagePipeline(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Image Builder Image Pipeline (%s): %s", d.Id(), err)
@@ -393,15 +443,14 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteImagePipelineInput{
+	log.Printf("[DEBUG] Deleting Image Builder Image Pipeline: %s", d.Id())
+	_, err := conn.DeleteImagePipeline(ctx, &imagebuilder.DeleteImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteImagePipelineWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -412,12 +461,37 @@ func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandImageScanningConfiguration(tfMap map[string]interface{}) *imagebuilder.ImageScanningConfiguration {
+func findImagePipelineByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.ImagePipeline, error) {
+	input := &imagebuilder.GetImagePipelineInput{
+		ImagePipelineArn: aws.String(arn),
+	}
+
+	output, err := conn.GetImagePipeline(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ImagePipeline == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ImagePipeline, nil
+}
+
+func expandImageScanningConfiguration(tfMap map[string]interface{}) *awstypes.ImageScanningConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.ImageScanningConfiguration{}
+	apiObject := &awstypes.ImageScanningConfiguration{}
 
 	if v, ok := tfMap["image_scanning_enabled"].(bool); ok {
 		apiObject.ImageScanningEnabled = aws.Bool(v)
@@ -430,15 +504,15 @@ func expandImageScanningConfiguration(tfMap map[string]interface{}) *imagebuilde
 	return apiObject
 }
 
-func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfiguration {
+func expandECRConfiguration(tfMap map[string]interface{}) *awstypes.EcrConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.EcrConfiguration{}
+	apiObject := &awstypes.EcrConfiguration{}
 
 	if v, ok := tfMap["container_tags"].(*schema.Set); ok {
-		apiObject.ContainerTags = flex.ExpandStringSet(v)
+		apiObject.ContainerTags = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap[names.AttrRepositoryName].(string); ok {
@@ -448,33 +522,33 @@ func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfi
 	return apiObject
 }
 
-func expandImageTestConfiguration(tfMap map[string]interface{}) *imagebuilder.ImageTestsConfiguration {
+func expandImageTestConfiguration(tfMap map[string]interface{}) *awstypes.ImageTestsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.ImageTestsConfiguration{}
+	apiObject := &awstypes.ImageTestsConfiguration{}
 
 	if v, ok := tfMap["image_tests_enabled"].(bool); ok {
 		apiObject.ImageTestsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["timeout_minutes"].(int); ok && v != 0 {
-		apiObject.TimeoutMinutes = aws.Int64(int64(v))
+		apiObject.TimeoutMinutes = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule {
+func expandPipelineSchedule(tfMap map[string]interface{}) *awstypes.Schedule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.Schedule{}
+	apiObject := &awstypes.Schedule{}
 
 	if v, ok := tfMap["pipeline_execution_start_condition"].(string); ok && v != "" {
-		apiObject.PipelineExecutionStartCondition = aws.String(v)
+		apiObject.PipelineExecutionStartCondition = awstypes.PipelineExecutionStartCondition(v)
 	}
 
 	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
@@ -488,7 +562,7 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 	return apiObject
 }
 
-func flattenImageScanningConfiguration(apiObject *imagebuilder.ImageScanningConfiguration) map[string]interface{} {
+func flattenImageScanningConfiguration(apiObject *awstypes.ImageScanningConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -496,7 +570,7 @@ func flattenImageScanningConfiguration(apiObject *imagebuilder.ImageScanningConf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ImageScanningEnabled; v != nil {
-		tfMap["image_scanning_enabled"] = aws.BoolValue(v)
+		tfMap["image_scanning_enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.EcrConfiguration; v != nil {
@@ -506,7 +580,7 @@ func flattenImageScanningConfiguration(apiObject *imagebuilder.ImageScanningConf
 	return tfMap
 }
 
-func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[string]interface{} {
+func flattenECRConfiguration(apiObject *awstypes.EcrConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -514,17 +588,17 @@ func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap[names.AttrRepositoryName] = aws.StringValue(v)
+		tfMap[names.AttrRepositoryName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringValueSlice(v)
+		tfMap["container_tags"] = aws.StringSlice(v)
 	}
 
 	return tfMap
 }
 
-func flattenImageTestsConfiguration(apiObject *imagebuilder.ImageTestsConfiguration) map[string]interface{} {
+func flattenImageTestsConfiguration(apiObject *awstypes.ImageTestsConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -532,33 +606,31 @@ func flattenImageTestsConfiguration(apiObject *imagebuilder.ImageTestsConfigurat
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ImageTestsEnabled; v != nil {
-		tfMap["image_tests_enabled"] = aws.BoolValue(v)
+		tfMap["image_tests_enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.TimeoutMinutes; v != nil {
-		tfMap["timeout_minutes"] = aws.Int64Value(v)
+		tfMap["timeout_minutes"] = aws.ToInt32(v)
 	}
 
 	return tfMap
 }
 
-func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
+func flattenSchedule(apiObject *awstypes.Schedule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.PipelineExecutionStartCondition; v != nil {
-		tfMap["pipeline_execution_start_condition"] = aws.StringValue(v)
-	}
+	tfMap["pipeline_execution_start_condition"] = string(apiObject.PipelineExecutionStartCondition)
 
 	if v := apiObject.ScheduleExpression; v != nil {
-		tfMap[names.AttrScheduleExpression] = aws.StringValue(v)
+		tfMap[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	if v := apiObject.Timezone; v != nil {
-		tfMap["timezone"] = aws.StringValue(v)
+		tfMap["timezone"] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -6,7 +6,8 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -76,7 +77,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	input := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
 		Owners:            flex.ExpandStringValueList(d.Get("owners").([]interface{})),
 	}
@@ -86,10 +87,10 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	images, err := findImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
@@ -118,19 +119,20 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		filteredImages = images[:]
 	}
 
-	sort.Slice(filteredImages, func(i, j int) bool {
-		itime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[i].CreationDate))
-		jtime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[j].CreationDate))
+	slices.SortFunc(filteredImages, func(a, b awstypes.Image) int {
+		atime, _ := time.Parse(time.RFC3339, aws.ToString(a.CreationDate))
+		btime, _ := time.Parse(time.RFC3339, aws.ToString(b.CreationDate))
+		compare := atime.Compare(btime)
 		if d.Get("sort_ascending").(bool) {
-			return itime.Unix() < jtime.Unix()
+			return compare
 		}
-		return itime.Unix() > jtime.Unix()
+		return -compare
 	})
 	for _, image := range filteredImages {
 		imageIDs = append(imageIDs, aws.ToString(image.ImageId))
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(fmt.Sprintf("%#v", input))))
 	d.Set(names.AttrIDs, imageIDs)
 
 	return diags

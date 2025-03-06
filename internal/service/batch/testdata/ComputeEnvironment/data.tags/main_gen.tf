@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_batch_compute_environment" "test" {
   compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
 }

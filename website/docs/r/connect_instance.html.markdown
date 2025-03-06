@@ -11,7 +11,7 @@ description: |-
 Provides an Amazon Connect instance resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-!> **WARN:** Amazon Connect enforces a limit of [100 combined instance creation and deletions every 30 days](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits).  For example, if you create 80 instances and delete 20 of them, you must wait 30 days to create or delete another instance.  Use care when creating or deleting instances.
+!> **WARN:** Amazon Connect enforces a limit of [100 combined instance creation and deletions every 30 days](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits). For example, if you create 80 instances and delete 20 of them, you must wait 30 days to create or delete another instance. Use care when creating or deleting instances.
 
 ## Example Usage
 
@@ -21,6 +21,10 @@ resource "aws_connect_instance" "test" {
   inbound_calls_enabled    = true
   instance_alias           = "friendly-name-connect"
   outbound_calls_enabled   = true
+
+  tags = {
+    "hello" = "world"
+  }
 }
 ```
 
@@ -61,6 +65,7 @@ This resource supports the following arguments:
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
 * `multi_party_conference_enabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
+* `tags` - (Optional) Tags to apply to the Instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ## Attribute Reference
@@ -72,6 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_time` - When the instance was created.
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

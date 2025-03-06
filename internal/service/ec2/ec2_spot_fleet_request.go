@@ -56,7 +56,7 @@ func resourceSpotFleetRequest() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SpotFleetRequestMigrateState,
+		MigrateState:  spotFleetRequestMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"allocation_strategy": {
@@ -868,8 +868,6 @@ func resourceSpotFleetRequest() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -885,7 +883,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		InstanceInterruptionBehavior:     awstypes.InstanceInterruptionBehavior(d.Get("instance_interruption_behaviour").(string)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		TagSpecifications:                getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSpotFleetRequest),
+		TagSpecifications:                getTagSpecificationsIn(ctx, awstypes.ResourceTypeSpotFleetRequest),
 		TargetCapacity:                   aws.Int32(int32(d.Get("target_capacity").(int))),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		Type:                             awstypes.FleetType(d.Get("fleet_type").(string)),
@@ -994,14 +992,14 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
-	input := &ec2.RequestSpotFleetInput{
+	input := ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.RequestSpotFleet(ctx, input)
+			return conn.RequestSpotFleet(ctx, &input)
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
 	)
@@ -1080,7 +1078,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	if err := d.Set("launch_template_config", flattenLaunchTemplateConfigs(config.LaunchTemplateConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template_config: %s", err)
@@ -1123,7 +1121,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifySpotFleetRequestInput{
+		input := ec2.ModifySpotFleetRequestInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
 
@@ -1142,7 +1140,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		log.Printf("[DEBUG] Modifying EC2 Spot Fleet Request: %s", d.Id())
-		if _, err := conn.ModifySpotFleetRequest(ctx, input); err != nil {
+		if _, err := conn.ModifySpotFleetRequest(ctx, &input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Spot Fleet Request (%s): %s", d.Id(), err)
 		}
 
@@ -1165,10 +1163,11 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting EC2 Spot Fleet Request: %s", d.Id())
-	output, err := conn.CancelSpotFleetRequests(ctx, &ec2.CancelSpotFleetRequestsInput{
+	input := ec2.CancelSpotFleetRequestsInput{
 		SpotFleetRequestIds: []string{d.Id()},
 		TerminateInstances:  aws.Bool(terminateInstances),
-	})
+	}
+	output, err := conn.CancelSpotFleetRequests(ctx, &input)
 
 	if err == nil && output != nil {
 		err = cancelSpotFleetRequestsError(output.UnsuccessfulFleetRequests)
@@ -1188,10 +1187,10 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		input := &ec2.DescribeSpotFleetInstancesInput{
+		input := ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
-		output, err := findSpotFleetInstances(ctx, conn, input)
+		output, err := findSpotFleetInstances(ctx, conn, &input)
 
 		if err != nil {
 			return nil, err
@@ -1286,7 +1285,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	if m, ok := d[names.AttrTags].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]awstypes.SpotFleetTagSpecification, 0)
 
-		tags := TagsV2(tftags.New(ctx, m).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := awstypes.SpotFleetTagSpecification{
 			ResourceType: awstypes.ResourceTypeInstance,
@@ -1431,7 +1430,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Throughput = aws.Int32(int32(v))
 			}
 
-			if dn, err := FetchRootDeviceName(ctx, conn, d["ami"].(string)); err == nil {
+			if dn, err := findRootDeviceName(ctx, conn, d["ami"].(string)); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -1852,7 +1851,7 @@ func expandSpotCapacityRebalance(l []interface{}) *awstypes.SpotCapacityRebalanc
 func launchSpecsToSet(ctx context.Context, conn *ec2.Client, launchSpecs []awstypes.SpotFleetLaunchSpecification) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
-		rootDeviceName, err := FetchRootDeviceName(ctx, conn, aws.ToString(spec.ImageId))
+		rootDeviceName, err := findRootDeviceName(ctx, conn, aws.ToString(spec.ImageId))
 		if err != nil {
 			return nil, err
 		}
@@ -1936,7 +1935,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if tagSpecs.ResourceType == awstypes.ResourceTypeInstance {
-				m[names.AttrTags] = keyValueTagsV2(ctx, tagSpecs.Tags).IgnoreAWS().Map()
+				m[names.AttrTags] = keyValueTags(ctx, tagSpecs.Tags).IgnoreAWS().Map()
 			}
 		}
 	}

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct1,
+			version: "1",
 			valid:   false,
 		},
 		{
@@ -58,7 +58,6 @@ func TestValidMemcachedVersionString(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
@@ -185,7 +184,6 @@ func TestValidRedisVersionString(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
@@ -281,10 +279,25 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "7.0",
 			valid:   true,
 		},
+
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2.6",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(fmt.Sprintf("%s %s", testcase.engine, testcase.version), func(t *testing.T) {
 			t.Parallel()
 			err := tfelasticache.ValidateClusterEngineVersion(testcase.engine, testcase.version)
@@ -389,7 +402,6 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -458,7 +470,6 @@ func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -617,7 +628,6 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -687,7 +697,6 @@ func TestNormalizeEngineVersion(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
@@ -782,6 +791,18 @@ func (d *mockChangesDiffer) GetOk(string) (any, bool) {
 	return nil, false
 }
 
+func (d *mockChangesDiffer) GetRawConfig() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawPlan() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+	return cty.NilVal
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
 }
@@ -872,8 +893,6 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

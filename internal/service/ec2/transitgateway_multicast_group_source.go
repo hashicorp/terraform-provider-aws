@@ -82,7 +82,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
+	multicastDomainID, groupIPAddress, eniID, err := transitGatewayMulticastGroupSourceParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -115,7 +115,7 @@ func resourceTransitGatewayMulticastGroupSourceDelete(ctx context.Context, d *sc
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
+	multicastDomainID, groupIPAddress, eniID, err := transitGatewayMulticastGroupSourceParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -137,11 +137,12 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 	id := transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Group Source: %s", id)
-	_, err := conn.DeregisterTransitGatewayMulticastGroupSources(ctx, &ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
+	input := ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
 		GroupIpAddress:                  aws.String(groupIPAddress),
 		NetworkInterfaceIds:             []string{eniID},
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
-	})
+	}
+	_, err := conn.DeregisterTransitGatewayMulticastGroupSources(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil
@@ -171,7 +172,7 @@ func transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, group
 	return id
 }
 
-func TransitGatewayMulticastGroupSourceParseResourceID(id string) (string, string, string, error) {
+func transitGatewayMulticastGroupSourceParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, transitGatewayMulticastGroupSourceIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {

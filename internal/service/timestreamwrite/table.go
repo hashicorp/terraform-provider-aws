@@ -175,8 +175,6 @@ func resourceTable() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -231,6 +229,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		log.Printf("[WARN] Timestream Table %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Timestream Table (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, table.Arn)
@@ -302,10 +304,11 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting Timestream Table: %s", d.Id())
-	_, err = conn.DeleteTable(ctx, &timestreamwrite.DeleteTableInput{
+	input := timestreamwrite.DeleteTableInput{
 		DatabaseName: aws.String(databaseName),
 		TableName:    aws.String(tableName),
-	})
+	}
+	_, err = conn.DeleteTable(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -49,19 +49,19 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "rank", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"equals.#":      acctest.Ct1,
+						"equals.#":      "1",
 						"equals.0":      acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "service.additionalInfo.threatListName",
-						"not_equals.#":  acctest.Ct2,
+						"not_equals.#":  "2",
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "another-threat",
 					}),
@@ -85,9 +85,9 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "NOOP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a NOOP"),
-					resource.TestCheckResourceAttr(resourceName, "rank", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
 		},
@@ -115,24 +115,24 @@ func testAccFilter_update(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
 			{
 				Config: testAccFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"equals.#":      acctest.Ct1,
+						"equals.#":      "1",
 						"equals.0":      acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "service.additionalInfo.threatListName",
-						"not_equals.#":  acctest.Ct2,
+						"not_equals.#":  "2",
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "yet-another-threat",
 					}),
@@ -163,7 +163,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_multipleTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
 				),
@@ -172,7 +172,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
 				),
 			},
@@ -180,7 +180,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -218,7 +218,7 @@ func testAccFilter_disappears(t *testing.T) {
 
 func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_filter" {
@@ -235,9 +235,9 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 				FilterName: aws.String(filterName),
 			}
 
-			_, err = conn.GetFilterWithContext(ctx, input)
+			_, err = conn.GetFilter(ctx, input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 					return nil
 				}
 				return err
@@ -266,12 +266,12 @@ func testAccCheckFilterExists(ctx context.Context, name string, filter *guarddut
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 		input := guardduty.GetFilterInput{
 			DetectorId: aws.String(detectorID),
 			FilterName: aws.String(name),
 		}
-		filter, err = conn.GetFilterWithContext(ctx, &input)
+		filter, err = conn.GetFilter(ctx, &input)
 
 		return err
 	}
@@ -456,7 +456,7 @@ func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource
 				return err
 			}
 
-			if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && output.CertificateAuthority.Status != acmpca_types.CertificateAuthorityStatusDeleted {
+			if output != nil && output.CertificateAuthority != nil && aws.ToString(output.CertificateAuthority.Arn) == rs.Primary.ID && output.CertificateAuthority.Status != acmpca_types.CertificateAuthorityStatusDeleted {
 				return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, string(output.CertificateAuthority.Status))
 			}
 		}

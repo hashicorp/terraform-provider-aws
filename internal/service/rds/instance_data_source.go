@@ -7,8 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,7 +21,8 @@ import (
 
 // @SDKDataSource("aws_db_instance", name="DB Instance")
 // @Tags
-func DataSourceInstance() *schema.Resource {
+// @Testing(tagsIdentifierAttribute="db_instance_arn")
+func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
@@ -217,20 +219,20 @@ func DataSourceInstance() *schema.Resource {
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	var instance *rds.DBInstance
+	var instance *types.DBInstance
 
-	filter := tfslices.PredicateTrue[*rds.DBInstance]()
+	filter := tfslices.PredicateTrue[*types.DBInstance]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		filter = func(v *rds.DBInstance) bool {
+		filter = func(v *types.DBInstance) bool {
 			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
 		}
 	}
 
 	if v, ok := d.GetOk("db_instance_identifier"); ok {
 		id := v.(string)
-		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
+		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", id, err)
@@ -243,7 +245,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		instance = output
 	} else {
 		input := &rds.DescribeDBInstancesInput{}
-		output, err := findDBInstanceSDKv1(ctx, conn, input, filter)
+		output, err := findDBInstance(ctx, conn, input, filter)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance: %s", err)
@@ -252,7 +254,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		instance = output
 	}
 
-	d.SetId(aws.StringValue(instance.DBInstanceIdentifier))
+	d.SetId(aws.ToString(instance.DBInstanceIdentifier))
 	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
@@ -263,16 +265,15 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("db_instance_class", instance.DBInstanceClass)
 	d.Set("db_instance_port", instance.DbInstancePort)
 	d.Set("db_name", instance.DBName)
-	parameterGroupNames := tfslices.ApplyToAll(instance.DBParameterGroups, func(v *rds.DBParameterGroupStatus) string {
-		return aws.StringValue(v.DBParameterGroupName)
-	})
-	d.Set("db_parameter_groups", parameterGroupNames)
+	d.Set("db_parameter_groups", tfslices.ApplyToAll(instance.DBParameterGroups, func(v types.DBParameterGroupStatus) string {
+		return aws.ToString(v.DBParameterGroupName)
+	}))
 	if instance.DBSubnetGroup != nil {
 		d.Set("db_subnet_group", instance.DBSubnetGroup.DBSubnetGroupName)
 	} else {
 		d.Set("db_subnet_group", "")
 	}
-	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(instance.EnabledCloudwatchLogsExports))
+	d.Set("enabled_cloudwatch_logs_exports", instance.EnabledCloudwatchLogsExports)
 	d.Set(names.AttrEngine, instance.Engine)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set(names.AttrIOPS, instance.Iops)
@@ -289,10 +290,9 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("monitoring_role_arn", instance.MonitoringRoleArn)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
-	optionGroupNames := tfslices.ApplyToAll(instance.OptionGroupMemberships, func(v *rds.OptionGroupMembership) string {
-		return aws.StringValue(v.OptionGroupName)
-	})
-	d.Set("option_group_memberships", optionGroupNames)
+	d.Set("option_group_memberships", tfslices.ApplyToAll(instance.OptionGroupMemberships, func(v types.OptionGroupMembership) string {
+		return aws.ToString(v.OptionGroupName)
+	}))
 	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
@@ -302,16 +302,15 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("storage_throughput", instance.StorageThroughput)
 	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
-	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v *rds.VpcSecurityGroupMembership) string {
-		return aws.StringValue(v.VpcSecurityGroupId)
-	})
-	d.Set("vpc_security_groups", vpcSecurityGroupIDs)
+	d.Set("vpc_security_groups", tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
 
 	// Per AWS SDK Go docs:
 	// The endpoint might not be shown for instances whose status is creating.
 	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
 		d.Set(names.AttrAddress, dbEndpoint.Address)
-		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.ToString(dbEndpoint.Address), aws.ToInt32(dbEndpoint.Port)))
 		d.Set(names.AttrHostedZoneID, dbEndpoint.HostedZoneId)
 		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {

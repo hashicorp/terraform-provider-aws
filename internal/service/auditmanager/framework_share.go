@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
 func newResourceFrameworkShare(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFrameworkShare{}, nil
 }
@@ -36,10 +36,6 @@ const (
 
 type resourceFrameworkShare struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework_share"
 }
 
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -90,12 +86,12 @@ func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.Create
 	}
 
 	in := auditmanager.StartAssessmentFrameworkShareInput{
-		DestinationAccount: aws.String(plan.DestinationAccount.ValueString()),
-		DestinationRegion:  aws.String(plan.DestinationRegion.ValueString()),
-		FrameworkId:        aws.String(plan.FrameworkID.ValueString()),
+		DestinationAccount: plan.DestinationAccount.ValueStringPointer(),
+		DestinationRegion:  plan.DestinationRegion.ValueStringPointer(),
+		FrameworkId:        plan.FrameworkID.ValueStringPointer(),
 	}
 	if !plan.Comment.IsNull() {
-		in.Comment = aws.String(plan.Comment.ValueString())
+		in.Comment = plan.Comment.ValueStringPointer()
 	}
 	out, err := conn.StartAssessmentFrameworkShare(ctx, &in)
 	if err != nil {
@@ -161,7 +157,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 	// Framework share requests in certain statuses must be revoked before deletion
 	if CanBeRevoked(state.Status.ValueString()) {
 		in := auditmanager.UpdateAssessmentFrameworkShareInput{
-			RequestId:   aws.String(state.ID.ValueString()),
+			RequestId:   state.ID.ValueStringPointer(),
 			RequestType: awstypes.ShareRequestTypeSent,
 			Action:      awstypes.ShareRequestActionRevoke,
 		}
@@ -175,7 +171,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 	}
 
 	in := auditmanager.DeleteAssessmentFrameworkShareInput{
-		RequestId:   aws.String(state.ID.ValueString()),
+		RequestId:   state.ID.ValueStringPointer(),
 		RequestType: awstypes.ShareRequestTypeSent,
 	}
 	_, err := conn.DeleteAssessmentFrameworkShare(ctx, &in)

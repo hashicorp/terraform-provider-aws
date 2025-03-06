@@ -161,10 +161,11 @@ func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %s", d.Id())
-	_, err := conn.UpdateGlobalTable(ctx, &dynamodb.UpdateGlobalTableInput{
+	input := dynamodb.UpdateGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
 		ReplicaUpdates:  expandReplicaUpdateDeleteReplicas(d.Get("replica").(*schema.Set).List()),
-	})
+	}
+	_, err := conn.UpdateGlobalTable(ctx, &input)
 
 	if errs.IsA[*awstypes.GlobalTableNotFoundException](err) || errs.IsA[*awstypes.ReplicaNotFoundException](err) {
 		return diags

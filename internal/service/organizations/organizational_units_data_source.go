@@ -62,7 +62,7 @@ func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceDa
 	children, err := findOrganizationalUnitsForParentByID(ctx, conn, parentID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parentID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Units for parent (%s): %s", parentID, err)
 	}
 
 	d.SetId(parentID)

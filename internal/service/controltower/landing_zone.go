@@ -89,8 +89,6 @@ func resourceLandingZone() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -205,16 +203,17 @@ func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ControlTower Landing Zone: %s", d.Id())
-	output, err := conn.DeleteLandingZone(ctx, &controltower.DeleteLandingZoneInput{
+	input := controltower.DeleteLandingZoneInput{
 		LandingZoneIdentifier: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.DeleteLandingZone(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Landing Zone: %s", err)
 	}
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
-		sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

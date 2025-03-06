@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,10 +77,7 @@ func resourcePlacementGroup() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourcePlacementGroupCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourcePlacementGroupCustomizeDiff,
 	}
 }
 
@@ -91,10 +86,10 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ec2.CreatePlacementGroupInput{
+	input := ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          awstypes.PlacementStrategy(d.Get("strategy").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypePlacementGroup),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
@@ -105,7 +100,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SpreadLevel = awstypes.SpreadLevel(v.(string))
 	}
 
-	_, err := conn.CreatePlacementGroup(ctx, input)
+	_, err := conn.CreatePlacementGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Placement Group (%s): %s", name, err)
@@ -139,10 +134,10 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -152,7 +147,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	setTagsOutV2(ctx, pg.Tags)
+	setTagsOut(ctx, pg.Tags)
 
 	return diags
 }
@@ -170,9 +165,10 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
-	_, err := conn.DeletePlacementGroup(ctx, &ec2.DeletePlacementGroupInput{
+	input := ec2.DeletePlacementGroupInput{
 		GroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeletePlacementGroup(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
 		return diags

@@ -53,12 +53,12 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
-	input := &amp.CreateAlertManagerDefinitionInput{
+	input := amp.CreateAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
 		WorkspaceId: aws.String(workspaceID),
 	}
 
-	_, err := conn.CreateAlertManagerDefinition(ctx, input)
+	_, err := conn.CreateAlertManagerDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Prometheus Alert Manager Definition (%s): %s", workspaceID, err)
@@ -99,12 +99,12 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.PutAlertManagerDefinitionInput{
+	input := amp.PutAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	}
 
-	_, err := conn.PutAlertManagerDefinition(ctx, input)
+	_, err := conn.PutAlertManagerDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
@@ -122,9 +122,10 @@ func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Alert Manager Definition: (%s)", d.Id())
-	_, err := conn.DeleteAlertManagerDefinition(ctx, &amp.DeleteAlertManagerDefinitionInput{
+	input := amp.DeleteAlertManagerDefinitionInput{
 		WorkspaceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAlertManagerDefinition(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -142,11 +143,11 @@ func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.Resourc
 }
 
 func findAlertManagerDefinitionByID(ctx context.Context, conn *amp.Client, id string) (*types.AlertManagerDefinitionDescription, error) {
-	input := &amp.DescribeAlertManagerDefinitionInput{
+	input := amp.DescribeAlertManagerDefinitionInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeAlertManagerDefinition(ctx, input)
+	output, err := conn.DescribeAlertManagerDefinition(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

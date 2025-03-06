@@ -87,7 +87,6 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -206,7 +205,7 @@ func TestAccIAMSessionContextDataSource_notAssumedRoleUser(t *testing.T) {
 			{
 				Config: testAccSessionContextDataSourceConfig_user(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGlobalARN(dataSourceName, names.AttrARN, "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, dataSourceName, names.AttrARN, "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),

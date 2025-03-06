@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_pipeline"
 description: |-
@@ -111,4 +111,4 @@ Using `terraform import`, import pipelines using the `pipelineName`. For example
 % terraform import aws_sagemaker_pipeline.test_pipeline pipeline
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d7d9406278252084fb1f7bd6ecb65a54d0e41065c5781c72cd26376e6a26ee56 -->
+<!-- cache-key: cdktf-0.20.8 input-d7d9406278252084fb1f7bd6ecb65a54d0e41065c5781c72cd26376e6a26ee56 -->

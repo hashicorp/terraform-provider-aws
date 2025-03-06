@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,9 +41,7 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 			Delete: schema.DefaultTimeout(32 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceIPAMPoolCIDRCustomizeDiff,
-		),
+		CustomizeDiff: resourceIPAMPoolCIDRCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -119,12 +116,12 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Cidr = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("netmask_length"); ok {
-		input.NetmaskLength = aws.Int32(int32(v.(int)))
-	}
-
 	if v, ok := d.GetOk("cidr_authorization_context"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CidrAuthorizationContext = expandIPAMCIDRAuthorizationContext(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("netmask_length"); ok {
+		input.NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
 	output, err := conn.ProvisionIpamPoolCidr(ctx, input)
@@ -145,7 +142,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// This resource's ID is a concatenated id of `<cidr>_<poolid>`
 	// ipam_pool_cidr_id was not part of the initial feature release
-	d.SetId(IPAMPoolCIDRCreateResourceID(aws.ToString(ipamPoolCidr.Cidr), poolID))
+	d.SetId(ipamPoolCIDRCreateResourceID(aws.ToString(ipamPoolCidr.Cidr), poolID))
 
 	return append(diags, resourceIPAMPoolCIDRRead(ctx, d, meta)...)
 }
@@ -154,8 +151,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
-
+	cidrBlock, poolID, err := ipamPoolCIDRParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -183,17 +179,17 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
-
+	cidrBlock, poolID, err := ipamPoolCIDRParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())
-	_, err = conn.DeprovisionIpamPoolCidr(ctx, &ec2.DeprovisionIpamPoolCidrInput{
+	input := ec2.DeprovisionIpamPoolCidrInput{
 		Cidr:       aws.String(cidrBlock),
 		IpamPoolId: aws.String(poolID),
-	})
+	}
+	_, err = conn.DeprovisionIpamPoolCidr(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return diags
@@ -213,14 +209,14 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 const ipamPoolCIDRIDSeparator = "_"
 
-func IPAMPoolCIDRCreateResourceID(cidrBlock, poolID string) string {
+func ipamPoolCIDRCreateResourceID(cidrBlock, poolID string) string {
 	parts := []string{cidrBlock, poolID}
 	id := strings.Join(parts, ipamPoolCIDRIDSeparator)
 
 	return id
 }
 
-func IPAMPoolCIDRParseResourceID(id string) (string, string, error) {
+func ipamPoolCIDRParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ipamPoolCIDRIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

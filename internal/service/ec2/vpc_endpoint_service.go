@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,7 +31,7 @@ import (
 // @SDKResource("aws_vpc_endpoint_service", name="VPC Endpoint Service")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVPCEndpointService() *schema.Resource {
+func resourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointServiceCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointServiceRead,
@@ -138,6 +139,14 @@ func ResourceVPCEndpointService() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectivityType](),
 				},
 			},
+			"supported_regions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -147,8 +156,6 @@ func ResourceVPCEndpointService() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -159,7 +166,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
 		ClientToken:        aws.String(id.UniqueId()),
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpointService),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpointService),
 	}
 
 	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok && v.(*schema.Set).Len() > 0 {
@@ -178,7 +185,10 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 		input.SupportedIpAddressTypes = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC Endpoint Service: %v", input)
+	if v, ok := d.GetOk("supported_regions"); ok && v.(*schema.Set).Len() > 0 {
+		input.SupportedRegions = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	output, err := conn.CreateVpcEndpointServiceConfiguration(ctx, input)
 
 	if err != nil {
@@ -223,10 +233,10 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -252,8 +262,9 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set(names.AttrState, svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", svcCfg.SupportedIpAddressTypes)
+	d.Set("supported_regions", flattenSupportedRegionDetails(svcCfg.SupportedRegions))
 
-	setTagsOutV2(ctx, svcCfg.Tags)
+	setTagsOut(ctx, svcCfg.Tags)
 
 	allowedPrincipals, err := findVPCEndpointServicePermissionsByServiceID(ctx, conn, d.Id())
 
@@ -270,7 +281,7 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name", "supported_ip_address_types") {
+	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name", "supported_ip_address_types", "supported_regions") {
 		input := &ec2.ModifyVpcEndpointServiceConfigurationInput{
 			ServiceId: aws.String(d.Id()),
 		}
@@ -287,8 +298,8 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		input.AddSupportedIpAddressTypes, input.RemoveSupportedIpAddressTypes = flattenAddAndRemoveStringValueLists(d, "supported_ip_address_types")
+		input.AddSupportedRegions, input.RemoveSupportedRegions = flattenAddAndRemoveStringValueLists(d, "supported_regions")
 
-		log.Printf("[DEBUG] Updating EC2 VPC Endpoint Service: %v", input)
 		_, err := conn.ModifyVpcEndpointServiceConfiguration(ctx, input)
 
 		if err != nil {
@@ -320,12 +331,13 @@ func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPC Endpoint Service: %s", d.Id())
-	output, err := conn.DeleteVpcEndpointServiceConfigurations(ctx, &ec2.DeleteVpcEndpointServiceConfigurationsInput{
+	input := ec2.DeleteVpcEndpointServiceConfigurationsInput{
 		ServiceIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteVpcEndpointServiceConfigurations(ctx, &input)
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceNotFound) {
@@ -343,18 +355,14 @@ func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func flattenAllowedPrincipals(apiObjects []awstypes.AllowedPrincipal) []*string {
+func flattenAllowedPrincipals(apiObjects []awstypes.AllowedPrincipal) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []*string
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, apiObject.Principal)
-	}
-
-	return tfList
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.AllowedPrincipal) string {
+		return aws.ToString(v.Principal)
+	})
 }
 
 func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfiguration) map[string]interface{} {
@@ -381,4 +389,18 @@ func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfig
 	}
 
 	return tfMap
+}
+
+func flattenSupportedRegionDetails(apiObjects []awstypes.SupportedRegionDetail) []string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	apiObjects = tfslices.Filter(apiObjects, func(v awstypes.SupportedRegionDetail) bool {
+		return aws.ToString(v.ServiceState) == supportedRegionServiceStateAvailable
+	})
+
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SupportedRegionDetail) string {
+		return aws.ToString(v.Region)
+	})
 }

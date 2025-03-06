@@ -48,12 +48,20 @@ func resourceEIPAssociation() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ExactlyOneOf: []string{
+					names.AttrInstanceID,
+					names.AttrNetworkInterfaceID,
+				},
 			},
 			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ExactlyOneOf: []string{
+					names.AttrInstanceID,
+					names.AttrNetworkInterfaceID,
+				},
 			},
 			"private_ip_address": {
 				Type:     schema.TypeString,
@@ -75,7 +83,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.AssociateAddressInput{}
+	input := ec2.AssociateAddressInput{}
 
 	if v, ok := d.GetOk("allocation_id"); ok {
 		input.AllocationId = aws.String(v.(string))
@@ -101,7 +109,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PublicIp = aws.String(v.(string))
 	}
 
-	output, err := conn.AssociateAddress(ctx, input)
+	output, err := conn.AssociateAddress(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP Association: %s", err)
@@ -171,12 +179,10 @@ func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
 	}
 
-	input := &ec2.DisassociateAddressInput{
+	input := ec2.DisassociateAddressInput{
 		AssociationId: aws.String(d.Id()),
 	}
-
-	log.Printf("[DEBUG] Deleting EC2 EIP Association: %s", d.Id())
-	_, err := conn.DisassociateAddress(ctx, input)
+	_, err := conn.DisassociateAddress(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return diags

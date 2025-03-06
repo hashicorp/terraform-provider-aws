@@ -14,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_datapipeline_pipeline")
-func DataSourcePipeline() *schema.Resource {
+// @SDKDataSource("aws_datapipeline_pipeline", name="Pipeline")
+// @Tags
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Pipeline")
+func dataSourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePipelineRead,
 
@@ -40,27 +42,20 @@ func DataSourcePipeline() *schema.Resource {
 func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
 	pipelineId := d.Get("pipeline_id").(string)
 
-	v, err := PipelineRetrieve(ctx, pipelineId, conn)
+	v, err := findPipeline(ctx, conn, pipelineId)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}
 
+	d.SetId(pipelineId)
 	d.Set(names.AttrName, v.Name)
 	d.Set(names.AttrDescription, v.Description)
 
-	tags := KeyValueTags(ctx, v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	d.SetId(pipelineId)
+	setTagsOut(ctx, v.Tags)
 
 	return diags
 }

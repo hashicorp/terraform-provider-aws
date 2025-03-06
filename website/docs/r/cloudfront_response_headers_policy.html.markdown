@@ -64,7 +64,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 ```
 
-The example below creates a CloudFront response headers policy with a custom headers config and server timing headers config.
+The example below creates a CloudFront response headers policy with a custom headers config, remove headers config and server timing headers config.
 
 ```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
@@ -75,6 +75,12 @@ resource "aws_cloudfront_response_headers_policy" "example" {
       header   = "X-Permitted-Cross-Domain-Policies"
       override = true
       value    = "none"
+    }
+  }
+
+  remove_headers_config {
+    items {
+      header = "Set-Cookie"
     }
   }
 

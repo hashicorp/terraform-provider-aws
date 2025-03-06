@@ -14,19 +14,20 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"slices"
-	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
 	const (
-		filename = `service_package_gen.go`
+		filename                 = `service_package_gen.go`
+		endpointResolverFilename = `service_endpoint_resolver_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -48,13 +49,18 @@ func main() {
 			continue
 		}
 
+		if l.IsClientSDKV1() && l.GenerateClient() {
+			g.Fatalf("cannot generate AWS SDK for Go v1 client")
+		}
+
 		// Look for Terraform Plugin Framework and SDK resource and data source annotations.
 		// These annotations are implemented as comments on factory functions.
 		v := &visitor{
 			g: g,
 
-			frameworkDataSources: make([]ResourceDatum, 0),
-			frameworkResources:   make([]ResourceDatum, 0),
+			ephemeralResources:   make(map[string]ResourceDatum, 0),
+			frameworkDataSources: make(map[string]ResourceDatum, 0),
+			frameworkResources:   make(map[string]ResourceDatum, 0),
 			sdkDataSources:       make(map[string]ResourceDatum),
 			sdkResources:         make(map[string]ResourceDatum),
 		}
@@ -66,37 +72,42 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			SkipClientGenerate:   l.SkipClientGenerate(),
-			GoV1Package:          l.GoV1Package(),
-			GoV2Package:          l.GoV2Package(),
-			ProviderPackage:      p,
-			ProviderNameUpper:    l.ProviderNameUpper(),
-			FrameworkDataSources: v.frameworkDataSources,
-			FrameworkResources:   v.frameworkResources,
-			SDKDataSources:       v.sdkDataSources,
-			SDKResources:         v.sdkResources,
+			GenerateClient:          l.GenerateClient(),
+			EndpointRegionOverrides: l.EndpointRegionOverrides(),
+			GoV2Package:             l.GoV2Package(),
+			ProviderPackage:         p,
+			ProviderNameUpper:       l.ProviderNameUpper(),
+			EphemeralResources:      v.ephemeralResources,
+			FrameworkDataSources:    v.frameworkDataSources,
+			FrameworkResources:      v.frameworkResources,
+			SDKDataSources:          v.sdkDataSources,
+			SDKResources:            v.sdkResources,
 		}
-
-		s.SDKVersion = l.SDKVersion()
-		if l.ClientSDKV1() {
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
+		templateFuncMap := template.FuncMap{
+			"Camel": names.ToCamelCase,
 		}
-
-		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
-			return s.FrameworkDataSources[i].FactoryName < s.FrameworkDataSources[j].FactoryName
-		})
-		sort.SliceStable(s.FrameworkResources, func(i, j int) bool {
-			return s.FrameworkResources[i].FactoryName < s.FrameworkResources[j].FactoryName
-		})
-
 		d := g.NewGoFileDestination(filename)
 
-		if err := d.WriteTemplate("servicepackagedata", tmpl, s); err != nil {
-			g.Fatalf("error generating %s service package data: %s", p, err)
+		if err := d.BufferTemplate("servicepackagedata", tmpl, s, templateFuncMap); err != nil {
+			g.Fatalf("generating %s service package data: %s", p, err)
 		}
 
 		if err := d.Write(); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
+		}
+
+		if p != "meta" && !l.IsClientSDKV1() {
+			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilename)
+
+			d = g.NewGoFileDestination(endpointResolverFilename)
+
+			if err := d.BufferTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
+				g.Fatalf("generating %s endpoint resolver: %s", p, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", endpointResolverFilename, err)
+			}
 		}
 
 		break
@@ -112,25 +123,28 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
-	SkipClientGenerate   bool
-	SDKVersion           string // AWS SDK for Go version ("1", "2" or "1,2")
-	GoV1Package          string // AWS SDK for Go v1 package name
-	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name
-	GoV2Package          string // AWS SDK for Go v2 package name
-	ProviderPackage      string
-	ProviderNameUpper    string
-	FrameworkDataSources []ResourceDatum
-	FrameworkResources   []ResourceDatum
-	SDKDataSources       map[string]ResourceDatum
-	SDKResources         map[string]ResourceDatum
+	GenerateClient          bool
+	EndpointRegionOverrides map[string]string
+	GoV2Package             string // AWS SDK for Go v2 package name
+	ProviderPackage         string
+	ProviderNameUpper       string
+	EphemeralResources      map[string]ResourceDatum
+	FrameworkDataSources    map[string]ResourceDatum
+	FrameworkResources      map[string]ResourceDatum
+	SDKDataSources          map[string]ResourceDatum
+	SDKResources            map[string]ResourceDatum
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string
+
+//go:embed endpoint_resolver.go.gtpl
+var endpointResolverTmpl string
 
 // Annotation processing.
 var (
-	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
+	annotation    = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
+	validTypeName = regexache.MustCompile(`^aws(?:_[a-z0-9]+)+$`)
 )
 
 type visitor struct {
@@ -141,8 +155,9 @@ type visitor struct {
 	functionName string
 	packageName  string
 
-	frameworkDataSources []ResourceDatum
-	frameworkResources   []ResourceDatum
+	ephemeralResources   map[string]ResourceDatum
+	frameworkDataSources map[string]ResourceDatum
+	frameworkResources   map[string]ResourceDatum
 	sdkDataSources       map[string]ResourceDatum
 	sdkResources         map[string]ResourceDatum
 }
@@ -224,17 +239,74 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			switch annotationName := m[1]; annotationName {
-			case "FrameworkDataSource":
-				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			case "EphemeralResource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.ephemeralResources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					v.frameworkDataSources = append(v.frameworkDataSources, d)
+					v.ephemeralResources[typeName] = d
+				}
+			case "FrameworkDataSource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.frameworkDataSources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.frameworkDataSources[typeName] = d
 				}
 			case "FrameworkResource":
-				if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.frameworkResources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					v.frameworkResources = append(v.frameworkResources, d)
+					v.frameworkResources[typeName] = d
 				}
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
@@ -243,6 +315,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if _, ok := v.sdkDataSources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -256,6 +338,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if _, ok := v.sdkResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

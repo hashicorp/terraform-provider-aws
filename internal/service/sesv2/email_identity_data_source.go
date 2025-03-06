@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sesv2_email_identity")
+// @SDKDataSource("aws_sesv2_email_identity", name="Email Identity")
 // @Tags(identifierAttribute="arn")
-func DataSourceEmailIdentity() *schema.Resource {
+func dataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 
@@ -89,7 +89,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 }
 
 const (
-	DSNameEmailIdentity = "Email Identity Data Source"
+	dsNameEmailIdentity = "Email Identity Data Source"
 )
 
 func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -98,15 +98,13 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get("email_identity").(string)
 
-	out, err := FindEmailIdentityByID(ctx, conn, name)
+	out, err := findEmailIdentityByID(ctx, conn, name)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameEmailIdentity, name, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameEmailIdentity, name, err)
 	}
 
-	arn := emailIdentityNameToARN(meta, name)
-
 	d.SetId(name)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, emailIdentityARN(ctx, meta.(*conns.AWSClient), name))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", name)
 
@@ -116,7 +114,7 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
 		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, name, err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, dsNameEmailIdentity, name, err)
 		}
 	} else {
 		d.Set("dkim_signing_attributes", nil)

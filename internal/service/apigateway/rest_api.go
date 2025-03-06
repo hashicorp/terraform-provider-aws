@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -173,8 +172,6 @@ func resourceRestAPI() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -183,7 +180,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &apigateway.CreateRestApiInput{
+	input := apigateway.CreateRestApiInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
@@ -225,7 +222,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Policy = aws.String(policy)
 	}
 
-	output, err := conn.CreateRestApi(ctx, input)
+	output, err := conn.CreateRestApi(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway REST API (%s): %s", name, err)
@@ -239,7 +236,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		// The VPC endpoints deletion and immediate recreation can cause a race condition.
 		// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
 		// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
-		input := &apigateway.PutRestApiInput{
+		input := apigateway.PutRestApiInput{
 			Body:      []byte(body.(string)),
 			Mode:      types.PutMode(modeConfigOrDefault(d)),
 			RestApiId: aws.String(d.Id()),
@@ -253,7 +250,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 		}
 
-		api, err := conn.PutRestApi(ctx, input)
+		api, err := conn.PutRestApi(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating API Gateway REST API (%s) specification: %s", d.Id(), err)
@@ -263,12 +260,12 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		// that was done with CreateRestApi. Reconcile these changes by having
 		// any Terraform configured values overwrite imported configuration.
 		if operations := resourceRestAPIWithBodyUpdateOperations(d, api); len(operations) > 0 {
-			input := &apigateway.UpdateRestApiInput{
+			input := apigateway.UpdateRestApiInput{
 				PatchOperations: operations,
 				RestApiId:       aws.String(d.Id()),
 			}
 
-			_, err := conn.UpdateRestApi(ctx, input)
+			_, err := conn.UpdateRestApi(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
@@ -296,7 +293,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("api_key_source", api.ApiKeySource)
-	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
@@ -304,7 +301,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
@@ -312,11 +309,10 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set(names.AttrName, api.Name)
 
-	input := &apigateway.GetResourcesInput{
+	input := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
-
-	rootResource, err := findResource(ctx, conn, input, func(v *types.Resource) bool {
+	rootResource, err := findResource(ctx, conn, &input, func(v *types.Resource) bool {
 		return aws.ToString(v.Path) == "/"
 	})
 
@@ -490,11 +486,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if len(operations) > 0 {
-			_, err := conn.UpdateRestApi(ctx, &apigateway.UpdateRestApiInput{
+			input := apigateway.UpdateRestApiInput{
 				PatchOperations: operations,
 				RestApiId:       aws.String(d.Id()),
-			})
-
+			}
+			_, err := conn.UpdateRestApi(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s): %s", d.Id(), err)
 			}
@@ -507,7 +503,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				// The VPC endpoints deletion and immediate recreation can cause a race condition.
 				// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
 				// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
-				input := &apigateway.PutRestApiInput{
+				input := apigateway.PutRestApiInput{
 					Body:      []byte(body.(string)),
 					Mode:      types.PutMode(modeConfigOrDefault(d)),
 					RestApiId: aws.String(d.Id()),
@@ -521,7 +517,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 				}
 
-				output, err := conn.PutRestApi(ctx, input)
+				output, err := conn.PutRestApi(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) specification: %s", d.Id(), err)
@@ -531,12 +527,12 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				// that was done previously. Reconcile these changes by having
 				// any Terraform configured values overwrite imported configuration.
 				if operations := resourceRestAPIWithBodyUpdateOperations(d, output); len(operations) > 0 {
-					input := &apigateway.UpdateRestApiInput{
+					input := apigateway.UpdateRestApiInput{
 						PatchOperations: operations,
 						RestApiId:       aws.String(d.Id()),
 					}
 
-					_, err := conn.UpdateRestApi(ctx, input)
+					_, err := conn.UpdateRestApi(ctx, &input)
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
@@ -554,9 +550,10 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway REST API: %s", d.Id())
-	_, err := conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
+	input := apigateway.DeleteRestApiInput{
 		RestApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRestApi(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -570,11 +567,10 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func findRestAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetRestApiOutput, error) {
-	input := &apigateway.GetRestApiInput{
+	input := apigateway.GetRestApiInput{
 		RestApiId: aws.String(id),
 	}
-
-	output, err := conn.GetRestApi(ctx, input)
+	output, err := conn.GetRestApi(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -781,21 +777,10 @@ func flattenAPIPolicy(apiObject *string) (string, error) {
 	return policy, nil
 }
 
-func apiARN(c *conns.AWSClient, apiID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/restapis/%s", apiID),
-	}.String()
+func apiARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s", apiID))
 }
 
-func apiInvokeARN(c *conns.AWSClient, apiID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  apiID,
-	}.String()
+func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARN(ctx, "execute-api", apiID)
 }

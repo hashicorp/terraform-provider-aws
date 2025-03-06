@@ -240,6 +240,12 @@ service/applicationinsights:
           - any-glob-to-any-file:
               - 'internal/service/applicationinsights/**/*'
               - 'website/**/applicationinsights_*'
+service/applicationsignals:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/applicationsignals/**/*'
+              - 'website/**/applicationsignals_*'
 service/appmesh:
   - any:
       - changed-files:
@@ -325,6 +331,12 @@ service/bedrockagent:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
               - 'website/**/bedrockagent_*'
+service/billing:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/billing/**/*'
+              - 'website/**/billing_*'
 service/billingconductor:
   - any:
       - changed-files:
@@ -465,6 +477,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_dashboard*'
               - 'website/**/cloudwatch_metric_*'
               - 'website/**/cloudwatch_composite_*'
+              - 'website/**/cloudwatch_contributor_*'
 service/codeartifact:
   - any:
       - changed-files:
@@ -489,6 +502,12 @@ service/codecommit:
           - any-glob-to-any-file:
               - 'internal/service/codecommit/**/*'
               - 'website/**/codecommit_*'
+service/codeconnections:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/codeconnections/**/*'
+              - 'website/**/codeconnections_*'
 service/codeguruprofiler:
   - any:
       - changed-files:
@@ -1062,6 +1081,12 @@ service/internetmonitor:
           - any-glob-to-any-file:
               - 'internal/service/internetmonitor/**/*'
               - 'website/**/internetmonitor_*'
+service/invoicing:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/invoicing/**/*'
+              - 'website/**/invoicing_*'
 service/iot:
   - any:
       - changed-files:
@@ -1454,6 +1479,7 @@ service/meta:
               - 'website/**/partition*'
               - 'website/**/region*'
               - 'website/**/service\.*'
+              - 'website/**/service_principal*'
 service/mgh:
   - any:
       - changed-files:
@@ -1532,6 +1558,12 @@ service/networkmanager:
           - any-glob-to-any-file:
               - 'internal/service/networkmanager/**/*'
               - 'website/**/networkmanager_*'
+service/networkmonitor:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networkmonitor/**/*'
+              - 'website/**/networkmonitor_*'
 service/nimble:
   - any:
       - changed-files:
@@ -1604,6 +1636,12 @@ service/pcaconnectorad:
           - any-glob-to-any-file:
               - 'internal/service/pcaconnectorad/**/*'
               - 'website/**/pcaconnectorad_*'
+service/pcs:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pcs/**/*'
+              - 'website/**/pcs_*'
 service/personalize:
   - any:
       - changed-files:
@@ -1646,6 +1684,12 @@ service/pinpointsmsvoice:
           - any-glob-to-any-file:
               - 'internal/service/pinpointsmsvoice/**/*'
               - 'website/**/pinpointsmsvoice_*'
+service/pinpointsmsvoicev2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pinpointsmsvoicev2/**/*'
+              - 'website/**/pinpointsmsvoicev2_*'
 service/pipes:
   - any:
       - changed-files:
@@ -1859,6 +1903,12 @@ service/s3outposts:
           - any-glob-to-any-file:
               - 'internal/service/s3outposts/**/*'
               - 'website/**/s3outposts_*'
+service/s3tables:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3tables/**/*'
+              - 'website/**/s3tables_*'
 service/sagemaker:
   - any:
       - changed-files:
@@ -2039,6 +2089,12 @@ service/ssmincidents:
           - any-glob-to-any-file:
               - 'internal/service/ssmincidents/**/*'
               - 'website/**/ssmincidents_*'
+service/ssmquicksetup:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/ssmquicksetup/**/*'
+              - 'website/**/ssmquicksetup_*'
 service/ssmsap:
   - any:
       - changed-files:
@@ -2093,6 +2149,12 @@ service/synthetics:
           - any-glob-to-any-file:
               - 'internal/service/synthetics/**/*'
               - 'website/**/synthetics_*'
+service/taxsettings:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/taxsettings/**/*'
+              - 'website/**/taxsettings_*'
 service/textract:
   - any:
       - changed-files:
@@ -2198,6 +2260,7 @@ service/vpc:
               - 'website/**/vpc_security_group_*'
               - 'website/**/vpc\.*'
               - 'website/**/vpcs\.*'
+              - 'website/**/vpc_block_public_access_*'
 service/vpclattice:
   - any:
       - changed-files:

@@ -251,6 +251,20 @@ func resourceProject() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ComputeType](),
 						},
+						"fleet": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"fleet_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"environment_variable": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -707,7 +721,6 @@ func resourceProject() *schema.Resource {
 				}
 				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
@@ -892,7 +905,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting logs_config: %s", err)
 	}
 	d.Set(names.AttrName, project.Name)
-	d.Set("project_visibility", project.ProjectVisibility)
+	if v := project.ProjectVisibility; v != "" {
+		d.Set("project_visibility", project.ProjectVisibility)
+	} else {
+		d.Set("project_visibility", types.ProjectVisibilityTypePrivate)
+	}
 	d.Set("public_project_alias", project.PublicProjectAlias)
 	d.Set("resource_access_role", project.ResourceAccessRole)
 	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
@@ -978,7 +995,11 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("concurrent_build_limit") {
-			input.ConcurrentBuildLimit = aws.Int32(int32(d.Get("concurrent_build_limit").(int)))
+			if v := int32(d.Get("concurrent_build_limit").(int)); v != 0 {
+				input.ConcurrentBuildLimit = aws.Int32(v)
+			} else {
+				input.ConcurrentBuildLimit = aws.Int32(-1)
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -998,6 +1019,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("file_system_locations") {
 			if v, ok := d.GetOk("file_system_locations"); ok && v.(*schema.Set).Len() > 0 {
 				input.FileSystemLocations = expandProjectFileSystemLocations(v.(*schema.Set).List())
+			} else {
+				input.FileSystemLocations = []types.ProjectFileSystemLocation{}
 			}
 		}
 
@@ -1080,9 +1103,10 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Project: %s", d.Id())
-	_, err := conn.DeleteProject(ctx, &codebuild.DeleteProjectInput{
+	input := codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Project (%s): %s", d.Id(), err)
@@ -1328,6 +1352,18 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 
 	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
 		apiObject.ComputeType = types.ComputeType(v)
+	}
+
+	if v, ok := tfMap["fleet"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		projectFleet := &types.ProjectFleet{}
+
+		if v, ok := tfMap["fleet_arn"]; ok && v.(string) != "" {
+			projectFleet.FleetArn = aws.String(v.(string))
+		}
+
+		apiObject.Fleet = projectFleet
 	}
 
 	if v, ok := tfMap["image"].(string); ok && v != "" {
@@ -1797,6 +1833,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []interface{
 		names.AttrType:                apiObject.Type,
 	}
 
+	tfMap["fleet"] = flattenFleet(apiObject.Fleet)
 	tfMap["image"] = aws.ToString(apiObject.Image)
 	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
 	tfMap["privileged_mode"] = aws.ToBool(apiObject.PrivilegedMode)
@@ -1804,6 +1841,18 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []interface{
 
 	if apiObject.EnvironmentVariables != nil {
 		tfMap["environment_variable"] = flattenEnvironmentVariables(apiObject.EnvironmentVariables)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFleet(apiObject *types.ProjectFleet) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"fleet_arn": aws.ToString(apiObject.FleetArn),
 	}
 
 	return []interface{}{tfMap}

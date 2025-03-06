@@ -135,7 +135,6 @@ func resourceStack() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			customdiff.ComputedIf("outputs", stackHasActualChanges),
 		),
 	}
@@ -351,10 +350,11 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Deleting CloudFormation Stack: %s", d.Id())
 	requestToken := id.UniqueId()
-	_, err := conn.DeleteStack(ctx, &cloudformation.DeleteStackInput{
+	input := cloudformation.DeleteStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStack(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeValidationError) {
 		return diags
@@ -549,16 +549,20 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 		minTimeout = 5 * time.Second
 	)
 	stateConf := retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
-		Target:     enum.Slice(awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed),
-		Timeout:    timeout,
-		MinTimeout: minTimeout,
-		Delay:      10 * time.Second,
-		Refresh:    statusStack(ctx, conn, name),
+		Pending:        enum.Slice(awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
+		Target:         enum.Slice(awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed),
+		Timeout:        timeout,
+		MinTimeout:     minTimeout,
+		Delay:          10 * time.Second,
+		Refresh:        statusStack(ctx, conn, name),
+		NotFoundChecks: 1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
+	switch {
+	case tfresource.NotFound(err):
+		return nil, nil
+	case err != nil:
 		return nil, err
 	}
 

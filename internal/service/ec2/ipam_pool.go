@@ -131,6 +131,7 @@ func resourceIPAMPool() *schema.Resource {
 			"publicly_advertisable": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"source_ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -144,8 +145,6 @@ func resourceIPAMPool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -153,12 +152,14 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
+	scopeID := d.Get("ipam_scope_id").(string)
+
 	addressFamily := awstypes.AddressFamily(d.Get("address_family").(string))
 	input := &ec2.CreateIpamPoolInput{
 		AddressFamily:     addressFamily,
 		ClientToken:       aws.String(id.UniqueId()),
-		IpamScopeId:       aws.String(d.Get("ipam_scope_id").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamPool),
+		IpamScopeId:       aws.String(scopeID),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamPool),
 	}
 
 	if v, ok := d.GetOk("allocation_default_netmask_length"); ok {
@@ -193,15 +194,18 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AwsService = awstypes.IpamPoolAwsService(v.(string))
 	}
 
-	var publicIpSource awstypes.IpamPoolPublicIpSource
 	if v, ok := d.GetOk("public_ip_source"); ok {
-		publicIpSource = awstypes.IpamPoolPublicIpSource(v.(string))
-		input.PublicIpSource = publicIpSource
+		input.PublicIpSource = awstypes.IpamPoolPublicIpSource(v.(string))
 	}
 
-	// PubliclyAdvertisable must be set if if the AddressFamily is IPv6 and PublicIpSource is byoip.
-	// The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.
-	if addressFamily == awstypes.AddressFamilyIpv6 && publicIpSource != awstypes.IpamPoolPublicIpSourceAmazon {
+	scope, err := findIPAMScopeByID(ctx, conn, scopeID)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Scope (%s): %s", scopeID, err)
+	}
+
+	// PubliclyAdvertisable must be set if if the AddressFamily is IPv6 and PublicIpSource is byoip (either '' or 'byoip').
+	// The request can't contain PubliclyAdvertisable if PublicIpSource is 'amazon'.
+	if addressFamily == awstypes.AddressFamilyIpv6 && scope.IpamScopeType == awstypes.IpamScopeTypePublic && input.PublicIpSource != awstypes.IpamPoolPublicIpSourceAmazon {
 		input.PubliclyAdvertisable = aws.Bool(d.Get("publicly_advertisable").(bool))
 	}
 
@@ -241,7 +245,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("address_family", pool.AddressFamily)
-	d.Set("allocation_resource_tags", keyValueTagsV2(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", keyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set(names.AttrARN, pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -256,7 +260,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set(names.AttrState, pool.State)
 
-	setTagsOutV2(ctx, pool.Tags)
+	setTagsOut(ctx, pool.Tags)
 
 	return diags
 }

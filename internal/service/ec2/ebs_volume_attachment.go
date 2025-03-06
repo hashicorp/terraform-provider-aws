@@ -106,17 +106,17 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet.
-		if _, err := waitVolumeAttachmentInstanceReady(ctx, conn, instanceID, InstanceReadyTimeout); err != nil {
+		if _, err := waitVolumeAttachmentInstanceReady(ctx, conn, instanceID, instanceReadyTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) to be ready: %s", instanceID, err)
 		}
 
-		input := &ec2.AttachVolumeInput{
+		input := ec2.AttachVolumeInput{
 			Device:     aws.String(deviceName),
 			InstanceId: aws.String(instanceID),
 			VolumeId:   aws.String(volumeID),
 		}
 
-		_, err := conn.AttachVolume(ctx, input)
+		_, err := conn.AttachVolume(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching EBS Volume (%s) to EC2 Instance (%s): %s", volumeID, instanceID, err)
@@ -169,12 +169,12 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	volumeID := d.Get("volume_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
-		if err := stopVolumeAttachmentInstance(ctx, conn, instanceID, false, InstanceStopTimeout); err != nil {
+		if err := stopVolumeAttachmentInstance(ctx, conn, instanceID, false, instanceStopTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 		}
 	}
 
-	input := &ec2.DetachVolumeInput{
+	input := ec2.DetachVolumeInput{
 		Device:     aws.String(deviceName),
 		Force:      aws.Bool(d.Get("force_detach").(bool)),
 		InstanceId: aws.String(instanceID),
@@ -182,7 +182,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume Attachment: %s", d.Id())
-	_, err := conn.DetachVolume(ctx, input)
+	_, err := conn.DetachVolume(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeIncorrectState, "available") {
 		return diags
@@ -209,15 +209,15 @@ func volumeAttachmentID(name, volumeID, instanceID string) string {
 }
 
 func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
-	input := &ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+	input := ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.device":      deviceName,
 			"attachment.instance-id": instanceID,
 		}),
 		VolumeIds: []string{volumeID},
 	}
 
-	output, err := findEBSVolume(ctx, conn, input)
+	output, err := findEBSVolume(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -255,10 +255,11 @@ func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id stri
 		"ec2_instance_id": id,
 		"force":           force,
 	})
-	_, err := conn.StopInstances(ctx, &ec2.StopInstancesInput{
+	input := ec2.StopInstancesInput{
 		Force:       aws.Bool(force),
 		InstanceIds: []string{id},
-	})
+	}
+	_, err := conn.StopInstances(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)

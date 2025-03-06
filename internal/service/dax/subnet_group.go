@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dax_subnet_group")
+// @SDKResource("aws_dax_subnet_group", name="Subnet Group")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -80,9 +80,10 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
-	resp, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+	input := dax.DescribeSubnetGroupsInput{
 		SubnetGroupNames: []string{d.Id()},
-	})
+	}
+	resp, err := conn.DescribeSubnetGroups(ctx, &input)
 
 	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
 		log.Printf("[WARN] DAX Subnet Group %q not found, removing from state", d.Id())

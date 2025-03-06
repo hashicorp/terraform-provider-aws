@@ -45,7 +45,6 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 		"ApiMappingKey":      testAccAPIMapping_key,
 	}
 	for name, tc := range testCases { //nolint:paralleltest
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t, rName, &certificateARN)
 		})
@@ -174,13 +173,14 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-		output, err := conn.ImportCertificate(ctx, &acm.ImportCertificateInput{
+		input := acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
 			Tags: tfacm.Tags(tftags.New(ctx, map[string]interface{}{
 				"Name": rName,
 			}).IgnoreAWS()),
-		})
+		}
+		output, err := conn.ImportCertificate(ctx, &input)
 
 		if err != nil {
 			return err

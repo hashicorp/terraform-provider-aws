@@ -4,7 +4,6 @@
 package appsync_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -40,12 +39,14 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtDisappears:        testAccGraphQLAPI_disappears,
 			"tags":                      testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
+			"apiType":                   testAccGraphQLAPI_apiType,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
 			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
 			"AuthenticationType_amazonCognitoUserPools":           testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
 			"AuthenticationType_openIDConnect":                    testAccGraphQLAPI_AuthenticationType_openIDConnect,
 			"AuthenticationType_awsLambda":                        testAccGraphQLAPI_AuthenticationType_lambda,
+			"enhancedMetricsConfig":                               testAccGraphQLAPI_enhancedMetricsConfig,
 			"log":                                                 testAccGraphQLAPI_log,
 			"Log_fieldLogLevel":                                   testAccGraphQLAPI_Log_fieldLogLevel,
 			"Log_excludeVerboseContent":                           testAccGraphQLAPI_Log_excludeVerboseContent,
@@ -109,19 +110,12 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDomainNameAPIAssociation_basic,
 			acctest.CtDisappears: testAccDomainNameAPIAssociation_disappears,
 		},
+		"SourceApiAssociation": {
+			acctest.CtBasic:      testAccAppSyncSourceAPIAssociation_basic,
+			acctest.CtDisappears: testAccAppSyncSourceAPIAssociation_disappears,
+			"update":             testAccAppSyncSourceAPIAssociation_update,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func getCertDomain(t *testing.T) string {
-	value := os.Getenv("AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	if value == "" {
-		t.Skip(
-			"Environment variable AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN is not set. " +
-				"This environment variable must be set to any non-empty value " +
-				"to enable the test.")
-	}
-
-	return value
 }

@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,10 +55,13 @@ func resourceSpotInstanceRequest() *schema.Resource {
 					continue
 				}
 				// tags_all is Optional+Computed.
-				if k == names.AttrTags || k == names.AttrTagsAll {
+				if k == names.AttrTags || k == names.AttrTagsAll || k == "volume_tags" {
 					continue
 				}
-				v.ForceNew = true
+				// Copy-on-write
+				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				x.ForceNew = true
+				s[k] = &x
 			}
 
 			// Remove attributes added for spot instances.
@@ -130,11 +131,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
-			s["volume_tags"] = &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -143,10 +139,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 
 			return s
 		}(),
-
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
@@ -159,7 +151,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ec2.RequestSpotInstancesInput{
+	input := ec2.RequestSpotInstancesInput{
 		ClientToken: aws.String(id.UniqueId()),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -181,7 +173,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 			NetworkInterfaces:   instanceOpts.NetworkInterfaces,
 		},
 		SpotPrice:         aws.String(d.Get("spot_price").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSpotInstancesRequest),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSpotInstancesRequest),
 		Type:              awstypes.SpotInstanceType(d.Get("spot_type").(string)),
 	}
 
@@ -210,7 +202,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.RequestSpotInstances(ctx, input)
+			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -278,7 +270,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	setTagsOutV2(ctx, request.Tags)
+	setTagsOut(ctx, request.Tags)
 
 	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.ToTime(request.ValidFrom).Format(time.RFC3339))
@@ -305,9 +297,10 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
-	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+	input := ec2.CancelSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.CancelSpotInstanceRequests(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
 		return diags

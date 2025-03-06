@@ -40,9 +40,10 @@ func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.ModifyEbsDefaultKmsKeyId(ctx, &ec2.ModifyEbsDefaultKmsKeyIdInput{
+	input := ec2.ModifyEbsDefaultKmsKeyIdInput{
 		KmsKeyId: aws.String(d.Get("key_arn").(string)),
-	})
+	}
+	resp, err := conn.ModifyEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS default KMS key: %s", err)
 	}
@@ -56,7 +57,8 @@ func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+	input := ec2.GetEbsDefaultKmsKeyIdInput{}
+	resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
@@ -70,7 +72,8 @@ func resourceEBSDefaultKMSKeyDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.ResetEbsDefaultKmsKeyId(ctx, &ec2.ResetEbsDefaultKmsKeyIdInput{})
+	input := ec2.ResetEbsDefaultKmsKeyIdInput{}
+	_, err := conn.ResetEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EBS default KMS key: %s", err)
 	}

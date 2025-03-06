@@ -77,7 +77,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 
 	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.SetRepositoryPolicy(ctx, input)
-	}, "Invalid repository policy provided")
+	}, "Principal not found")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ECR Repository Policy (%s): %s", repositoryName, err)

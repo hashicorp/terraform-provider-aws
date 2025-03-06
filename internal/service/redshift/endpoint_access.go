@@ -8,13 +8,14 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -119,7 +120,7 @@ func resourceEndpointAccess() *schema.Resource {
 
 func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	createOpts := redshift.CreateEndpointAccessInput{
 		EndpointName:    aws.String(d.Get("endpoint_name").(string)),
@@ -127,7 +128,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		createOpts.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
@@ -138,12 +139,12 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		createOpts.ResourceOwner = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateEndpointAccessWithContext(ctx, &createOpts)
+	_, err := conn.CreateEndpointAccess(ctx, &createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift endpoint access: %s", err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.EndpointName))
+	d.SetId(aws.ToString(createOpts.EndpointName))
 	log.Printf("[INFO] Redshift endpoint access ID: %s", d.Id())
 
 	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
@@ -155,7 +156,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	endpoint, err := findEndpointAccessByName(ctx, conn, d.Id())
 
@@ -186,7 +187,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	if d.HasChanges(names.AttrVPCSecurityGroupIDs) {
 		_, n := d.GetChange(names.AttrVPCSecurityGroupIDs)
@@ -195,12 +196,12 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 		ns := n.(*schema.Set)
 
-		var sIds []*string
+		var sIds []string
 		for _, s := range ns.List() {
-			sIds = append(sIds, aws.String(s.(string)))
+			sIds = append(sIds, s.(string))
 		}
 
-		_, err := conn.ModifyEndpointAccessWithContext(ctx, &redshift.ModifyEndpointAccessInput{
+		_, err := conn.ModifyEndpointAccess(ctx, &redshift.ModifyEndpointAccessInput{
 			EndpointName:        aws.String(d.Id()),
 			VpcSecurityGroupIds: sIds,
 		})
@@ -219,14 +220,14 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	_, err := conn.DeleteEndpointAccessWithContext(ctx, &redshift.DeleteEndpointAccessInput{
+	_, err := conn.DeleteEndpointAccess(ctx, &redshift.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
+		if errs.IsA[*awstypes.EndpointNotFoundFault](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Endpoint Access (%s): %s", d.Id(), err)
@@ -239,15 +240,15 @@ func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func vpcSgsIdsToSlice(vpsSgsIds []*redshift.VpcSecurityGroupMembership) []string {
+func vpcSgsIdsToSlice(vpsSgsIds []awstypes.VpcSecurityGroupMembership) []string {
 	VpcSgsSlice := make([]string, 0, len(vpsSgsIds))
 	for _, s := range vpsSgsIds {
-		VpcSgsSlice = append(VpcSgsSlice, *s.VpcSecurityGroupId)
+		VpcSgsSlice = append(VpcSgsSlice, aws.ToString(s.VpcSecurityGroupId))
 	}
 	return VpcSgsSlice
 }
 
-func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
+func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -259,43 +260,39 @@ func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap[names.AttrVPCID] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenNetworkInterface(apiObject *redshift.NetworkInterface) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
-		tfMap["private_ip_address"] = aws.StringValue(v)
+		tfMap["private_ip_address"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap[names.AttrSubnetID] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenNetworkInterfaces(apiObjects []*redshift.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -303,10 +300,6 @@ func flattenNetworkInterfaces(apiObjects []*redshift.NetworkInterface) []interfa
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenNetworkInterface(apiObject))
 	}
 

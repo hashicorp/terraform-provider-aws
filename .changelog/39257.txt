@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_batch_job_queue: Fixes error in schema migration function.
+```

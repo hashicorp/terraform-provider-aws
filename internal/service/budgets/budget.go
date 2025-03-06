@@ -33,8 +33,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// @SDKResource("aws_budgets_budget")
+// @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -294,7 +295,6 @@ func ResourceBudget() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -314,14 +314,15 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 
-	_, err = conn.CreateBudget(ctx, &budgets.CreateBudgetInput{
+	input := budgets.CreateBudgetInput{
 		AccountId:    aws.String(accountID),
 		Budget:       budget,
 		ResourceTags: getTagsIn(ctx),
-	})
+	}
+	_, err = conn.CreateBudget(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Budget (%s): %s", name, err)
@@ -370,7 +371,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrAccountID, accountID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  "budget/" + budgetName,
@@ -486,10 +487,11 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	_, err = conn.UpdateBudget(ctx, &budgets.UpdateBudgetInput{
+	input := budgets.UpdateBudgetInput{
 		AccountId: aws.String(accountID),
 		NewBudget: budget,
-	})
+	}
+	_, err = conn.UpdateBudget(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Budget (%s): %s", d.Id(), err)
@@ -516,10 +518,11 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Budget: %s", d.Id())
-	_, err = conn.DeleteBudget(ctx, &budgets.DeleteBudgetInput{
+	input := budgets.DeleteBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
-	})
+	}
+	_, err = conn.DeleteBudget(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -662,12 +665,13 @@ func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifi
 			return errors.New("Budget notification must have at least one subscriber")
 		}
 
-		_, err := conn.CreateNotification(ctx, &budgets.CreateNotificationInput{
+		input := budgets.CreateNotificationInput{
 			AccountId:    aws.String(accountID),
 			BudgetName:   aws.String(budgetName),
 			Notification: notification,
 			Subscribers:  subscribers,
-		})
+		}
+		_, err := conn.CreateNotification(ctx, &input)
 
 		if err != nil {
 			return err

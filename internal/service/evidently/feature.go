@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -197,7 +196,6 @@ func ResourceFeature() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -518,7 +516,6 @@ func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes
 	// remove is a list of strings
 	remove = make([]string, 0)
 	for k := range om {
-		k := k
 		if _, ok := nm[k]; !ok {
 			remove = append(remove, k)
 		}

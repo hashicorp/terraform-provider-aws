@@ -107,7 +107,7 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				return err
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 			_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
@@ -142,7 +142,7 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 

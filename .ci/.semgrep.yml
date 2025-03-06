@@ -337,17 +337,17 @@ rules:
     patterns:
       - pattern-either:
           - pattern: |
-              aws.TimeValue($X) == $Y
+              aws.ToTime($X) == $Y
           - pattern: |
-              aws.TimeValue($X) != $Y
+              aws.ToTime($X) != $Y
           - pattern: |
               ($X : time.Time) == $Y
           - pattern: |
               ($X : time.Time) != $Y
           - pattern: |
-              $X == aws.TimeValue($Y)
+              $X == aws.ToTime($Y)
           - pattern: |
-              $X != aws.TimeValue($Y)
+              $X != aws.ToTime($Y)
           - pattern: |
               $X == ($Y : time.Time)
           - pattern: |
@@ -634,3 +634,67 @@ rules:
     patterns:
       - pattern-regex: "(Create|Read|Update|Delete)Context:"
     severity: ERROR
+
+  - id: unreturned-sdkdiag-AppendErrorf
+    languages: [go]
+    message: Calls to `sdkdiag.AppendErrorf()` should be returned or set to the `diags` variable
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: |
+          if err != nil {
+            sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+      - pattern-not: |
+          if err != nil {
+            return sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+      - pattern-not: |
+          if err != nil {
+            return ..., sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+      - pattern-not: |
+          if err != nil {
+            $DIAGS = sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+    severity: ERROR
+
+  - id: avoid-errs-Must
+    languages: [go]
+    message: Avoid use of `errs.Must()` in service packages, handle errors explicitly instead.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern-either:
+          - pattern: errs.Must(...)
+    severity: WARNING
+
+  - id: avoid-SingleNestedBlock
+    languages: [go]
+    message: Avoid use of `SingleNestedBlock` in schema definitions. Use `ListNestedBlock` with a size validator instead.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: schema.SingleNestedBlock{ ... }
+    severity: ERROR
+
+  - id: include-argument-name-in-deprecation-message
+    languages: [go]
+    message: Deprecation messages should begin with `argument_name is deprecated`.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            ..., Deprecated: $MESSAGE, ...
+          }
+      - metavariable-pattern:
+          metavariable: $MESSAGE
+          patterns:
+            - pattern-not-regex: ([a-zA-Z0-9_]+ is deprecated\.)
+    severity: WARNING

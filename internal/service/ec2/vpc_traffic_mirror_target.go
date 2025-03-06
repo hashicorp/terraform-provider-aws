@@ -38,8 +38,6 @@ func resourceTrafficMirrorTarget() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -97,7 +95,7 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateTrafficMirrorTargetInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTrafficMirrorTarget),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorTarget),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -145,9 +143,9 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 
 	ownerID := aws.ToString(target.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
 	}.String()
@@ -158,7 +156,7 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	setTagsOutV2(ctx, target.Tags)
+	setTagsOut(ctx, target.Tags)
 
 	return diags
 }
@@ -176,9 +174,10 @@ func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Target: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorTarget(ctx, &ec2.DeleteTrafficMirrorTargetInput{
+	input := ec2.DeleteTrafficMirrorTargetInput{
 		TrafficMirrorTargetId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorTarget(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
 		return diags

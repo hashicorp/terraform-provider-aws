@@ -67,6 +67,11 @@ func resourceIPAM() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"enable_private_gua": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"operating_regions": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -103,10 +108,9 @@ func resourceIPAM() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() == "" { // Create.
-					currentRegion := meta.(*conns.AWSClient).Region
+					currentRegion := meta.(*conns.AWSClient).Region(ctx)
 
 					for _, v := range diff.Get("operating_regions").(*schema.Set).List() {
 						if v.(map[string]interface{})["region_name"].(string) == currentRegion {
@@ -130,11 +134,15 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpam),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpam),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("enable_private_gua"); ok {
+		input.EnablePrivateGua = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("tier"); ok {
@@ -176,6 +184,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("default_resource_discovery_association_id", ipam.DefaultResourceDiscoveryAssociationId)
 	d.Set("default_resource_discovery_id", ipam.DefaultResourceDiscoveryId)
 	d.Set(names.AttrDescription, ipam.Description)
+	d.Set("enable_private_gua", ipam.EnablePrivateGua)
 	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
 	}
@@ -184,7 +193,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("scope_count", ipam.ScopeCount)
 	d.Set("tier", ipam.Tier)
 
-	setTagsOutV2(ctx, ipam.Tags)
+	setTagsOut(ctx, ipam.Tags)
 
 	return diags
 }
@@ -200,6 +209,10 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("enable_private_gua") {
+			input.EnablePrivateGua = aws.Bool(d.Get("enable_private_gua").(bool))
 		}
 
 		if d.HasChange("operating_regions") {
@@ -240,7 +253,7 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	return diags
+	return append(diags, resourceIPAMRead(ctx, d, meta)...)
 }
 
 func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
