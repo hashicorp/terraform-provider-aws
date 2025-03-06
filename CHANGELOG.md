@@ -44,6 +44,8 @@ ENHANCEMENTS:
 * data-source/aws_cloudfront_response_headers_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 * data-source/aws_dx_connection: Add `state` attribute ([#41575](https://github.com/hashicorp/terraform-provider-aws/issues/41575))
 * data-source/aws_opensearch_domain: Add `cluster_config.node_options` attribute ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
+* resource/aws_account_region: Allow adoption of regions in an ENABLED or DISABLED state without an explicit import operation ([#41678](https://github.com/hashicorp/terraform-provider-aws/issues/41678))
+* resource/aws_account_region: Prevent errors when the region is an ENABLING or DISABLING state during creation ([#41678](https://github.com/hashicorp/terraform-provider-aws/issues/41678))
 * resource/aws_cloudfront_cache_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 * resource/aws_cloudfront_continuous_deployment_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 * resource/aws_cloudfront_field_level_encryption_config: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
