@@ -2693,37 +2693,44 @@ func TestAccAPIGatewayRestAPI_PolicyDiffSuppress(t *testing.T) {
 				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "execute-api:/*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				// Using complete ARN format for resource specification - ensure no plan differences are detected when compared to the shorthand format
-				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "arn:aws:execute-api:*:*:*/*"),
+				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "${data.aws_partition.current.partition}:execute-api:*:*:*/*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
-				PlanOnly:    true,
-				ExpectError: nil, // Expect no changes in plan
+				PlanOnly: true, // Expect no changes in plan
 			},
 			{
 				// Test with ARN containing specific region and account ID - verify no differences are detected
-				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "arn:aws:execute-api:ap-northeast-1:123456789012:*/*"),
+				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*/*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
-				PlanOnly:    true,
-				ExpectError: nil, // Expect no changes in plan
+				PlanOnly: true, // Expect no changes in plan
 			},
 			{
 				// Test with different app_id - should detect differences
 				Config: testAccRestAPIConfig_policyWithAppID(rName, "abcdef123456", "execute-api:/*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 				ExpectNonEmptyPlan: true, // Expect changes in plan due to app_id change
+			},
+			{
+				// Test with specific API method - should detect differences
+				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "execute-api:/*/GET"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+				ExpectNonEmptyPlan: true, // Expect changes in plan due to method specification
 			},
 		},
 	})
@@ -2731,6 +2738,10 @@ func TestAccAPIGatewayRestAPI_PolicyDiffSuppress(t *testing.T) {
 
 func testAccRestAPIConfig_policyWithResourceFormat(rName, resourceFormat string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
@@ -2742,7 +2753,7 @@ resource "aws_api_gateway_rest_api" "test" {
         AWS = "*"
       }
       Action   = "execute-api:Invoke"
-      Resource = %[2]q
+      Resource = "arn:${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[2]s"
     }]
   })
 }
@@ -2751,6 +2762,10 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIConfig_policyWithAppID(rName, appID, resourceFormat string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
@@ -2762,7 +2777,7 @@ resource "aws_api_gateway_rest_api" "test" {
         AWS = "*"
       }
       Action   = "execute-api:Invoke"
-      Resource = "arn:aws:execute-api:*:*:%[2]s/%[3]s"
+      Resource = "arn:${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[2]s/%[3]s"
     }]
   })
 }

@@ -236,9 +236,9 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
 		// The VPC endpoints deletion and immediate recreation can cause a race condition.
 		// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
-		// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
+		// The `merge` mode will not delete literal properties of a RestApi if they're not explicitly set in the OAS definition.
 		input := apigateway.PutRestApiInput{
-      
+
 			Body:      []byte(body.(string)),
 			Mode:      types.PutMode(modeConfigOrDefault(d)),
 			RestApiId: aws.String(d.Id()),
@@ -504,7 +504,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
 				// The VPC endpoints deletion and immediate recreation can cause a race condition.
 				// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
-				// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
+				// The `merge` mode will not delete literal properties of a RestApi if they're not explicitly set in the OAS definition.
 				input := apigateway.PutRestApiInput{
 
 					Body:      []byte(body.(string)),
@@ -593,19 +593,44 @@ func findRestAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*
 	return output, nil
 }
 
-func normalizeAPIGatewayPolicyResource(resource, apiID string) string {
-	// For "execute-api:/*" format, convert to a complete ARN format with wildcards
+func normalizePolicyResource(resource, apiID string) string {
+	const prefix = "arn:${data.aws_partition.current.partition}:execute-api:*:*:"
+
+	// If it starts with "execute-api:/", convert it to a complete ARN format
 	if strings.HasPrefix(resource, "execute-api:/") {
-		return fmt.Sprintf("arn:aws:execute-api:*:*:%s%s", apiID, strings.TrimPrefix(resource, "execute-api"))
+		return fmt.Sprintf("%s%s%s", prefix, apiID, strings.TrimPrefix(resource, "execute-api"))
 	}
+
 	// For complete ARNs, normalize all parts except the API ID
-	if strings.Contains(resource, ":execute-api:") {
-		parts := strings.Split(resource, ":")
-		if len(parts) >= 7 {
-			return fmt.Sprintf("arn:aws:execute-api:*:*:%s/*", apiID)
+	parts := strings.Split(resource, ":")
+	if len(parts) >= 7 && parts[2] == "execute-api" {
+		return fmt.Sprintf("%s%s/*", prefix, apiID)
+	}
+
+	return resource
+}
+
+func normalizePolicyJSON(policy, id string) (string, error) {
+	var policyObj map[string]interface{}
+	if err := json.Unmarshal([]byte(policy), &policyObj); err != nil {
+		return policy, err
+	}
+
+	if statements, ok := policyObj["Statement"].([]interface{}); ok {
+		for _, stmt := range statements {
+			if statement, ok := stmt.(map[string]interface{}); ok {
+				if resource, ok := statement["Resource"].(string); ok {
+					statement["Resource"] = normalizePolicyResource(resource, id)
+				}
+			}
 		}
 	}
-	return resource
+
+	normalizedBytes, err := json.Marshal(policyObj)
+	if err != nil {
+		return policy, err
+	}
+	return string(normalizedBytes), nil
 }
 
 func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.PutRestApiOutput) []types.PatchOperation {
@@ -713,38 +738,18 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		oldPolicy := aws.ToString(output.Policy)
 		newPolicy := v.(string)
-
-		var oldPolicyObj, newPolicyObj map[string]interface{}
-		if err := json.Unmarshal([]byte(oldPolicy), &oldPolicyObj); err == nil {
-			if err := json.Unmarshal([]byte(newPolicy), &newPolicyObj); err == nil {
-				if statements, ok := oldPolicyObj["Statement"].([]interface{}); ok {
-					for _, stmt := range statements {
-						if statement, ok := stmt.(map[string]interface{}); ok {
-							if resource, ok := statement["Resource"].(string); ok {
-								statement["Resource"] = normalizeAPIGatewayPolicyResource(resource, d.Id())
-							}
-						}
-					}
-				}
-				if statements, ok := newPolicyObj["Statement"].([]interface{}); ok {
-					for _, stmt := range statements {
-						if statement, ok := stmt.(map[string]interface{}); ok {
-							if resource, ok := statement["Resource"].(string); ok {
-								statement["Resource"] = normalizeAPIGatewayPolicyResource(resource, d.Id())
-							}
-						}
-					}
-				}
-
-				oldPolicyBytes, _ := json.Marshal(oldPolicyObj)
-				newPolicyBytes, _ := json.Marshal(newPolicyObj)
-				oldPolicy = string(oldPolicyBytes)
-				newPolicy = string(newPolicyBytes)
-			}
+		normalizedOldPolicy, errOld := normalizePolicyJSON(oldPolicy, d.Id())
+		if errOld != nil {
+			normalizedOldPolicy = oldPolicy
 		}
 
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(newPolicy, oldPolicy); err != nil || !equivalent {
-			policy, _ := structure.NormalizeJsonString(v.(string))
+		normalizedNewPolicy, errNew := normalizePolicyJSON(newPolicy, d.Id())
+		if errNew != nil {
+			normalizedNewPolicy = newPolicy
+		}
+
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(normalizedNewPolicy, normalizedOldPolicy); err != nil || !equivalent {
+			policy, _ := structure.NormalizeJsonString(newPolicy)
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/policy"),
