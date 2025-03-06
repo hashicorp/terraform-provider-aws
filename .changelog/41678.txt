@@ -1,3 +1,7 @@
-```release-note:note
-resource/aws_account_region: Change the way to handle region enable/disable when already enabled/disabled in state
+```release-note:enhancement
+resource/aws_account_region: Prevent errors when the region is an ENABLING or DISABLING state during creation.
+```
+
+```release-note:enhancement
+resource/aws_account_region: Allow adoption of regions in an ENABLED or DISABLED state without an explicit import operation.
 ```

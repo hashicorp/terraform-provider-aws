@@ -247,7 +247,7 @@ func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, re
 
 func requiresStatusChange(status types.RegionOptStatus, enable bool) bool {
 	if enable {
-		return status != types.RegionOptStatusEnabled
+		return status != types.RegionOptStatusEnabled && status != types.RegionOptStatusEnabling
 	}
 	return status != types.RegionOptStatusDisabled && status != types.RegionOptStatusDisabling
 }
