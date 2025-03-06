@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -269,4 +271,25 @@ func (r tagsInterceptor) getIdentifier(ctx context.Context, d interface {
 	}
 
 	return identifier
+}
+
+// setTagsAll is a plan modifier that calculates the new value for the `tags_all` attribute.
+func setTagsAll(ctx context.Context, meta *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// If the entire plan is null, the resource is planned for destruction.
+	if request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var planTags tftags.Map
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if planTags.IsWhollyKnown() {
+		allTags := meta.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(meta.IgnoreTagsConfig(ctx))
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
+	} else {
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
+	}
 }
