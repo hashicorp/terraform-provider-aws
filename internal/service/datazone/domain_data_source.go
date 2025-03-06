@@ -29,7 +29,7 @@ func newDataSourceDomain(_ context.Context) (datasource.DataSourceWithConfigure,
 }
 
 const (
-	DSNameDataZoneDomain = "Domain Data Source"
+	DSNameDomain = "Domain Data Source"
 )
 
 type dataSourceDomain struct {
@@ -101,13 +101,13 @@ func (d *dataSourceDomain) Read(ctx context.Context, request datasource.ReadRequ
 	output, err := findDomain(ctx, conn, filter)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameDataZoneDomain, data.Name.String(), err),
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameDomain, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("DataZoneDomain"))...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
