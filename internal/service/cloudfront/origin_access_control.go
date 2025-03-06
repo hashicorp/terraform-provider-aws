@@ -35,6 +35,10 @@ func resourceOriginAccessControl() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -111,6 +115,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Control (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, originAccessControlARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	config := output.OriginAccessControl.OriginAccessControlConfig
 	d.Set(names.AttrDescription, config.Description)
 	d.Set("etag", output.ETag)
@@ -192,4 +197,9 @@ func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	return output, nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func originAccessControlARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "origin-access-control/"+id)
 }

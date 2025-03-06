@@ -35,6 +35,10 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -143,6 +147,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Field-level Encryption Profile (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, fieldLevelEncryptionProfileARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set(names.AttrComment, apiObject.Comment)
@@ -382,4 +387,9 @@ func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]interfac
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func fieldLevelEncryptionProfileARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "field-level-encryption-profile/"+id)
 }

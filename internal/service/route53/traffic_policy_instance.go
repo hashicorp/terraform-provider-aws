@@ -37,6 +37,10 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrHostedZoneID: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -118,6 +122,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, trafficPolicyInstanceARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrHostedZoneID, trafficPolicyInstance.HostedZoneId)
 	d.Set(names.AttrName, strings.TrimSuffix(aws.ToString(trafficPolicyInstance.Name), "."))
 	d.Set("traffic_policy_id", trafficPolicyInstance.TrafficPolicyId)
@@ -289,4 +294,9 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 	}
 
 	return nil, err
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func trafficPolicyInstanceARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "trafficpolicyinstance/"+id)
 }

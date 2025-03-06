@@ -34,6 +34,10 @@ func resourceOriginRequestPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -190,6 +194,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Request Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, originRequestPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
@@ -409,4 +414,9 @@ func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequ
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func originRequestPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "origin-request-policy/"+id)
 }

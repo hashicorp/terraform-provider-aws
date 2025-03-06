@@ -35,13 +35,32 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudfront_cache_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_origin_access_control: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_origin_access_identity: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_origin_request_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_response_headers_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_dx_connection: Add `state` attribute ([#41575](https://github.com/hashicorp/terraform-provider-aws/issues/41575))
 * data-source/aws_opensearch_domain: Add `cluster_config.node_options` attribute ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
+* resource/aws_cloudfront_cache_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_continuous_deployment_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_field_level_encryption_config: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_field_level_encryption_profile: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_origin_access_control: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_origin_access_identity: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_origin_request_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_response_headers_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 * resource/aws_ec2_client_vpn_endpoint: Add `disconnect_on_session_timeout` attribute ([#41621](https://github.com/hashicorp/terraform-provider-aws/issues/41621))
+* resource/aws_mwaa_environment: Lower the minimum value of the `max_webservers` and `min_webservers` arguments from `2` to `1` in support of Amazon MWAA micro environments ([#40244](https://github.com/hashicorp/terraform-provider-aws/issues/40244))
 * resource/aws_opensearch_domain: Add `cluster_config.node_options` configuration block in support of [dedicated coordinator nodes](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/Dedicated-coordinator-nodes.html) ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
 * resource/aws_prometheus_rule_group_namespace: Add `arn` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
 * resource/aws_prometheus_rule_group_namespace: Add `tags` argument and `tags_all` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
+* resource/aws_route53_traffic_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_route53_traffic_policy_instance: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 * resource/aws_s3_bucket_lifecycle_configuration: Adds warning validation to require exactly one of the elements of `rule.filter` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
 * resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required. Technically this is a breaking change, but failure to configure this attribute would have led to `InvalidArgument` or `MalformedXML` errors ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
+* resource/aws_waf_byte_match_set: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_waf_sql_injection_match_set: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 
 BUG FIXES:
 
