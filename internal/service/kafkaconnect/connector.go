@@ -655,7 +655,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 	return nil, err
 }
 
-func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
+func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateUpdating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
