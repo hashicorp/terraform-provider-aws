@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_dx_connection: Add `state` argument.
-```
