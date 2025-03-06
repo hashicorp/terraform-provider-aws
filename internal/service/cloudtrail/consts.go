@@ -22,13 +22,14 @@ func resourceType_Values() []string {
 }
 
 const (
-	fieldEventCategory   = "eventCategory"
-	fieldEventName       = "eventName"
-	fieldEventSource     = "eventSource"
-	fieldReadOnly        = "readOnly"
-	fieldResourcesARN    = "resources.ARN"
-	fieldResourcesType   = "resources.type"
-	fieldUserIdentityARN = "userIdentity.arn"
+	fieldEventCategory                = "eventCategory"
+	fieldEventName                    = "eventName"
+	fieldEventSource                  = "eventSource"
+	fieldReadOnly                     = "readOnly"
+	fieldResourcesARN                 = "resources.ARN"
+	fieldResourcesType                = "resources.type"
+	fieldUserIdentityARN              = "userIdentity.arn"
+	fieldsessionCredentialFromConsole = "sessionCredentialFromConsole"
 )
 
 func field_Values() []string {
@@ -40,6 +41,7 @@ func field_Values() []string {
 		fieldResourcesARN,
 		fieldResourcesType,
 		fieldUserIdentityARN,
+		fieldsessionCredentialFromConsole,
 	}
 }
 
