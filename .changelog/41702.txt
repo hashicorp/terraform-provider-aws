@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cognito_resource_server: Allow changes to `name` attribute without deleting and recreating.
+```

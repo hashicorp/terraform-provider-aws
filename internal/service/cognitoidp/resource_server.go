@@ -45,7 +45,6 @@ func resourceResourceServer() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrScope: {
 				Type:     schema.TypeSet,

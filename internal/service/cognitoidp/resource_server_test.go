@@ -123,6 +123,37 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPResourceServer_nameChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceServer awstypes.ResourceServerType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	identifier := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_resource_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceServerConfig_basic(identifier, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				Config: testAccResourceServerConfig_nameUpdate(identifier, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf(`%s updated`, rName)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceServerExists(ctx context.Context, n string, v *awstypes.ResourceServerType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -175,6 +206,20 @@ func testAccResourceServerConfig_basic(identifier, rName string) string {
 resource "aws_cognito_resource_server" "test" {
   identifier   = %[1]q
   name         = %[2]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[2]q
+}
+`, identifier, rName)
+}
+
+func testAccResourceServerConfig_nameUpdate(identifier, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_resource_server" "test" {
+  identifier   = %[1]q
+  name         = "%[2]s updated"
   user_pool_id = aws_cognito_user_pool.test.id
 }
 
