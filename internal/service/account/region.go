@@ -104,7 +104,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AccountId = aws.String(accountID)
 		}
 
-		if !skipRegionUpdate(status.RegionOptStatus, true) {
+		if requiresStatusChange(status.RegionOptStatus, true) {
 			_, err := conn.EnableRegion(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
@@ -122,7 +122,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AccountId = aws.String(accountID)
 		}
 
-		if !skipRegionUpdate(status.RegionOptStatus, false) {
+		if requiresStatusChange(status.RegionOptStatus, false) {
 			_, err := conn.DisableRegion(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling Account Region (%s): %s", id, err)
@@ -215,7 +215,6 @@ func waitRegionEnabled(ctx context.Context, conn *account.Client, accountID, reg
 		Target:       enum.Slice(types.RegionOptStatusEnabled),
 		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
 		Timeout:      timeout,
-		Delay:        1 * time.Minute,
 		PollInterval: 30 * time.Second,
 	}
 
@@ -234,7 +233,6 @@ func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, re
 		Target:       enum.Slice(types.RegionOptStatusDisabled),
 		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
 		Timeout:      timeout,
-		Delay:        1 * time.Minute,
 		PollInterval: 30 * time.Second,
 	}
 
@@ -247,9 +245,9 @@ func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, re
 	return nil, err
 }
 
-func skipRegionUpdate(status types.RegionOptStatus, enable bool) bool {
+func requiresStatusChange(status types.RegionOptStatus, enable bool) bool {
 	if enable {
-		return status == types.RegionOptStatusEnabled || status == types.RegionOptStatusEnabledByDefault
+		return status != types.RegionOptStatusEnabled
 	}
-	return status == types.RegionOptStatusDisabled || status == types.RegionOptStatusDisabling
+	return status != types.RegionOptStatusDisabled && status != types.RegionOptStatusDisabling
 }
