@@ -6,14 +6,15 @@ package bedrockagent
 import (
 	"context"
 	"errors"
+	"regexp"
 	"time"
-    "regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -519,10 +520,86 @@ type flowConnectionModel struct {
     Source        types.String                                       `tfsdk:"source"`
     Target        types.String                                       `tfsdk:"target"`
     Type          fwtypes.StringEnum[awstypes.FlowConnectionType]    `tfsdk:"type"`
-    Configuration fwtypes.ObjectValueOf[flowConnectionConfiguration] `tfsdk:"configuration"`
+    Configuration fwtypes.ObjectValueOf[flowConnectionConfigurationModel] `tfsdk:"configuration"`
 }
 
-type flowConnectionConfiguration struct {} // TODO
+type flowConnectionConfigurationModel struct {
+    Data        fwtypes.ObjectValueOf[flowConnectionConfigurationMemberDataModel]        `tfsdk:"data"`
+    Conditional fwtypes.ObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
+}
+
+type flowConnectionConfigurationMemberDataModel struct {
+    Condition types.String `tfsdk:"condition"`
+}
+
+type flowConnectionConfigurationMemberConditionalModel struct {
+    SourceOutput types.String `tfsdk:"source_output"`
+    TargetInput  types.String `tfsdk:"target_input"`
+}
+
+func (m *flowConnectionConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+    switch t := v.(type) {
+    case awstypes.FlowConnectionConfigurationMemberData:
+        var model flowConnectionConfigurationMemberDataModel
+        d := flex.Flatten(ctx, t.Value, &model)
+        diags.Append(d...)
+        if diags.HasError() {
+            return diags
+        }
+
+        m.Data = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+        return diags
+    case awstypes.FlowConnectionConfigurationMemberConditional:
+        var model flowConnectionConfigurationMemberConditionalModel
+        d := flex.Flatten(ctx, t.Value, &model)
+        diags.Append(d...)
+        if diags.HasError() {
+            return diags
+        }
+
+        m.Conditional = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+        return diags
+    default:
+        return diags
+    }
+}
+
+func (m flowConnectionConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+    switch {
+    case !m.Data.IsNull():
+        flowConnectionConfigurationData, d := m.Data.ToPtr(ctx)
+        diags.Append(d...)
+        if diags.HasError() {
+            return nil, diags
+        }
+
+        var r awstypes.FlowConnectionConfigurationMemberData
+        diags.Append(flex.Expand(ctx, flowConnectionConfigurationData, &r.Value)...)
+        if diags.HasError() {
+            return nil, diags
+        }
+
+        return &r, diags
+    case !m.Conditional.IsNull():
+        flowConnectionConfigurationConditional, d := m.Conditional.ToPtr(ctx)
+        diags.Append(d...)
+        if diags.HasError() {
+            return nil, diags
+        }
+
+        var r awstypes.FlowConnectionConfigurationMemberConditional
+        diags.Append(flex.Expand(ctx, flowConnectionConfigurationConditional, &r.Value)...)
+        if diags.HasError() {
+            return nil, diags
+        }
+
+        return &r, diags
+    }
+
+    return nil, diags
+}
 
 type flowNodeModel struct {
     Name          types.String                                         `tfsdk:"name"`
