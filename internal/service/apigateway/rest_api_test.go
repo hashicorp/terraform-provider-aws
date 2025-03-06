@@ -2735,7 +2735,7 @@ resource "aws_api_gateway_rest_api" "test" {
       Principal = {
         AWS = "*"
       }
-      Action = "execute-api:Invoke"
+      Action   = "execute-api:Invoke"
       Resource = %[2]q
     }]
   })
@@ -2755,7 +2755,7 @@ resource "aws_api_gateway_rest_api" "test" {
       Principal = {
         AWS = "*"
       }
-      Action = "execute-api:Invoke"
+      Action   = "execute-api:Invoke"
       Resource = "arn:aws:execute-api:*:*:%[2]s/%[3]s"
     }]
   })
