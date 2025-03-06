@@ -661,7 +661,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
