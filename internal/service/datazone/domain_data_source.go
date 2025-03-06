@@ -15,12 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_datazone_domain", name="Domain")
-func newDataSourceDataZoneDomain(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceDataZoneDomain(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDataZoneDomain{}, nil
 }
 
@@ -32,11 +33,7 @@ type dataSourceDataZoneDomain struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataZoneDomain) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_datazone_domain"
-}
-
-func (d *dataSourceDataZoneDomain) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *dataSourceDataZoneDomain) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
@@ -57,7 +54,10 @@ func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	domain, err := findDomainByName(ctx, conn, data.Name.ValueString())
+	output, err := findDomain(ctx, conn, func(domain *awstypes.DomainSummary) bool {
+		return aws.ToString(domain.Name) == data.Name.ValueString()
+	})
+
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameDataZoneDomain, data.Name.String(), err),
@@ -66,7 +66,7 @@ func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, domain, &data, flex.WithFieldNamePrefix("DataZoneDomain"))...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("DataZoneDomain"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -74,39 +74,33 @@ func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func findDomainByName(ctx context.Context, conn *datazone.Client, name string) (*awstypes.DomainSummary, error) {
-	return _findDomainByName(ctx, conn, name, nil)
-}
-
-func _findDomainByName(ctx context.Context, conn *datazone.Client, name string, nextToken *string) (*awstypes.DomainSummary, error) {
-	// GetDomain requires a domain identifier, so we need to list all domains and find the one with the matching name.
-	domainsInput := &datazone.ListDomainsInput{}
-
-	if nextToken != nil {
-		domainsInput.NextToken = aws.String(*nextToken)
-	}
-
-	domains, err := conn.ListDomains(ctx, domainsInput)
+func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*awstypes.DomainSummary, error) {
+	domain, err := findDomains(ctx, conn, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	if domains == nil {
-		return nil, tfresource.NewEmptyResultError(domainsInput)
-	}
+	return tfresource.AssertSingleValueResult(domain)
+}
 
-	for i := range domains.Items {
-		domain := domains.Items[i]
-		if name == aws.ToString(domain.Name) {
-			return &domain, nil
+func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) ([]awstypes.DomainSummary, error) {
+	var output []awstypes.DomainSummary
+
+	pages := datazone.NewListDomainsPaginator(conn, &datazone.ListDomainsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, domain := range page.Items {
+			if filter(&domain) {
+				output = append(output, domain)
+			}
 		}
 	}
 
-	if domains.NextToken == nil {
-		return nil, tfresource.NewEmptyResultError(domainsInput)
-	}
-
-	return _findDomainByName(ctx, conn, name, domains.NextToken)
+	return output, nil
 }
 
 type dataSourceDomainModel struct {
