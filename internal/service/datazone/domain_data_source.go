@@ -24,19 +24,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_datazone_domain", name="Domain")
-func newDataSourceDataZoneDomain(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDataZoneDomain{}, nil
+func newDataSourceDomain(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceDomain{}, nil
 }
 
 const (
 	DSNameDataZoneDomain = "Domain Data Source"
 )
 
-type dataSourceDataZoneDomain struct {
+type dataSourceDomain struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataZoneDomain) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *dataSourceDomain) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -75,7 +75,7 @@ func (d *dataSourceDataZoneDomain) Schema(_ context.Context, _ datasource.Schema
 	}
 }
 
-func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *dataSourceDomain) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data dataSourceDomainModel
@@ -115,7 +115,7 @@ func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (d *dataSourceDataZoneDomain) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *dataSourceDomain) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.AtLeastOneOf(
 			path.MatchRoot(names.AttrName),
