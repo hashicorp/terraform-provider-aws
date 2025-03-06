@@ -24,11 +24,18 @@ data "aws_datazone_domain" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the Domain.
+* `name` - (Optional) Name of the Domain.
+* `id` - (Optional) ID of the Domain.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Domain.
-* `id` - ID of the Domain.
+* `created_at` - The date and time the Domain was created.
+* `description` - Description of the Domain.
+* `domain_version` - Version of the Domain.
+* `last_updated_at` - The date and time the Domain was last updated.
+* `managed_account_id` - The AWS account ID that owns the Domain.
+* `portal_url` - URL of the Domain.
+* `status` - Status of the Domain.
