@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_hosted_configuration_version")
+// @SDKResource("aws_appconfig_hosted_configuration_version", name="Hosted Configuration Version")
 func ResourceHostedConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConfigurationVersionCreate,
@@ -168,11 +168,12 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	}
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version: %s", d.Id())
-	_, err = conn.DeleteHostedConfigurationVersion(ctx, &appconfig.DeleteHostedConfigurationVersionInput{
+	input := appconfig.DeleteHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
 		VersionNumber:          aws.Int32(versionNumber),
-	})
+	}
+	_, err = conn.DeleteHostedConfigurationVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

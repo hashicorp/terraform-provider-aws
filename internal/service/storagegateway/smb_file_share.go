@@ -206,8 +206,6 @@ func resourceSMBFileShare() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

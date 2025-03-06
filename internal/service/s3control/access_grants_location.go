@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Location")
+// @FrameworkResource("aws_s3control_access_grants_location", name="Access Grants Location")
 // @Tags
 func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsLocationResource{}
@@ -40,10 +40,6 @@ func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConf
 type accessGrantsLocationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *accessGrantsLocationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_location"
 }
 
 func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -261,10 +257,6 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 
 		return
 	}
-}
-
-func (r *accessGrantsLocationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantsLocationOutput, error) {

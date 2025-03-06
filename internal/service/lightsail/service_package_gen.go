@@ -5,6 +5,8 @@ package lightsail
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,10 +40,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBucketAccessKey,
 			TypeName: "aws_lightsail_bucket_access_key",
+			Name:     "Bucket Access Key",
 		},
 		{
 			Factory:  ResourceBucketResourceAccess,
 			TypeName: "aws_lightsail_bucket_resource_access",
+			Name:     "Bucket Resource Access",
 		},
 		{
 			Factory:  ResourceCertificate,
@@ -64,6 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContainerServiceDeploymentVersion,
 			TypeName: "aws_lightsail_container_service_deployment_version",
+			Name:     "Container Service Deployment Version",
 		},
 		{
 			Factory:  ResourceDatabase,
@@ -86,6 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDiskAttachment,
 			TypeName: "aws_lightsail_disk_attachment",
+			Name:     "Disk Attachment",
 		},
 		{
 			Factory:  ResourceDistribution,
@@ -99,10 +105,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDomain,
 			TypeName: "aws_lightsail_domain",
+			Name:     "Domain",
 		},
 		{
 			Factory:  ResourceDomainEntry,
 			TypeName: "aws_lightsail_domain_entry",
+			Name:     "Domain Entry",
 		},
 		{
 			Factory:  ResourceInstance,
@@ -116,6 +124,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceInstancePublicPorts,
 			TypeName: "aws_lightsail_instance_public_ports",
+			Name:     "Instance Public Ports",
 		},
 		{
 			Factory:  ResourceKeyPair,
@@ -138,36 +147,73 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLoadBalancerAttachment,
 			TypeName: "aws_lightsail_lb_attachment",
+			Name:     "Load Balancer Attachment",
 		},
 		{
 			Factory:  ResourceLoadBalancerCertificate,
 			TypeName: "aws_lightsail_lb_certificate",
+			Name:     "Load Balancer Certificate",
 		},
 		{
 			Factory:  ResourceLoadBalancerCertificateAttachment,
 			TypeName: "aws_lightsail_lb_certificate_attachment",
+			Name:     "Load Balancer Certificate Attachment",
 		},
 		{
 			Factory:  ResourceLoadBalancerHTTPSRedirectionPolicy,
 			TypeName: "aws_lightsail_lb_https_redirection_policy",
+			Name:     "Load Balancer HTTPS Redirection Policy",
 		},
 		{
 			Factory:  ResourceLoadBalancerStickinessPolicy,
 			TypeName: "aws_lightsail_lb_stickiness_policy",
+			Name:     "Load Balancer Stickiness Policy",
 		},
 		{
 			Factory:  ResourceStaticIP,
 			TypeName: "aws_lightsail_static_ip",
+			Name:     "Static IP",
 		},
 		{
 			Factory:  ResourceStaticIPAttachment,
 			TypeName: "aws_lightsail_static_ip_attachment",
+			Name:     "Static IP Attachment",
 		},
 	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Lightsail
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lightsail.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*lightsail.Options){
+		lightsail.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
+	}
+
+	return lightsail.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*lightsail.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*lightsail.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *lightsail.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*lightsail.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

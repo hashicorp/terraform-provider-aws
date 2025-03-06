@@ -170,10 +170,11 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting Appsync API Key: %s", d.Id())
-	_, err = conn.DeleteApiKey(ctx, &appsync.DeleteApiKeyInput{
+	input := appsync.DeleteApiKeyInput{
 		ApiId: aws.String(apiID),
 		Id:    aws.String(keyID),
-	})
+	}
+	_, err = conn.DeleteApiKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

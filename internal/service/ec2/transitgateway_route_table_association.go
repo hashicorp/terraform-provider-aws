@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,7 +52,6 @@ func resourceTransitGatewayRouteTableAssociation() *schema.Resource {
 			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"transit_gateway_route_table_id": {
@@ -61,6 +61,43 @@ func resourceTransitGatewayRouteTableAssociation() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if !d.HasChange(names.AttrTransitGatewayAttachmentID) {
+					return nil
+				}
+
+				// See https://github.com/hashicorp/terraform-provider-aws/issues/30085
+				// In all cases, changes should force new except:
+				//   o is not empty string AND
+				//   n is empty string AND
+				//   plan is unknown AND
+				//   state is known
+				o, n := d.GetChange(names.AttrTransitGatewayAttachmentID)
+				if o.(string) == "" || n.(string) != "" {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				rawPlan := d.GetRawPlan()
+				plan := rawPlan.GetAttr(names.AttrTransitGatewayAttachmentID)
+				if plan.IsKnown() {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				rawState := d.GetRawState()
+				if rawState.IsNull() || !rawState.IsKnown() {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				state := rawState.GetAttr(names.AttrTransitGatewayAttachmentID)
+				if !state.IsKnown() {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				return nil
+			},
+		),
 	}
 }
 

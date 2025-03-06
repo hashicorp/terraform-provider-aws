@@ -36,7 +36,7 @@ func testAccPhoneNumber_basic(t *testing.T) {
 				Config: testAccPhoneNumberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "phone-number/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "country_code", "US"),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
 					resource.TestCheckResourceAttr(resourceName, "status.#", "1"),

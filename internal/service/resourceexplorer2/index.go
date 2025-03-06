@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Index")
+// @FrameworkResource("aws_resourceexplorer2_index", name="Index")
 // @Tags(identifierAttribute="id")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
@@ -46,10 +46,6 @@ type indexResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*indexResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_resourceexplorer2_index"
 }
 
 func (r *indexResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -236,10 +232,6 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 
 		return
 	}
-}
-
-func (r *indexResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.

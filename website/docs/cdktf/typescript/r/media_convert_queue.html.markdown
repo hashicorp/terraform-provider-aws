@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) A unique identifier describing the queue
+* `concurrent_jobs` - (Optional) The maximum number of jobs your queue can process concurrently. For on-demand queues, the value you enter is constrained by your service quotas for Maximum concurrent jobs, per on-demand queue and Maximum concurrent jobs, per account. For reserved queues, specify the number of jobs you can process concurrently in your reservation plan instead.
 * `description` - (Optional) A description of the queue
 * `pricingPlan` - (Optional) Specifies whether the pricing plan for the queue is on-demand or reserved. Valid values are `ON_DEMAND` or `RESERVED`. Default to `ON_DEMAND`.
 * `reservationPlanSettings` - (Optional) A detail pricing plan of the  reserved queue. See below.
@@ -89,4 +90,4 @@ Using `terraform import`, import Media Convert Queue using the queue name. For e
 % terraform import aws_media_convert_queue.test tf-test-queue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4187cb7aae796644c39c65825e4388d40e4bbc13bb166ecba228fe64c9f6f4c9 -->
+<!-- cache-key: cdktf-0.20.8 input-6ac4cb79867aaf03c72aae7df996487d85e54c3b4b2b8b632d4f8f4bc779dea0 -->

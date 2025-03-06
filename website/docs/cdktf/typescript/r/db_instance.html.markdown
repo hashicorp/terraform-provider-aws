@@ -29,6 +29,8 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `passwordWo` is available to use in place of `password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
@@ -472,9 +474,9 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
-* `manageMasterUserPassword` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` is provided.
+* `manageMasterUserPassword` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` or `passwordWo` is provided.
 * `masterUserSecretKmsKeyId` - (Optional) The Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
-* `maxAllocatedStorage` - (Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to `allocatedStorage`. Must be greater than or equal to `allocatedStorage` or `0` to disable Storage Autoscaling.
+* `maxAllocatedStorage` - (Optional) Specifies the maximum storage (in GiB) that Amazon RDS can automatically scale to for this DB instance. By default, Storage Autoscaling is disabled. To enable Storage Autoscaling, set `maxAllocatedStorage` to **greater than or equal to** `allocatedStorage`. Setting `maxAllocatedStorage` to 0 explicitly disables Storage Autoscaling. When configured, changes to `allocatedStorage` will be automatically ignored as the storage can dynamically scale.
 * `monitoringInterval` - (Optional) The interval, in seconds, between points
 when Enhanced Monitoring metrics are collected for the DB instance. To disable
 collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid
@@ -490,9 +492,9 @@ Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `networkType` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `optionGroupName` - (Optional) Name of the DB option group to associate.
 * `parameterGroupName` - (Optional) Name of the DB parameter group to associate.
-* `password` - (Required unless `manageMasterUserPassword` is set to true or unless a `snapshotIdentifier` or `replicateSourceDb`
-is provided or `manageMasterUserPassword` is set.) Password for the master DB user. Note that this may show up in
-logs, and it will be stored in the state file. Cannot be set if `manageMasterUserPassword` is set to `true`.
+* `password` - (Optional required unless `manageMasterUserPassword` is set to true, `snapshotIdentifier`, `replicateSourceDb`, or `passwordWo` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manageMasterUserPassword` is set to `true`.
+* `passwordWo` - (Optional, Write-Only required unless `manageMasterUserPassword` is set to true, `snapshotIdentifier`, `replicateSourceDb`, or `password` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manageMasterUserPassword` is set to `true`.
+* `passwordWoVersion` - (Optional) Used together with `passwordWo` to trigger an update. Increment this value when an update to `passwordWo` is required.
 * `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performanceInsightsKmsKeyId` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performanceInsightsKmsKeyId`, `performanceInsightsEnabled` needs to be set to true. Once KMS key is set, it can never be changed.
 * `performanceInsightsRetentionPeriod` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performanceInsightsRetentionPeriod`, `performanceInsightsEnabled` needs to be set to true. Defaults to '7'.
@@ -706,4 +708,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4a73d395cca86db28f6cec85c0b39295ff84bb301f2f565f7dc3008cc42ded33 -->
+<!-- cache-key: cdktf-0.20.8 input-8c72ee77c4819ae2d1e6c4175088084e6cf691e8c48e81f6e2b079d9907fcce5 -->

@@ -51,6 +51,7 @@ func TestAccAmplify_serial(t *testing.T) {
 			"certificateSettings_Custom":  testAccDomainAssociation_certificateSettings_Custom,
 			acctest.CtDisappears:          testAccDomainAssociation_disappears,
 			"update":                      testAccDomainAssociation_update,
+			"createWithSubdomain":         testAccDomainAssociation_CreateWithSubdomain,
 		},
 		"Webhook": {
 			acctest.CtBasic:      testAccWebhook_basic,

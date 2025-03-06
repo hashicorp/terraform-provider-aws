@@ -1,5 +1,5 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint_configuration"
 description: |-
@@ -102,7 +102,8 @@ This resource supports the following arguments:
 * `capture_options` - (Required) Specifies what data to capture. Fields are documented below.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt the captured data on Amazon S3.
 * `enable_capture` - (Optional) Flag to enable data capture. Defaults to `false`.
-* `capture_content_type_header` - (Optional) The content type headers to capture. Fields are documented below.
+* `capture_content_type_header` - (Optional) The content type headers to capture.
+  See [`capture_content_type_header`](#capture_content_type_header) below.
 
 #### capture_options
 
@@ -111,7 +112,9 @@ This resource supports the following arguments:
 #### capture_content_type_header
 
 * `csv_content_types` - (Optional) The CSV content type headers to capture.
+  One of `csv_content_types` or `json_content_types` is required.
 * `json_content_types` - (Optional) The JSON content type headers to capture.
+  One of `json_content_types` or `csv_content_types` is required.
 
 ### async_inference_config
 
@@ -168,4 +171,4 @@ Using `terraform import`, import endpoint configurations using the `name`. For e
 % terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-74160ca7a494fbdfee7a09117b03977ef1e71157bac453042f4a965a4b2af9c8 -->
+<!-- cache-key: cdktf-0.20.8 input-855790d940135b3b746c0fbf903d79c3f825f0619d46ad8d5b8f3d8bd3a163f7 -->

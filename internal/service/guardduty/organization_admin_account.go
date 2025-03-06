@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_guardduty_organization_admin_account")
+// @SDKResource("aws_guardduty_organization_admin_account", name="Organization Admin Account")
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,

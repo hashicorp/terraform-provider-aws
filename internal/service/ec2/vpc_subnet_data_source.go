@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnet")
+// @SDKDataSource("aws_subnet", name="Subnet")
 // @Tags
 // @Testing(tagsIdentifierAttribute="id", generator=false)
 func dataSourceSubnet() *schema.Resource {

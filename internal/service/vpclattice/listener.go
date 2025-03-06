@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_listener", name="Listener")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -157,8 +157,6 @@ func resourceListener() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -287,10 +285,11 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	listenerId := d.Get("listener_id").(string)
 
 	log.Printf("[INFO] Deleting VPCLattice Listener %s", d.Id())
-	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
+	input := vpclattice.DeleteListenerInput{
 		ListenerIdentifier: aws.String(listenerId),
 		ServiceIdentifier:  aws.String(serviceId),
-	})
+	}
+	_, err := conn.DeleteListener(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

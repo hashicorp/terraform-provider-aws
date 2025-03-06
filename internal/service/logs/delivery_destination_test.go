@@ -38,7 +38,7 @@ func TestAccLogsDeliveryDestination_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_basic(rName),
+				Config: testAccDeliveryDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -81,7 +81,7 @@ func TestAccLogsDeliveryDestination_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_basic(rName),
+				Config: testAccDeliveryDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliveryDestination, resourceName),
@@ -107,7 +107,7 @@ func TestAccLogsDeliveryDestination_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDeliveryDestinationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -130,7 +130,7 @@ func TestAccLogsDeliveryDestination_tags(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccLogDeliveryDestinationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliveryDestinationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -147,7 +147,7 @@ func TestAccLogsDeliveryDestination_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLogDeliveryDestinationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliveryDestinationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -181,7 +181,7 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_outputFormat(rName, "w3c"),
+				Config: testAccDeliveryDestinationConfig_outputFormat(rName, "w3c"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -202,7 +202,7 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccLogDeliveryDestinationConfig_outputFormat(rName, "plain"),
+				Config: testAccDeliveryDestinationConfig_outputFormat(rName, "plain"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -234,7 +234,7 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationSameTy
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName),
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -255,7 +255,7 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationSameTy
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL2(rName),
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationCWL2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -287,7 +287,7 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDiffer
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName),
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -308,7 +308,7 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDiffer
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationS3(rName),
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, resourceName, &v),
 				),
@@ -383,7 +383,7 @@ func testAccDeliveryDestinationImportStateIDFunc(n string) resource.ImportStateI
 	}
 }
 
-func testAccLogDeliveryDestinationConfig_basic(rName string) string {
+func testAccDeliveryDestinationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -399,7 +399,7 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 `, rName)
 }
 
-func testAccLogDeliveryDestinationConfig_tags1(rName, tag1Key, tag1Value string) string {
+func testAccDeliveryDestinationConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -419,7 +419,7 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccLogDeliveryDestinationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccDeliveryDestinationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -440,7 +440,7 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccLogDeliveryDestinationConfig_outputFormat(rName, outputFormat string) string {
+func testAccDeliveryDestinationConfig_outputFormat(rName, outputFormat string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -458,7 +458,7 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 `, rName, outputFormat)
 }
 
-func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName string) string {
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test1" {
   name = "%[1]s-1"
@@ -475,8 +475,8 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName string) string {
-	return acctest.ConfigCompose(testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationCWL1(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_destination" "test" {
   name = %[1]q
 
@@ -487,8 +487,8 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 `, rName))
 }
 
-func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationCWL2(rName string) string {
-	return acctest.ConfigCompose(testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationCWL2(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_destination" "test" {
   name = %[1]q
 
@@ -499,8 +499,8 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
 `, rName))
 }
 
-func testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationS3(rName string) string {
-	return acctest.ConfigCompose(testAccLogDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_destination" "test" {
   name = %[1]q
 

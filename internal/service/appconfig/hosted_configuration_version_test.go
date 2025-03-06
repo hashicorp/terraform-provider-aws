@@ -137,11 +137,12 @@ func testAccCheckHostedConfigurationVersionExists(ctx context.Context, resourceN
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetHostedConfigurationVersion(ctx, &appconfig.GetHostedConfigurationVersionInput{
+		input := appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
 			VersionNumber:          aws.Int32(versionNumber),
-		})
+		}
+		output, err := conn.GetHostedConfigurationVersion(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error reading AppConfig Hosted Configuration Version (%s): %w", rs.Primary.ID, err)

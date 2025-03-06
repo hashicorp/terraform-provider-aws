@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,8 +84,6 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -181,10 +178,11 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Instance: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessInstance(ctx, &ec2.DeleteVerifiedAccessInstanceInput{
+	input := ec2.DeleteVerifiedAccessInstanceInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessInstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessInstance(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
 		return diags

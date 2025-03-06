@@ -37,8 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Domain")
+// @FrameworkResource( "aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 func newResourceDomain(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}
@@ -57,10 +56,6 @@ const (
 type resourceDomain struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceDomain) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_domain"
 }
 
 func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -363,10 +358,6 @@ func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest,
 
 func (r *resourceDomain) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceDomain) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, timeout time.Duration) (*datazone.GetDomainOutput, error) {

@@ -365,6 +365,102 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	})
 }
 
+// Tests the state upgrader coming from a version < v5.1.0 where the default values
+// from the arguments added in 5.1.0 are not yet present.
+//
+// This causes unintentional invocations and/or issues processing input which is
+// valid type for CREATE_ONLY lifecycle_scope.
+//
+// https://github.com/hashicorp/terraform-provider-aws/issues/40954
+// https://github.com/hashicorp/terraform-provider-aws/issues/31786
+func TestAccLambdaInvocation_UpgradeState_Pre_v5_1_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.65.0",
+					},
+				},
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
+// Tests the state upgrader in cases where the default values from the arguments added
+// in v5.1.0 are already present
+func TestAccLambdaInvocation_UpgradeState_v5_83_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.83.0",
+					},
+				},
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
 // testAccCheckCRUDDestroyResult verifies that when CRUD lifecycle is active that a destroyed resource
 // triggers the lambda.
 //

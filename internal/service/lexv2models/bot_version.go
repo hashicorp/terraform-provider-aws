@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot Version")
+// @FrameworkResource("aws_lexv2models_bot_version", name="Bot Version")
 func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotVersion{}
 
@@ -48,10 +48,6 @@ const (
 type resourceBotVersion struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceBotVersion) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_version"
 }
 
 func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

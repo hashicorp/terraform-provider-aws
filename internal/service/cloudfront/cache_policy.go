@@ -278,10 +278,11 @@ func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
-	_, err := conn.DeleteCachePolicy(ctx, &cloudfront.DeleteCachePolicyInput{
+	input := cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteCachePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
 		return diags

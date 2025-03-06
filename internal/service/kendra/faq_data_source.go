@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_faq")
+// @SDKDataSource("aws_kendra_faq", name="FAQ")
 func DataSourceFaq() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFaqRead,

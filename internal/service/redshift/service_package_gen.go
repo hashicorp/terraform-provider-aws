@@ -17,12 +17,14 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceDataShares,
-			Name:    "Data Shares",
+			Factory:  newDataSourceDataShares,
+			TypeName: "aws_redshift_data_shares",
+			Name:     "Data Shares",
 		},
 		{
-			Factory: newDataSourceProducerDataShares,
-			Name:    "Producer Data Shares",
+			Factory:  newDataSourceProducerDataShares,
+			TypeName: "aws_redshift_producer_data_shares",
+			Name:     "Producer Data Shares",
 		},
 	}
 }
@@ -30,20 +32,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceDataShareAuthorization,
-			Name:    "Data Share Authorization",
+			Factory:  newResourceDataShareAuthorization,
+			TypeName: "aws_redshift_data_share_authorization",
+			Name:     "Data Share Authorization",
 		},
 		{
-			Factory: newResourceDataShareConsumerAssociation,
-			Name:    "Data Share Consumer Association",
+			Factory:  newResourceDataShareConsumerAssociation,
+			TypeName: "aws_redshift_data_share_consumer_association",
+			Name:     "Data Share Consumer Association",
 		},
 		{
-			Factory: newResourceLogging,
-			Name:    "Logging",
+			Factory:  newResourceLogging,
+			TypeName: "aws_redshift_logging",
+			Name:     "Logging",
 		},
 		{
-			Factory: newResourceSnapshotCopy,
-			Name:    "Snapshot Copy",
+			Factory:  newResourceSnapshotCopy,
+			TypeName: "aws_redshift_snapshot_copy",
+			Name:     "Snapshot Copy",
 		},
 	}
 }
@@ -212,11 +218,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*redshift.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return redshift.NewFromConfig(cfg,
+	optFns := []func(*redshift.Options){
 		redshift.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return redshift.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*redshift.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*redshift.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *redshift.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*redshift.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

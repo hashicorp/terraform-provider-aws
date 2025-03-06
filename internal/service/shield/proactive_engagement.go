@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Proactive Engagement")
+// @FrameworkResource("aws_shield_proactive_engagement", name="Proactive Engagement")
 func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &proactiveEngagementResource{}, nil
 }
@@ -35,10 +35,6 @@ func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfi
 type proactiveEngagementResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *proactiveEngagementResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_proactive_engagement"
 }
 
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

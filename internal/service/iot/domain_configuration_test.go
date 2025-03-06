@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -35,10 +36,11 @@ func TestAccIoTDomainConfiguration_basic(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "DATA"),
@@ -75,7 +77,7 @@ func TestAccIoTDomainConfiguration_disappears(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceDomainConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -190,7 +192,7 @@ func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) { // nosemgrep:ci.aw
 				Config: testAccDomainConfigurationConfig_awsManaged(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_type", "AWS_MANAGED"),

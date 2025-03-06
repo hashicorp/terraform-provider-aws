@@ -135,6 +135,7 @@ class MyConvertedCode(TerraformStack):
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
+|Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
 |Chatbot|`chatbot`|`AWS_ENDPOINT_URL_CHATBOT`|`chatbot`|
@@ -227,6 +228,7 @@ class MyConvertedCode(TerraformStack):
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
+|Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
 |IoT Analytics|`iotanalytics`|`AWS_ENDPOINT_URL_IOTANALYTICS`|`iotanalytics`|
 |IoT Events|`iotevents`|`AWS_ENDPOINT_URL_IOT_EVENTS`|`iot_events`|
@@ -258,6 +260,7 @@ class MyConvertedCode(TerraformStack):
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
+|Elemental MediaPackage VOD|`mediapackagevod`|`AWS_ENDPOINT_URL_MEDIAPACKAGE_VOD`|`mediapackage_vod`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
@@ -454,4 +457,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7d5e83cb756f223a78a2e2031e90a71987614ef4e697b264240b6547c00228b9 -->
+<!-- cache-key: cdktf-0.20.8 input-97c3cb707d3a062177488b18e495f9ee8ec86f4e047798c29565c3ba117a5c1a -->

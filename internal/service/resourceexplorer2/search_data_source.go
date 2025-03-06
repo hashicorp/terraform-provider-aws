@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Search")
+// @FrameworkDataSource("aws_resourceexplorer2_search", name="Search")
 func newDataSourceSearch(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSearch{}, nil
 }
@@ -33,10 +33,6 @@ const (
 
 type dataSourceSearch struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceSearch) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_resourceexplorer2_search"
 }
 
 func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

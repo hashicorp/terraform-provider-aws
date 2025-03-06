@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Policy Store")
+// @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
 func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourcePolicyStore{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type dataSourcePolicyStore struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourcePolicyStore) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_verifiedpermissions_policy_store"
 }
 
 func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

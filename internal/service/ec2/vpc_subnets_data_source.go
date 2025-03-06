@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnets", name "Subnets")
+// @SDKDataSource("aws_subnets", name="Subnets")
 func dataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetsRead,

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_lambda_function_association")
+// @SDKDataSource("aws_connect_lambda_function_association", name="Lambda Function Association")
 func dataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,
