@@ -36,6 +36,10 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -392,6 +396,7 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Response Headers Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, responseHeadersPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {
@@ -1307,4 +1312,9 @@ func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *awstypes.R
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func responseHeadersPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "response-headers-policy/"+id)
 }
