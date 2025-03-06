@@ -35,6 +35,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory:  newResourceMalwareScanSettings,
+			TypeName: "aws_guardduty_malware_scan_settings",
+			Name:     "Malware Scan Settings",
+		},
+		{
 			Factory:  newMemberDetectorFeatureResource,
 			TypeName: "aws_guardduty_member_detector_feature",
 			Name:     "Member Detector Feature",
