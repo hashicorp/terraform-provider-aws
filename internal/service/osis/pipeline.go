@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -195,10 +196,8 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 							},
 						},
 						"vpc_endpoint_management": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.VpcEndpointManagement](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.VpcEndpointManagement](),
+							Optional:   true,
 						},
 					},
 				},
@@ -217,8 +216,8 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
 	name := data.PipelineName.ValueString()
-	input := &osis.CreatePipelineInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := osis.CreatePipelineInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -228,7 +227,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 
 	// Retry for IAM eventual consistency.
 	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreatePipeline(ctx, input)
+		return conn.CreatePipeline(ctx, &input)
 	})
 
 	if err != nil {
@@ -242,6 +241,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	pipeline, err := waitPipelineCreated(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("pipeline_name"), name)...)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Ingestion Pipeline (%s) create", name), err.Error())
 
 		return
@@ -306,20 +306,21 @@ func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	if !new.BufferOptions.Equal(old.BufferOptions) ||
-		!new.EncryptionAtRestOptions.Equal(old.EncryptionAtRestOptions) ||
-		!new.LogPublishingOptions.Equal(old.LogPublishingOptions) ||
-		!new.MaxUnits.Equal(old.MaxUnits) ||
-		!new.MinUnits.Equal(old.MinUnits) ||
-		!new.PipelineConfigurationBody.Equal(old.PipelineConfigurationBody) {
-		input := &osis.UpdatePipelineInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := osis.UpdatePipelineInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		name := new.PipelineName.ValueString()
-		_, err := conn.UpdatePipeline(ctx, input)
+		_, err := conn.UpdatePipeline(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Ingestion Pipeline (%s)", name), err.Error())
@@ -525,7 +526,7 @@ type cloudWatchLogDestinationModel struct {
 }
 
 type vpcOptionsModel struct {
-	SecurityGroupIDs      fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs             fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
-	VpcEndpointManagement types.String                     `tfsdk:"vpc_endpoint_management"`
+	SecurityGroupIDs      fwtypes.SetValueOf[types.String]                   `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetValueOf[types.String]                   `tfsdk:"subnet_ids"`
+	VpcEndpointManagement fwtypes.StringEnum[awstypes.VpcEndpointManagement] `tfsdk:"vpc_endpoint_management"`
 }
