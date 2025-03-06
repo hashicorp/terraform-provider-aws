@@ -537,7 +537,6 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 			// If we're also changing connector config we need the new version
 			if d.HasChange("connector_configuration") {
-
 				res, err := conn.DescribeConnector(ctx, &kafkaconnect.DescribeConnectorInput{ConnectorArn: aws.String(d.Id())})
 
 				if err != nil {
