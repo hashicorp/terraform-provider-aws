@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_sink")
+// @SDKDataSource("aws_oam_sink", name="Sink")
 func DataSourceSink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSinkRead,

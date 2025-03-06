@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Event Sources Config")
+// @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
 func newResourceEventSourcesConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceEventSourcesConfig{}, nil
 }
@@ -35,10 +35,6 @@ const (
 
 type resourceEventSourcesConfig struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceEventSourcesConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_event_sources_config"
 }
 
 func (r *resourceEventSourcesConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

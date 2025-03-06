@@ -491,10 +491,11 @@ func resourceResponseHeadersPolicyDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Response Headers Policy: %s", d.Id())
-	_, err := conn.DeleteResponseHeadersPolicy(ctx, &cloudfront.DeleteResponseHeadersPolicyInput{
+	input := cloudfront.DeleteResponseHeadersPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteResponseHeadersPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResponseHeadersPolicy](err) {
 		return diags

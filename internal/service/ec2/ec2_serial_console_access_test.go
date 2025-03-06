@@ -54,7 +54,8 @@ func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		input := ec2.GetSerialConsoleAccessStatusInput{}
+		response, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -80,7 +81,8 @@ func testAccCheckSerialConsoleAccess(ctx context.Context, n string, enabled bool
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		input := ec2.GetSerialConsoleAccessStatusInput{}
+		response, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 		if err != nil {
 			return err
 		}

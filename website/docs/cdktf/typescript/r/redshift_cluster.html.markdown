@@ -17,6 +17,8 @@ Provides a Redshift Cluster Resource.
 
 ~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `defaultIamRoleArn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `defaultIamRoleArn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Basic Usage
@@ -87,13 +89,19 @@ This resource supports the following arguments:
 * `nodeType` - (Required) The node type to be provisioned for the cluster.
 * `clusterType` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
 * `manageMasterPassword` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
-  Conflicts with `masterPassword`.
+  Conflicts with `masterPassword` and `masterPasswordWo`.
   One of `masterPassword` or `manageMasterPassword` is required unless `snapshotIdentifier` is provided.
 * `masterPassword` - (Optional) Password for the master DB user.
-  Conflicts with `manageMasterPassword`.
-  One of `masterPassword` or `manageMasterPassword` is required unless `snapshotIdentifier` is provided.
+  Conflicts with `manageMasterPassword` and `masterPasswordWo`.
+  One of `masterPassword`, `masterPasswordWo` or `manageMasterPassword` is required unless `snapshotIdentifier` is provided.
   Note that this may show up in logs, and it will be stored in the state file.
   Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `masterPasswordWo` - (Optional, Write-Only) Password for the master DB user.
+  Conflicts with `manageMasterPassword` and `masterPassword`.
+  One of `masterPasswordWo`, `masterPassword` or `manageMasterPassword` is required unless `snapshotIdentifier` is provided.
+  Note that this may show up in logs.
+  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `masterPasswordWoVersion` - (Optional) Used together with `masterPasswordWo` to trigger an update. Increment this value when an update to the `masterPasswordWo` is required.
 * `masterPasswordSecretKmsKeyId` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `masterUsername` - (Required unless a `snapshotIdentifier` is provided) Username for the master DB user.
 * `multiAz` - (Optional) Specifies if the Redshift cluster is multi-AZ.
@@ -230,4 +238,4 @@ Using `terraform import`, import Redshift Clusters using the `clusterIdentifier`
 % terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-256317dde5b7df14e079cdaf9e10b363bf1abfa16c1fe6bf54c640647f4810cf -->
+<!-- cache-key: cdktf-0.20.8 input-508eb7588c9fdc96d467c7370b89cbae8d075f257098ddab0a90edeb84dfa679 -->

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_chime_voice_connector_group")
+// @SDKResource("aws_chime_voice_connector_group", name="Voice Connector Group")
 func ResourceVoiceConnectorGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorGroupCreate,

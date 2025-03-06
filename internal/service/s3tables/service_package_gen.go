@@ -21,24 +21,29 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceNamespace,
-			Name:    "Namespace",
+			Factory:  newResourceNamespace,
+			TypeName: "aws_s3tables_namespace",
+			Name:     "Namespace",
 		},
 		{
-			Factory: newResourceTable,
-			Name:    "Table",
+			Factory:  newResourceTable,
+			TypeName: "aws_s3tables_table",
+			Name:     "Table",
 		},
 		{
-			Factory: newResourceTableBucket,
-			Name:    "Table Bucket",
+			Factory:  newResourceTableBucket,
+			TypeName: "aws_s3tables_table_bucket",
+			Name:     "Table Bucket",
 		},
 		{
-			Factory: newResourceTableBucketPolicy,
-			Name:    "Table Bucket Policy",
+			Factory:  newResourceTableBucketPolicy,
+			TypeName: "aws_s3tables_table_bucket_policy",
+			Name:     "Table Bucket Policy",
 		},
 		{
-			Factory: newResourceTablePolicy,
-			Name:    "Table Policy",
+			Factory:  newResourceTablePolicy,
+			TypeName: "aws_s3tables_table_policy",
+			Name:     "Table Policy",
 		},
 	}
 }
@@ -58,11 +63,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3tables.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return s3tables.NewFromConfig(cfg,
+	optFns := []func(*s3tables.Options){
 		s3tables.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return s3tables.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*s3tables.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*s3tables.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *s3tables.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*s3tables.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

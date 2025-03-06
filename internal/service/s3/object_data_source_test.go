@@ -37,6 +37,7 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
@@ -478,6 +479,7 @@ func TestAccS3ObjectDataSource_checksumMode(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "checksum_mode", "ENABLED"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32", resourceName, "checksum_crc32"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32c", resourceName, "checksum_crc32c"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc64nvme", resourceName, "checksum_crc64nvme"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha1", resourceName, "checksum_sha1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha256", resourceName, "checksum_sha256"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "checksum_sha256"),
@@ -565,6 +567,7 @@ func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
@@ -1027,7 +1030,7 @@ data "aws_s3_object" "test" {
 }
 
 func testAccObjectDataSourceConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

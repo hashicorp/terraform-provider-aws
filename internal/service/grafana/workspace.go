@@ -186,8 +186,6 @@ func resourceWorkspace() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

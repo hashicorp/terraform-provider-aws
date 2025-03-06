@@ -35,9 +35,9 @@ class MyConvertedCode(TerraformStack):
         FsxWindowsFileSystem(self, "example",
             active_directory_id=Token.as_string(aws_directory_service_directory_example.id),
             kms_key_id=Token.as_string(aws_kms_key_example.arn),
-            storage_capacity=300,
+            storage_capacity=32,
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
-            throughput_capacity=1024
+            throughput_capacity=32
         )
 ```
 
@@ -65,9 +65,9 @@ class MyConvertedCode(TerraformStack):
                 password="avoid-plaintext-passwords",
                 username="Admin"
             ),
-            storage_capacity=300,
+            storage_capacity=32,
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
-            throughput_capacity=1024
+            throughput_capacity=32
         )
 ```
 
@@ -198,4 +198,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0a78a794f659cfe5c611887ac9e1fb7eebb21239a00af5aa1b95cd06aa75b7cb -->
+<!-- cache-key: cdktf-0.20.8 input-7512c63eecc7f2680d6ccea199dd6ef48933a2367fbdf05c9a796ce6d12b0c43 -->

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_detective_member")
+// @SDKResource("aws_detective_member", name="Member")
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
@@ -180,10 +180,11 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Detective Member: %s", d.Id())
-	_, err = conn.DeleteMembers(ctx, &detective.DeleteMembersInput{
+	input := detective.DeleteMembersInput{
 		AccountIds: []string{accountID},
 		GraphArn:   aws.String(graphARN),
-	})
+	}
+	_, err = conn.DeleteMembers(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -286,7 +287,7 @@ func waitMemberInvited(ctx context.Context, conn *detective.Client, graphARN, ad
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemberStatusVerificationInProgress),
-		Target:  enum.Slice(awstypes.MemberStatusInvited),
+		Target:  enum.Slice(awstypes.MemberStatusInvited, awstypes.MemberStatusEnabled),
 		Refresh: statusMember(ctx, conn, graphARN, adminAccountID),
 		Timeout: timeout,
 	}

@@ -745,7 +745,7 @@ resource "aws_s3_bucket" "destination" {
 }
 
 func testAccBucketAnalyticsConfigurationConfig_directoryBucket(bucket, name string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucket), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

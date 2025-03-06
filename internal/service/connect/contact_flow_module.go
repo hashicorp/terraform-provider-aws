@@ -42,8 +42,6 @@ func resourceContactFlowModule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -241,10 +239,11 @@ func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Contact Flow Module: %s", d.Id())
-	_, err = conn.DeleteContactFlowModule(ctx, &connect.DeleteContactFlowModuleInput{
+	input := connect.DeleteContactFlowModuleInput{
 		ContactFlowModuleId: aws.String(contactFlowModuleID),
 		InstanceId:          aws.String(instanceID),
-	})
+	}
+	_, err = conn.DeleteContactFlowModule(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

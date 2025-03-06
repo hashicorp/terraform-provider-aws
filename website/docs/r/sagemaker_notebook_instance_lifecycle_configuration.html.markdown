@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_notebook_instance_lifecycle_configuration"
 description: |-
-  Provides a lifecycle configuration for SageMaker Notebook Instances.
+  Provides a lifecycle configuration for SageMaker AI Notebook Instances.
 ---
 
 # Resource: aws_sagemaker_notebook_instance_lifecycle_configuration
 
-Provides a lifecycle configuration for SageMaker Notebook Instances.
+Provides a lifecycle configuration for SageMaker AI Notebook Instances.
 
 ## Example Usage
 
@@ -27,8 +27,8 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "lc" {
 This resource supports the following arguments:
 
 * `name` - (Optional) The name of the lifecycle configuration (must be unique). If omitted, Terraform will assign a random, unique name.
-* `on_create` - (Optional) A shell script (base64-encoded) that runs only once when the SageMaker Notebook Instance is created.
-* `on_start` - (Optional) A shell script (base64-encoded) that runs every time the SageMaker Notebook Instance is started including the time it's created.
+* `on_create` - (Optional) A shell script (base64-encoded) that runs only once when the SageMaker AI Notebook Instance is created.
+* `on_start` - (Optional) A shell script (base64-encoded) that runs every time the SageMaker AI Notebook Instance is started including the time it's created.
 
 ## Attribute Reference
 

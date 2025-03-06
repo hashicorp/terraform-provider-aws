@@ -143,9 +143,10 @@ func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGateway(ctx, &directconnect.DeleteDirectConnectGatewayInput{
+	input := directconnect.DeleteDirectConnectGatewayInput{
 		DirectConnectGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDirectConnectGateway(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags

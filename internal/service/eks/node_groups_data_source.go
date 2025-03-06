@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_node_groups")
+// @SDKDataSource("aws_eks_node_groups", name="Node Groups")
 func dataSourceNodeGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupsRead,

@@ -721,7 +721,6 @@ func resourceProject() *schema.Resource {
 				}
 				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
@@ -1104,9 +1103,10 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Project: %s", d.Id())
-	_, err := conn.DeleteProject(ctx, &codebuild.DeleteProjectInput{
+	input := codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Project (%s): %s", d.Id(), err)

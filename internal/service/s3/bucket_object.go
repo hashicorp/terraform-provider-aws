@@ -21,7 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,10 +52,7 @@ func resourceBucketObject() *schema.Resource {
 			StateContext: resourceBucketObjectImport,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceBucketObjectCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceBucketObjectCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"acl": {
@@ -70,7 +66,7 @@ func resourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrBucket: {
-				Deprecated:   "Use the aws_s3_object resource instead",
+				Deprecated:   "bucket is deprecated. Use the aws_s3_object resource instead.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -127,7 +123,7 @@ func resourceBucketObject() *schema.Resource {
 				Default:  false,
 			},
 			names.AttrKey: {
-				Deprecated:   "Use the aws_s3_object resource instead",
+				Deprecated:   "key is deprecated. Use the aws_s3_object resource instead.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,

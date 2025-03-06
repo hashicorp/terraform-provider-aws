@@ -48,9 +48,9 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the sink.
-* `id` - ARN of the sink.
+* `id` - ARN of the sink. Use `arn` instead.
 * `name` - Name of the sink.
 * `sinkId` - Random ID string that AWS generated as part of the sink ARN.
 * `tags` - Tags assigned to the sink.
 
-<!-- cache-key: cdktf-0.20.8 input-8e63be540533d9d78bac454b3d644795733c12ad84f0bb46cc6b5785db3cbc59 -->
+<!-- cache-key: cdktf-0.20.8 input-bad94e897a19fbf7755c47c7266ecfe078fcb886193156f8edc70f3949676e31 -->

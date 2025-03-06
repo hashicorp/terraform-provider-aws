@@ -21,22 +21,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newConfigurationSetResource,
-			Name:    "Configuration Set",
+			Factory:  newConfigurationSetResource,
+			TypeName: "aws_pinpointsmsvoicev2_configuration_set",
+			Name:     "Configuration Set",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newOptOutListResource,
-			Name:    "Opt-out List",
+			Factory:  newOptOutListResource,
+			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
+			Name:     "Opt-out List",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newPhoneNumberResource,
-			Name:    "Phone Number",
+			Factory:  newPhoneNumberResource,
+			TypeName: "aws_pinpointsmsvoicev2_phone_number",
+			Name:     "Phone Number",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
@@ -59,11 +62,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*pinpointsmsvoicev2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return pinpointsmsvoicev2.NewFromConfig(cfg,
+	optFns := []func(*pinpointsmsvoicev2.Options){
 		pinpointsmsvoicev2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return pinpointsmsvoicev2.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*pinpointsmsvoicev2.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*pinpointsmsvoicev2.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *pinpointsmsvoicev2.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*pinpointsmsvoicev2.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

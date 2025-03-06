@@ -116,9 +116,10 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DisassociateWebACL(ctx, &wafregional.DisassociateWebACLInput{
+	input := wafregional.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
-	})
+	}
+	_, err = conn.DisassociateWebACL(ctx, &input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags

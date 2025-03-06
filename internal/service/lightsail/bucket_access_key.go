@@ -27,7 +27,7 @@ const (
 	BucketAccessKeyIdPartsCount = 2
 )
 
-// @SDKResource("aws_lightsail_bucket_access_key")
+// @SDKResource("aws_lightsail_bucket_access_key", name="Bucket Access Key")
 func ResourceBucketAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAccessKeyCreate,

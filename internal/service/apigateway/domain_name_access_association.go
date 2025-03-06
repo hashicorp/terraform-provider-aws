@@ -45,10 +45,6 @@ type domainNameAccessAssociationResource struct {
 	framework.WithImportByID
 }
 
-func (*domainNameAccessAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_domain_name_access_association"
-}
-
 func (r *domainNameAccessAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -89,8 +85,8 @@ func (r *domainNameAccessAssociationResource) Create(ctx context.Context, reques
 
 	conn := r.Meta().APIGatewayClient(ctx)
 
-	input := &apigateway.CreateDomainNameAccessAssociationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := apigateway.CreateDomainNameAccessAssociationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -98,7 +94,7 @@ func (r *domainNameAccessAssociationResource) Create(ctx context.Context, reques
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateDomainNameAccessAssociation(ctx, input)
+	output, err := conn.CreateDomainNameAccessAssociation(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating API Gateway Domain Name Access Association", err.Error())
@@ -155,9 +151,10 @@ func (r *domainNameAccessAssociationResource) Delete(ctx context.Context, reques
 
 	conn := r.Meta().APIGatewayClient(ctx)
 
-	_, err := conn.DeleteDomainNameAccessAssociation(ctx, &apigateway.DeleteDomainNameAccessAssociationInput{
+	input := apigateway.DeleteDomainNameAccessAssociationInput{
 		DomainNameAccessAssociationArn: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteDomainNameAccessAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return
@@ -170,16 +167,12 @@ func (r *domainNameAccessAssociationResource) Delete(ctx context.Context, reques
 	}
 }
 
-func (r *domainNameAccessAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDomainNameAccessAssociationByARN(ctx context.Context, conn *apigateway.Client, arn string) (*awstypes.DomainNameAccessAssociation, error) {
-	input := &apigateway.GetDomainNameAccessAssociationsInput{
+	input := apigateway.GetDomainNameAccessAssociationsInput{
 		ResourceOwner: awstypes.ResourceOwnerSelf,
 	}
 
-	return findDomainNameAccessAssociation(ctx, conn, input, func(v *awstypes.DomainNameAccessAssociation) bool {
+	return findDomainNameAccessAssociation(ctx, conn, &input, func(v *awstypes.DomainNameAccessAssociation) bool {
 		return aws.ToString(v.DomainNameAccessAssociationArn) == arn
 	})
 }

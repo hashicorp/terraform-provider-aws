@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dax_parameter_group")
+// @SDKResource("aws_dax_parameter_group", name="Parameter Group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -90,9 +90,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
-	resp, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
+	describeGroupInput := dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []string{d.Id()},
-	})
+	}
+	resp, err := conn.DescribeParameterGroups(ctx, &describeGroupInput)
 
 	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
@@ -112,9 +113,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	pg := resp.ParameterGroups[0]
 
-	paramresp, err := conn.DescribeParameters(ctx, &dax.DescribeParametersInput{
+	describeParametersInput := dax.DescribeParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
-	})
+	}
+	paramresp, err := conn.DescribeParameters(ctx, &describeParametersInput)
 
 	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())

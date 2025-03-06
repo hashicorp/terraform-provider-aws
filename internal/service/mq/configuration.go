@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +54,6 @@ func resourceConfiguration() *schema.Resource {
 				}
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

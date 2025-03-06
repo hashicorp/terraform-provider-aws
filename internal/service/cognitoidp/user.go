@@ -388,10 +388,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 
 	log.Printf("[DEBUG] Deleting Cognito User: %s", d.Id())
-	_, err := conn.AdminDeleteUser(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
+	input := cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(username),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err := conn.AdminDeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.UserNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

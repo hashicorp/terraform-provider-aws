@@ -309,13 +309,13 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `cachedMethods` (Required) - Controls whether CloudFront caches the response to requests using the specified HTTP methods.
 * `cachePolicyId` (Optional) - Unique identifier of the cache policy that is attached to the cache behavior. If configuring the `defaultCacheBehavior` either `cachePolicyId` or `forwardedValues` must be set.
 * `compress` (Optional) - Whether you want CloudFront to automatically compress content for web requests that include `Accept-Encoding: gzip` in the request header (default: `false`).
-* `defaultTtl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header.
+* `defaultTtl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header. The TTL defined in Cache Policy overrides this configuration.
 * `fieldLevelEncryptionId` (Optional) - Field level encryption configuration ID.
 * `forwardedValues` (Optional, **Deprecated** use `cachePolicyId` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront handles query strings, cookies and headers (maximum one).
 * `lambdaFunctionAssociation` (Optional) - A [config block](#lambda-function-association) that triggers a lambda function with specific actions (maximum 4).
 * `functionAssociation` (Optional) - A [config block](#function-association) that triggers a cloudfront function with specific actions (maximum 2).
-* `maxTtl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers.
-* `minTtl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds.
+* `maxTtl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers. The TTL defined in Cache Policy overrides this configuration.
+* `minTtl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds. The TTL defined in Cache Policy overrides this configuration.
 * `originRequestPolicyId` (Optional) - Unique identifier of the origin request policy that is attached to the behavior.
 * `pathPattern` (Required) - Pattern (for example, `images/*.jpg`) that specifies which requests you want this cache behavior to apply to.
 * `realtimeLogConfigArn` (Optional) - ARN of the [real-time log configuration](cloudfront_realtime_log_config.html) that is attached to this cache behavior.
@@ -325,6 +325,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `trustedKeyGroups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `trustedSigners` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `viewerProtocolPolicy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
+* `grpcConfig` (Optional) - A [config block](#grpc-config-arguments) that sets the grpc config.
 
 ##### Forwarded Values Arguments
 
@@ -458,6 +459,10 @@ class MyConvertedCode extends TerraformStack {
 
 * `eventType` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
 * `functionArn` (Required) - ARN of the CloudFront function.
+
+##### GRPC config arguments
+
+* `enabled` (Required) - Whether Grpc requests are enabled.
 
 ##### Cookies Arguments
 
@@ -617,4 +622,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-016f5dbc9c21b429c56166e27cf76bcc384dee8b54d767c742e1c29c528c8899 -->
+<!-- cache-key: cdktf-0.20.8 input-2ea6c83a9b5622e035954c100ff852684cea05950f360c75884dca270010d20b -->

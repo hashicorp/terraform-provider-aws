@@ -165,7 +165,8 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 func testAccPreCheckTrafficMirrorFilterRule(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorFilters(ctx, &ec2.DescribeTrafficMirrorFiltersInput{})
+	input := ec2.DescribeTrafficMirrorFiltersInput{}
+	_, err := conn.DescribeTrafficMirrorFilters(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror filter rule acceprance test: ", err)
