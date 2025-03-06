@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.30.1
+	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.33.1
@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/dax v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/detective v1.32.1
@@ -256,10 +256,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/waf v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.53.1
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.31.1
 	github.com/aws/smithy-go v1.22.3
@@ -300,10 +300,10 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.4.0
-	golang.org/x/crypto v0.35.0
-	golang.org/x/mod v0.23.0
-	golang.org/x/text v0.22.0
-	golang.org/x/tools v0.30.0
+	golang.org/x/crypto v0.36.0
+	golang.org/x/mod v0.24.0
+	golang.org/x/text v0.23.0
+	golang.org/x/tools v0.31.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	syreclabs.com/go/faker v1.2.3
@@ -369,9 +369,9 @@ require (
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 	google.golang.org/grpc v1.70.0 // indirect
