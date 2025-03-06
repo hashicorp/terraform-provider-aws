@@ -47,7 +47,7 @@ func v5_86_0_ErrorCheck(t *testing.T, isV5_86_0 *bool) resource.ErrorCheckFunc {
 		if *isV5_86_0 {
 			re := regexache.MustCompile(`(?s)creating S3 Bucket \([-a-z0-9]+\) Lifecycle Configuration.+couldn't find resource`)
 			if re.MatchString(err.Error()) {
-				t.Skipf("skipping test: known failure in v5.86.0: %s", err)
+				t.Skipf("skipping test: known possible failure in v5.86.0: %s", err)
 			}
 		}
 		return err
@@ -1699,7 +1699,7 @@ func testAccCheckBucketLifecycleConfigurationExists_v5_86_0(ctx context.Context,
 
 		_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 		if tfresource.NotFound(err) {
-			t.Skipf("skipping test: known failure in v5.86.0: %s", err)
+			t.Skipf("skipping test: known possible failure in v5.86.0: %s", err)
 		}
 
 		return err
