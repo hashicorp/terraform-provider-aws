@@ -301,12 +301,12 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	if v := aws.ToInt32(output.FromPort); v == -1 && data.FromPort.IsNull() {
 		data.FromPort = types.Int64Null()
 	} else {
-		data.FromPort = fwflex.Int32ToFramework(ctx, output.FromPort)
+		data.FromPort = fwflex.Int32ToFrameworkInt64(ctx, output.FromPort)
 	}
 	if v := aws.ToInt32(output.ToPort); v == -1 && data.ToPort.IsNull() {
 		data.ToPort = types.Int64Null()
 	} else {
-		data.ToPort = fwflex.Int32ToFramework(ctx, output.ToPort)
+		data.ToPort = fwflex.Int32ToFrameworkInt64(ctx, output.ToPort)
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -395,8 +395,6 @@ func (r *securityGroupRuleResource) ModifyPlan(ctx context.Context, request reso
 			response.RequiresReplace = []path.Path{path.Root(old), path.Root(new)}
 		}
 	}
-
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource.ConfigValidator {
@@ -456,9 +454,9 @@ func (model *securityGroupRuleResourceModel) setID() {
 
 func (model *securityGroupRuleResourceModel) expandIPPermission(ctx context.Context) awstypes.IpPermission {
 	apiObject := awstypes.IpPermission{
-		FromPort:   fwflex.Int32FromFramework(ctx, model.FromPort),
+		FromPort:   fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
 		IpProtocol: fwflex.StringFromFramework(ctx, model.IPProtocol),
-		ToPort:     fwflex.Int32FromFramework(ctx, model.ToPort),
+		ToPort:     fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
 	}
 
 	if !model.CIDRIPv4.IsNull() {
@@ -504,11 +502,11 @@ func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx 
 		CidrIpv4:          fwflex.StringFromFramework(ctx, model.CIDRIPv4),
 		CidrIpv6:          fwflex.StringFromFramework(ctx, model.CIDRIPv6),
 		Description:       fwflex.StringFromFramework(ctx, model.Description),
-		FromPort:          fwflex.Int32FromFramework(ctx, model.FromPort),
+		FromPort:          fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
 		IpProtocol:        fwflex.StringFromFramework(ctx, model.IPProtocol),
 		PrefixListId:      fwflex.StringFromFramework(ctx, model.PrefixListID),
 		ReferencedGroupId: fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID),
-		ToPort:            fwflex.Int32FromFramework(ctx, model.ToPort),
+		ToPort:            fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
 	}
 
 	return apiObject

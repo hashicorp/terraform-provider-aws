@@ -336,7 +336,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -429,10 +429,6 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 		return
 	}
-}
-
-func (r *serverlessCacheResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findServerlessCache(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeServerlessCachesInput) (*awstypes.ServerlessCache, error) {

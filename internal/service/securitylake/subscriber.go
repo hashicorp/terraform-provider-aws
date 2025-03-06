@@ -406,10 +406,6 @@ func (r *subscriberResource) ImportState(ctx context.Context, request resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, resp)
 }
 
-func (r *subscriberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, resp)
-}
-
 func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id string) (*awstypes.SubscriberResource, error) {
 	input := &securitylake.GetSubscriberInput{
 		SubscriberId: aws.String(id),

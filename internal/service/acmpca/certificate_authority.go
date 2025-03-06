@@ -331,8 +331,6 @@ func resourceCertificateAuthority() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.CertificateAuthorityUsageMode](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

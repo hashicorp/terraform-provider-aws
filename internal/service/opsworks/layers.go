@@ -447,6 +447,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	}
 
 	return &schema.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 			return lt.Create(ctx, d, meta)
 		},
@@ -467,8 +468,6 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return resourceSchema
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

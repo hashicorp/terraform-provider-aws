@@ -219,7 +219,6 @@ func resourceFleet() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

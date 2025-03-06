@@ -231,10 +231,6 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *monitorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) {
 	input := &networkmonitor.GetMonitorInput{
 		MonitorName: aws.String(name),

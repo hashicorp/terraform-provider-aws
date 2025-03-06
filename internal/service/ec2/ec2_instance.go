@@ -174,7 +174,7 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				Deprecated:    "use 'cpu_options' argument instead",
+				Deprecated:    "cpu_core_count is deprecated. Use cpu_options instead.",
 				ConflictsWith: []string{"cpu_options.0.core_count"},
 			},
 			"cpu_threads_per_core": {
@@ -182,7 +182,7 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				Deprecated:    "use 'cpu_options' argument instead",
+				Deprecated:    "cpu_threads_per_core is deprecated. Use cpu_options instead.",
 				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
@@ -850,7 +850,6 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				_, ok := diff.GetOk(names.AttrLaunchTemplate)
 

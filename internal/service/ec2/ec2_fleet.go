@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,10 +49,7 @@ func resourceFleet() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceFleetCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceFleetCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -591,6 +587,26 @@ func resourceFleet() *schema.Resource {
 									},
 								},
 							},
+						},
+						"max_total_price": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"min_target_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"single_availability_zone": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"single_instance_type": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -1153,6 +1169,22 @@ func expandSpotOptionsRequest(tfMap map[string]interface{}) *awstypes.SpotOption
 		apiObject.MaintenanceStrategies = expandFleetSpotMaintenanceStrategiesRequest(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["max_total_price"].(string); ok && v != "" {
+		apiObject.MaxTotalPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["min_target_capacity"].(int); ok {
+		apiObject.MinTargetCapacity = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["single_availability_zone"].(bool); ok {
+		apiObject.SingleAvailabilityZone = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["single_instance_type"].(bool); ok {
+		apiObject.SingleInstanceType = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -1512,6 +1544,22 @@ func flattenSpotOptions(apiObject *awstypes.SpotOptions) map[string]interface{} 
 
 	if v := apiObject.MaintenanceStrategies; v != nil {
 		tfMap["maintenance_strategies"] = []interface{}{flattenFleetSpotMaintenanceStrategies(v)}
+	}
+
+	if v := apiObject.MaxTotalPrice; v != nil {
+		tfMap["max_total_price"] = aws.ToString(v)
+	}
+
+	if v := apiObject.MinTargetCapacity; v != nil {
+		tfMap["min_target_capacity"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.SingleAvailabilityZone; v != nil {
+		tfMap["single_availability_zone"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.SingleInstanceType; v != nil {
+		tfMap["single_instance_type"] = aws.ToBool(v)
 	}
 
 	return tfMap

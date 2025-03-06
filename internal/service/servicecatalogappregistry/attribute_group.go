@@ -221,10 +221,6 @@ func (r *resourceAttributeGroup) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceAttributeGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetAttributeGroupOutput, error) {
 	in := &servicecatalogappregistry.GetAttributeGroupInput{
 		AttributeGroup: aws.String(id),

@@ -171,8 +171,6 @@ func resourceReplicationConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

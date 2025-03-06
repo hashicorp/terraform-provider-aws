@@ -386,10 +386,6 @@ func (r *resourceClusterSnapshotCopy) ImportState(ctx context.Context, req resou
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func (r *resourceClusterSnapshotCopy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 type resourceClusterSnapshotCopyData struct {
 	AllocatedStorage                  types.Int64  `tfsdk:"allocated_storage"`
 	CopyTags                          types.Bool   `tfsdk:"copy_tags"`

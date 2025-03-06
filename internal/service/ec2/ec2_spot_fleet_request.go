@@ -868,8 +868,6 @@ func resourceSpotFleetRequest() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

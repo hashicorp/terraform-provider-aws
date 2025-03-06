@@ -903,6 +903,137 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 	})
 }
 
+// Simulate a change in default value for `transition_default_minimum_object_size`
+func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_ZeroLessThan_ChangeOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: providerVersionSchemaV0,
+					},
+				},
+				Config: testAccBucketLifecycleConfigurationConfig_Migrate_Filter_And_ZeroLessThan(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkSchemaV0Expiration_Days(1),
+							names.AttrFilter: checkSchemaV0Filter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(0),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("baseline/"),
+									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+										"Key":   knownvalue.StringExact("data-lifecycle-action"),
+										"Value": knownvalue.StringExact("delete"),
+									}),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("varies_by_storage_class")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketLifecycleConfigurationConfig_Migrate_Filter_And_ZeroLessThan(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(1),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(0),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("baseline/"),
+									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+										"Key":   knownvalue.StringExact("data-lifecycle-action"),
+										"Value": knownvalue.StringExact("delete"),
+									}),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// This is checking the change _after_ the state migration step happens
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(1),
+								names.AttrFilter: checkFilter_And(
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(0),
+										"object_size_less_than":    knownvalue.Int64Exact(0),
+										names.AttrPrefix:           knownvalue.StringExact("baseline/"),
+										names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+											"Key":   knownvalue.StringExact("data-lifecycle-action"),
+											"Value": knownvalue.StringExact("delete"),
+										}),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New("transition_default_minimum_object_size"),
+							knownvalue.StringExact("varies_by_storage_class"),
+							knownvalue.StringExact("all_storage_classes_128K"),
+						),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2246,4 +2377,42 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 `, rName)
+}
+
+// Set `migrated` to `false` before migration and `true` after
+func testAccBucketLifecycleConfigurationConfig_Migrate_Filter_And_ZeroLessThan(rName string, migrated bool) string {
+	var transition string
+	if !migrated {
+		transition = "transition_default_minimum_object_size = \"varies_by_storage_class\""
+	}
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    status = "Enabled"
+
+    id = %[1]q
+
+    expiration {
+      days = 1
+    }
+
+    filter {
+      and {
+        prefix = "baseline/"
+        tags = {
+          Key   = "data-lifecycle-action"
+          Value = "delete"
+        }
+      }
+    }
+  }
+
+  %[2]s
+}`, rName, transition)
 }

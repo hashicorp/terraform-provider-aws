@@ -249,10 +249,6 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceProject) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),

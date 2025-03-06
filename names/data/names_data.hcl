@@ -6983,7 +6983,7 @@ service "sagemaker" {
 
   names {
     provider_name_upper = "SageMaker"
-    human_friendly      = "SageMaker"
+    human_friendly      = "SageMaker AI"
   }
 
   endpoint_info {
@@ -6996,7 +6996,7 @@ service "sagemaker" {
 
   provider_package_correct = "sagemaker"
   doc_prefix               = ["sagemaker_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "sagemakera2iruntime" {

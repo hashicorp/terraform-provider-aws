@@ -12,6 +12,8 @@ Provides an SSM Parameter resource.
 
 ~> **Note:** `overwrite` also makes it possible to overwrite an existing SSM Parameter that's not created by Terraform before. This argument has been deprecated and will be removed in v6.0.0 of the provider. For more information on how this affects the behavior of this resource, see [this issue comment](https://github.com/hashicorp/terraform-provider-aws/issues/25636#issuecomment-1623661159).
 
+-> **Note:** Write-Only argument `value_wo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Basic example

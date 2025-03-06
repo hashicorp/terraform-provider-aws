@@ -284,7 +284,7 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -353,10 +353,6 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceMembership) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceMembershipData struct {

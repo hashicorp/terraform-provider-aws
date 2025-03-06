@@ -244,10 +244,6 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *namespaceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findNamespaceByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) (*awstypes.NamespaceInfoV2, error) {
 	input := &quicksight.DescribeNamespaceInput{
 		AwsAccountId: aws.String(awsAccountID),

@@ -552,7 +552,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		renewForYears := fwflex.Int32ValueFromFramework(ctx, new.DurationInYears) - fwflex.Int32ValueFromFramework(ctx, old.DurationInYears)
+		renewForYears := fwflex.Int32ValueFromFrameworkInt64(ctx, new.DurationInYears) - fwflex.Int32ValueFromFrameworkInt64(ctx, old.DurationInYears)
 
 		if err := renewDomain(ctx, conn, domainName, currentExpirationDate, renewForYears, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
@@ -628,8 +628,6 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		// duration_in_years can only be increased.
 		var oldDurationInYears, newDurationInYears types.Int64

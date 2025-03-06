@@ -78,7 +78,7 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"saml_options": schema.SingleNestedBlock{
+			"saml_options": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Attributes: map[string]schema.Attribute{
 					"group_attribute": schema.StringAttribute{
 						Optional: true,
@@ -204,7 +204,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, diags := fwflex.Calculate(ctx, plan, state)
+	diff, diags := fwflex.Diff(ctx, plan, state)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return

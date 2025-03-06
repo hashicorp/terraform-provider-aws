@@ -422,14 +422,14 @@ The `filter` configuration block supports the following arguments:
 The `noncurrent_version_expiration` configuration block supports the following arguments:
 
 * `newer_noncurrent_versions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
-* `noncurrent_days` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action. Must be a positive integer.
+* `noncurrent_days` - (Required) Number of days an object is noncurrent before Amazon S3 can perform the associated action. Must be a positive integer.
 
 ### noncurrent_version_transition
 
 The `noncurrent_version_transition` configuration block supports the following arguments:
 
 * `newer_noncurrent_versions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
-* `noncurrent_days` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action.
+* `noncurrent_days` - (Required) Number of days an object is noncurrent before Amazon S3 can perform the associated action.
 * `storage_class` - (Required) Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### transition

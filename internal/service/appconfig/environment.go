@@ -298,10 +298,6 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, request resource.
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrApplicationID), parts[1])...)
 }
 
-func (r *resourceEnvironment) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceEnvironmentData struct {
 	ApplicationID types.String `tfsdk:"application_id"`
 	ARN           types.String `tfsdk:"arn"`

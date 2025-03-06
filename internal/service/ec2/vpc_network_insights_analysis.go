@@ -105,8 +105,6 @@ func resourceNetworkInsightsAnalysis() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
