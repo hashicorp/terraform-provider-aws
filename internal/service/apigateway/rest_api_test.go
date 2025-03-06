@@ -2669,3 +2669,96 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 `, rName, title, failOnWarnings)
 }
+
+func TestAccAPIGatewayRestAPI_PolicyDiffSuppress(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Test with shorthand resource format
+				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "execute-api:/*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				// Using complete ARN format for resource specification - ensure no plan differences are detected when compared to the shorthand format
+				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "arn:aws:execute-api:*:*:*/*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+				PlanOnly:    true,
+				ExpectError: nil, // Expect no changes in plan
+			},
+			{
+				// Test with ARN containing specific region and account ID - verify no differences are detected
+				Config: testAccRestAPIConfig_policyWithResourceFormat(rName, "arn:aws:execute-api:ap-northeast-1:123456789012:*/*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+				PlanOnly:    true,
+				ExpectError: nil, // Expect no changes in plan
+			},
+			{
+				// Test with different app_id - should detect differences
+				Config: testAccRestAPIConfig_policyWithAppID(rName, "abcdef123456", "execute-api:/*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+				ExpectNonEmptyPlan: true, // Expect changes in plan due to app_id change
+			},
+		},
+	})
+}
+
+func testAccRestAPIConfig_policyWithResourceFormat(rName, resourceFormat string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action = "execute-api:Invoke"
+      Resource = %[2]q
+    }]
+  })
+}
+`, rName, resourceFormat)
+}
+
+func testAccRestAPIConfig_policyWithAppID(rName, appID, resourceFormat string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action = "execute-api:Invoke"
+      Resource = "arn:aws:execute-api:*:*:%[2]s/%[3]s"
+    }]
+  })
+}
+`, rName, appID, resourceFormat)
+}
