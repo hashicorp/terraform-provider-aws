@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_mwaa_environment: introducing Amazon MWAA micro environments for Apache Airflow
+resource/aws_mwaa_environment: Lower the minimum value of the `max_webservers` and `min_webservers` arguments from `2` to `1` in support of Amazon MWAA micro environments
 ```

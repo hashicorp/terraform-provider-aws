@@ -136,7 +136,7 @@ This resource supports the following arguments:
 * `logging_configuration` - (Optional) The Apache Airflow logs you want to send to Amazon CloudWatch Logs. See [`logging_configuration` Block](#logging_configuration-block) for details.
 * `max_webservers` - (Optional) The maximum number of web servers that you want to run in your environment. Value need to be between `2` and `5` if `environment_class` is not `mw1.micro`, `1` otherwise.
 * `max_workers` - (Optional) The maximum number of workers that can be automatically scaled up. Value need to be between `1` and `25`. Will be `10` by default.
-* `min_webservers` - (Optional) The minimum number of web servers that you want to run in your environment. Value need to be between `2` and `5` if `environment_class` is not `mw1.micro`, `1` otherwise. Will be `2` by default.
+* `min_webservers` - (Optional) The minimum number of web servers that you want to run in your environment. Value need to be between `2` and `5` if `environment_class` is not `mw1.micro`, `1` otherwise.
 * `min_workers` - (Optional) The minimum number of workers that you want to run in your environment. Will be `1` by default.
 * `name` - (Required) The name of the Apache Airflow Environment
 * `network_configuration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [`network_configuration` Block](#network_configuration-block) for details.
