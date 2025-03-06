@@ -143,7 +143,6 @@ func resourceConnector() *schema.Resource {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -517,20 +516,53 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &kafkaconnect.UpdateConnectorInput{
-			Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
-			ConnectorArn:   aws.String(d.Id()),
-			CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		currentVersion := aws.String(d.Get(names.AttrVersion).(string))
+
+		if d.HasChange("capacity") {
+			input := &kafkaconnect.UpdateConnectorInput{
+				Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
+				ConnectorArn:   aws.String(d.Id()),
+				CurrentVersion: currentVersion,
+			}
+
+			_, err := conn.UpdateConnector(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector Capacity (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+			}
+
+			// If we're also changing connector config we need the new version
+			if d.HasChange("connector_configuration") {
+				res, err := conn.DescribeConnector(ctx, &kafkaconnect.DescribeConnectorInput{ConnectorArn: aws.String(d.Id())})
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "getting new MSK Connect Connector version (%s): %s", d.Id(), err)
+				}
+
+				currentVersion = res.CurrentVersion
+			}
 		}
 
-		_, err := conn.UpdateConnector(ctx, input)
+		if d.HasChange("connector_configuration") {
+			input := &kafkaconnect.UpdateConnectorInput{
+				ConnectorConfiguration: flex.ExpandStringValueMap(d.Get("connector_configuration").(map[string]interface{})),
+				ConnectorArn:           aws.String(d.Id()),
+				CurrentVersion:         currentVersion,
+			}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector (%s): %s", d.Id(), err)
-		}
+			_, err := conn.UpdateConnector(ctx, input)
 
-		if _, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector Configuration (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+			}
 		}
 	}
 
