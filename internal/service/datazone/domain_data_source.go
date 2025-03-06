@@ -117,7 +117,7 @@ func (d *dataSourceDataZoneDomain) Read(ctx context.Context, request datasource.
 
 func (d *dataSourceDataZoneDomain) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
-		datasourcevalidator.ExactlyOneOf(
+		datasourcevalidator.AtLeastOneOf(
 			path.MatchRoot(names.AttrName),
 			path.MatchRoot(names.AttrID),
 		),

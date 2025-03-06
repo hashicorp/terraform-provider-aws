@@ -14,9 +14,6 @@ import (
 
 func TestAccDataZoneDomainDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	dataSourceName := "data.aws_datazone_domain.test"
 	resourceName := "aws_datazone_domain.test"
@@ -31,12 +28,8 @@ func TestAccDataZoneDomainDataSource_basic(t *testing.T) {
 				Config: testAccDomainDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-				),
-			},
-			{
-				Config: testAccDomainDataSourceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},
@@ -45,9 +38,6 @@ func TestAccDataZoneDomainDataSource_basic(t *testing.T) {
 
 func TestAccDataZoneDomainDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	dataSourceName := "data.aws_datazone_domain.test"
 	resourceName := "aws_datazone_domain.test"
@@ -62,14 +52,6 @@ func TestAccDataZoneDomainDataSource_name(t *testing.T) {
 				Config: testAccDomainDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-				),
-			},
-			{
-				Config: testAccDomainDataSourceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 				),
