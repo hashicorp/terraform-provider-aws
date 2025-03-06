@@ -119,7 +119,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
                 CustomType: fwtypes.ARNType,
 				Optional: true,
 			},
-            "definition": schema.StringAttribute{
+            "definition": schema.ListAttribute{
+                ElementType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
 				Optional: true,
 			},
 			"description": schema.StringAttribute{
@@ -489,26 +490,57 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 // With Terraform Plugin-Framework configurations are deserialized into
 // Go types, providing type safety without the need for type assertions.
 // These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name. 
+// tag value should match the attribute name.
 //
-// Nested objects are represented in their own data struct. These will 
+// Nested objects are represented in their own data struct. These will
 // also have a corresponding attribute type mapping for use inside flex
 // functions.
 //
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceFlowModel struct {
-	ARN                      types.String   `tfsdk:"arn"`
-	ID                       types.String   `tfsdk:"id"`
-	Name                     types.String   `tfsdk:"name"`
-	ExecutionRoleARN         types.String   `tfsdk:"execution_role_arn"`
-	CustomerEncryptionKeyARN types.String   `tfsdk:"customer_encryption_key_arn"`
-	Definition               types.String   `tfsdk:"definition"`
-	Description              types.String   `tfsdk:"description"`
-	Timeouts                 timeouts.Value `tfsdk:"timeouts"`
+	ARN                      types.String                                 `tfsdk:"arn"`
+	ID                       types.String                                 `tfsdk:"id"`
+	Name                     types.String                                 `tfsdk:"name"`
+	ExecutionRoleARN         types.String                                 `tfsdk:"execution_role_arn"`
+	CustomerEncryptionKeyARN types.String                                 `tfsdk:"customer_encryption_key_arn"`
+	Definition               fwtypes.ObjectValueOf[flowDefinitionModel]   `tfsdk:"definition"`
+	Description              types.String                                 `tfsdk:"description"`
+	Timeouts                 timeouts.Value                               `tfsdk:"timeouts"`
 }
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+type flowDefinitionModel struct {
+	Connections fwtypes.ListNestedObjectValueOf[flowConnectionModel] `tfsdk:"connections"`
+	Nodes       fwtypes.ListNestedObjectValueOf[flowNodeModel]       `tfsdk:"nodes"`
+}
+
+type flowConnectionModel struct {
+    Name          types.String                                       `tfsdk:"name"`
+    Source        types.String                                       `tfsdk:"source"`
+    Target        types.String                                       `tfsdk:"target"`
+    Type          fwtypes.StringEnum[awstypes.FlowConnectionType]    `tfsdk:"type"`
+    Configuration fwtypes.ObjectValueOf[flowConnectionConfiguration] `tfsdk:"configuration"`
+}
+
+type flowConnectionConfiguration struct {} // TODO
+
+type flowNodeModel struct {
+    Name          types.String                                         `tfsdk:"name"`
+    Type          fwtypes.StringEnum[awstypes.FlowNodeType]            `tfsdk:"type"`
+    Configuration fwtypes.ObjectValueOf[flowNodeConfigurationModel]    `tfsdk:"configuration"`
+    Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]  `tfsdk:"inputs"`
+    Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel] `tfsdk:"outputs"`
+}
+
+type flowNodeConfigurationModel struct {} // TODO
+
+type flowNodeInputModel struct {
+    Expression types.String                                    `tfsdk:"expression"`
+    Name       types.String                                    `tfsdk:"name"`
+    Type       fwtypes.StringEnum[awstypes.FlowNodeIODataType] `tfsdk:"type"`
+}
+
+type flowNodeOutputModel struct {
+    Name       types.String                                    `tfsdk:"name"`
+    Type       fwtypes.StringEnum[awstypes.FlowNodeIODataType] `tfsdk:"type"`
 }
