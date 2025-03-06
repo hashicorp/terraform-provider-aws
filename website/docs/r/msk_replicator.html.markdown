@@ -49,6 +49,9 @@ resource "aws_msk_replicator" "test" {
 
 
     topic_replication {
+      topic_name_configuration {
+        type = "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS"
+      }
       topics_to_replicate = [".*"]
       starting_position {
         type = "LATEST"
@@ -96,6 +99,7 @@ The following arguments are required:
 
 ### topic_replication Argument Reference
 
+* `topic_name_configuration` - (Optional) Configuration for specifying replicated topic names should be the same as their corresponding upstream topics or prefixed with source cluster alias.
 * `topics_to_replicate` - (Required) List of regular expression patterns indicating the topics to copy.
 * `topics_to_exclude` - (Optional) List of regular expression patterns indicating the topics that should not be replica.
 * `detect_and_copy_new_topics` - (Optional) Whether to periodically check for new topics and partitions.
@@ -109,6 +113,10 @@ The following arguments are required:
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
+
+### topic_name_configuration
+
+* `type` - (optional) The type of topic configuration name. Supports `PREFIXED_WITH_SOURCE_CLUSTER_ALIAS` and `IDENTICAL`.
 
 ### starting_position
 

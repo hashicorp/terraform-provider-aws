@@ -31,6 +31,7 @@ class MyConvertedCode(TerraformStack):
         Sesv2ConfigurationSet(self, "example",
             configuration_set_name="example",
             delivery_options=Sesv2ConfigurationSetDeliveryOptions(
+                max_delivery_seconds=300,
                 tls_policy="REQUIRE"
             ),
             reputation_options=Sesv2ConfigurationSetReputationOptions(
@@ -43,7 +44,8 @@ class MyConvertedCode(TerraformStack):
                 suppressed_reasons=["BOUNCE", "COMPLAINT"]
             ),
             tracking_options=Sesv2ConfigurationSetTrackingOptions(
-                custom_redirect_domain="example.com"
+                custom_redirect_domain="example.com",
+                https_policy="REQUIRE"
             )
         )
 ```
@@ -65,6 +67,7 @@ This resource supports the following arguments:
 
 The `delivery_options` configuration block supports the following arguments:
 
+* `max_delivery_seconds` - The maximum amount of time, in seconds, that Amazon SES API v2 will attempt delivery of email. If specified, the value must greater than or equal to 300 seconds (5 minutes) and less than or equal to 50400 seconds (840 minutes).
 * `sending_pool_name` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
 * `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `REQUIRE`, `OPTIONAL`.
 
@@ -91,6 +94,7 @@ The `suppression_options` configuration block supports the following arguments:
 The `tracking_options` configuration block supports the following arguments:
 
 * `custom_redirect_domain` - (Required) The domain to use for tracking open and click events.
+* `https_policy`: The https policy to use for tracking open and click events. Valid values are `REQUIRE`, `REQUIRE_OPEN_ONLY` or `OPTIONAL`.
 
 ### `vdm_options` Block
 
@@ -144,4 +148,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set using
 % terraform import aws_sesv2_configuration_set.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-003c069f05ea5b8836d33ce1f579ac41250d9029ef4a8a5bc4f4d9eb0663e3f6 -->
+<!-- cache-key: cdktf-0.20.8 input-241342fefebf27269fa69fbd8ee7fe802fa28b50c7b041bca4b7e55f6ebe4c34 -->

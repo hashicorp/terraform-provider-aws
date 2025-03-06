@@ -197,16 +197,55 @@ This resource supports the following arguments:
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
-* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan.
-* `condition` - (Optional) A list of conditions that you define to assign resources to your backup plans using tags.
+* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag) for details.
+* `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition) for details.
 * `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan.
 * `not_resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to exclude from a backup plan.
 
-Tag conditions (`selection_tag`) support the following:
+### selection_tag
 
-* `type` - (Required) An operation, such as `StringEquals`, that is applied to a key-value pair used to filter resources in a selection.
-* `key` - (Required) The key in a key-value pair.
-* `value` - (Required) The value in a key-value pair.
+The `selection_tag` configuration block supports the following attributes:
+
+* `type` - (Required) An operation, such as `STRINGEQUALS`, that is applied to the key-value pair used to filter resources in a selection.
+* `key` - (Required) Key for the filter.
+* `value` - (Required) Value for the filter.
+
+### condition
+
+The `condition` configuration block supports the following attributes:
+
+* `string_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching". See [below](#string_equals) for details.
+* `string_not_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching". See [below](#string_not_equals) for details.
+* `string_like` - (Optional) Filters the values of your tagged resources for matching tag values with the use of a wildcard character (`*`) anywhere in the string. For example, `prod*` or `*rod*` matches the tag value `production`. See [below](#string_like) for details.
+* `string_not_like` - (Optional) Filters the values of your tagged resources for non-matching tag values with the use of a wildcard character (`*`) anywhere in the string. See [below](#string_not_like) for details.
+
+### string_equals
+
+The `string_equals` configuration block supports the following attributes:
+
+* `key` - (Required) Key for the filter.
+* `value` - (Required) Value for the filter.
+
+### string_not_equals
+
+The `string_not_equals` configuration block supports the following attributes:
+
+* `key` - (Required) Key for the filter.
+* `value` - (Required) Value for the filter.
+
+### string_like
+
+The `string_like` configuration block supports the following attributes:
+
+* `key` - (Required) Key for the filter.
+* `value` - (Required) Value for the filter.
+
+### string_not_like
+
+The `string_not_like` configuration block supports the following attributes:
+
+* `key` - (Required) Key for the filter.
+* `value` - (Required)  Value for the filter.
 
 ## Attribute Reference
 
@@ -239,4 +278,4 @@ Using `terraform import`, import Backup selection using the role plan_id and id 
 % terraform import aws_backup_selection.example plan-id|selection-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-611a33d70e2d7ee876d82838e90e00edfd3ded77693e25a475537a3e728818a3 -->
+<!-- cache-key: cdktf-0.20.8 input-1b2c673f05bd7fe873496812dab7eaa71a1d54ba120b1bb1f6d73889b1210f65 -->

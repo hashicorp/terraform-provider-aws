@@ -39,12 +39,12 @@ func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
-	input := &apigateway.GetAuthorizersInput{
+	input := apigateway.GetAuthorizersInput{
 		RestApiId: aws.String(apiID),
 	}
 	var ids []*string
 
-	err := getAuthorizersPages(ctx, conn, input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
+	err := getAuthorizersPages(ctx, conn, &input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

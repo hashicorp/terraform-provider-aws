@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Enrollment Status")
+// @FrameworkResource("aws_computeoptimizer_enrollment_status", name="Enrollment Status")
 func newEnrollmentStatusResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &enrollmentStatusResource{}
 
@@ -45,10 +45,6 @@ type enrollmentStatusResource struct {
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 	framework.WithImportByID
-}
-
-func (*enrollmentStatusResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_computeoptimizer_enrollment_status"
 }
 
 func (r *enrollmentStatusResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -105,7 +101,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 	}
 
 	// Set values for unknowns.
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	output, err := waitEnrollmentStatusUpdated(ctx, conn, string(input.Status), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -115,7 +111,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFramework(ctx, output.NumberOfMemberAccountsOptedIn)
+	data.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFrameworkInt64(ctx, output.NumberOfMemberAccountsOptedIn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -181,7 +177,7 @@ func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.
 		return
 	}
 
-	new.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFramework(ctx, output.NumberOfMemberAccountsOptedIn)
+	new.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFrameworkInt64(ctx, output.NumberOfMemberAccountsOptedIn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }

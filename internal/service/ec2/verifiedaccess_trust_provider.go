@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -137,8 +136,6 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.UserTrustProviderType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -260,10 +257,11 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &ec2.DeleteVerifiedAccessTrustProviderInput{
+	input := ec2.DeleteVerifiedAccessTrustProviderInput{
 		ClientToken:                   aws.String(id.UniqueId()),
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
 		return diags

@@ -401,8 +401,6 @@ func resourceModel() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -446,13 +444,13 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createOpts.InferenceExecutionConfig = expandModelInferenceExecutionConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker AI model create config: %#v", *createOpts)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateModel(ctx, createOpts)
 	}, ErrCodeValidationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker model: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI model: %s", err)
 	}
 	d.SetId(name)
 
@@ -472,7 +470,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker model %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI model %s: %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, output.ModelArn)
@@ -514,7 +512,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker model: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI model: %s", d.Id())
 
 	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteModel(ctx, deleteOpts)

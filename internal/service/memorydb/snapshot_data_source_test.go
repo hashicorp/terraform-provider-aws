@@ -29,6 +29,7 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.description", resourceName, "cluster_configuration.0.description"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.engine", resourceName, "cluster_configuration.0.engine"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.engine_version", resourceName, "cluster_configuration.0.engine_version"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.maintenance_window", resourceName, "cluster_configuration.0.maintenance_window"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.name", resourceName, "cluster_configuration.0.name"),

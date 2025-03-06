@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -102,8 +101,6 @@ func resourceTarget() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -112,7 +109,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	resourceID := d.Get(names.AttrResourceID).(string)
-	input := &applicationautoscaling.RegisterScalableTargetInput{
+	input := applicationautoscaling.RegisterScalableTargetInput{
 		MaxCapacity:       aws.Int32(int32(d.Get(names.AttrMaxCapacity).(int))),
 		MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
 		ResourceId:        aws.String(resourceID),
@@ -129,7 +126,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.SuspendedState = expandSuspendedState(v.([]interface{}))
 	}
 
-	err := registerScalableTarget(ctx, conn, input)
+	err := registerScalableTarget(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Application AutoScaling Target (%s): %s", resourceID, err)
@@ -182,7 +179,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &applicationautoscaling.RegisterScalableTargetInput{
+		input := applicationautoscaling.RegisterScalableTargetInput{
 			MaxCapacity:       aws.Int32(int32(d.Get(names.AttrMaxCapacity).(int))),
 			MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
 			ResourceId:        aws.String(d.Id()),
@@ -198,7 +195,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.SuspendedState = expandSuspendedState(v.([]interface{}))
 		}
 
-		err := registerScalableTarget(ctx, conn, input)
+		err := registerScalableTarget(ctx, conn, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Application AutoScaling Target (%s): %s", d.Id(), err)
@@ -212,14 +209,14 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	input := &applicationautoscaling.DeregisterScalableTargetInput{
+	input := applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Id()),
 		ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
 	}
 
 	log.Printf("[INFO] Deleting Application AutoScaling Target: %s", d.Id())
-	_, err := conn.DeregisterScalableTarget(ctx, input)
+	_, err := conn.DeregisterScalableTarget(ctx, &input)
 
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return diags
@@ -241,14 +238,14 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.Client, resourceID, namespace, dimension string) (*awstypes.ScalableTarget, error) {
-	input := &applicationautoscaling.DescribeScalableTargetsInput{
+	input := applicationautoscaling.DescribeScalableTargetsInput{
 		ResourceIds:       []string{resourceID},
 		ScalableDimension: awstypes.ScalableDimension(dimension),
 		ServiceNamespace:  awstypes.ServiceNamespace(namespace),
 	}
 	var output []awstypes.ScalableTarget
 
-	pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, input)
+	pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, &input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -268,7 +265,7 @@ func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 
 	if aws.ToString(target.ResourceId) != resourceID || string(target.ScalableDimension) != dimension || string(target.ServiceNamespace) != namespace {
 		return nil, &retry.NotFoundError{
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 

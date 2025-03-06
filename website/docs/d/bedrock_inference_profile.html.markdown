@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 - `inference_profile_name` - The unique identifier of the inference profile.
 - `models` - A list of information about each model in the inference profile. See [`models`](#models).
 - `status` - The status of the inference profile. `ACTIVE` means that the inference profile is available to use.
-- `type` - The type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock.
+- `type` - The type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock. `APPLICATION` means that the inference profile is defined by the user.
 - `created_at` - The time at which the inference profile was created.
 - `description` - The description of the inference profile.
 - `updated_at` - The time at which the inference profile was last updated.

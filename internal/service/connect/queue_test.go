@@ -38,7 +38,7 @@ func testAccQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -58,7 +58,7 @@ func testAccQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -116,7 +116,7 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 				Config: testAccQueueConfig_hoursOfOperation(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -136,7 +136,7 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 				Config: testAccQueueConfig_hoursOfOperation(rName, rName2, "second"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -156,7 +156,7 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 				Config: testAccQueueConfig_hoursOfOperation(rName, rName2, "first"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -193,7 +193,7 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 				Config: testAccQueueConfig_maxContacts(rName, rName2, originalMaxContacts),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -214,7 +214,7 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 				Config: testAccQueueConfig_maxContacts(rName, rName2, updatedMaxContacts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -249,7 +249,7 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 				Config: testAccQueueConfig_outboundCaller(rName, rName2, originalOutboundCallerIdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -271,7 +271,7 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 				Config: testAccQueueConfig_outboundCaller(rName, rName2, updatedOutboundCallerIdName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -307,7 +307,7 @@ func testAccQueue_updateStatus(t *testing.T) {
 				Config: testAccQueueConfig_status(rName, rName2, originalStatus),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -327,7 +327,7 @@ func testAccQueue_updateStatus(t *testing.T) {
 				Config: testAccQueueConfig_status(rName, rName2, updatedStatus),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -363,7 +363,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
@@ -384,7 +384,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				Config: testAccQueueConfig_quickConnect1(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
@@ -406,7 +406,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				Config: testAccQueueConfig_quickConnect2(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
@@ -427,7 +427,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				Config: testAccQueueConfig_quickConnect1(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/queue/{queue_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),

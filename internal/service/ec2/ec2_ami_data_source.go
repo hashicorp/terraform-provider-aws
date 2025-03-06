@@ -217,6 +217,10 @@ func dataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -233,23 +237,25 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	describeImagesInput := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		describeImagesInput.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	images, err := findImages(ctx, conn, input)
+	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool))
+
+	images, err := findImages(ctx, conn, &describeImagesInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
@@ -295,7 +301,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("architecture", image.Architecture)
 	imageArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   names.EC2,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 	}.String()
@@ -335,6 +341,14 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
+
+	getInstanceUEFIDataInput := ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &getInstanceUEFIDataInput)
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
 
 	setTagsOut(ctx, image.Tags)
 
@@ -417,4 +431,29 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
 		s[names.AttrMessage] = "UNSET"
 	}
 	return s
+}
+
+// checkMostRecentAndMissingFilters appends a diagnostic if the provided configuration
+// uses the most recent image and is not filtered by owner or image ID
+func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent bool) diag.Diagnostics {
+	filtered := false
+	for _, f := range input.Filters {
+		name := aws.ToString(f.Name)
+		if name == "image-id" || name == "owner-id" {
+			filtered = true
+		}
+	}
+
+	if mostRecent && len(input.Owners) == 0 && !filtered {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Most Recent Image Not Filtered",
+			Detail: `"most_recent" is set to "true" and results are not filtered by owner or image ID. ` +
+				"With this configuration, a third party may introduce a new image which " +
+				"will be returned by this data source. Consider filtering by owner or image ID " +
+				"to avoid this possibility.",
+		})
+	}
+
+	return diags
 }

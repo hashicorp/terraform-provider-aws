@@ -73,7 +73,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 		deviceIDs = append(deviceIDs, aws.ToString(v.DeviceId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, deviceIDs)
 
 	return diags

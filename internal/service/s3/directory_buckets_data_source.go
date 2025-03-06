@@ -29,10 +29,6 @@ type directoryBucketsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *directoryBucketsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_s3_directory_buckets"
-}
-
 func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -51,9 +47,7 @@ func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.
 
 func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data directoryBucketsDataSourceModel
-
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -81,7 +75,7 @@ func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasourc
 		return d.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", v))
 	}))
 	data.Buckets = flex.FlattenFrameworkStringValueList(ctx, buckets)
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

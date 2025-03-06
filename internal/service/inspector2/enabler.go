@@ -34,7 +34,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// @SDKResource("aws_inspector2_enabler")
+// @SDKResource("aws_inspector2_enabler", name="Enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,
@@ -75,7 +75,7 @@ func ResourceEnabler() *schema.Resource {
 				if l := len(accountIDs); l > 1 {
 					client := meta.(*conns.AWSClient)
 
-					if slices.Contains(accountIDs, client.AccountID) {
+					if slices.Contains(accountIDs, client.AccountID(ctx)) {
 						return fmt.Errorf(`"account_ids" can contain either the administrator account or one or more member accounts. Contains %v`, accountIDs)
 					}
 				}
@@ -322,9 +322,9 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := client.Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
-	admin := slices.Contains(accountIDs, client.AccountID)
+	admin := slices.Contains(accountIDs, client.AccountID(ctx))
 	members := tfslices.Filter(accountIDs, func(s string) bool {
-		return s != client.AccountID
+		return s != client.AccountID(ctx)
 	})
 	if len(members) > 0 {
 		// Catch legacy case mixing admin account and member accounts
@@ -340,7 +340,7 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 			return diags
 		}
 	} else if admin {
-		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID})...)
+		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID(ctx)})...)
 	}
 
 	return diags

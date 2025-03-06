@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Environment Blueprint Configuration")
+// @FrameworkResource("aws_datazone_environment_blueprint_configuration", name="Environment Blueprint Configuration")
 func newResourceEnvironmentBlueprintConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironmentBlueprintConfiguration{}
 	return r, nil
@@ -41,10 +41,6 @@ const (
 
 type resourceEnvironmentBlueprintConfiguration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceEnvironmentBlueprintConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment_blueprint_configuration"
 }
 
 func (r *resourceEnvironmentBlueprintConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -9,7 +9,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key string, optFns ...func(*{{ .AWSService }}.Options)) (*string, error) {
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
-	input := &{{ .AWSService  }}.{{ .ListTagsOp }}Input{
+	input := {{ .AWSService  }}.{{ .ListTagsOp }}Input{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
@@ -22,7 +22,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 		},
 	}
 
-	output, err := conn.{{ .ListTagsOp }}(ctx, input, optFns...)
+	output, err := conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
 
 	if err != nil {
 		return nil, err

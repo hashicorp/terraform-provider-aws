@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datapipeline_pipeline_definition")
+// @SDKResource("aws_datapipeline_pipeline_definition", name="Pipeline Definition")
 func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineDefinitionPut,

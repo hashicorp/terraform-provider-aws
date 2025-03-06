@@ -40,7 +40,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_max_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_min_netmask_length"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "ipam-pool/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -66,7 +66,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocation_min_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.test", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "ipam-pool/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -340,10 +340,11 @@ func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.Ipam
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
+		input := ec2.ProvisionIpamPoolCidrInput{
 			IpamPoolId: ipampool.IpamPoolId,
 			Cidr:       aws.String("10.0.0.0/16"),
-		})
+		}
+		_, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 		return err
 	}

@@ -64,7 +64,7 @@ func dataSourceCoIPPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EC2 COIP Pools: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("pool_ids", tfslices.ApplyToAll(output, func(v awstypes.CoipPool) string {
 		return aws.ToString(v.PoolId)
 	}))

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Preferences")
+// @FrameworkResource("aws_costoptimizationhub_preferences", name="Preferences")
 func newResourcePreferences(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePreferences{}
 
@@ -45,10 +45,6 @@ type resourcePreferences struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourcePreferences) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_costoptimizationhub_preferences"
 }
 
 func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -111,7 +107,7 @@ func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	plan.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	plan.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 
@@ -144,7 +140,7 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	state.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	state.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 

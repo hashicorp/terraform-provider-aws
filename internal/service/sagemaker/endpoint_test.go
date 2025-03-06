@@ -34,7 +34,7 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -297,7 +297,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Endpoint (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Endpoint (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -311,7 +311,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Endpoint ID is set")
+			return fmt.Errorf("no SageMaker AI Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

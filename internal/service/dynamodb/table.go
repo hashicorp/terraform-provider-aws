@@ -127,7 +127,6 @@ func resourceTable() *schema.Resource {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			validateTTLCustomDiff,
-			verify.SetTagsDiff,
 		),
 
 		SchemaVersion: 1,
@@ -810,7 +809,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling point in time recovery: %w", err))
 		}
 	}
@@ -927,9 +926,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &describeBackupsInput)
 
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
@@ -940,9 +940,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "point_in_time_recovery", err)
 	}
 
-	ttlOut, err := conn.DescribeTimeToLive(ctx, &dynamodb.DescribeTimeToLiveInput{
+	describeTTLInput := dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	ttlOut, err := conn.DescribeTimeToLive(ctx, &describeTTLInput)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), fmt.Errorf("TTL: %w", err))
@@ -1005,10 +1006,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Table Class cannot be changed concurrently with other values
 	if d.HasChange("table_class") {
-		_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+		input := dynamodb.UpdateTableInput{
 			TableClass: awstypes.TableClass(d.Get("table_class").(string)),
 			TableName:  aws.String(d.Id()),
-		})
+		}
+		_, err := conn.UpdateTable(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: %s", d.Id(), err)
 		}
@@ -1148,7 +1150,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("server_side_encryption") {
 		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
-			var replicaInputs []awstypes.ReplicationGroupUpdate
+			var replicaUpdates []awstypes.ReplicationGroupUpdate
 			for _, replica := range replicas.List() {
 				tfMap, ok := replica.(map[string]interface{})
 				if !ok {
@@ -1170,27 +1172,31 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					KMSMasterKeyId: aws.String(key),
 				}
 				var update = awstypes.ReplicationGroupUpdate{Update: input}
-				replicaInputs = append(replicaInputs, update)
+				replicaUpdates = append(replicaUpdates, update)
 			}
-			var input = &awstypes.UpdateReplicationGroupMemberAction{
+			var updateAction = awstypes.UpdateReplicationGroupMemberAction{
 				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
-				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region(ctx)),
 			}
-			var update = awstypes.ReplicationGroupUpdate{Update: input}
-			replicaInputs = append(replicaInputs, update)
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+			var update = awstypes.ReplicationGroupUpdate{
+				Update: &updateAction,
+			}
+			replicaUpdates = append(replicaUpdates, update)
+			input := dynamodb.UpdateTableInput{
 				TableName:      aws.String(d.Id()),
-				ReplicaUpdates: replicaInputs,
-			})
+				ReplicaUpdates: replicaUpdates,
+			}
+			_, err := conn.UpdateTable(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Using normal update for SSE")
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+			input := dynamodb.UpdateTableInput{
 				TableName:        aws.String(d.Id()),
 				SSESpecification: sseSpecification,
-			})
+			}
+			_, err := conn.UpdateTable(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
 			}
@@ -1250,7 +1256,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1430,7 +1436,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout, replicaDelayDefault); err != nil {
 			return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 		}
 
@@ -1902,9 +1908,10 @@ func replicaPITR(ctx context.Context, conn *dynamodb.Client, tableName string, r
 		o.Region = region
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	input := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
-	}, optFn)
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &input, optFn)
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return false, fmt.Errorf("describing Continuous Backups: %w", err)
@@ -2021,7 +2028,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region(ctx))
 	if err != nil {
 		return sseList
 	}

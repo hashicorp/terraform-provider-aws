@@ -7,11 +7,89 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestCheckMostRecentAndMissingFilters(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		input      *ec2.DescribeImagesInput
+		mostRecent bool
+		wantDiag   bool
+	}{
+		{
+			name:       "most_recent false",
+			input:      &ec2.DescribeImagesInput{},
+			mostRecent: false,
+		},
+		{
+			name: "image-id filter",
+			input: &ec2.DescribeImagesInput{
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("image-id"),
+						Values: []string{"ami-123"},
+					},
+				},
+			},
+			mostRecent: true,
+		},
+		{
+			name: "owner-id filter",
+			input: &ec2.DescribeImagesInput{
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("owner-id"),
+						Values: []string{"amazon"},
+					},
+				},
+			},
+			mostRecent: true,
+		},
+		{
+			name: "owners argument",
+			input: &ec2.DescribeImagesInput{
+				Owners: []string{"amazon"},
+			},
+			mostRecent: true,
+		},
+		{
+			name: "missing filters",
+			input: &ec2.DescribeImagesInput{
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("name"), // nosemgrep:ci.literal-Name-string-test-constant,ci.literal-name-string-constant
+						Values: []string{"some-ami-name-*"},
+					},
+				},
+			},
+			mostRecent: true,
+			wantDiag:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var diags diag.Diagnostics
+			got := tfec2.CheckMostRecentAndMissingFilters(diags, tt.input, tt.mostRecent)
+			if (len(got) > 0) != tt.wantDiag {
+				t.Errorf("CheckMostRecentAndMissingFilters() diag = %v, wantErr %v", got, tt.wantDiag)
+				return
+			}
+		})
+	}
+}
 
 func TestAccEC2AMIDataSource_linuxInstance(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -195,7 +273,7 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "block_device_mappings.#", resourceName, "ebs_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_device_name", resourceName, "root_device_name"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_snapshot_id", resourceName, "root_snapshot_id"),
@@ -350,7 +428,7 @@ data "aws_ami" "test" {
 
   filter {
     name   = "name"
-    values = ["AwsMarketPublished_IBM App Connect v12.0.12.0 and IBM MQ v9.3.0.16 with RapidDeploy 5.1.12 -422d2ddd-3288-4067-be37-4e2a69450606"]
+    values = ["AwsMarketPublished_IBM App Connect v13.0.1.0 and IBM MQ v9.4.0.5 with RapidDeploy 5.1.15 by-422d2ddd-3288-4067-be37-4e2a69450606"]
   }
 }
 `

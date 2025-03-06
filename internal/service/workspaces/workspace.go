@@ -23,7 +23,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -150,8 +149,6 @@ func resourceWorkspace() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -159,7 +156,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	input := types.WorkspaceRequest{
+	req := types.WorkspaceRequest{
 		BundleId:                    aws.String(d.Get("bundle_id").(string)),
 		DirectoryId:                 aws.String(d.Get("directory_id").(string)),
 		RootVolumeEncryptionEnabled: aws.Bool(d.Get("root_volume_encryption_enabled").(bool)),
@@ -170,12 +167,13 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("volume_encryption_key"); ok {
-		input.VolumeEncryptionKey = aws.String(v.(string))
+		req.VolumeEncryptionKey = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateWorkspaces(ctx, &workspaces.CreateWorkspacesInput{
-		Workspaces: []types.WorkspaceRequest{input},
-	})
+	input := workspaces.CreateWorkspacesInput{
+		Workspaces: []types.WorkspaceRequest{req},
+	}
+	output, err := conn.CreateWorkspaces(ctx, &input)
 
 	if err == nil && len(output.FailedRequests) > 0 {
 		v := output.FailedRequests[0]
@@ -273,11 +271,12 @@ func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting WorkSpaces Workspace: %s", d.Id())
-	output, err := conn.TerminateWorkspaces(ctx, &workspaces.TerminateWorkspacesInput{
+	input := workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []types.TerminateRequest{{
 			WorkspaceId: aws.String(d.Id()),
 		}},
-	})
+	}
+	output, err := conn.TerminateWorkspaces(ctx, &input)
 
 	if err == nil && len(output.FailedRequests) > 0 {
 		v := output.FailedRequests[0]

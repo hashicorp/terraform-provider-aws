@@ -113,7 +113,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	slices.Sort(arns)
 	slices.Sort(nms)
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 	d.Set(names.AttrNames, nms)
 

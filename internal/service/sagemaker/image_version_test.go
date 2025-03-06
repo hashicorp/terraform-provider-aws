@@ -44,8 +44,8 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "container_image"),
 				),
 			},
@@ -132,10 +132,10 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Image Version (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SageMaker Image Version %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Image Version %q still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -60,7 +60,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 		name = aws.ToString(lexBot.Name)
 		region = aws.ToString(lexBot.LexRegion)
 		if region == "" {
-			region = meta.(*conns.AWSClient).Region
+			region = meta.(*conns.AWSClient).Region(ctx)
 		}
 	}
 
@@ -71,7 +71,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Connect Bot Association (%s): %s", id, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrInstanceID, instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)

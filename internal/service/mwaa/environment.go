@@ -316,7 +316,6 @@ func resourceEnvironment() *schema.Resource {
 
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }

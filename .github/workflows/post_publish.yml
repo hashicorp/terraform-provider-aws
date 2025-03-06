@@ -19,7 +19,7 @@ jobs:
     steps:
       - if: github.event_name == 'workflow_run'
         name: Download Artifact from Release workflow
-        uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
         with:
           workflow: release.yml
           name: release-tag
@@ -65,11 +65,12 @@ jobs:
           for i in 1 2
           do
             LATEST_VERSION=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq -r '.data.attributes.version')
-            if [[ "${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
+            if [[ "${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != "v${LATEST_VERSION}" ]]; then
               sleep 1h
             else
               echo "Registry and Github Version matches"
-                echo "current=$LATEST_VERSION >> "$GITHUB_OUTPUT"
+              echo "current=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
           done
 
@@ -82,8 +83,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     needs: [registry-check]
     steps:
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_wrapper: false
       - name: Specify Provider Version in TF Configuration
         run: |
           cat <<EOF > main.tf
@@ -91,7 +98,7 @@ jobs:
             required_providers {
               aws = {
                 source  = "hashicorp/aws"
-                version = ${{ needs.registry-check.outputs.latest-version }}
+                version = "${{ needs.registry-check.outputs.latest-version }}"
               }
             }
           }
@@ -107,12 +114,12 @@ jobs:
       - name: Send Slack Notification Upon Failure
         if: ${{ failure() }}
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             {
+              "channel" : "${{ secrets.SLACK_CHANNEL }}",
               "blocks": [
                 {
                   "type": "section",

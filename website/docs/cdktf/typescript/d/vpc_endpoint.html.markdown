@@ -78,6 +78,7 @@ In addition to all arguments above except `filter`, the following attributes are
 * `requesterManaged` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `routeTableIds` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `securityGroupIds` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
+* `serviceRegion` - The AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `subnetIds` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpcEndpointType` - VPC Endpoint type, `Gateway` or `Interface`.
 
@@ -101,4 +102,4 @@ DNS options (for `dnsOptions`) support the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-cf41a1af88fdcd16967d2fea2f7220a7cac0581c1bfd6c1afb6c5a31ae85ffb1 -->
+<!-- cache-key: cdktf-0.20.8 input-4f0e8fcaf3803ffa7c58af668a56247f7f26ea4640aea7c4154cfad227c76bf4 -->

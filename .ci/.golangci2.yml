@@ -1,5 +1,4 @@
-# IMPORTANT: Only add linters whose names start with letters A-M here.
-# Linters starting with N-Z should be placed in .golangci3.yml.
+# IMPORTANT: Only add linters whose names start with letters A-E here.
 issues:
   max-issues-per-linter: 10
   max-same-issues: 3
@@ -7,7 +6,7 @@ issues:
 linters:
   disable-all: true
   enable:
-    # !! only add a-m linters here, n-z linters go in .golangci3.yml
+    # !! only add a-e linters here
     - asasalint
     - asciicheck
     - containedctx
@@ -18,15 +17,6 @@ linters:
     - errcheck
     - errname
     - errorlint
-    - goconst
-    - gocritic
-    - gofmt
-    - gosimple
-    - govet
-    - ineffassign
-    - makezero
-    - misspell
-    - mnd
 
 linters-settings:
   copyloopvar:
@@ -41,56 +31,6 @@ linters-settings:
       - io:Close
   errorlint:
     errorf: false
-  goconst:
-    ignore-tests: true
-    min-occurrences: 6
-  gocritic:
-    enabled-tags:
-      - diagnostic
-    disabled-tags:
-      - experimental
-      - opinionated
-      - performance
-      - style
-  mnd:
-    checks:
-      - argument
-    ignored-functions:
-      # AWS Go SDK
-      - aws.Int32
-      - aws.Int64
-      - request.ConstantWaiterDelay
-      - request.WithWaiterMaxAttempts
-      # AWS Provider
-      - nullable.*
-      - tfresource.Retry*
-      - tfresource.With*
-      # Terraform Plugin SDK
-      - retry.RetryContext
-      - schema.DefaultTimeout
-      - validation.*
-      # QuickSight schema
-      - floatBetweenSchema
-      - intBetweenSchema
-      - stringLenBetweenSchema
-      # Terraform Plugin Framework
-      - int32validator.*
-      - int64validator.*
-      - listvalidator.*
-      - setvalidator.*
-      - stringvalidator.*
-      - SetDefaultCreateTimeout
-      - SetDefaultReadTimeout
-      - SetDefaultUpdateTimeout
-      - SetDefaultDeleteTimeout
-      # Go
-      - make
-      - strconv.FormatFloat
-      - strconv.FormatInt
-      - strconv.ParseFloat
-      - strconv.ParseInt
-      - strings.SplitN
-      # - big.Int.Text # Not sure how to specify a method
 
 run:
   timeout: 75m

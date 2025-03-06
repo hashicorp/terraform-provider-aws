@@ -43,7 +43,7 @@ func TestAccBackupVault_basic(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
@@ -233,21 +233,22 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 		iamRoleARN := arn.ARN{
 			Partition: client.Partition(ctx),
 			Service:   "iam",
-			AccountID: client.AccountID,
+			AccountID: client.AccountID(ctx),
 			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
 		}.String()
 		resourceARN := arn.ARN{
 			Partition: client.Partition(ctx),
 			Service:   "dynamodb",
-			Region:    client.Region,
-			AccountID: client.AccountID,
+			Region:    client.Region(ctx),
+			AccountID: client.AccountID(ctx),
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
-		output, err := conn.StartBackupJob(ctx, &backup.StartBackupJobInput{
+		input := backup.StartBackupJobInput{
 			BackupVaultName: aws.String(rName),
 			IamRoleArn:      aws.String(iamRoleARN),
 			ResourceArn:     aws.String(resourceARN),
-		})
+		}
+		output, err := conn.StartBackupJob(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error starting Backup Job: %w", err)

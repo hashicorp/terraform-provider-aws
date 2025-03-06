@@ -82,8 +82,10 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	const expectedEndpointRegion = providerRegion
+	const providerRegion = "us-east-1" //lintignore:AWSAT003
+	// Route 53 Recovery Control Config uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for Route 53 Recovery Control Config, but the AWS SDK's endpoint resolution returns one for the current region.
+	const expectedEndpointRegion = "us-west-2" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
@@ -283,7 +285,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListClusters(ctx, &route53recoverycontrolconfig.ListClustersInput{},
+	input := route53recoverycontrolconfig.ListClustersInput{}
+	_, err := client.ListClusters(ctx, &input,
 		func(opts *route53recoverycontrolconfig.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
@@ -446,14 +449,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {

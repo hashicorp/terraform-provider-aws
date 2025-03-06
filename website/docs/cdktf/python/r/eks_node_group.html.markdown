@@ -207,6 +207,7 @@ The following arguments are optional:
 * `launch_template` - (Optional) Configuration block with Launch Template settings. See [`launch_template`](#launch_template-configuration-block) below for details. Conflicts with `remote_access`.
 * `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
 * `node_group_name_prefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
+* `node_repair_config` - (Optional) The node auto repair configuration for the node group. See [`node_repair_config`](#node_repair_config-configuration-block) below for details.
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
 * `remote_access` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details. Conflicts with `launch_template`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -221,6 +222,10 @@ The following arguments are optional:
 * `id` - (Optional) Identifier of the EC2 Launch Template. Conflicts with `name`.
 * `name` - (Optional) Name of the EC2 Launch Template. Conflicts with `id`.
 * `version` - (Required) EC2 Launch Template version number. While the API accepts values like `$Default` and `$Latest`, the API will convert the value to the associated version number (e.g., `1`) on read and Terraform will show a difference on next plan. Using the `default_version` or `latest_version` attribute of the `aws_launch_template` resource or data source is recommended for this argument.
+
+### node_repair_config Configuration Block
+
+* `enabled` - (Required) Specifies whether to enable node auto repair for the node group. Node auto repair is disabled by default.
 
 ### remote_access Configuration Block
 
@@ -292,4 +297,4 @@ Using `terraform import`, import EKS Node Groups using the `cluster_name` and `n
 % terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fe608fb7adc16d4f1e0363865ecd6fc2d5b0eb9372860c4a8aa730be1b4503a7 -->
+<!-- cache-key: cdktf-0.20.8 input-bd4da5e734791aeb8e83cd00d25e46f8bdc19df7017cb3a4cc0ce59c8947dc3c -->

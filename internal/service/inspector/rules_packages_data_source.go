@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_inspector_rules_packages")
+// @SDKDataSource("aws_inspector_rules_packages", name="Rules Packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,
@@ -42,7 +42,7 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 	arns := output
 	slices.Sort(arns)
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 
 	return diags

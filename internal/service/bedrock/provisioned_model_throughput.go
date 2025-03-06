@@ -32,8 +32,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Provisioned Model Throughput")
+// @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
+// @Testing(tagsTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProvisionedModelThroughput{}
 
@@ -47,10 +48,6 @@ type resourceProvisionedModelThroughput struct {
 	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceProvisionedModelThroughput) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_provisioned_model_throughput"
 }
 
 func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -184,9 +181,10 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteProvisionedModelThroughput(ctx, &bedrock.DeleteProvisionedModelThroughputInput{
+	input := bedrock.DeleteProvisionedModelThroughputInput{
 		ProvisionedModelId: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteProvisionedModelThroughput(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

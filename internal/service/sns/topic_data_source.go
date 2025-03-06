@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sns_topic")
+// @SDKDataSource("aws_sns_topic", name="Topic")
 // @Testing(tagsTest=true)
 // @Tags(identifierAttribute="arn")
 func dataSourceTopic() *schema.Resource {

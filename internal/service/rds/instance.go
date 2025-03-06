@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -79,7 +80,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(40 * time.Minute),
+			Create: schema.DefaultTimeout(50 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
@@ -415,7 +416,7 @@ func resourceInstance() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrPassword},
+				ConflictsWith: []string{names.AttrPassword, "password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -496,7 +497,20 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "password_wo"},
+			},
+			"password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password", names.AttrPassword},
+				RequiredWith:  []string{"password_wo_version"},
+			},
+			"password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -540,8 +554,10 @@ func resourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
+				DiffSuppressOnRefresh: true,
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
@@ -684,8 +700,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -696,7 +711,7 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -704,6 +719,20 @@ func resourceInstance() *schema.Resource {
 				source := d.Get("replicate_source_db").(string)
 				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
+				}
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				source := d.Get("replicate_source_db").(string)
+				if source == "" {
+					return nil
+				}
+
+				rawConfig := d.GetRawConfig()
+				if v := rawConfig.GetAttr("db_subnet_group_name"); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+					if !arn.IsARN(source) {
+						return errors.New(`"replicate_source_db" must be an ARN when "db_subnet_group_name" is set.`)
+					}
 				}
 				return nil
 			},
@@ -751,6 +780,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				))
 			}
 		}
+	}
+
+	// get write-only value from configuration
+	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
 	}
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
@@ -859,7 +895,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 				}
-				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region(ctx)
 			}
 			if crossRegion {
 				input.DBParameterGroupName = aws.String(v.(string))
@@ -984,6 +1020,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
+
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1095,6 +1136,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1340,6 +1385,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(v.(bool))
 			requiresModifyDbInstance = true
@@ -1566,6 +1616,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -1760,6 +1815,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
 		}
 
 		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
@@ -1992,7 +2051,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrPubliclyAccessible, v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", v.ReadReplicaDBInstanceIdentifiers)
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+
+	// The AWS API accepts either the identifier or ARN when setting up a replica in the same region. The AWS Console uses the ARN.
+	// However, if the replica is in the same region, it always returns the identifier.
+	// Store the ARN if the ARN was originally set.
+	var sourceDBIdentifier string
+	if v.ReadReplicaSourceDBInstanceIdentifier != nil {
+		sourceDBIdentifier = aws.ToString(v.ReadReplicaSourceDBInstanceIdentifier)
+		if original, ok := d.GetOk("replicate_source_db"); ok {
+			original := original.(string)
+			if arn.IsARN(original) {
+				if !arn.IsARN(sourceDBIdentifier) {
+					awsClient := meta.(*conns.AWSClient)
+					sourceDBIdentifier = newDBInstanceARNString(ctx, awsClient, sourceDBIdentifier)
+				}
+			}
+		}
+	}
+	d.Set("replicate_source_db", sourceDBIdentifier)
+
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set(names.AttrStorageEncrypted, v.StorageEncrypted)
@@ -2259,6 +2336,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
+				// Handle virtual attribute
+				if input.ManageMasterUserPassword != nil {
+					// Attempted change, but update error as it's a stopped instance, so revert to original value
+					old, _ := d.GetChange("manage_master_user_password")
+					d.Set("manage_master_user_password", old.(bool))
+				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 		}
@@ -2366,7 +2449,8 @@ func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *r
 	return outputRaw.(*rds.CreateDBInstanceReadReplicaOutput), nil
 }
 
-func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) bool {
+func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	needsModify := false
 
 	if d.HasChanges(names.AttrAllocatedStorage, names.AttrIOPS) {
@@ -2541,6 +2625,18 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 	}
 
+	if d.HasChange("password_wo_version") {
+		passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+	}
+
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		needsModify = true
 		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
@@ -2586,7 +2682,14 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		needsModify = true
 		input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 
+		// Need to send the iops and allocated_size if migrating to a gp3 volume that's larger than the threshold.
+		if aws.ToString(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+		}
+
 		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.ToString(input.StorageType)) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
@@ -2598,7 +2701,7 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 	}
 
-	return needsModify
+	return needsModify, diags
 }
 
 func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
@@ -2661,6 +2764,10 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *types
 		pendingVersion = aws.ToString(c.PendingModifiedValues.EngineVersion)
 	}
 	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
+}
+
+func newDBInstanceARNString(ctx context.Context, client *conns.AWSClient, identifier string) string {
+	return client.RegionalARN(ctx, "rds", "db:"+identifier)
 }
 
 type dbInstanceARN struct {
@@ -2811,6 +2918,42 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringIAMDatabaseAuth,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusMaintenance,
+			instanceStatusModifying,
+			instanceStatusMovingToVPC,
+			instanceStatusRebooting,
+			instanceStatusRenaming,
+			instanceStatusResettingMasterCredentials,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageFull,
+			instanceStatusUpgrading,
+		},
+		Target:                    []string{instanceStatusStopped},
+		Refresh:                   statusDBInstance(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+		Delay:                     10 * time.Second,
+		MinTimeout:                3 * time.Second,
+	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -3047,4 +3190,66 @@ func flattenEndpoint(apiObject *types.Endpoint) map[string]interface{} {
 	}
 
 	return tfMap
+}
+
+func startInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	var err error
+
+	tflog.Info(ctx, "Starting RDS Instance", map[string]any{
+		"rds_instance_id": id,
+	})
+	_, err = conn.StartDBInstance(ctx, &rds.StartDBInstanceInput{
+		DBInstanceIdentifier: &id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting RDS Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitDBInstanceAvailable(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Instance (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	tflog.Info(ctx, "Stopping RDS Instance", map[string]any{
+		"rds_instance_id": id,
+	})
+	_, err := conn.StopDBInstance(ctx, &rds.StopDBInstanceInput{
+		DBInstanceIdentifier: &id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("stopping RDS Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitDBInstanceStopped(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Instance (%s) stop: %w", id, err)
+	}
+
+	return nil
+}
+
+func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.ResourceData) bool {
+	// Ideally, we'd be able to check the partition, region, and accountID, but that's not available in SDK
+	if arn.IsARN(old) {
+		if new != "" && !arn.IsARN(new) {
+			if oldARN, err := parseDBInstanceARN(old); err != nil {
+				return false
+			} else {
+				return oldARN.Identifier == new
+			}
+		}
+	} else if arn.IsARN(new) {
+		if old != "" && !arn.IsARN(old) {
+			if newARN, err := parseDBInstanceARN(new); err != nil {
+				return false
+			} else {
+				return newARN.Identifier == old
+			}
+		}
+	}
+	return false
 }

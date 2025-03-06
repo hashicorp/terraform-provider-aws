@@ -44,7 +44,7 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "add_header_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "bounce_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "0"),

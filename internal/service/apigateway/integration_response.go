@@ -98,7 +98,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.PutIntegrationResponseInput{
+	input := apigateway.PutIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
@@ -121,7 +121,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 		input.SelectionPattern = aws.String(v.(string))
 	}
 
-	_, err := conn.PutIntegrationResponse(ctx, input)
+	_, err := conn.PutIntegrationResponse(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting API Gateway Integration Response: %s", err)
@@ -168,12 +168,13 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
-	_, err := conn.DeleteIntegrationResponse(ctx, &apigateway.DeleteIntegrationResponseInput{
+	input := apigateway.DeleteIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
-	})
+	}
+	_, err := conn.DeleteIntegrationResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -187,14 +188,14 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func findIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID, statusCode string) (*apigateway.GetIntegrationResponseOutput, error) {
-	input := &apigateway.GetIntegrationResponseInput{
+	input := apigateway.GetIntegrationResponseInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
 		RestApiId:  aws.String(apiID),
 		StatusCode: aws.String(statusCode),
 	}
 
-	output, err := conn.GetIntegrationResponse(ctx, input)
+	output, err := conn.GetIntegrationResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
