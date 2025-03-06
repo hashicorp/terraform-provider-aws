@@ -43,7 +43,7 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "database_vpc_endpoint_service"),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_vpc_endpoint_service"),
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
-					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.small"),
+					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.micro"),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrExecutionRoleARN, "iam", "role/service-role/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
@@ -62,15 +62,15 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "INFO"),
-					resource.TestCheckResourceAttr(resourceName, "max_workers", "10"),
+					resource.TestCheckResourceAttr(resourceName, "max_workers", "1"),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", "1"),
-					resource.TestCheckResourceAttr(resourceName, "max_webservers", "2"),
-					resource.TestCheckResourceAttr(resourceName, "min_webservers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schedulers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceRoleARN),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -740,6 +740,11 @@ resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
+  environment_class  = "mw1.micro"
+  min_workers        = 1
+  max_workers        = 1
+  min_webservers     = 1
+  max_webservers     = 1
 
   network_configuration {
     security_group_ids = [aws_security_group.test.id]
