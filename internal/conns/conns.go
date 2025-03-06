@@ -36,17 +36,37 @@ var (
 
 // InContext represents the resource information kept in Context.
 type InContext struct {
-	IsDataSource        bool   // Data source?
-	IsEphemeralResource bool   // Ephemeral resource?
-	ResourceName        string // Friendly resource name, e.g. "Subnet"
-	ServicePackageName  string // Canonical name defined as a constant in names package
+	isDataSource        bool   // Data source?
+	isEphemeralResource bool   // Ephemeral resource?
+	resourceName        string // Friendly resource name, e.g. "Subnet"
+	servicePackageName  string // Canonical name defined as a constant in names package
+}
+
+// IsDataSource returns true if the resource is a data source.
+func (c *InContext) IsDataSource() bool {
+	return c.isDataSource
+}
+
+// IsDataSource returns true if the resource is an ephemeral resource.
+func (c *InContext) IsEphemeralResource() bool {
+	return c.isEphemeralResource
+}
+
+// ResourceName returns the friendly resource name, e.g. "Subnet".
+func (c *InContext) ResourceName() string {
+	return c.resourceName
+}
+
+// ServicePackageName returns the canonical service name defined as a constant in the `names` package.
+func (c *InContext) ServicePackageName() string {
+	return c.servicePackageName
 }
 
 func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
 	v := InContext{
-		IsDataSource:       true,
-		ResourceName:       resourceName,
-		ServicePackageName: servicePackageName,
+		isDataSource:       true,
+		resourceName:       resourceName,
+		servicePackageName: servicePackageName,
 	}
 
 	return context.WithValue(ctx, contextKey, &v)
@@ -54,9 +74,9 @@ func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName 
 
 func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
 	v := InContext{
-		IsEphemeralResource: true,
-		ResourceName:        resourceName,
-		ServicePackageName:  servicePackageName,
+		isEphemeralResource: true,
+		resourceName:        resourceName,
+		servicePackageName:  servicePackageName,
 	}
 
 	return context.WithValue(ctx, contextKey, &v)
@@ -64,8 +84,8 @@ func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resour
 
 func NewResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
 	v := InContext{
-		ResourceName:       resourceName,
-		ServicePackageName: servicePackageName,
+		resourceName:       resourceName,
+		servicePackageName: servicePackageName,
 	}
 
 	return context.WithValue(ctx, contextKey, &v)

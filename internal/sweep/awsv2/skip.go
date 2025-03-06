@@ -86,6 +86,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
+		return true
+	}
 	// For example from us-west-2 Route53 zone
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true

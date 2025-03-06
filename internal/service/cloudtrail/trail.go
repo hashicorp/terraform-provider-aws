@@ -264,8 +264,6 @@ func resourceTrail() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -407,9 +405,10 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("sns_topic_name", nil)
 	}
 
-	if output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+	input := cloudtrail.GetTrailStatusInput{
 		Name: aws.String(d.Id()),
-	}); err != nil {
+	}
+	if output, err := conn.GetTrailStatus(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) status: %s", d.Id(), err)
 	} else {
 		d.Set("enable_logging", output.IsLogging)
@@ -552,9 +551,10 @@ func resourceTrailDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Trail: %s", d.Id())
-	_, err := conn.DeleteTrail(ctx, &cloudtrail.DeleteTrailInput{
+	input := cloudtrail.DeleteTrailInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrail(ctx, &input)
 
 	if errs.IsA[*types.TrailNotFoundException](err) {
 		return diags

@@ -458,7 +458,19 @@ Each `network_interfaces` block supports the following:
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
 * `security_groups` - (Optional) A list of security group IDs to associate.
 * `subnet_id` - (Optional) The VPC Subnet ID to associate.
+* `ena_srd_specification` - (Optional) Configuration for Elastic Network Adapter (ENA) Express settings. Applies to network interfaces that use the [ena Express](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html) feature. See details below.
 * `connection_tracking_specification` - (Optional) The Connection Tracking Configuration for the network interface. See [Amazon EC2 security group connection tracking](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts)
+
+The `ena_srd_specification` block supports the following:
+
+* `ena_srd_enabled` - (Optional) Whether to enable ENA Express. ENA Express uses AWS Scalable Reliable Datagram (SRD) technology to improve the performance of TCP traffic.
+* `ena_srd_udp_specification` - (Optional) Configuration for ENA Express UDP optimization. See details below.
+
+The `ena_srd_udp_specification` block supports the following:
+
+* `ena_srd_udp_enabled` - (Optional) Whether to enable UDP traffic optimization through ENA Express. Requires `ena_srd_enabled` to be `true`.
+
+NOTE: ENA Express requires [specific instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html#ena-express-requirements) and minimum bandwidth of 25 Gbps.
 
 The `connection_tracking_specification` block supports the following:
 

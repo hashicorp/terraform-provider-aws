@@ -34,10 +34,6 @@ type dataSourceLifecyclePolicy struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceLifecyclePolicy) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
-}
-
 func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

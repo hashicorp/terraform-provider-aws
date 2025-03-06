@@ -5,13 +5,19 @@ package autoscalingplans
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscalingplans/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -331,14 +337,13 @@ func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AutoScalingPlansClient(ctx)
 
 	scalingPlanName := d.Get(names.AttrName).(string)
-	input := &autoscalingplans.CreateScalingPlanInput{
+	input := autoscalingplans.CreateScalingPlanInput{
 		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling Scaling Plan: %+v", input)
-	output, err := conn.CreateScalingPlan(ctx, input)
+	output, err := conn.CreateScalingPlan(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Scaling Plan (%s): %s", scalingPlanName, err)
@@ -367,7 +372,7 @@ func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
-	scalingPlan, err := FindScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
+	scalingPlan, err := findScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scaling Plan (%s) not found, removing from state", d.Id())
@@ -403,15 +408,14 @@ func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
-	input := &autoscalingplans.UpdateScalingPlanInput{
+	input := autoscalingplans.UpdateScalingPlanInput{
 		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 		ScalingPlanVersion:  aws.Int64(int64(scalingPlanVersion)),
 	}
 
-	log.Printf("[DEBUG] Updating Auto Scaling Scaling Plan: %+v", input)
-	_, err = conn.UpdateScalingPlan(ctx, input)
+	_, err = conn.UpdateScalingPlan(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
@@ -430,23 +434,18 @@ func resourceScalingPlanDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingPlansClient(ctx)
 
-	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
-	}
+	scalingPlanName := d.Get(names.AttrName).(string)
+	scalingPlanVersion := d.Get("scaling_plan_version").(int)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Scaling Plan: %s", d.Id())
 	input := autoscalingplans.DeleteScalingPlanInput{
 		ScalingPlanName:    aws.String(scalingPlanName),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
 	}
-	_, err = conn.DeleteScalingPlan(ctx, &input)
-
+	_, err := conn.DeleteScalingPlan(ctx, &input)
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return diags
 	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
@@ -818,4 +817,135 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 	}
 
 	return vScalingInstructions
+}
+
+func findScalingPlanByNameAndVersion(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
+	input := autoscalingplans.DescribeScalingPlansInput{
+		ScalingPlanNames:   []string{scalingPlanName},
+		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
+	}
+
+	output, err := conn.DescribeScalingPlans(ctx, &input)
+
+	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output.ScalingPlans)
+}
+
+func statusScalingPlanCode(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		scalingPlan, err := findScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return scalingPlan, string(scalingPlan.StatusCode), nil
+	}
+}
+
+const (
+	scalingPlanCreatedTimeout = 5 * time.Minute
+	scalingPlanDeletedTimeout = 5 * time.Minute
+	scalingPlanUpdatedTimeout = 5 * time.Minute
+)
+
+func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeCreationInProgress),
+		Target:  enum.Slice(awstypes.ScalingPlanStatusCodeActive, awstypes.ScalingPlanStatusCodeActiveWithProblems),
+		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
+		Timeout: scalingPlanCreatedTimeout,
+		Delay:   10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
+		if output.StatusCode == awstypes.ScalingPlanStatusCodeCreationFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeDeletionInProgress),
+		Target:  []string{},
+		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
+		Timeout: scalingPlanDeletedTimeout,
+		Delay:   10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
+		if output.StatusCode == awstypes.ScalingPlanStatusCodeDeletionFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeUpdateInProgress),
+		Target:  enum.Slice(awstypes.ScalingPlanStatusCodeActive, awstypes.ScalingPlanStatusCodeActiveWithProblems),
+		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
+		Timeout: scalingPlanUpdatedTimeout,
+		Delay:   10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
+		if output.StatusCode == awstypes.ScalingPlanStatusCodeUpdateFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const scalingPlanResourceIDSeparator = "/"
+
+func scalingPlanCreateResourceID(scalingPlanName string, scalingPlanVersion int) string {
+	return fmt.Sprintf("%[1]s%[2]s%[3]d", scalingPlanName, scalingPlanResourceIDSeparator, scalingPlanVersion)
+}
+
+func scalingPlanParseResourceID(id string) (string, int, error) {
+	parts := strings.Split(id, scalingPlanResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		v, err := strconv.Atoi(parts[1])
+
+		if err != nil {
+			return "", 0, err
+		}
+
+		return parts[0], v, nil
+	}
+
+	return "", 0, fmt.Errorf("unexpected format for ID (%[1]s), expected SCALINGPLANNAME%[2]sSCALINGPLANVERSION", id, scalingPlanResourceIDSeparator)
 }

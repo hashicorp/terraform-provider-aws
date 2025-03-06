@@ -211,7 +211,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
 
 	if fleet.ScalingConfiguration != nil {
-		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
+		if err := d.Set("scaling_configuration", flattenScalingConfiguration(fleet.ScalingConfiguration)); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}

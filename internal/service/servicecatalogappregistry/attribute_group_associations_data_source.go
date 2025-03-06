@@ -35,10 +35,6 @@ type dataSourceAttributeGroupAssociations struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceAttributeGroupAssociations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_servicecatalogappregistry_attribute_group_associations"
-}
-
 func (d *dataSourceAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

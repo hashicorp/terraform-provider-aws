@@ -44,10 +44,6 @@ type resourceNotificationChannel struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceNotificationChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_notification_channel"
-}
-
 func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

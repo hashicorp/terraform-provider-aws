@@ -64,8 +64,6 @@ func resourceVPNGateway() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -73,7 +71,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVpnGatewayInput{
+	input := ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnGateway),
 		Type:              awstypes.GatewayTypeIpsec1,
@@ -83,7 +81,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.AmazonSideAsn = flex.StringValueToInt64(v.(string))
 	}
 
-	output, err := conn.CreateVpnGateway(ctx, input)
+	output, err := conn.CreateVpnGateway(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
@@ -207,13 +205,13 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) error {
-	input := &ec2.AttachVpnGatewayInput{
+	input := ec2.AttachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return conn.AttachVpnGateway(ctx, input)
+		return conn.AttachVpnGateway(ctx, &input)
 	}, errCodeInvalidVPNGatewayIDNotFound)
 
 	if err != nil {
@@ -228,12 +226,12 @@ func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID, 
 }
 
 func detachVPNGatewayFromVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) error {
-	input := &ec2.DetachVpnGatewayInput{
+	input := ec2.DetachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
-	_, err := conn.DetachVpnGateway(ctx, input)
+	_, err := conn.DetachVpnGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayAttachmentNotFound, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil

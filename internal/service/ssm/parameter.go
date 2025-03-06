@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,9 +46,6 @@ func resourceParameter() *schema.Resource {
 			},
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath(names.AttrValue), cty.GetAttrPath("value_wo")),
-		},
 		Schema: map[string]*schema.Schema{
 			"allowed_pattern": {
 				Type:         schema.TypeString,
@@ -101,7 +97,7 @@ func resourceParameter() *schema.Resource {
 			"overwrite": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Deprecated: "this attribute has been deprecated",
+				Deprecated: "overwrite is deprecated. This argument will be removed in a future major version.",
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -166,7 +162,6 @@ func resourceParameter() *schema.Resource {
 			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("value_wo_version")
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }

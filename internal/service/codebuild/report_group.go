@@ -112,8 +112,6 @@ func resourceReportGroup() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.ReportType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -199,10 +197,11 @@ func resourceReportGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Report Group: %s", d.Id())
-	_, err := conn.DeleteReportGroup(ctx, &codebuild.DeleteReportGroupInput{
+	input := codebuild.DeleteReportGroupInput{
 		Arn:           aws.String(d.Id()),
 		DeleteReports: d.Get("delete_reports").(bool),
-	})
+	}
+	_, err := conn.DeleteReportGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Report Group (%s): %s", d.Id(), err)

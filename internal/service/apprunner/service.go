@@ -405,7 +405,7 @@ func resourceService() *schema.Resource {
 									"image_identifier": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1,2}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
 										Type:             schema.TypeString,
@@ -426,8 +426,6 @@ func resourceService() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -101,7 +101,8 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	_, err := conn.DisableOrganizationAdminAccount(ctx, &detective.DisableOrganizationAdminAccountInput{})
+	input := detective.DisableOrganizationAdminAccountInput{}
+	_, err := conn.DisableOrganizationAdminAccount(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) { // nosemgrep:dgryski.semgrep-go.oddifsequence.odd-sequence-ifs // Semgrep ignores type parameters
 		return diags
 	}

@@ -180,10 +180,11 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Detective Member: %s", d.Id())
-	_, err = conn.DeleteMembers(ctx, &detective.DeleteMembersInput{
+	input := detective.DeleteMembersInput{
 		AccountIds: []string{accountID},
 		GraphArn:   aws.String(graphARN),
-	})
+	}
+	_, err = conn.DeleteMembers(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

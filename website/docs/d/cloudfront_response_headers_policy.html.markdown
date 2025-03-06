@@ -41,6 +41,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - The response headers policy ARN.
 * `comment` - Comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `etag` - Current version of the response headers policy.
 * `cors_config` - Configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.

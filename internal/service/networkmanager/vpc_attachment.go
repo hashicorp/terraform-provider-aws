@@ -40,7 +40,6 @@ func resourceVPCAttachment() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 				if d.Id() == "" {
 					return nil

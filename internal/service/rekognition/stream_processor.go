@@ -92,10 +92,6 @@ type resourceStreamProcessor struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_stream_processor"
-}
-
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -217,7 +213,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 					},
 					Blocks: map[string]schema.Block{
-						"bounding_box": schema.SingleNestedBlock{
+						"bounding_box": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
 							Description: "The box representing a region of interest on screen.",
 							Validators: []validator.Object{
@@ -717,10 +713,6 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 
 func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
-}
-
-func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {

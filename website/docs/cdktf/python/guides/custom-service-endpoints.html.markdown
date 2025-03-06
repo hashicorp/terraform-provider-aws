@@ -260,6 +260,7 @@ class MyConvertedCode(TerraformStack):
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
+|Elemental MediaPackage VOD|`mediapackagevod`|`AWS_ENDPOINT_URL_MEDIAPACKAGE_VOD`|`mediapackage_vod`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
@@ -456,4 +457,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-332252b925b4809e50075382e34b81b4fa4349e9017cef2084c56bfa342b8aac -->
+<!-- cache-key: cdktf-0.20.8 input-97c3cb707d3a062177488b18e495f9ee8ec86f4e047798c29565c3ba117a5c1a -->

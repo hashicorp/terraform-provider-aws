@@ -21,11 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -59,12 +59,6 @@ var (
 type resourceBucketLifecycleConfiguration struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-// Metadata should return the full name of the resource, such as
-// examplecloud_thing.
-func (r *resourceBucketLifecycleConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3_bucket_lifecycle_configuration"
 }
 
 // Schema returns the schema for this resource.
@@ -117,12 +111,14 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							},
 						},
 						names.AttrPrefix: schema.StringAttribute{
-							Optional: true,
-							Computed: true, // Because of Legacy value handling
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+							Optional:           true,
+							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
+							Validators: []validator.String{
+								warnExactlyOneOf(
+									path.MatchRelative().AtParent().AtName(names.AttrFilter),
+								),
+							},
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Required: true,
@@ -166,8 +162,11 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
 										Computed: true,
-										PlanModifiers: []planmodifier.Bool{
-											boolplanmodifier.UseStateForUnknown(),
+										Validators: []validator.Bool{
+											warnIfSetWith(
+												path.MatchRelative().AtParent().AtName("date"),
+												path.MatchRelative().AtParent().AtName("days"),
+											),
 										},
 									},
 								},
@@ -197,8 +196,13 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+										Validators: []validator.String{
+											warnExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
+												path.MatchRelative().AtParent().AtName("object_size_less_than"),
+												path.MatchRelative().AtParent().AtName("and"),
+												path.MatchRelative().AtParent().AtName("tag"),
+											),
 										},
 									},
 								},
@@ -281,8 +285,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
-										Optional: true,
-										Computed: true, // Because of schema change
+										Required: true,
 										PlanModifiers: []planmodifier.Int32{
 											int32planmodifier.UseStateForUnknown(),
 										},
@@ -308,8 +311,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										},
 									},
 									"noncurrent_days": schema.Int32Attribute{
-										Optional: true,
-										Computed: true, // Because of schema change
+										Required: true,
 										PlanModifiers: []planmodifier.Int32{
 											int32planmodifier.UseStateForUnknown(),
 										},
@@ -640,9 +642,8 @@ func lifecycleRulesEqual(rules1, rules2 []awstypes.LifecycleRule) bool {
 	}
 
 	for _, rule1 := range rules1 {
-		// We consider 2 LifecycleRules equal if their IDs and Statuses are equal.
 		if !slices.ContainsFunc(rules2, func(rule2 awstypes.LifecycleRule) bool {
-			return aws.ToString(rule1.ID) == aws.ToString(rule2.ID) && rule1.Status == rule2.Status
+			return reflect.DeepEqual(rule1, rule2)
 		}) {
 			return false
 		}
@@ -921,7 +922,7 @@ func (m lifecycleExpirationModel) Expand(ctx context.Context) (result any, diags
 	// For legacy-mode reasons, `days` may be zero, but should be treated as `nil`
 	days := fwflex.ZeroInt32AsNull(m.Days)
 
-	r.Days = fwflex.Int32FromFrameworkInt32(ctx, days)
+	r.Days = fwflex.Int32FromFramework(ctx, days)
 
 	if m.ExpiredObjectDeleteMarker.IsUnknown() || m.ExpiredObjectDeleteMarker.IsNull() {
 		if (m.Date.IsUnknown() || m.Date.IsNull()) && (days.IsUnknown() || days.IsNull()) {
@@ -975,7 +976,7 @@ func (m transitionModel) Expand(ctx context.Context) (result any, diags diag.Dia
 			r.Days = aws.Int32(0)
 		}
 	} else {
-		r.Days = fwflex.Int32FromFrameworkInt32(ctx, m.Days)
+		r.Days = fwflex.Int32FromFramework(ctx, m.Days)
 	}
 
 	r.StorageClass = m.StorageClass.ValueEnum()
@@ -994,9 +995,9 @@ var (
 )
 
 type lifecycleRuleAndOperatorModel struct {
-	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than" autoflex:",legacy"`
-	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than" autoflex:",legacy"`
-	Prefix                types.String `tfsdk:"prefix" autoflex:",legacy"`
+	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than"`
+	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than"`
+	Prefix                types.String `tfsdk:"prefix"`
 	Tags                  tftags.Map   `tfsdk:"tags"`
 }
 
@@ -1005,7 +1006,7 @@ func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, 
 
 	r.ObjectSizeGreaterThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeGreaterThan)
 
-	r.ObjectSizeLessThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeLessThan)
+	r.ObjectSizeLessThan = fwflex.Int64FromFrameworkLegacy(ctx, m.ObjectSizeLessThan)
 
 	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
 
@@ -1070,4 +1071,79 @@ func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx 
 		return
 	}
 	resp.PlanValue = v
+}
+
+var (
+	_ validator.Bool = warnIfSetWithValidator{}
+)
+
+func warnIfSetWith(expressions ...path.Expression) validator.Bool {
+	return warnIfSetWithValidator{
+		PathExpressions: expressions,
+	}
+}
+
+type warnIfSetWithValidator struct {
+	PathExpressions path.Expressions
+}
+
+func (v warnIfSetWithValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v warnIfSetWithValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Ensure that if an attribute is set, a warning is emitted if any of these are also set: %q", v.PathExpressions)
+}
+
+// Validation logic is adapted from the standard ConflictsWith validator
+// available for all types
+func (v warnIfSetWithValidator) ValidateBool(ctx context.Context, req validator.BoolRequest, resp *validator.BoolResponse) {
+	// If attribute configuration is null, it cannot conflict with others
+	// If attribute configuration is unknown, delay the validation until it is known.
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	expressions := req.PathExpression.MergeExpressions(v.PathExpressions...)
+
+	for _, expression := range expressions {
+		matchedPaths, diags := req.Config.PathMatches(ctx, expression)
+
+		resp.Diagnostics.Append(diags...)
+
+		// Collect all errors
+		if diags.HasError() {
+			continue
+		}
+
+		for _, mp := range matchedPaths {
+			// If the user specifies the same attribute this validator is applied to,
+			// also as part of the input, skip it
+			if mp.Equal(req.Path) {
+				continue
+			}
+
+			var mpVal attr.Value
+			diags := req.Config.GetAttribute(ctx, mp, &mpVal)
+			resp.Diagnostics.Append(diags...)
+
+			// Collect all errors
+			if diags.HasError() {
+				continue
+			}
+
+			// Delay validation until all involved attribute have a known value
+			if mpVal.IsUnknown() {
+				return
+			}
+
+			if !mpVal.IsNull() {
+				resp.Diagnostics.Append(diag.NewAttributeWarningDiagnostic(
+					req.Path,
+					"Invalid Attribute Combination",
+					fmt.Sprintf("Attribute %q should not be specified when %q is also specified", req.Path, mp),
+				))
+			}
+		}
+	}
 }

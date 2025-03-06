@@ -47,10 +47,6 @@ type resourcePreferences struct {
 	framework.WithImportByID
 }
 
-func (r *resourcePreferences) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_costoptimizationhub_preferences"
-}
-
 func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

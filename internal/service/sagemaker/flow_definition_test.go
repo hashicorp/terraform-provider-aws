@@ -217,7 +217,7 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Flow Definition %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Flow Definition %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -232,7 +232,7 @@ func testAccCheckFlowDefinitionExists(ctx context.Context, n string, flowDefinit
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Flow Definition ID is set")
+			return fmt.Errorf("No SageMaker AI Flow Definition ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

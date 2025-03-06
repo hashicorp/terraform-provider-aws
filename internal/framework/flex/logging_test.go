@@ -151,16 +151,8 @@ func infoExpanding(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Expanding", sourceType, targetType)
 }
 
-func infoExpandingWithPath(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
-	return infoWithPathLogLine("Expanding", sourcePath, sourceType, targetPath, targetType)
-}
-
 func infoFlattening(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Flattening", sourceType, targetType)
-}
-
-func infoFlatteningWithPath(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
-	return infoWithPathLogLine("Flattening", sourcePath, sourceType, targetPath, targetType)
 }
 
 func infoConverting(sourceType, targetType reflect.Type) map[string]any {
@@ -642,15 +634,6 @@ func infoLogLine(message string, sourceType, targetType reflect.Type) map[string
 	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetType: fullTypeName(targetType),
-	})
-}
-
-func infoWithPathLogLine(message string, sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
-	return logInfo(message, map[string]any{
-		logAttrKeySourcePath: sourcePath,
-		logAttrKeySourceType: fullTypeName(sourceType),
-		logAttrKeyTargetType: fullTypeName(targetType),
-		logAttrKeyTargetPath: targetPath,
 	})
 }
 
