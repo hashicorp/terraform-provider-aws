@@ -24,8 +24,8 @@ data "aws_datazone_domain" "example" {
 
 The following arguments are required:
 
-* `name` - (Optional) Name of the Domain.
-* `id` - (Optional) ID of the Domain.
+* `name` - (Optional) Name of the Domain. One of `name` or `id` is required.
+* `id` - (Optional) ID of the Domain. One of `name` or `id` is required
 
 ## Attribute Reference
 
