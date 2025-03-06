@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -72,7 +71,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 
 		tags := tagsInContext.TagsOut.UnwrapOrDefault()
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
+		stateTags := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), tftags.NewMapFromMapValue(stateTags))...)
 		if diags.HasError() {
 			return diags
@@ -127,7 +126,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOpt
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
+		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 		if diags.HasError() {
 			return diags
@@ -178,7 +177,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
 		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), response, &diags).Map(); len(v) > 0 {
-			stateTags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, v))
+			stateTags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 		if diags.HasError() {
@@ -186,7 +185,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
+		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 		if diags.HasError() {
 			return diags
