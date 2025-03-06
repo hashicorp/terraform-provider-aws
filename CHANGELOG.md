@@ -35,8 +35,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_dx_connection: Add `state` attribute ([#41575](https://github.com/hashicorp/terraform-provider-aws/issues/41575))
 * data-source/aws_opensearch_domain: Add `cluster_config.node_options` attribute ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
 * resource/aws_ec2_client_vpn_endpoint: Add `disconnect_on_session_timeout` attribute ([#41621](https://github.com/hashicorp/terraform-provider-aws/issues/41621))
+* resource/aws_mwaa_environment: Lower the minimum value of the `max_webservers` and `min_webservers` arguments from `2` to `1` in support of Amazon MWAA micro environments ([#40244](https://github.com/hashicorp/terraform-provider-aws/issues/40244))
 * resource/aws_opensearch_domain: Add `cluster_config.node_options` configuration block in support of [dedicated coordinator nodes](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/Dedicated-coordinator-nodes.html) ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
 * resource/aws_prometheus_rule_group_namespace: Add `arn` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
 * resource/aws_prometheus_rule_group_namespace: Add `tags` argument and `tags_all` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
