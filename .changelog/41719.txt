@@ -3,5 +3,5 @@ resource/aws_wafv2_web_acl: Add `ja3_fingerprint` and `ja4_fingerprint` argument
 ```
 
 ```release-note:enhancement
-resource/aws_wafv2_web_acl: Add `ja4_fingerprint` arguments to `custom_key` for Match rules.
+resource/aws_wafv2_web_acl: Add `ja4_fingerprint` arguments to `field_to_match` for Match rules.
 ```
