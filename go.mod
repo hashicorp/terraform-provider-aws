@@ -198,7 +198,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.94.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.1
-	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.32.1
+	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.30.1
@@ -259,7 +259,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.54.0
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.31.1
 	github.com/aws/smithy-go v1.22.3

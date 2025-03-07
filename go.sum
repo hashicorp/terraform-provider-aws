@@ -425,8 +425,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.94.1 h1:OxrMHbabEdgwKLdMYvnHJju4XFye
 github.com/aws/aws-sdk-go-v2/service/rds v1.94.1/go.mod h1:CXiHj5rVyQ5Q3zNSoYzwaJfWm8IGDweyyCGfO8ei5fQ=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.54.1 h1:atHdz2zvGf9wC7NfaOvPh3dHAwg+XwHcoYdmkq/i/Sc=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.54.1/go.mod h1:TC8pNvjiikrjpX2MEzX/cEJ4/T4XIoSY4BskVvHj8bk=
-github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.32.1 h1:mBmCGjVidRtfjKMNwDNZo9wGu++S7CzgaZqub1r3QEs=
-github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.32.1/go.mod h1:pe1ZJmqbvJOw0SYKoeR/JIypaIlftRUqkDxt4gLXiA8=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.0 h1:l8vdpEf98yQZqYTcISRlOCsocjL9KIb6cgDMrAMPDoE=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.0/go.mod h1:pe1ZJmqbvJOw0SYKoeR/JIypaIlftRUqkDxt4gLXiA8=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.26.1 h1:BaVYzvKVffMqiqg0GQ8Sz0nOOGyhkn3Afazz7+bZufk=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.26.1/go.mod h1:gpRsJN3qxZbsj1NhAoCNX02zJ4RZUB5v/7o4QrnGTcA=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.46.1 h1:CtkGvqA22++pHQf2E3vVi5vOOQmm4uZ1EqYBZNiXEtQ=
@@ -549,8 +549,8 @@ github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.1 h1:nypTzAkd4PRO4gr6
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.1/go.mod h1:lMYHuv2uomrtX9xyyhMzb5149Cz4MHrBFzRSezLgs1U=
 github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2 h1:VN3Qydtdl3UlJRHVxQxSP1d8I5gtvT5zdaCCAfZST7Y=
 github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2/go.mod h1:Z3RLpIq4q49syd921XdsKeD584kPu89iKTEjluh7908=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.54.0 h1:DEFbMFWZ0NruUHNb4rIBhzu8dr6Oiv0d5X0UxmdBdUo=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.54.0/go.mod h1:/YN7Ft92lmFXqFWyEpl1kLnbhDZjDL82S4ibIxPK7ow=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.0 h1:m1yfaBU2P/pUlecDGfAUg8Z6xOTXzxl1e7p3i5usWRE=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.0/go.mod h1:/YN7Ft92lmFXqFWyEpl1kLnbhDZjDL82S4ibIxPK7ow=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.1 h1:n5cjUhv9JEYqN6JjP7XHOFET5roRUCQTG9xIwQz5U6w=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.1/go.mod h1:XvRRv60AFt7FKxxcb9OHbx9QxwoFU0hexFUqF7THWR4=
 github.com/aws/aws-sdk-go-v2/service/xray v1.31.1 h1:e+SEWAOD2kl/Tt6ovDgbzg/AvM8YVBWBwJmF/190y1A=
