@@ -1554,7 +1554,6 @@ func expandCondition(tfMap map[string]interface{}) *types.Condition {
 }
 
 func expandConditions(tfList []interface{}) []types.Condition {
-
 	if len(tfList) == 0 {
 		return nil
 	}
