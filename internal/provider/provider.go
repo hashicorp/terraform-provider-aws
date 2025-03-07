@@ -361,6 +361,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			var customizeDiffFuncs []schema.CustomizeDiffFunc
 			interceptors := interceptorItems{}
 			if v.Tags != nil {
 				schema := r.SchemaMap()
@@ -386,6 +387,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					continue
 				}
 
+				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
 				interceptors = append(interceptors, interceptorItem{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
@@ -406,9 +408,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 					return ctx, diags
 				},
-				interceptors:           interceptors,
-				typeName:               typeName,
-				usesTransparentTagging: v.Tags != nil,
+				customizeDiffFuncs: customizeDiffFuncs,
+				interceptors:       interceptors,
+				typeName:           typeName,
 			}
 			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
