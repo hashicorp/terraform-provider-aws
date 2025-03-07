@@ -1,4 +1,13 @@
 ## 5.91.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_datazone_domain` ([#41480](https://github.com/hashicorp/terraform-provider-aws/issues/41480))
+
+ENHANCEMENTS:
+
+* resource/aws_mskconnect_connector: Allow `connector_configuration` to be updated in-place ([#41685](https://github.com/hashicorp/terraform-provider-aws/issues/41685))
+
 ## 5.90.0 (March  6, 2025)
 
 BREAKING CHANGES:
