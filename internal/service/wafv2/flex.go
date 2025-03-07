@@ -2975,7 +2975,7 @@ func flattenRateLimitHeader(apiObject *awstypes.RateLimitHeader) []interface{} {
 	}
 }
 
-func flattenRateLimitJa3FingerPrint(apiObject *awstypes.RateLimitJA3Fingerprint) []interface{} {
+func flattenRateLimitJa3Fingerprint(apiObject *awstypes.RateLimitJA3Fingerprint) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2986,7 +2986,7 @@ func flattenRateLimitJa3FingerPrint(apiObject *awstypes.RateLimitJA3Fingerprint)
 	}
 }
 
-func flattenRateLimitJa4FingerPrint(apiObject *awstypes.RateLimitJA4Fingerprint) []interface{} {
+func flattenRateLimitJa4Fingerprint(apiObject *awstypes.RateLimitJA4Fingerprint) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3073,10 +3073,10 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 			}
 		}
 		if o.JA3Fingerprint != nil {
-			tfMap["ja3_fingerprint"] = flattenRateLimitJa3FingerPrint(o.JA3Fingerprint)
+			tfMap["ja3_fingerprint"] = flattenRateLimitJa3Fingerprint(o.JA3Fingerprint)
 		}
 		if o.JA4Fingerprint != nil {
-			tfMap["ja4_fingerprint"] = flattenRateLimitJa4FingerPrint(o.JA4Fingerprint)
+			tfMap["ja4_fingerprint"] = flattenRateLimitJa4Fingerprint(o.JA4Fingerprint)
 		}
 		if o.LabelNamespace != nil {
 			tfMap["label_namespace"] = flattenRateLimitLabelNamespace(o.LabelNamespace)

@@ -504,7 +504,7 @@ var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-var jaXFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
+var rateLimitJAFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1096,8 +1096,8 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								},
 							},
 							"ip":              emptySchema(),
-							"ja3_fingerprint": jaXFingerprintConfigSchema(),
-							"ja4_fingerprint": jaXFingerprintConfigSchema(),
+							"ja3_fingerprint": rateLimitJAFingerprintConfigSchema(),
+							"ja4_fingerprint": rateLimitJAFingerprintConfigSchema(),
 							"label_namespace": {
 								Type:     schema.TypeList,
 								Optional: true,
