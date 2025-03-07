@@ -40,108 +40,6 @@ const (
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
 func resourcePipeline() *schema.Resource {
-	conditionsSchemaElem := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"result": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.Result](),
-			},
-			"rule": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 5,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
-						},
-						"rule_type_id": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"category": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.RuleCategory](),
-									},
-									"owner": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.RuleOwner](),
-									},
-									"provider": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"version": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
-										),
-									},
-								},
-							},
-						},
-						"commands": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 1000),
-								),
-							},
-						},
-						"configuration": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 10000),
-								),
-							},
-						},
-						"input_artifacts": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
-									validation.StringLenBetween(1, 100),
-								),
-							},
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"timeout_in_minutes": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(5, 86400),
-						},
-					},
-				},
-			},
-		},
-	}
-
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
 		ReadWithoutTimeout:   resourcePipelineRead,
@@ -152,475 +50,585 @@ func resourcePipeline() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"artifact_store": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_key": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrID: {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			conditionsSchema := func() map[string]*schema.Schema {
+				return map[string]*schema.Schema{
+					"result": {
+						Type:             schema.TypeString,
+						Optional:         true,
+						ValidateDiagFunc: enum.Validate[types.Result](),
+					},
+					"rule": {
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 5,
+						Required: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"commands": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MaxItems: 50,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 1000),
+										),
 									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.EncryptionKeyType](),
+								},
+								"configuration": {
+									Type:     schema.TypeMap,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10000),
+										),
 									},
+								},
+								"input_artifacts": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
+											validation.StringLenBetween(1, 100),
+										),
+									},
+								},
+								names.AttrName: {
+									Type:         schema.TypeString,
+									Required:     true,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+								},
+								names.AttrRegion: {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								"role_arn": {
+									Type:         schema.TypeString,
+									Optional:     true,
+									ValidateFunc: verify.ValidARN,
+								},
+								"rule_type_id": {
+									Type:     schema.TypeList,
+									Required: true,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"category": {
+												Type:             schema.TypeString,
+												Required:         true,
+												ValidateDiagFunc: enum.Validate[types.RuleCategory](),
+											},
+											"owner": {
+												Type:             schema.TypeString,
+												Optional:         true,
+												ValidateDiagFunc: enum.Validate[types.RuleOwner](),
+											},
+											"provider": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+											"version": {
+												Type:     schema.TypeString,
+												Optional: true,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(1, 9),
+													validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+												),
+											},
+										},
+									},
+								},
+								"timeout_in_minutes": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									ValidateFunc: validation.IntBetween(5, 86400),
 								},
 							},
 						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ArtifactStoreType](),
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"artifact_store": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_key": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.EncryptionKeyType](),
+										},
+									},
+								},
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ArtifactStoreType](),
+							},
 						},
 					},
 				},
-			},
-			"execution_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.ExecutionModeSuperseded,
-				ValidateDiagFunc: enum.Validate[types.ExecutionMode](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-				),
-			},
-			"pipeline_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.PipelineTypeV1,
-				ValidateDiagFunc: enum.Validate[types.PipelineType](),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStage: {
-				Type:     schema.TypeList,
-				MinItems: 2,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"category": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ActionCategory](),
-									},
-									names.AttrConfiguration: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										ValidateDiagFunc: validation.AllDiag(
-											validation.MapKeyLenBetween(1, 50),
-											validation.MapKeyLenBetween(1, 1000),
-										),
-										Elem:             &schema.Schema{Type: schema.TypeString},
-										DiffSuppressFunc: pipelineSuppressStageActionConfigurationDiff,
-									},
-									"input_artifacts": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-										),
-									},
-									names.AttrNamespace: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
-										),
-									},
-									"output_artifacts": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrOwner: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ActionOwner](),
-									},
-									"provider": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: pipelineValidateActionProvider,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"run_order": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntBetween(1, 999),
-									},
-									"timeout_in_minutes": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(5, 86400),
-									},
-									names.AttrVersion: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
-										),
-									},
-								},
-							},
-						},
-						"before_entry": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"condition": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem:     conditionsSchemaElem,
+				"execution_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.ExecutionModeSuperseded,
+					ValidateDiagFunc: enum.Validate[types.ExecutionMode](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+					),
+				},
+				"pipeline_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.PipelineTypeV1,
+					ValidateDiagFunc: enum.Validate[types.PipelineType](),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrStage: {
+					Type:     schema.TypeList,
+					MinItems: 2,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ActionCategory](),
+										},
+										names.AttrConfiguration: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											ValidateDiagFunc: validation.AllDiag(
+												validation.MapKeyLenBetween(1, 50),
+												validation.MapKeyLenBetween(1, 1000),
+											),
+											Elem:             &schema.Schema{Type: schema.TypeString},
+											DiffSuppressFunc: pipelineSuppressStageActionConfigurationDiff,
+										},
+										"input_artifacts": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+											),
+										},
+										names.AttrNamespace: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
+											),
+										},
+										"output_artifacts": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrOwner: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ActionOwner](),
+										},
+										"provider": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: pipelineValidateActionProvider,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"run_order": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(1, 999),
+										},
+										"timeout_in_minutes": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(5, 86400),
+										},
+										names.AttrVersion: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 9),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+											),
+										},
 									},
 								},
 							},
-						},
-						"on_success": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"condition": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem:     conditionsSchemaElem,
-									},
-								},
-							},
-						},
-						"on_failure": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"condition": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem:     conditionsSchemaElem,
-									},
-									"result": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Elem:             &schema.Schema{Type: schema.TypeString},
-										ValidateDiagFunc: enum.Validate[types.Result](),
-									},
-									"retry_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"retry_mode": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.StageRetryMode](),
-												},
+							"before_entry": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"condition": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: conditionsSchema(),
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-							),
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"trigger": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"git_configuration": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"pull_request": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 3,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"branches": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-												"events": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 3,
-													Elem: &schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 100),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+								),
+							},
+							"on_failure": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"condition": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: conditionsSchema(),
+											},
+										},
+										"result": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Elem:             &schema.Schema{Type: schema.TypeString},
+											ValidateDiagFunc: enum.Validate[types.Result](),
+										},
+										"retry_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"retry_mode": {
 														Type:             schema.TypeString,
-														ValidateDiagFunc: enum.Validate[types.GitPullRequestEventType](),
-													},
-												},
-												"file_paths": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.StageRetryMode](),
 													},
 												},
 											},
 										},
 									},
-									"push": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 3,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"branches": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-												"file_paths": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-												names.AttrTags: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
+								},
+							},
+							"on_success": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"condition": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: conditionsSchema(),
 											},
 										},
-									},
-									"source_action_name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-										),
 									},
 								},
 							},
 						},
-						"provider_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"trigger": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"git_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"pull_request": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"branches": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													"events": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 3,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[types.GitPullRequestEventType](),
+														},
+													},
+													"file_paths": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"push": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"branches": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													"file_paths": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													names.AttrTags: {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"source_action_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+											),
+										},
+									},
+								},
+							},
+							"provider_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
+							},
 						},
 					},
 				},
-			},
-			"variable": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
+				"variable": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
