@@ -88,11 +88,11 @@ func sweepSamplingRules(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 
 func sweepResourcePolicy(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.XRayClient(ctx)
-	input := &xray.ListResourcePoliciesInput{}
+	input := xray.ListResourcePoliciesInput{}
 
-	var sweepResources []sweep.Sweepable
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := xray.NewListResourcePoliciesPaginator(conn, input)
+	pages := xray.NewListResourcePoliciesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
