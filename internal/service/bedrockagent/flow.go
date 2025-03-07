@@ -609,7 +609,209 @@ type flowNodeModel struct {
 	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel] `tfsdk:"outputs"`
 }
 
-type flowNodeConfigurationModel struct{} // TODO
+// TODO: Tagged union
+type flowNodeConfigurationModel struct {
+	Agent          fwtypes.ObjectValueOf[flowNodeConfigurationMemberAgentModel]          `tfsdk:"agent"`
+	Collector      fwtypes.ObjectValueOf[flowNodeConfigurationMemberCollectorModel]      `tfsdk:"collector"`
+	Condition      fwtypes.ObjectValueOf[flowNodeConfigurationMemberConditionModel]      `tfsdk:"condition"`
+	Input          fwtypes.ObjectValueOf[flowNodeConfigurationMemberInputModel]          `tfsdk:"input"`
+	Iterator       fwtypes.ObjectValueOf[flowNodeConfigurationMemberIteratorModel]       `tfsdk:"iterator"`
+	KnowledgeBase  fwtypes.ObjectValueOf[flowNodeConfigurationMemberKnowledgeBaseModel]  `tfsdk:"knowledge_base"`
+	LambdaFunction fwtypes.ObjectValueOf[flowNodeConfigurationMemberLambdaFunctionModel] `tfsdk:"lambda_function"`
+	Lex            fwtypes.ObjectValueOf[flowNodeConfigurationMemberLexModel]            `tfsdk:"lex"`
+	Output         fwtypes.ObjectValueOf[flowNodeConfigurationMemberOutputModel]         `tfsdk:"output"`
+	Prompt         fwtypes.ObjectValueOf[flowNodeConfigurationMemberPromptModel]         `tfsdk:"prompt"`
+	Retrieval      fwtypes.ObjectValueOf[flowNodeConfigurationMemberRetrievalModel]      `tfsdk:"retrieval"`
+	Storage        fwtypes.ObjectValueOf[flowNodeConfigurationMemberStorageModel]        `tfsdk:"storage"`
+}
+
+type flowNodeConfigurationMemberAgentModel struct {
+	AgentAliasARN types.String `tfsdk:"agent_alias_arn"`
+}
+
+type flowNodeConfigurationMemberCollectorModel struct {
+}
+
+type flowNodeConfigurationMemberConditionModel struct {
+	Conditions fwtypes.ListNestedObjectValueOf[flowConditionModel] `tfsdk:"conditions"`
+}
+
+type flowConditionModel struct {
+	Name       types.String `tfsdk:"name"`
+	Expression types.String `tfsdk:"expression"`
+}
+
+type flowNodeConfigurationMemberInputModel struct {
+}
+
+type flowNodeConfigurationMemberIteratorModel struct {
+}
+
+type flowNodeConfigurationMemberKnowledgeBaseModel struct {
+	KnowledgeBaseID        types.String                                       `tfsdk:"knowledge_base_id"`
+	GuardrailConfiguration fwtypes.ObjectValueOf[guardrailConfigurationModel] `tfsdk:"guardrail_configuration"`
+	ModelID                types.String                                       `tfsdk:"model_id"`
+}
+
+type flowNodeConfigurationMemberLambdaFunctionModel struct {
+	LambdaARN types.String `tfsdk:"lambda_arn"`
+}
+
+type flowNodeConfigurationMemberLexModel struct {
+	BotAliasARN types.String `tfsdk:"bot_alias_arn"`
+	LocaleID    types.String `tfsdk:"locale_id"`
+}
+
+type flowNodeConfigurationMemberOutputModel struct {
+}
+
+type flowNodeConfigurationMemberPromptModel struct {
+	SourceConfiguration    fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationModel] `tfsdk:"source_configuration"`
+	GuardrailConfiguration fwtypes.ObjectValueOf[guardrailConfigurationModel]            `tfsdk:"guardrail_configuration"`
+}
+
+// TODO: Tagged union
+type promptFlowNodeSourceConfigurationModel struct {
+	Inline   fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationMemberInlineModel]   `tfsdk:"inline"`
+	Resource fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationMemberResourceModel] `tfsdk:"resource"`
+}
+
+type promptFlowNodeSourceConfigurationMemberInlineModel struct {
+	ModelID                      types.String                                       `tfsdk:"model_id"`
+	TemplateConfiguration        fwtypes.ObjectValueOf[templateConfigurationModel]  `tfsdk:"template_configuration"`
+	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]    `tfsdk:"template_type"`
+	AdditionalModelRequestFields types.Object                                       `tfsdk:"additional_model_request_fields"` // TODO: how do i handle document.Interface?
+	InferenceConfiguration       fwtypes.ObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_configuration"`
+}
+
+// TODO: Tagged union
+type templateConfigurationModel struct {
+	Chat fwtypes.ObjectValueOf[promptTemplateConfigurationMemberChatModel] `tfsdk:"chat"`
+	Text fwtypes.ObjectValueOf[promptTemplateConfigurationMemberTextModel] `tfsdk:"text"`
+}
+
+type promptTemplateConfigurationMemberChatModel struct {
+	Messages          fwtypes.ListNestedObjectValueOf[messageModel]             `tfsdk:"messages"`
+	InputVariables    fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variables"`
+	System            fwtypes.ListNestedObjectValueOf[systemContentBlockModel]  `tfsdk:"system"`
+	ToolConfiguration fwtypes.ObjectValueOf[toolConfigurationModel]             `tfsdk:"tool_configuration"`
+}
+
+type messageModel struct {
+	Content fwtypes.ListNestedObjectValueOf[contentBlockModel] `tfsdk:"content"`
+	Role    fwtypes.StringEnum[awstypes.ConversationRole]      `tfsdk:"role"`
+}
+
+// TODO: tagged union
+type contentBlockModel struct {
+	CachePoint fwtypes.ObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
+	Text       fwtypes.ObjectValueOf[contentBlockMemberTextModel]       `tfsdk:"text"`
+}
+
+type contentBlockMemberCachePointModel struct {
+	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
+}
+
+type contentBlockMemberTextModel struct {
+	Value types.String `tfsdk:"value"`
+}
+
+type promptInputVariableModel struct {
+	Name types.String `tfsdk:"name"`
+}
+
+// TODO: tagged union
+type systemContentBlockModel struct {
+	CachePoint fwtypes.ObjectValueOf[cachePointModel]                   `tfsdk:"cache_point"`
+	Text       fwtypes.ObjectValueOf[systemContentBlockMemberTextModel] `tfsdk:"text"`
+}
+
+type systemContentBlockMemberTextModel struct {
+	Value types.String `tfsdk:"value"`
+}
+
+type toolConfigurationModel struct {
+	Tools      fwtypes.ListNestedObjectValueOf[toolModel] `tfsdk:"tools"`
+	ToolChoice fwtypes.ObjectValueOf[toolChoiceModel]     `tfsdk:"tool_choice"`
+}
+
+// TODO: tagged union
+type toolModel struct {
+	CachePoint fwtypes.ObjectValueOf[cachePointModel]         `tfsdk:"cache_point"`
+	ToolSpec   fwtypes.ObjectValueOf[toolMemberToolSpecModel] `tfsdk:"tool_spec"`
+}
+
+type toolMemberToolSpecModel struct {
+	InputSchema fwtypes.ObjectValueOf[toolInputSchemaModel] `tfsdk:"input_schema"`
+	Name        types.String                                `tfsdk:"name"`
+	Description types.String                                `tfsdk:"description"`
+}
+
+// TODO: tagged union
+type toolInputSchemaModel struct {
+	Json fwtypes.ObjectValueOf[toolInputSchemaMemberJsonModel] `tfsdk:"json"`
+}
+
+type toolInputSchemaMemberJsonModel struct {
+	Value types.Object `tfsdk:"value"` // TODO: how do i handle document.Interface?
+}
+
+// TODO: tagged union
+type toolChoiceModel struct {
+	Any   fwtypes.ObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
+	Auto  fwtypes.ObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
+	Toold fwtypes.ObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
+}
+
+type toolChoiceMemberAnyModel struct {
+}
+
+type toolChoiceMemberAutoModel struct {
+}
+
+type toolChoiceMemberToolModel struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type promptTemplateConfigurationMemberTextModel struct {
+	Text           types.String                                              `tfsdk:"text"`
+	CachePoint     fwtypes.ObjectValueOf[cachePointModel]                    `tfsdk:"cache_point"`
+	InputVariables fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variables"`
+}
+
+type cachePointModel struct {
+	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
+}
+
+type promptFlowNodeSourceConfigurationMemberResourceModel struct {
+	ResourceARN types.String `tfsdk:"resource_arn"`
+}
+
+type flowNodeConfigurationMemberRetrievalModel struct {
+	ServiceConfiguration fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
+}
+
+// TODO: tagged union
+type retrievalFlowNodeServiceConfigurationModel struct {
+	S3 fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
+}
+
+type retrievalFlowNodeServiceConfigurationMemberS3Model struct {
+	BucketName types.String `tfsdk:"bucket_name"`
+}
+
+type flowNodeConfigurationMemberStorageModel struct {
+	ServiceConfiguration fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
+}
+
+// TODO: tagged union
+type storageFlowNodeServiceConfigurationModel struct {
+	S3 fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
+}
+
+type storageFlowNodeServiceConfigurationMemberS3Model struct {
+	BucketName types.String `tfsdk:"bucket_name"`
+}
 
 type flowNodeInputModel struct {
 	Expression types.String                                    `tfsdk:"expression"`
