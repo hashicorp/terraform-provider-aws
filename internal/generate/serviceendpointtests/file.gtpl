@@ -756,6 +756,8 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 		t.Fatal(err)
 	}
 
+	p.TerraformVersion = "1.0.0"
+
 	expectedDiags := testcase.expected.diags
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 

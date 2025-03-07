@@ -32,13 +32,13 @@ func TestProvider(t *testing.T) {
 	t.Parallel()
 
 	p, err := New(context.Background())
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = p.InternalValidate()
+	p.TerraformVersion = "1.0.0"
 
+	err = p.InternalValidate()
 	if err != nil {
 		t.Fatal(err)
 	}
