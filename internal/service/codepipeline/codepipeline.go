@@ -359,7 +359,6 @@ func resourcePipeline() *schema.Resource {
 										"result": {
 											Type:             schema.TypeString,
 											Optional:         true,
-											Elem:             &schema.Schema{Type: schema.TypeString},
 											ValidateDiagFunc: enum.Validate[types.Result](),
 										},
 										"retry_configuration": {
