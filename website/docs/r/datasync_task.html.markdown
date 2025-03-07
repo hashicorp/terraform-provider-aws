@@ -40,7 +40,7 @@ resource "aws_datasync_task" "example" {
 
 ## Example Usage with Filtering
 
-```hcl
+```terraform
 resource "aws_datasync_task" "example" {
   destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = "example"
@@ -58,6 +58,24 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
+## Example Usage with Enhanced Task Mode
+
+```terraform
+resource "aws_datasync_task" "example" {
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = "example"
+  source_location_arn      = aws_datasync_location_s3.source.arn
+  task_mode                = "ENHANCED"
+
+  options {
+    gid               = "NONE"
+    posix_permissions = "NONE"
+    uid               = "NONE"
+    verify_mode       = "ONLY_FILES_TRANSFERRED"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -71,6 +89,9 @@ This resource supports the following arguments:
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
 * `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `task_mode` - (Optional) One of the following task modes for your data transfer:
+    * `BASIC` (default) - Transfer files or objects between Amazon Web Services storage and on-premises, edge, or other cloud storage.
+    * `ENHANCED` - Transfer virtually unlimited numbers of objects with enhanced metrics, more detailed logs, and higher performance than Basic mode. Currently available for transfers between Amazon S3 locations.
 * `task_report_config` - (Optional) Configuration block containing the configuration of a DataSync Task Report. See [`task_report_config`](#task_report_config-argument-reference) below.
 
 ### options Argument Reference
