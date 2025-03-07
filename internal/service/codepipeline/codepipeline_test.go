@@ -50,6 +50,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.category", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.owner", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.provider", "CodeStarSourceConnection"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.version", "1"),
@@ -67,6 +68,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.category", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.owner", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.provider", "CodeBuild"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.version", "1"),
@@ -93,6 +95,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.input_artifacts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "artifacts"),
@@ -103,6 +106,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "artifacts"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.%", "1"),
@@ -595,7 +599,7 @@ func TestAccCodePipeline_ecr(t *testing.T) {
 	})
 }
 
-func TestAccCodePipeline_pipelinetype(t *testing.T) {
+func TestAccCodePipeline_pipelineType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
 	rName := sdkacctest.RandString(10)
@@ -613,7 +617,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodePipelineConfig_pipelinetype(rName, "V1"),
+				Config: testAccCodePipelineConfig_pipelineType(rName, "V1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
@@ -663,7 +667,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodePipelineConfig_pipelinetypeUpdated1(rName),
+				Config: testAccCodePipelineConfig_pipelineTypeUpdated1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeQueued)),
@@ -803,7 +807,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCodePipelineConfig_pipelinetypeUpdated2(rName),
+				Config: testAccCodePipelineConfig_pipelineTypeUpdated2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeQueued)),
@@ -878,7 +882,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCodePipelineConfig_pipelinetypeUpdated3(rName),
+				Config: testAccCodePipelineConfig_pipelineTypeUpdated3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeQueued)),
@@ -921,7 +925,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCodePipelineConfig_pipelinetype(rName, "V2"),
+				Config: testAccCodePipelineConfig_pipelineType(rName, "V2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
@@ -1359,7 +1363,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_pipelinetype(rName, pipelineType string) string { // nosemgrep:ci.codepipeline-in-func-name
+func testAccCodePipelineConfig_pipelineType(rName, pipelineType string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1424,7 +1428,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, pipelineType))
 }
 
-func testAccCodePipelineConfig_pipelinetypeUpdated1(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+func testAccCodePipelineConfig_pipelineTypeUpdated1(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
@@ -1536,7 +1540,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_pipelinetypeUpdated2(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+func testAccCodePipelineConfig_pipelineTypeUpdated2(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
@@ -1648,7 +1652,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_pipelinetypeUpdated3(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+func testAccCodePipelineConfig_pipelineTypeUpdated3(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
