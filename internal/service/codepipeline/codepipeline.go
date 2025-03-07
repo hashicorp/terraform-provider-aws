@@ -58,7 +58,7 @@ func resourcePipeline() *schema.Resource {
 						Optional:         true,
 						ValidateDiagFunc: enum.Validate[types.Result](),
 					},
-					"rule": {
+					names.AttrRule: {
 						Type:     schema.TypeList,
 						MinItems: 1,
 						MaxItems: 5,
@@ -76,7 +76,7 @@ func resourcePipeline() *schema.Resource {
 										),
 									},
 								},
-								"configuration": {
+								names.AttrConfiguration: {
 									Type:     schema.TypeMap,
 									Optional: true,
 									Elem: &schema.Schema{
@@ -106,7 +106,7 @@ func resourcePipeline() *schema.Resource {
 									Type:     schema.TypeString,
 									Optional: true,
 								},
-								"role_arn": {
+								names.AttrRoleARN: {
 									Type:         schema.TypeString,
 									Optional:     true,
 									ValidateFunc: verify.ValidARN,
@@ -122,7 +122,7 @@ func resourcePipeline() *schema.Resource {
 												Required:         true,
 												ValidateDiagFunc: enum.Validate[types.RuleCategory](),
 											},
-											"owner": {
+											names.AttrOwner: {
 												Type:             schema.TypeString,
 												Optional:         true,
 												ValidateDiagFunc: enum.Validate[types.RuleOwner](),
@@ -131,7 +131,7 @@ func resourcePipeline() *schema.Resource {
 												Type:     schema.TypeString,
 												Required: true,
 											},
-											"version": {
+											names.AttrVersion: {
 												Type:     schema.TypeString,
 												Optional: true,
 												ValidateFunc: validation.All(
@@ -323,7 +323,7 @@ func resourcePipeline() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"condition": {
+										names.AttrCondition: {
 											Type:     schema.TypeList,
 											Required: true,
 											MaxItems: 1,
@@ -348,7 +348,7 @@ func resourcePipeline() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"condition": {
+										names.AttrCondition: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MaxItems: 1,
@@ -385,7 +385,7 @@ func resourcePipeline() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"condition": {
+										names.AttrCondition: {
 											Type:     schema.TypeList,
 											Required: true,
 											MaxItems: 1,
@@ -1428,7 +1428,7 @@ func expandConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
 		apiObject.Category = types.RuleCategory(*aws.String(v))
 	}
 
-	if v, ok := tfMap["owner"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
 		apiObject.Owner = types.RuleOwner(*aws.String(v))
 	}
 
@@ -1436,7 +1436,7 @@ func expandConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
 		apiObject.Provider = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -1472,7 +1472,7 @@ func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 
 	apiObject := &types.RuleDeclaration{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1486,7 +1486,7 @@ func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 		}
 	}
 
-	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && v != nil {
+	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && v != nil {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
@@ -1494,11 +1494,11 @@ func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 		apiObject.InputArtifacts = expandConditionRuleInputArtifacts(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -1546,7 +1546,7 @@ func expandCondition(tfMap map[string]interface{}) *types.Condition {
 		apiObject.Result = types.Result(v)
 	}
 
-	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrRule].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Rules = expandConditionRules(v)
 	}
 
@@ -1584,7 +1584,7 @@ func expandBeforeEntryDeclaration(tfMap map[string]interface{}) *types.BeforeEnt
 
 	apiObject := &types.BeforeEntryConditions{}
 
-	if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
 	}
 
@@ -1598,7 +1598,7 @@ func expandOnSuccessDeclaration(tfMap map[string]interface{}) *types.SuccessCond
 
 	apiObject := &types.SuccessConditions{}
 
-	if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
 	}
 
@@ -1626,7 +1626,7 @@ func expandOnFailureDeclaration(tfMap map[string]interface{}) *types.FailureCond
 
 	apiObject := &types.FailureConditions{}
 
-	if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Conditions = expandConditions(v)
 	}
 
@@ -1700,7 +1700,7 @@ func flattenConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]interfac
 		tfMap["category"] = string(v)
 	}
 	if v := apiObject.Owner; v != "" {
-		tfMap["owner"] = string(v)
+		tfMap[names.AttrOwner] = string(v)
 	}
 
 	if v := apiObject.Provider; v != nil {
@@ -1708,7 +1708,7 @@ func flattenConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]interfac
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.ToString(v)
+		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1718,7 +1718,7 @@ func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObjects.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObjects.RuleTypeId; v != nil {
@@ -1734,7 +1734,7 @@ func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]interface
 	}
 
 	if v := apiObjects.Configuration; v != nil {
-		tfMap["configuration"] = v
+		tfMap[names.AttrConfiguration] = v
 	}
 
 	if v := apiObjects.InputArtifacts; v != nil {
@@ -1742,11 +1742,11 @@ func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]interface
 	}
 
 	if v := apiObjects.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObjects.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.ToString(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObjects.TimeoutInMinutes; v != nil {
@@ -1778,7 +1778,7 @@ func flattenCondition(apiObject types.Condition) map[string]interface{} {
 	}
 
 	if v := apiObject.Rules; v != nil {
-		tfMap["rule"] = flattenConditionRules(v)
+		tfMap[names.AttrRule] = flattenConditionRules(v)
 	}
 
 	return tfMap
@@ -1802,7 +1802,7 @@ func flattenBeforeEntryDeclaration(apiObject *types.BeforeEntryConditions) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["condition"] = flattenConditions(v)
+		tfMap[names.AttrCondition] = flattenConditions(v)
 	}
 
 	return tfMap
@@ -1812,7 +1812,7 @@ func flattenOnSuccessDeclaration(apiObject *types.SuccessConditions) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["condition"] = flattenConditions(v)
+		tfMap[names.AttrCondition] = flattenConditions(v)
 	}
 
 	return tfMap
@@ -1832,7 +1832,7 @@ func flattenOnFailureDeclaration(apiObject *types.FailureConditions) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Conditions; v != nil {
-		tfMap["condition"] = flattenConditions(v)
+		tfMap[names.AttrCondition] = flattenConditions(v)
 	}
 
 	if v := apiObject.Result; v != "" {
