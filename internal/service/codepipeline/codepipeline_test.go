@@ -3002,7 +3002,7 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-	
+
           name = "CheckRepositoryNameRule"
 
           rule_type_id {
@@ -3041,7 +3041,7 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-	
+
           name = "CheckRepositoryNameRule"
 
           rule_type_id {
@@ -3249,8 +3249,8 @@ resource "aws_codepipeline" "test" {
 
     on_failure {
       result = "RETRY"
-	  retry_configuration {
-	    retry_mode = "ALL_ACTIONS"
+      retry_configuration {
+        retry_mode = "ALL_ACTIONS"
       }
     }
 
@@ -3282,7 +3282,8 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-          name          = "CheckRepositoryNameRule"
+
+          name = "CheckRepositoryNameRule"
 
           rule_type_id {
             category = "Rule"
@@ -3320,7 +3321,8 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-          name          = "CheckRepositoryNameRule"
+
+          name = "CheckRepositoryNameRule"
 
           rule_type_id {
             category = "Rule"
@@ -3336,7 +3338,8 @@ resource "aws_codepipeline" "test" {
             Value    = "update"
             Variable = "#{SourceVariables.CommitMessage}"
           }
-          name          = "CheckCommitMessageRule"
+
+          name = "CheckCommitMessageRule"
 
           rule_type_id {
             category = "Rule"
