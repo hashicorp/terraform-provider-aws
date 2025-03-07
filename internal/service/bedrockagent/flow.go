@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagent_flow", name="Flow")
 func newResourceFlow(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceFlow{}
@@ -56,7 +55,6 @@ type resourceFlow struct {
 	framework.WithTimeouts
 }
 
-
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the attributes in snake case (e.g.,
 // delete_automated_backups).
@@ -66,28 +64,31 @@ type resourceFlow struct {
 // * Do not add a blank line between attributes.
 //
 // Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
+//   - If a user can provide a value ("configure a value") for an
+//     attribute (e.g., instances = 5), we call the attribute an
+//     "argument."
+//   - You change the way users interact with attributes using:
+//   - Required
+//   - Optional
+//   - Computed
+//   - There are only four valid combinations:
 //
 // 1. Required only - the user must provide a value
 // Required: true,
 //
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
+//  2. Optional only - the user can configure or omit a value; do not
+//     use Default or DefaultFunc
+//
 // Optional: true,
 //
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
+//  3. Computed only - the provider can provide a value but the user
+//     cannot, i.e., read-only
+//
 // Computed: true,
 //
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
+//  4. Optional AND Computed - the provider or user can provide a value;
+//     use this combination if you are using Default
+//
 // Optional: true,
 // Computed: true,
 //
@@ -102,27 +103,27 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
-			"id": framework.IDAttribute(),
+			"id":  framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
-                Validators: []validator.String{
-                    stringvalidator.All(
-                        stringvalidator.LengthBetween(1, 50),
-                        stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "the name should only contain 0-9, A-Z, a-z, and _"),
-                    ),
-                },
+				Validators: []validator.String{
+					stringvalidator.All(
+						stringvalidator.LengthBetween(1, 50),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "the name should only contain 0-9, A-Z, a-z, and _"),
+					),
+				},
 			},
-            "execution_role_arn": schema.StringAttribute{
-                CustomType: fwtypes.ARNType,
-				Required: true,
+			"execution_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
-            "customer_encryption_key_arn": schema.StringAttribute{
-                CustomType: fwtypes.ARNType,
-				Optional: true,
+			"customer_encryption_key_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
-            "definition": schema.ListAttribute{
-                ElementType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
-				Optional: true,
+			"definition": schema.ListAttribute{
+				ElementType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
+				Optional:    true,
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -353,7 +354,6 @@ func (r *resourceFlow) ImportState(ctx context.Context, req resource.ImportState
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
 // already have suitable constants. We prefer that you use the constants
@@ -422,10 +422,10 @@ func waitFlowUpdated(ctx context.Context, conn *bedrockagent.Client, id string, 
 // be additional pending states, however.
 func waitFlowDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   statusFlow(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: statusFlow(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -500,14 +500,14 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceFlowModel struct {
-	ARN                      types.String                                 `tfsdk:"arn"`
-	ID                       types.String                                 `tfsdk:"id"`
-	Name                     types.String                                 `tfsdk:"name"`
-	ExecutionRoleARN         types.String                                 `tfsdk:"execution_role_arn"`
-	CustomerEncryptionKeyARN types.String                                 `tfsdk:"customer_encryption_key_arn"`
-	Definition               fwtypes.ObjectValueOf[flowDefinitionModel]   `tfsdk:"definition"`
-	Description              types.String                                 `tfsdk:"description"`
-	Timeouts                 timeouts.Value                               `tfsdk:"timeouts"`
+	ARN                      types.String                               `tfsdk:"arn"`
+	ID                       types.String                               `tfsdk:"id"`
+	Name                     types.String                               `tfsdk:"name"`
+	ExecutionRoleARN         types.String                               `tfsdk:"execution_role_arn"`
+	CustomerEncryptionKeyARN types.String                               `tfsdk:"customer_encryption_key_arn"`
+	Definition               fwtypes.ObjectValueOf[flowDefinitionModel] `tfsdk:"definition"`
+	Description              types.String                               `tfsdk:"description"`
+	Timeouts                 timeouts.Value                             `tfsdk:"timeouts"`
 }
 
 type flowDefinitionModel struct {
@@ -516,108 +516,108 @@ type flowDefinitionModel struct {
 }
 
 type flowConnectionModel struct {
-    Name          types.String                                       `tfsdk:"name"`
-    Source        types.String                                       `tfsdk:"source"`
-    Target        types.String                                       `tfsdk:"target"`
-    Type          fwtypes.StringEnum[awstypes.FlowConnectionType]    `tfsdk:"type"`
-    Configuration fwtypes.ObjectValueOf[flowConnectionConfigurationModel] `tfsdk:"configuration"`
+	Name          types.String                                            `tfsdk:"name"`
+	Source        types.String                                            `tfsdk:"source"`
+	Target        types.String                                            `tfsdk:"target"`
+	Type          fwtypes.StringEnum[awstypes.FlowConnectionType]         `tfsdk:"type"`
+	Configuration fwtypes.ObjectValueOf[flowConnectionConfigurationModel] `tfsdk:"configuration"`
 }
 
 type flowConnectionConfigurationModel struct {
-    Data        fwtypes.ObjectValueOf[flowConnectionConfigurationMemberDataModel]        `tfsdk:"data"`
-    Conditional fwtypes.ObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
+	Data        fwtypes.ObjectValueOf[flowConnectionConfigurationMemberDataModel]        `tfsdk:"data"`
+	Conditional fwtypes.ObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
 }
 
 type flowConnectionConfigurationMemberDataModel struct {
-    Condition types.String `tfsdk:"condition"`
+	Condition types.String `tfsdk:"condition"`
 }
 
 type flowConnectionConfigurationMemberConditionalModel struct {
-    SourceOutput types.String `tfsdk:"source_output"`
-    TargetInput  types.String `tfsdk:"target_input"`
+	SourceOutput types.String `tfsdk:"source_output"`
+	TargetInput  types.String `tfsdk:"target_input"`
 }
 
 func (m *flowConnectionConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-    switch t := v.(type) {
-    case awstypes.FlowConnectionConfigurationMemberData:
-        var model flowConnectionConfigurationMemberDataModel
-        d := flex.Flatten(ctx, t.Value, &model)
-        diags.Append(d...)
-        if diags.HasError() {
-            return diags
-        }
+	switch t := v.(type) {
+	case awstypes.FlowConnectionConfigurationMemberData:
+		var model flowConnectionConfigurationMemberDataModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
 
-        m.Data = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Data = fwtypes.NewObjectValueOfMust(ctx, &model)
 
-        return diags
-    case awstypes.FlowConnectionConfigurationMemberConditional:
-        var model flowConnectionConfigurationMemberConditionalModel
-        d := flex.Flatten(ctx, t.Value, &model)
-        diags.Append(d...)
-        if diags.HasError() {
-            return diags
-        }
+		return diags
+	case awstypes.FlowConnectionConfigurationMemberConditional:
+		var model flowConnectionConfigurationMemberConditionalModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
 
-        m.Conditional = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Conditional = fwtypes.NewObjectValueOfMust(ctx, &model)
 
-        return diags
-    default:
-        return diags
-    }
+		return diags
+	default:
+		return diags
+	}
 }
 
 func (m flowConnectionConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-    switch {
-    case !m.Data.IsNull():
-        flowConnectionConfigurationData, d := m.Data.ToPtr(ctx)
-        diags.Append(d...)
-        if diags.HasError() {
-            return nil, diags
-        }
+	switch {
+	case !m.Data.IsNull():
+		flowConnectionConfigurationData, d := m.Data.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
 
-        var r awstypes.FlowConnectionConfigurationMemberData
-        diags.Append(flex.Expand(ctx, flowConnectionConfigurationData, &r.Value)...)
-        if diags.HasError() {
-            return nil, diags
-        }
+		var r awstypes.FlowConnectionConfigurationMemberData
+		diags.Append(flex.Expand(ctx, flowConnectionConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
 
-        return &r, diags
-    case !m.Conditional.IsNull():
-        flowConnectionConfigurationConditional, d := m.Conditional.ToPtr(ctx)
-        diags.Append(d...)
-        if diags.HasError() {
-            return nil, diags
-        }
+		return &r, diags
+	case !m.Conditional.IsNull():
+		flowConnectionConfigurationConditional, d := m.Conditional.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
 
-        var r awstypes.FlowConnectionConfigurationMemberConditional
-        diags.Append(flex.Expand(ctx, flowConnectionConfigurationConditional, &r.Value)...)
-        if diags.HasError() {
-            return nil, diags
-        }
+		var r awstypes.FlowConnectionConfigurationMemberConditional
+		diags.Append(flex.Expand(ctx, flowConnectionConfigurationConditional, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
 
-        return &r, diags
-    }
+		return &r, diags
+	}
 
-    return nil, diags
+	return nil, diags
 }
 
 type flowNodeModel struct {
-    Name          types.String                                         `tfsdk:"name"`
-    Type          fwtypes.StringEnum[awstypes.FlowNodeType]            `tfsdk:"type"`
-    Configuration fwtypes.ObjectValueOf[flowNodeConfigurationModel]    `tfsdk:"configuration"`
-    Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]  `tfsdk:"inputs"`
-    Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel] `tfsdk:"outputs"`
+	Name          types.String                                         `tfsdk:"name"`
+	Type          fwtypes.StringEnum[awstypes.FlowNodeType]            `tfsdk:"type"`
+	Configuration fwtypes.ObjectValueOf[flowNodeConfigurationModel]    `tfsdk:"configuration"`
+	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]  `tfsdk:"inputs"`
+	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel] `tfsdk:"outputs"`
 }
 
-type flowNodeConfigurationModel struct {} // TODO
+type flowNodeConfigurationModel struct{} // TODO
 
 type flowNodeInputModel struct {
-    Expression types.String                                    `tfsdk:"expression"`
-    Name       types.String                                    `tfsdk:"name"`
-    Type       fwtypes.StringEnum[awstypes.FlowNodeIODataType] `tfsdk:"type"`
+	Expression types.String                                    `tfsdk:"expression"`
+	Name       types.String                                    `tfsdk:"name"`
+	Type       fwtypes.StringEnum[awstypes.FlowNodeIODataType] `tfsdk:"type"`
 }
 
 type flowNodeOutputModel struct {
-    Name       types.String                                    `tfsdk:"name"`
-    Type       fwtypes.StringEnum[awstypes.FlowNodeIODataType] `tfsdk:"type"`
+	Name types.String                                    `tfsdk:"name"`
+	Type fwtypes.StringEnum[awstypes.FlowNodeIODataType] `tfsdk:"type"`
 }
