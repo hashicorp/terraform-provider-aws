@@ -1,4 +1,9 @@
 ## 6.0.0-beta1 (Unreleased)
+
+NOTES:
+
+* provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
+
 ## 5.90.0 (Unreleased)
 
 BREAKING CHANGES:
