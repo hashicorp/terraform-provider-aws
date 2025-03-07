@@ -6602,3 +6602,107 @@ resource "aws_rds_cluster" "test" {
 }
 `, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriond)
 }
+func TestAccRDSCluster_GlobalClusterPerformanceInsightsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	globalClusterResourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_globalClusterPerformanceInsightsEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					// Despite setting performance_insights_enabled to true, it gets reset to false when part of a global cluster
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			// Update to explicitly enable Performance Insights - this should work
+			{
+				Config: testAccClusterConfig_globalClusterPerformanceInsightsEnabledUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterConfig_globalClusterPerformanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_globalClusterBase(rName), fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
+  engine_version            = "13.4"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  database_name             = "mydb"
+  master_username           = "foo"
+  master_password           = "barbarbar"
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  performance_insights_enabled = %[2]t
+}
+`, rName, performanceInsightsEnabled))
+}
+
+func testAccClusterConfig_globalClusterPerformanceInsightsEnabledUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_globalClusterBase(rName), fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
+  engine_version            = "13.4"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  database_name             = "mydb"
+  master_username           = "foo"
+  master_password           = "barbarbar"
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  performance_insights_enabled = true
+  apply_immediately         = true
+}
+`, rName))
+}
+
+// If this function doesn't exist already
+func testAccClusterConfig_globalClusterBase(rName string) string {
+	return `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`
+}
