@@ -7,7 +7,6 @@ import (
 	"context"
 	"unsafe"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -59,27 +58,25 @@ func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaReq
 func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().AccountClient(ctx)
 
-	var err error
-
 	var data dataSourceRegionsModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	accountID := flex.StringValueFromFramework(ctx, data.AccountID)
+	accountID := flex.StringFromFramework(ctx, data.AccountID)
 	regionOptsString := flex.ExpandFrameworkStringValueList(ctx, data.RegionOptStatusContains)
 
 	regionOpts := *(*[]awstypes.RegionOptStatus)(unsafe.Pointer(&regionOptsString))
 
 	input := &account.ListRegionsInput{
-		AccountId:               aws.String(accountID),
+		AccountId:               accountID,
 		RegionOptStatusContains: regionOpts,
 	}
 
-	var output *account.ListRegionsOutput
+	output := &account.ListRegionsOutput{}
 	for {
-		output, err = conn.ListRegions(ctx, input)
+		page, err := conn.ListRegions(ctx, input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Account, create.ErrActionReading, DSNameRegions, data.AccountID.String(), err),
@@ -87,12 +84,18 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 			)
 			return
 		}
-
-		if aws.ToString(output.NextToken) == "" {
+		if page == nil {
 			break
 		}
 
-		input.NextToken = output.NextToken
+		if len(page.Regions) > 0 {
+			output.Regions = append(output.Regions, page.Regions...)
+		}
+
+		input.NextToken = page.NextToken
+		if page.NextToken == nil {
+			break
+		}
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("Regions"))...)
