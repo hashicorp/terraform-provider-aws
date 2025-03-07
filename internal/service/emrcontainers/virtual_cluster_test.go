@@ -403,6 +403,24 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 
+resource "aws_emrcontainers_security_configuration" "test" {
+  name = %[1]q
+
+  security_configuration_data {
+    authorization_configuration {
+      lake_formation_configuration {
+		authorized_session_tag_value = "EMR on EKS Engine"
+		query_engine_role_arn = "arn:aws:iam::123456789012:role/query-engine-role"
+		secure_namespace_info {
+		  cluster_id = aws_eks_cluster.test.id
+		  namespace = "non-default"
+		}
+	  }
+	}
+  }
+  depends_on = [aws_eks_cluster.test]
+}
+
 resource "time_sleep" "eks_cluster_ready" {
   depends_on = [aws_eks_cluster.test, aws_eks_node_group.test]
 
@@ -522,6 +540,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
     }
   }
 
+  security_configuration_id = aws_emrcontainers_security_configuration.test.id
   name = %[1]q
 
   depends_on = [kubernetes_config_map.aws_auth, time_sleep.eks_cluster_ready]
@@ -543,6 +562,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
     }
   }
 
+  security_configuration_id = aws_emrcontainers_security_configuration.test.id
   name = %[1]q
 
   tags = {
@@ -568,6 +588,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
     }
   }
 
+  security_configuration_id = aws_emrcontainers_security_configuration.test.id
   name = %[1]q
 
   tags = {

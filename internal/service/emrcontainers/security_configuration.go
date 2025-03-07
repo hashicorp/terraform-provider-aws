@@ -6,8 +6,6 @@ package emrcontainers
 import (
 	"context"
 	"errors"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
