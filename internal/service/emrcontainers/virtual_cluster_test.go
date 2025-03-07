@@ -20,6 +20,10 @@ import (
 )
 
 func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -28,6 +32,10 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 		"kubernetes": {
 			Source:            "hashicorp/kubernetes",
 			VersionConstraint: "~> 2.3",
+		},
+		"time": {
+			Source:            "hashicorp/time",
+			VersionConstraint: "~> 0.13",
 		},
 	}
 
@@ -76,6 +84,10 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 }
 
 func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,6 +96,10 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 		"kubernetes": {
 			Source:            "hashicorp/kubernetes",
 			VersionConstraint: "~> 2.3",
+		},
+		"time": {
+			Source:            "hashicorp/time",
+			VersionConstraint: "~> 0.13",
 		},
 	}
 
@@ -110,6 +126,10 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 }
 
 func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -118,6 +138,10 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 		"kubernetes": {
 			Source:            "hashicorp/kubernetes",
 			VersionConstraint: "~> 2.3",
+		},
+		"time": {
+			Source:            "hashicorp/time",
+			VersionConstraint: "~> 0.13",
 		},
 	}
 
@@ -379,6 +403,12 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 
+resource "time_sleep" "eks_cluster_ready" {
+  depends_on = [aws_eks_cluster.test, aws_eks_node_group.test]
+
+  create_duration = "90s"
+}
+
 data "aws_eks_cluster_auth" "cluster" {
   name = aws_eks_cluster.test.id
 }
@@ -494,7 +524,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
 
   name = %[1]q
 
-  depends_on = [kubernetes_config_map.aws_auth]
+  depends_on = [kubernetes_config_map.aws_auth, time_sleep.eks_cluster_ready]
 }
 `, rName))
 }
@@ -519,7 +549,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
     %[2]q = %[3]q
   }
 
-  depends_on = [kubernetes_config_map.aws_auth]
+  depends_on = [kubernetes_config_map.aws_auth, time_sleep.eks_cluster_ready]
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -545,7 +575,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
     %[4]q = %[5]q
   }
 
-  depends_on = [kubernetes_config_map.aws_auth]
+  depends_on = [kubernetes_config_map.aws_auth, time_sleep.eks_cluster_ready]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
