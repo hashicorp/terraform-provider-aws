@@ -192,9 +192,10 @@ func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service RADIUS Settings: %s", d.Id())
-	_, err := conn.DisableRadius(ctx, &directoryservice.DisableRadiusInput{
+	input := directoryservice.DisableRadiusInput{
 		DirectoryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisableRadius(ctx, &input)
 
 	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags

@@ -52,10 +52,11 @@ which take the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `peer_account_id` - Identifier of the peer AWS account
-* `peer_region` - Identifier of the peer AWS region
-* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway
-* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway
+* `arn` - ARN of the attachment.
+* `peer_account_id` - Identifier of the peer AWS account.
+* `peer_region` - Identifier of the peer AWS region.
+* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway.
+* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway.
 
 ## Timeouts
 

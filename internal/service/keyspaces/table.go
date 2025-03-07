@@ -65,7 +65,6 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

@@ -215,11 +215,10 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -423,11 +422,10 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -637,11 +635,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -711,11 +708,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -819,11 +815,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -907,11 +902,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1014,11 +1008,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1121,11 +1114,10 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1184,11 +1176,10 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1233,11 +1224,10 @@ func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1294,11 +1284,10 @@ func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1343,11 +1332,10 @@ func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1392,11 +1380,10 @@ func TestAccWAFV2WebACL_ByteMatchStatement_headerOrder(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1486,11 +1473,10 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1553,11 +1539,10 @@ func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1606,11 +1591,10 @@ func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1655,11 +1639,10 @@ func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1703,11 +1686,10 @@ func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1809,11 +1791,10 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2082,11 +2063,10 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2155,11 +2135,10 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2222,11 +2201,10 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2262,14 +2240,14 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-					input := &wafv2.ListWebACLsInput{
+					listACLsInput := wafv2.ListWebACLsInput{
 						Scope: awstypes.ScopeRegional,
 					}
 
 					aclID := ""
 					lockToken := ""
 
-					err := tfwafv2.ListWebACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+					err := tfwafv2.ListWebACLsPages(ctx, conn, &listACLsInput, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -2294,13 +2272,12 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("couldn't find WebACL (%s)", webACLName)
 					}
 
-					in := &wafv2.ListRuleGroupsInput{
+					var rgARN string
+
+					listRuleGroupsInput := wafv2.ListRuleGroupsInput{
 						Scope: awstypes.ScopeRegional,
 					}
-
-					rgARN := ""
-
-					err = tfwafv2.ListRuleGroupsPages(ctx, conn, in, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+					err = tfwafv2.ListRuleGroupsPages(ctx, conn, &listRuleGroupsInput, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -2324,7 +2301,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("couldn't find Rule Group (%s)", webACLName)
 					}
 
-					_, err = conn.UpdateWebACL(ctx, &wafv2.UpdateWebACLInput{
+					updateACLInput := wafv2.UpdateWebACLInput{
 						DefaultAction: &awstypes.DefaultAction{
 							Allow: &awstypes.AllowAction{},
 						},
@@ -2354,7 +2331,8 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 							MetricName:               aws.String("friendly-metric-name"),
 							SampledRequestsEnabled:   false,
 						},
-					})
+					}
+					_, err = conn.UpdateWebACL(ctx, &updateACLInput)
 					if err != nil {
 						t.Fatalf("adding rule in PreConfig: %s", err)
 					}
@@ -2478,11 +2456,10 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccWebACLConfig_customRequestHandlingCount(webACLName, "x-hdr1", "x-hdr2"),
@@ -2581,7 +2558,6 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
-				ImportStateVerifyIgnore: []string{names.AttrRule},
 			},
 		},
 	})
@@ -2698,11 +2674,10 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2793,11 +2768,10 @@ func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2839,11 +2813,10 @@ func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -3037,11 +3010,10 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerifyIgnore: []string{names.AttrRule},
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -3071,7 +3043,7 @@ func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"rule_json"},
+				ImportStateVerifyIgnore: []string{"rule_json", names.AttrRule},
 				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
 			},
 			{

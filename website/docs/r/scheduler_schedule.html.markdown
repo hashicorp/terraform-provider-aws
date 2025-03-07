@@ -102,7 +102,7 @@ The following arguments are optional:
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `kinesis_parameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
 * `retry_policy` - (Optional) Information about the retry policy settings. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker AI [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS [`SendMessage`](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html) API operation. Detailed below.
 
 #### dead_letter_config Configuration Block
@@ -169,12 +169,12 @@ The following arguments are optional:
 
 #### sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker Model Building Pipeline. Detailed below.
+* `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker AI Model Building Pipeline. Detailed below.
 
 ##### pipeline_parameter Configuration Block
 
-* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
-* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+* `name` - (Required) Name of parameter to start execution of a SageMaker AI Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker AI Model Building Pipeline.
 
 #### sqs_parameters Configuration Block
 

@@ -318,7 +318,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `dbParameterGroupIdentifier` - (Optional) ID of the DB parameter group assigned to your DB instance. If added to an existing Timestream for InfluxDB instance or given a new value, will cause an in-place update to the instance. However, if an instance already has a value for `dbParameterGroupIdentifier`, removing `dbParameterGroupIdentifier` will cause the instance to be destroyed and recreated.
-* `dbStorageType` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT1"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400.
+* `dbStorageType` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400.
 * `deploymentType` - (Default `"SINGLE_AZ"`) Specifies whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`.
 * `logDeliveryConfiguration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket.
 * `publiclyAccessible` - (Default `false`) Configures the DB instance with a public IP to facilitate access. Other resources, such as a VPC, a subnet, an internet gateway, and a route table with routes, are also required to enabled public access, in addition to this argument. See "[Usage with Public Internet Access Enabled](#usage-with-public-internet-access-enabled)" for an example configuration with all required resources for public internet access.
@@ -389,4 +389,4 @@ Using `terraform import`, import Timestream for InfluxDB Db Instance using its i
 % terraform import aws_timestreaminfluxdb_db_instance.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bbace641ee6cd0778d345f68e4d25df90f0a186b88b885e36dbf4489de5ab592 -->
+<!-- cache-key: cdktf-0.20.8 input-1df9f984146bb461f846fa92cf324326d2a79924e8090777fa9fdf655e6b93b6 -->

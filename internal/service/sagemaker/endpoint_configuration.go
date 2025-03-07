@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -596,7 +598,72 @@ func resourceEndpointConfiguration() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: validateDataCaptureConfigCustomDiff,
+	}
+}
+
+func validateDataCaptureConfigCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	dataCapturesPath := cty.GetAttrPath("data_capture_config")
+	dataCaptures := configRaw.GetAttr("data_capture_config")
+	if dataCaptures.IsKnown() && !dataCaptures.IsNull() {
+		dataCaptureConfigPlanTimeValidate(dataCapturesPath, dataCaptures, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func dataCaptureConfigPlanTimeValidate(path cty.Path, dataCaptures cty.Value, diags *diag.Diagnostics) {
+	it := dataCaptures.ElementIterator()
+	for it.Next() {
+		_, dataCapture := it.Element()
+
+		if !dataCapture.IsKnown() {
+			break
+		}
+		if dataCapture.IsNull() {
+			break
+		}
+
+		captureContentHeaderPath := path.GetAttr("capture_content_type_header")
+		captureContentHeaders := dataCapture.GetAttr("capture_content_type_header")
+
+		captureContentTypeHeaderPlanTimeValidate(captureContentHeaderPath, captureContentHeaders, diags)
+	}
+}
+
+func captureContentTypeHeaderPlanTimeValidate(path cty.Path, captureContentHeaders cty.Value, diags *diag.Diagnostics) {
+	it := captureContentHeaders.ElementIterator()
+	for it.Next() {
+		_, captureContentHeader := it.Element()
+
+		if !captureContentHeader.IsKnown() {
+			break
+		}
+		if captureContentHeader.IsNull() {
+			break
+		}
+
+		csvContentTypes := captureContentHeader.GetAttr("csv_content_types")
+		if csvContentTypes.IsKnown() && !csvContentTypes.IsNull() {
+			break
+		}
+
+		jsonContentTypes := captureContentHeader.GetAttr("json_content_types")
+		if jsonContentTypes.IsKnown() && !jsonContentTypes.IsNull() {
+			break
+		}
+
+		*diags = append(*diags, errs.NewAtLeastOneOfChildrenError(path,
+			cty.GetAttrPath("csv_content_types"),
+			cty.GetAttrPath("json_content_types"),
+		))
 	}
 }
 
@@ -628,10 +695,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		createOpts.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker AI Endpoint Configuration create config: %#v", *createOpts)
 	_, err := conn.CreateEndpointConfig(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint Configuration: %s", err)
 	}
 	d.SetId(name)
 
@@ -645,13 +712,13 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	endpointConfig, err := findEndpointConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Endpoint Configuration (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Endpoint Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
@@ -660,19 +727,19 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("shadow_production_variants", flattenProductionVariants(endpointConfig.ShadowProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -693,7 +760,7 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker Endpoint Configuration: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint Configuration: %s", d.Id())
 
 	_, err := conn.DeleteEndpointConfig(ctx, deleteOpts)
 
@@ -702,7 +769,7 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -882,7 +949,7 @@ func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConf
 		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
+	if v, ok := m["capture_content_type_header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]interface{}))
 	}
 

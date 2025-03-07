@@ -64,21 +64,22 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	input := awstypes.UserStackAssociation{
+	userStackAssociation := awstypes.UserStackAssociation{
 		AuthenticationType: awstypes.AuthenticationType(d.Get("authentication_type").(string)),
 		StackName:          aws.String(d.Get("stack_name").(string)),
 		UserName:           aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	if v, ok := d.GetOk("send_email_notification"); ok {
-		input.SendEmailNotification = aws.Bool(v.(bool))
+		userStackAssociation.SendEmailNotification = aws.Bool(v.(bool))
 	}
 
 	id := EncodeUserStackAssociationID(d.Get(names.AttrUserName).(string), d.Get("authentication_type").(string), d.Get("stack_name").(string))
 
-	output, err := conn.BatchAssociateUserStack(ctx, &appstream.BatchAssociateUserStackInput{
-		UserStackAssociations: []awstypes.UserStackAssociation{input},
-	})
+	input := appstream.BatchAssociateUserStackInput{
+		UserStackAssociations: []awstypes.UserStackAssociation{userStackAssociation},
+	}
+	output, err := conn.BatchAssociateUserStack(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppStream User Stack Association (%s): %s", id, err)
@@ -108,12 +109,12 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User Stack Association ID (%s): %s", d.Id(), err)
 	}
 
-	resp, err := conn.DescribeUserStackAssociations(ctx,
-		&appstream.DescribeUserStackAssociationsInput{
-			AuthenticationType: awstypes.AuthenticationType(authType),
-			StackName:          aws.String(stackName),
-			UserName:           aws.String(userName),
-		})
+	input := appstream.DescribeUserStackAssociationsInput{
+		AuthenticationType: awstypes.AuthenticationType(authType),
+		StackName:          aws.String(stackName),
+		UserName:           aws.String(userName),
+	}
+	resp, err := conn.DescribeUserStackAssociations(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppStream User Stack Association (%s) not found, removing from state", d.Id())
@@ -153,15 +154,16 @@ func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User Stack Association ID (%s): %s", d.Id(), err)
 	}
 
-	input := awstypes.UserStackAssociation{
+	userStackAssociation := awstypes.UserStackAssociation{
 		AuthenticationType: awstypes.AuthenticationType(authType),
 		StackName:          aws.String(stackName),
 		UserName:           aws.String(userName),
 	}
 
-	_, err = conn.BatchDisassociateUserStack(ctx, &appstream.BatchDisassociateUserStackInput{
-		UserStackAssociations: []awstypes.UserStackAssociation{input},
-	})
+	input := appstream.BatchDisassociateUserStackInput{
+		UserStackAssociations: []awstypes.UserStackAssociation{userStackAssociation},
+	}
+	_, err = conn.BatchDisassociateUserStack(ctx, &input)
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {

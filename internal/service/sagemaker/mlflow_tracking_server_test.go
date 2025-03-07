@@ -153,7 +153,7 @@ func testAccCheckMlflowTrackingServerDestroy(ctx context.Context) resource.TestC
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Mlflow Tracking Server %s still exists", rs.Primary.ID)

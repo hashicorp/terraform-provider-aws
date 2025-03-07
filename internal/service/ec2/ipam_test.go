@@ -348,10 +348,11 @@ func testAccCheckIPAMScopeCreate(ctx context.Context, ipam *awstypes.Ipam) resou
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := conn.CreateIpamScope(ctx, &ec2.CreateIpamScopeInput{
+		input := ec2.CreateIpamScopeInput{
 			ClientToken: aws.String(id.UniqueId()),
 			IpamId:      ipam.IpamId,
-		})
+		}
+		_, err := conn.CreateIpamScope(ctx, &input)
 
 		return err
 	}

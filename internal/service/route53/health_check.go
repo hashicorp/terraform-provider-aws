@@ -11,11 +11,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -183,10 +181,7 @@ func resourceHealthCheck() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			triggersCustomizeDiff,
-		),
+		CustomizeDiff: triggersCustomizeDiff,
 	}
 }
 
@@ -319,12 +314,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Health Check (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "healthcheck/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, healthCheckARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	healthCheckConfig := output.HealthCheckConfig
 	d.Set("child_health_threshold", healthCheckConfig.HealthThreshold)
 	d.Set("child_healthchecks", healthCheckConfig.ChildHealthChecks)
@@ -488,4 +478,9 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta inter
 	}
 
 	return nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func healthCheckARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "healthcheck/"+id)
 }

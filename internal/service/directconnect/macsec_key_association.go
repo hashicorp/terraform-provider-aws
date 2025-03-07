@@ -150,10 +150,11 @@ func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect MACSec Key Association: %s", d.Id())
-	_, err = conn.DisassociateMacSecKey(ctx, &directconnect.DisassociateMacSecKeyInput{
+	input := directconnect.DisassociateMacSecKeyInput{
 		ConnectionId: aws.String(connectionID),
 		SecretARN:    aws.String(secretARN),
-	})
+	}
+	_, err = conn.DisassociateMacSecKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting MACSec Key Association (%s): %s", d.Id(), err)

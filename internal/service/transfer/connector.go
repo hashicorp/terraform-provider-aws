@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -142,8 +141,6 @@ func resourceConnector() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -266,9 +263,10 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Connector: %s", d.Id())
-	_, err := conn.DeleteConnector(ctx, &transfer.DeleteConnectorInput{
+	input := transfer.DeleteConnectorInput{
 		ConnectorId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnector(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -607,7 +607,7 @@ func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.T
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Data Quality Job Definition (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Data Quality Job Definition (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -621,7 +621,7 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Data Quality Job Definition ID is set")
+			return fmt.Errorf("no SageMaker AI Data Quality Job Definition ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

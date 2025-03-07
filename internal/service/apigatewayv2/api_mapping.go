@@ -137,10 +137,11 @@ func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API Mapping (%s)", d.Id())
-	_, err := conn.DeleteApiMapping(ctx, &apigatewayv2.DeleteApiMappingInput{
+	input := apigatewayv2.DeleteApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get(names.AttrDomainName).(string)),
-	})
+	}
+	_, err := conn.DeleteApiMapping(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
