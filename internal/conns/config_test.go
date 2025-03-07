@@ -460,6 +460,8 @@ func TestProxyConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			p.TerraformVersion = "1.0.0"
+
 			expectedDiags := tc.expectedDiags
 			diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
