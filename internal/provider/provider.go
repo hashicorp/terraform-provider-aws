@@ -445,6 +445,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		terraformVersion = "0.11+compatible"
 	}
 
+	// Terraform 0.12.31 will download beta version of the provider as the latest available.
+	// See https://github.com/hashicorp/terraform/issues/36586.
+	// This check must be removed before the GA release.
+	switch {
+	case terraformVersion == "0.11+compatible", strings.HasPrefix(terraformVersion, "0.12."):
+		return nil, diag.Errorf("unsupported Terraform version: %s", terraformVersion)
+	}
+
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
 		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
