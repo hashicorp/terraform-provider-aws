@@ -13,10 +13,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	enabledByDefault = "ENABLED_BY_DEFAULT"
+	disabled         = "DISABLED"
+)
+
 func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_account_regions.test"
+
+	enabledByDefaultRegions := []string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "ap-northeast-1", "ap-northeast-2", "ap-northeast-3", "ap-south-1", "ap-southeast-1", "ap-southeast-2", "ca-central-1", "eu-central-1", "eu-north-1", "eu-west-1", "eu-west-2", "eu-west-3", "sa-east-1"}
+
+	var testChecks []resource.TestCheckFunc
+	for _, region := range enabledByDefaultRegions {
+		testChecks = append(testChecks, resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
+			"region_name":       region,
+			"region_opt_status": enabledByDefault,
+		}))
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -28,38 +43,25 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountRegionsDataSourceConfig_inAccount(),
+				Config: `data "aws_account_regions" "test" {}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-						"region_name":       "us-east-1",
-						"region_opt_status": "ENABLED",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-						"region_name":       "us-east-2",
-						"region_opt_status": "ENABLED",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-						"region_name":       "us-west-1",
-						"region_opt_status": "ENABLED",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-						"region_name":       "us-west-2",
-						"region_opt_status": "ENABLED",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-						"region_name":       "af-south-1",
-						"region_opt_status": "DISABLED",
-					}),
-					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", "data.aws_caller_identity.current", "account_id"),
+					testChecks...,
 				),
+			},
+			{
+				Config: testAccAccountRegionsDataSourceConfig_disabled(),
+				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
+					"region_opt_status": disabled,
+				}),
 			},
 		},
 	})
 }
 
-func testAccAccountRegionsDataSourceConfig_inAccount() string {
+func testAccAccountRegionsDataSourceConfig_disabled() string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_account_regions" "test" {}
-`)
+data "aws_account_regions" "test" {
+	region_opt_status_contains = ["%s"]	
+}
+`, disabled)
 }
