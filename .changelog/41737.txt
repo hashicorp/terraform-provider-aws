@@ -1,0 +1,3 @@
+```release-note:bug
+resource/rds: Setting performance_insights_* to requiresModifyDbCluster = true for global_clusters
+```
