@@ -450,7 +450,9 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	// This check must be removed before the GA release.
 	switch {
 	case terraformVersion == "0.11+compatible", strings.HasPrefix(terraformVersion, "0.12."):
-		return nil, sdkdiag.AppendErrorf(diags, "unsupported Terraform version: %s", terraformVersion)
+		return nil, sdkdiag.AppendErrorf(diags, "unsupported Terraform version: %s. "+
+			"This version of Terraform is not supported with pre-release version of the Terraform AWS Provider but will be supported at GA. "+
+			"See https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements for details of how to specify an exact provider version to use", terraformVersion)
 	}
 
 	config := conns.Config{
