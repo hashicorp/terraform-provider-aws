@@ -10,4 +10,7 @@ var (
 
 	FindJobTemplateByID    = findJobTemplateByID
 	FindVirtualClusterByID = findVirtualClusterByID
+
+	FindSecurityConfigurationByID = findSecurityConfigurationByID
+	ResourceSecurityConfiguration = newResourceSecurityConfiguration
 )
