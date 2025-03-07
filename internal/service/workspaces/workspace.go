@@ -313,7 +313,7 @@ func workspacePropertyUpdate(ctx context.Context, conn *workspaces.Client, d *sc
 			RunningMode: types.RunningMode(d.Get(key).(string)),
 		}
 	case "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes":
-		if d.Get("workspace_properties.0.running_mode") != types.RunningModeAutoStop {
+		if d.Get("workspace_properties.0.running_mode") != string(types.RunningModeAutoStop) {
 			log.Printf("[DEBUG] Property running_mode_auto_stop_timeout_in_minutes makes sense only for AUTO_STOP running mode")
 			return nil
 		}
