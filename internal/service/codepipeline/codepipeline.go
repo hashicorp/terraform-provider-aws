@@ -851,8 +851,8 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
-	if v, ok := tfMap["commands"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Commands = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := tfMap["commands"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Commands = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && len(v) > 0 {
