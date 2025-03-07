@@ -2893,6 +2893,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     action {
       name            = "Build2"
       category        = "Build"
@@ -2905,6 +2906,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     on_failure {
       result = "RETRY"
       retry_configuration {
@@ -2912,6 +2914,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_retry_failed_actions"
 
@@ -2927,6 +2930,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     action {
       name            = "Build2"
       category        = "Build"
@@ -2939,6 +2943,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     on_failure {
       result = "RETRY"
       retry_configuration {
@@ -2946,6 +2951,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_rollback_and_before_entry"
 
@@ -2961,17 +2967,21 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     on_failure {
       result = "ROLLBACK"
     }
+
     on_success {
       condition {
         result = "ROLLBACK"
+
         rule {
           configuration = {}
-          commands = ["exit 0"]
-          role_arn = aws_iam_role.codepipeline_role.arn
-          name     = "SuccessCheckByCommandsRule"
+          commands      = ["exit 0"]
+          role_arn      = aws_iam_role.codepipeline_role.arn
+          name          = "SuccessCheckByCommandsRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -2981,16 +2991,20 @@ resource "aws_codepipeline" "test" {
         }
       }
     }
+
     before_entry {
       condition {
         result = "SKIP"
+
         rule {
           configuration = {
             Operator = "EQ"
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-          name       = "CheckRepositoryNameRule"
+	
+          name = "CheckRepositoryNameRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3001,6 +3015,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_before_entry_multiple_rules"
 
@@ -3016,6 +3031,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     before_entry {
       condition {
         result = "SKIP"
@@ -3025,7 +3041,9 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-          name            = "CheckRepositoryNameRule"
+	
+          name = "CheckRepositoryNameRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3033,13 +3051,16 @@ resource "aws_codepipeline" "test" {
             version  = "1"
           }
         }
+
         rule {
           configuration = {
             Operator = "CONTAINS"
             Value    = "update"
             Variable = "#{SourceVariables.CommitMessage}"
           }
-          name            = "CheckCommitMessageRule"
+
+          name = "CheckCommitMessageRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3050,6 +3071,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_before_entry_commands_rule"
 
@@ -3065,16 +3087,19 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     before_entry {
       condition {
         result = "FAIL"
+
         rule {
-          configuration = {}
-          commands = ["exit 0"]
+          configuration   = {}
+          commands        = ["exit 0"]
           input_artifacts = ["test"]
-          region = data.aws_region.current.name
-          role_arn = aws_iam_role.codepipeline_role.arn
+          region          = data.aws_region.current.name
+          role_arn        = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3150,6 +3175,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     action {
       name            = "Build2"
       category        = "Build"
@@ -3162,6 +3188,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     on_failure {
       result = "RETRY"
       retry_configuration {
@@ -3169,6 +3196,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_retry_failed_actions"
 
@@ -3184,6 +3212,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     action {
       name            = "Build2"
       category        = "Build"
@@ -3196,10 +3225,12 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     on_failure {
       result = "ROLLBACK"
     }
   }
+
   stage {
     name = "Build_with_rollback_and_before_entry"
 
@@ -3215,20 +3246,23 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     on_failure {
       result = "RETRY"
 	  retry_configuration {
 	    retry_mode = "ALL_ACTIONS"
       }
     }
+
     on_success {
       condition {
         result = "ROLLBACK"
         rule {
           configuration = {}
-          commands = ["exit 1"]
-          role_arn = aws_iam_role.codepipeline_role.arn
-          name            = "SuccessCheckByCommandsRule"
+          commands      = ["exit 1"]
+          role_arn      = aws_iam_role.codepipeline_role.arn
+          name          = "SuccessCheckByCommandsRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3238,6 +3272,7 @@ resource "aws_codepipeline" "test" {
         }
       }
     }
+
     before_entry {
       condition {
         result = "SKIP"
@@ -3247,7 +3282,8 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-          name            = "CheckRepositoryNameRule"
+          name          = "CheckRepositoryNameRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3258,6 +3294,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_before_entry_multiple_rules"
 
@@ -3273,6 +3310,7 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     before_entry {
       condition {
         result = "SKIP"
@@ -3282,7 +3320,8 @@ resource "aws_codepipeline" "test" {
             Value    = "test"
             Variable = "#{SourceVariables.RepositoryName}"
           }
-          name            = "CheckRepositoryNameRule"
+          name          = "CheckRepositoryNameRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3290,13 +3329,15 @@ resource "aws_codepipeline" "test" {
             version  = "1"
           }
         }
+
         rule {
           configuration = {
             Operator = "MATCHES"
             Value    = "update"
             Variable = "#{SourceVariables.CommitMessage}"
           }
-          name            = "CheckCommitMessageRule"
+          name          = "CheckCommitMessageRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3307,6 +3348,7 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build_with_before_entry_commands_rule"
 
@@ -3322,16 +3364,18 @@ resource "aws_codepipeline" "test" {
         ProjectName = "test"
       }
     }
+
     before_entry {
       condition {
         result = "FAIL"
         rule {
-          configuration = {}
-          commands = ["exit 1"]
+          configuration   = {}
+          commands        = ["exit 1"]
           input_artifacts = ["test"]
-          region = data.aws_region.current.name
-          role_arn = aws_iam_role.codepipeline_role.arn
+          region          = data.aws_region.current.name
+          role_arn        = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
+
           rule_type_id {
             category = "Rule"
             owner    = "AWS"
@@ -3348,6 +3392,7 @@ resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
 }
+
 data "aws_region" "current" {}
 `, rName))
 }
