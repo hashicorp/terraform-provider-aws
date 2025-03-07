@@ -1118,7 +1118,6 @@ The `ja4_fingerprint` block supports the following arguments:
 
 * `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
-
 ### RateLimit `label_namespace` Block
 
 Use the specified label namespace as an aggregate key. Each distinct fully qualified label name that has the specified label namespace contributes to the aggregation instance. If you use just one label namespace as your custom key, then each label name fully defines an aggregation instance. This uses only labels that have been added to the request by rules that are evaluated before this rate-based rule in the web ACL. For information about label namespaces and names, see Label syntax and naming requirements (https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-label-requirements.html) in the WAF Developer Guide.
