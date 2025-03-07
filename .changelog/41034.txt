@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_codepipeline: Add `commands` attribute to support `Compute` action category
+resource/aws_codepipeline: Add `stage.action.commands` argument
 ```
