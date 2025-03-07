@@ -44,6 +44,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newResourceInvalidation,
+			Name:    "Invalidation",
+		},
 	}
 }
 
