@@ -2099,25 +2099,24 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                        "1",
-						"statement.0.rate_based_statement.#":                                                 "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                    "2",
-						"statement.0.rate_based_statement.0.aggregate_key_type":                              "CUSTOM_KEYS",
-						"statement.0.rate_based_statement.0.evaluation_window_sec":                           "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                           "1",
-						"statement.0.rate_based_statement.0.limit":                                           "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                           "1",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                      "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                           "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                               "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                   "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                         "0",
-						"statement.0.rate_based_statement.0.custom_key.1.ja3_signature.#":                    "1",
-						"statement.0.rate_based_statement.0.custom_key.1.ja3_signature.0.fallback_behaviour": "NO_MATCH",
+						"statement.#":                                                                       "1",
+						"statement.0.rate_based_statement.#":                                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                   "2",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                          "300",
+						"statement.0.rate_based_statement.0.limit":                                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                          "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                        "0",
+						"statement.0.rate_based_statement.0.custom_key.1.ja3_signature.#":                   "1",
+						"statement.0.rate_based_statement.0.custom_key.1.ja3_signature.0.fallback_behavior": "NO_MATCH",
 					}),
 				),
 			},
@@ -2158,25 +2157,24 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                        "1",
-						"statement.0.rate_based_statement.#":                                                 "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                    "2",
-						"statement.0.rate_based_statement.0.aggregate_key_type":                              "CUSTOM_KEYS",
-						"statement.0.rate_based_statement.0.evaluation_window_sec":                           "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                           "1",
-						"statement.0.rate_based_statement.0.limit":                                           "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                           "1",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                      "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                           "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                               "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                   "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                         "0",
-						"statement.0.rate_based_statement.0.custom_key.1.ja4_signature.#":                    "1",
-						"statement.0.rate_based_statement.0.custom_key.1.ja4_signature.0.fallback_behaviour": "NO_MATCH",
+						"statement.#":                                                                       "1",
+						"statement.0.rate_based_statement.#":                                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                   "2",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                          "300",
+						"statement.0.rate_based_statement.0.limit":                                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                          "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                        "0",
+						"statement.0.rate_based_statement.0.custom_key.1.ja4_signature.#":                   "1",
+						"statement.0.rate_based_statement.0.custom_key.1.ja4_signature.0.fallback_behavior": "NO_MATCH",
 					}),
 				),
 			},
@@ -5534,11 +5532,6 @@ resource "aws_wafv2_web_acl" "test" {
         aggregate_key_type = "CUSTOM_KEYS"
         limit              = 50000
 
-        forwarded_ip_config {
-          fallback_behavior = "MATCH"
-          header_name       = "x-forwarded-for"
-        }
-
         custom_key {
           cookie {
             name = "cookie-name"
@@ -5602,11 +5595,6 @@ resource "aws_wafv2_web_acl" "test" {
       rate_based_statement {
         aggregate_key_type = "CUSTOM_KEYS"
         limit              = 50000
-
-        forwarded_ip_config {
-          fallback_behavior = "MATCH"
-          header_name       = "x-forwarded-for"
-        }
 
         custom_key {
           cookie {
