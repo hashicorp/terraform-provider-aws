@@ -115,10 +115,20 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 
 // GlobalARN returns a global (no Region) ARN for the specified service namespace and resource.
 func (c *AWSClient) GlobalARN(ctx context.Context, service, resource string) string {
+	return c.GlobalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+}
+
+// GlobalARNNoAccount returns a global (no Region) ARN for the specified service namespace and resource without AWS account ID.
+func (c *AWSClient) GlobalARNNoAccount(ctx context.Context, service, resource string) string {
+	return c.GlobalARNWithAccount(ctx, service, "", resource)
+}
+
+// GlobalARNWithAccount returns a global (no Region) ARN for the specified service namespace, resource and account ID.
+func (c *AWSClient) GlobalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		AccountID: c.AccountID(ctx),
+		AccountID: accountID,
 		Resource:  resource,
 	}.String()
 }

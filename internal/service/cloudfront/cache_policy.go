@@ -35,6 +35,10 @@ func resourceCachePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -217,6 +221,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, cachePolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
@@ -570,4 +575,9 @@ func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]in
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func cachePolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "cache-policy/"+id)
 }

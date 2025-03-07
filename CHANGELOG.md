@@ -1,8 +1,44 @@
-## 5.90.0 (Unreleased)
+## 5.91.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_datazone_domain` ([#41480](https://github.com/hashicorp/terraform-provider-aws/issues/41480))
+
+ENHANCEMENTS:
+
+* resource/aws_mskconnect_connector: Allow `connector_configuration` to be updated in-place ([#41685](https://github.com/hashicorp/terraform-provider-aws/issues/41685))
+
+## 5.90.0 (March  6, 2025)
 
 BREAKING CHANGES:
 
 * resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
+
+NOTES:
+
+* data-source/aws_launch_template: `elastic_gpu_specifications` and `elastic_inference_accelerator` are deprecated. AWS no longer supports Elastic Graphics or Elastic Inference. ([#41677](https://github.com/hashicorp/terraform-provider-aws/issues/41677))
+* provider: In preparation for Go 1.24, we are re-enabling the experimental post-quantum key exchange mechanism, `X25519Kyber768Draft00`. Previously, in environments using AWS Network Firewall, the Provider would hang due to a handshake issue between Go 1.23 and Network Firewall, which supported Suricata 6.0.9. We had disabled the post-quantum key exchange to resolve the issue. Since November 2024, AWS Network Firewall has upgraded to Suricata 7.0, which no longer has this issue. However, if you use AWS Network Firewall, we’d appreciate your help in identifying any remaining issues related to this change. ([#41655](https://github.com/hashicorp/terraform-provider-aws/issues/41655))
+* provider: On December 3, 2024, Amazon SageMaker was renamed to Amazon SageMaker AI. While resource and data source names remain the same in the provider, documentation and error messages have been updated to reflect the name change. ([#41673](https://github.com/hashicorp/terraform-provider-aws/issues/41673))
+* resource/aws_ecs_task_execution: `overrides.inference_accelerator_overrides` is deprecated. AWS no longer provides the Elastic Inference service. ([#41676](https://github.com/hashicorp/terraform-provider-aws/issues/41676))
+* resource/aws_launch_template: `elastic_gpu_specifications` and `elastic_inference_accelerator` are deprecated. AWS no longer supports Elastic Graphics or Elastic Inference. ([#41677](https://github.com/hashicorp/terraform-provider-aws/issues/41677))
+* resource/aws_opsworks_application: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_custom_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_ecs_cluster_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_ganglia_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_haproxy_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_instance: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_java_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_memcached_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_mysql_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_nodejs_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_permission: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_php_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_rails_app_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_rds_db_instance: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_stack: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_static_web_layer: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_opsworks_user_profile: OpsWorks is no longer supported by AWS. This resource is deprecated and will be removed in the next major version. ([#41674](https://github.com/hashicorp/terraform-provider-aws/issues/41674))
+* resource/aws_sagemaker_notebook_instance: `accelerator_types` is deprecated and will be removed in a future version. Use `instance_type` instead. ([#41673](https://github.com/hashicorp/terraform-provider-aws/issues/41673))
 
 FEATURES:
 
@@ -11,15 +47,42 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudfront_cache_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_origin_access_control: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_origin_access_identity: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_origin_request_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_cloudfront_response_headers_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* data-source/aws_dx_connection: Add `state` attribute ([#41575](https://github.com/hashicorp/terraform-provider-aws/issues/41575))
+* data-source/aws_opensearch_domain: Add `cluster_config.node_options` attribute ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
+* resource/aws_account_region: Allow adoption of regions in an ENABLED or DISABLED state without an explicit import operation ([#41678](https://github.com/hashicorp/terraform-provider-aws/issues/41678))
+* resource/aws_account_region: Prevent errors when the region is an ENABLING or DISABLING state during creation ([#41678](https://github.com/hashicorp/terraform-provider-aws/issues/41678))
+* resource/aws_cloudfront_cache_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_continuous_deployment_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_field_level_encryption_config: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_field_level_encryption_profile: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_origin_access_control: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_origin_access_identity: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_origin_request_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_cloudfront_response_headers_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 * resource/aws_ec2_client_vpn_endpoint: Add `disconnect_on_session_timeout` attribute ([#41621](https://github.com/hashicorp/terraform-provider-aws/issues/41621))
+* resource/aws_mwaa_environment: Lower the minimum value of the `max_webservers` and `min_webservers` arguments from `2` to `1` in support of Amazon MWAA micro environments ([#40244](https://github.com/hashicorp/terraform-provider-aws/issues/40244))
+* resource/aws_opensearch_domain: Add `cluster_config.node_options` configuration block in support of [dedicated coordinator nodes](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/Dedicated-coordinator-nodes.html) ([#40181](https://github.com/hashicorp/terraform-provider-aws/issues/40181))
+* resource/aws_osis_pipeline: Add `vpc_options.vpc_endpoint_management` argument ([#38001](https://github.com/hashicorp/terraform-provider-aws/issues/38001))
 * resource/aws_prometheus_rule_group_namespace: Add `arn` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
 * resource/aws_prometheus_rule_group_namespace: Add `tags` argument and `tags_all` attribute ([#41645](https://github.com/hashicorp/terraform-provider-aws/issues/41645))
+* resource/aws_route53_traffic_policy: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_route53_traffic_policy_instance: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_s3_bucket_lifecycle_configuration: Adds warning validation to require exactly one of the elements of `rule.filter` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
 * resource/aws_s3_bucket_lifecycle_configuration: `rule.noncurrent_version_expiration.noncurrent_days` and `rule.noncurrent_version_transition.noncurrent_days` are Required. Technically this is a breaking change, but failure to configure this attribute would have led to `InvalidArgument` or `MalformedXML` errors ([#40796](https://github.com/hashicorp/terraform-provider-aws/issues/40796))
+* resource/aws_waf_byte_match_set: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
+* resource/aws_waf_sql_injection_match_set: Add `arn` attribute ([#41660](https://github.com/hashicorp/terraform-provider-aws/issues/41660))
 
 BUG FIXES:
 
 * ephemeral/aws_secrets_manager_random_password: Change `exclude_characters` from `Bool` to `String` ([#41546](https://github.com/hashicorp/terraform-provider-aws/issues/41546))
 * resource/aws_ecs_service: Fix removal of all `vpc_lattice_configurations` blocks ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix error when converting `rule` configuration from `filter.prefix` to `filter.and.prefix` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix error when converting `rule` configuration from `prefix` to `filter.prefix` or  `filter.and.prefix` ([#41662](https://github.com/hashicorp/terraform-provider-aws/issues/41662))
 * resource/aws_sagemaker_mlflow_tracking_server: Increased the timeout from 30 to 45 minutes ([#41463](https://github.com/hashicorp/terraform-provider-aws/issues/41463))
 * resource/aws_vpclattice_target_group: Retry `ConflictException` errors on delete ([#41594](https://github.com/hashicorp/terraform-provider-aws/issues/41594))
 

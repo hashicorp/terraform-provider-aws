@@ -474,16 +474,16 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.SpaceDisplayName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker AI Space create config: %#v", *input)
 	out, err := conn.CreateSpace(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Space: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Space: %s", err)
 	}
 
 	d.SetId(aws.ToString(out.SpaceArn))
 
 	if err := waitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
@@ -495,19 +495,19 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	space, err := findSpaceByName(ctx, conn, domainID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Space (%s), removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Space (%s), removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, space.SpaceArn)
@@ -518,15 +518,15 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrURL, space.Url)
 
 	if err := d.Set("ownership_settings", flattenOwnershipSettings(space.OwnershipSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_settings", flattenSpaceSettings(space.SpaceSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_sharing_settings", flattenSpaceSharingSettings(space.SpaceSharingSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -553,14 +553,14 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.SpaceDisplayName = aws.String(d.Get("space_display_name").(string))
 		}
 
-		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI Space update config: %#v", *input)
 		_, err := conn.UpdateSpace(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Space: %s", err)
 		}
 
 		if err := waitSpaceInService(ctx, conn, domainID, name); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -581,13 +581,13 @@ func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if _, err := conn.DeleteSpace(ctx, input); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Space (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Space (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitSpaceDeleted(ctx, conn, domainID, name); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to delete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to delete: %s", d.Id(), err)
 		}
 	}
 

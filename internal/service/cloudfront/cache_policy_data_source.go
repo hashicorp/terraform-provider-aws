@@ -21,6 +21,10 @@ func dataSourceCachePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCachePolicyRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -189,7 +193,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(cachePolicyID)
-
+	d.Set(names.AttrARN, cachePolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)

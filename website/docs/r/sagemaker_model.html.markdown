@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model"
 description: |-
-  Provides a SageMaker model resource.
+  Provides a SageMaker AI model resource.
 ---
 
 # Resource: aws_sagemaker_model
 
-Provides a SageMaker model resource.
+Provides a SageMaker AI model resource.
 
 ## Example Usage
 
@@ -50,7 +50,7 @@ This resource supports the following arguments:
 
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
-* `execution_role_arn` - (Required) A role that SageMaker can assume to access model artifacts and docker images for deployment.
+* `execution_role_arn` - (Required) A role that SageMaker AI can assume to access model artifacts and docker images for deployment.
 * `inference_execution_config` - (Optional) Specifies details of how containers in a multi-container endpoint are called. see [Inference Execution Config](#inference-execution-config).
 * `container` (Optional) -  Specifies containers in the inference pipeline. If not specified, the `primary_container` argument is required. Fields are documented below.
 * `enable_network_isolation` (Optional) - Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
@@ -63,7 +63,7 @@ The `primary_container` and `container` block both support:
 * `mode` - (Optional) The container hosts value `SingleModel/MultiModel`. The default value is `SingleModel`.
 * `model_data_url` - (Optional) The URL for the S3 location where model artifacts are stored.
 * `model_package_name` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
-* `model_data_source` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker Developer Guide_.
+* `model_data_source` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker AI Developer Guide_.
 * `container_hostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.

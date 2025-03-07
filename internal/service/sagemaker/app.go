@@ -143,22 +143,22 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.ResourceSpec = expandResourceSpec(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker AI App create config: %#v", *input)
 	output, err := conn.CreateApp(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker App: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI App: %s", err)
 	}
 
 	appArn := aws.ToString(output.AppArn)
 	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(appArn)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker App (%s): %s", appArn, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI App (%s): %s", appArn, err)
 	}
 
 	d.SetId(appArn)
 
 	if _, err := waitAppInService(ctx, conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "create SageMaker App (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "create SageMaker AI App (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
@@ -170,19 +170,19 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI App (%s): %s", d.Id(), err)
 	}
 
 	app, err := findAppByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker App (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI App (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI App (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_name", app.AppName)
@@ -193,7 +193,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("user_profile_name", app.UserProfileName)
 
 	if err := d.Set("resource_spec", flattenResourceSpec(app.ResourceSpec)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting resource_spec for SageMaker App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting resource_spec for SageMaker AI App (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -239,12 +239,12 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker App (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI App (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitAppDeleted(ctx, conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker App (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI App (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

@@ -695,10 +695,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		createOpts.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker AI Endpoint Configuration create config: %#v", *createOpts)
 	_, err := conn.CreateEndpointConfig(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint Configuration: %s", err)
 	}
 	d.SetId(name)
 
@@ -712,13 +712,13 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	endpointConfig, err := findEndpointConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Endpoint Configuration (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Endpoint Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
@@ -727,19 +727,19 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("shadow_production_variants", flattenProductionVariants(endpointConfig.ShadowProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -760,7 +760,7 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker Endpoint Configuration: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint Configuration: %s", d.Id())
 
 	_, err := conn.DeleteEndpointConfig(ctx, deleteOpts)
 
@@ -769,7 +769,7 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags

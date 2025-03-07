@@ -220,8 +220,9 @@ func resourceLaunchTemplate() *schema.Resource {
 				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"elastic_gpu_specifications": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
+				Type:       schema.TypeList,
+				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -232,9 +233,10 @@ func resourceLaunchTemplate() *schema.Resource {
 				},
 			},
 			"elastic_inference_accelerator": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {

@@ -111,12 +111,14 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							},
 						},
 						names.AttrPrefix: schema.StringAttribute{
-							Optional: true,
-							Computed: true, // Because of Legacy value handling
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+							Optional:           true,
+							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
+							Validators: []validator.String{
+								warnExactlyOneOf(
+									path.MatchRelative().AtParent().AtName(names.AttrFilter),
+								),
+							},
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Required: true,
@@ -194,8 +196,13 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+										Validators: []validator.String{
+											warnExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
+												path.MatchRelative().AtParent().AtName("object_size_less_than"),
+												path.MatchRelative().AtParent().AtName("and"),
+												path.MatchRelative().AtParent().AtName("tag"),
+											),
 										},
 									},
 								},
@@ -635,9 +642,8 @@ func lifecycleRulesEqual(rules1, rules2 []awstypes.LifecycleRule) bool {
 	}
 
 	for _, rule1 := range rules1 {
-		// We consider 2 LifecycleRules equal if their IDs and Statuses are equal.
 		if !slices.ContainsFunc(rules2, func(rule2 awstypes.LifecycleRule) bool {
-			return aws.ToString(rule1.ID) == aws.ToString(rule2.ID) && rule1.Status == rule2.Status
+			return reflect.DeepEqual(rule1, rule2)
 		}) {
 			return false
 		}
