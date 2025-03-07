@@ -1425,11 +1425,11 @@ func expandConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
 	apiObject := &types.RuleTypeId{}
 
 	if v, ok := tfMap["category"].(string); ok && v != "" {
-		apiObject.Category = types.RuleCategory(*aws.String(v))
+		apiObject.Category = types.RuleCategory(v)
 	}
 
 	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
-		apiObject.Owner = types.RuleOwner(*aws.String(v))
+		apiObject.Owner = types.RuleOwner(v)
 	}
 
 	if v, ok := tfMap["provider"].(string); ok && v != "" {
@@ -1696,11 +1696,13 @@ func flattenConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]interfac
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if v := apiObject.Category; v != "" {
-		tfMap["category"] = string(v)
+		tfMap["category"] = v
 	}
+
 	if v := apiObject.Owner; v != "" {
-		tfMap[names.AttrOwner] = string(v)
+		tfMap[names.AttrOwner] = v
 	}
 
 	if v := apiObject.Provider; v != nil {
@@ -1774,7 +1776,7 @@ func flattenCondition(apiObject types.Condition) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Result; v != "" {
-		tfMap["result"] = string(v)
+		tfMap["result"] = v
 	}
 
 	if v := apiObject.Rules; v != nil {
@@ -1822,7 +1824,7 @@ func flattenRetryConfiguration(apiObject *types.RetryConfiguration) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RetryMode; v != "" {
-		tfMap["retry_mode"] = string(v)
+		tfMap["retry_mode"] = v
 	}
 
 	return tfMap
@@ -1836,7 +1838,7 @@ func flattenOnFailureDeclaration(apiObject *types.FailureConditions) map[string]
 	}
 
 	if v := apiObject.Result; v != "" {
-		tfMap["result"] = string(v)
+		tfMap["result"] = v
 	}
 
 	if v := apiObject.RetryConfiguration; v != nil {
