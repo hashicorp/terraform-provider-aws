@@ -1561,6 +1561,26 @@ func expandRateLimitHeader(l []interface{}) *awstypes.RateLimitHeader {
 	}
 }
 
+func expandRateLimitJa3Fingerprint(l []interface{}) *awstypes.RateLimitJA3Fingerprint {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &awstypes.RateLimitJA3Fingerprint{
+		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+	}
+}
+
+func expandRateLimitJa4Fingerprint(l []interface{}) *awstypes.RateLimitJA4Fingerprint {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &awstypes.RateLimitJA4Fingerprint{
+		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+	}
+}
+
 func expandRateLimitLabelNamespace(l []interface{}) *awstypes.RateLimitLabelNamespace {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1625,6 +1645,12 @@ func expandRateBasedStatementCustomKeys(l []interface{}) []awstypes.RateBasedSta
 		}
 		if v, ok := m["ip"]; ok && len(v.([]interface{})) > 0 {
 			r.IP = &awstypes.RateLimitIP{}
+		}
+		if v, ok := m["ja3_fingerprint"]; ok && len(v.([]interface{})) > 0 {
+			r.JA3Fingerprint = expandRateLimitJa3Fingerprint(v.([]interface{}))
+		}
+		if v, ok := m["ja4_fingerprint"]; ok && len(v.([]interface{})) > 0 {
+			r.JA4Fingerprint = expandRateLimitJa4Fingerprint(v.([]interface{}))
 		}
 		if v, ok := m["label_namespace"]; ok {
 			r.LabelNamespace = expandRateLimitLabelNamespace(v.([]interface{}))
@@ -2949,6 +2975,28 @@ func flattenRateLimitHeader(apiObject *awstypes.RateLimitHeader) []interface{} {
 	}
 }
 
+func flattenRateLimitJa3FingerPrint(apiObject *awstypes.RateLimitJA3Fingerprint) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"fallback_behavior": apiObject.FallbackBehavior,
+		},
+	}
+}
+
+func flattenRateLimitJa4FingerPrint(apiObject *awstypes.RateLimitJA4Fingerprint) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"fallback_behavior": apiObject.FallbackBehavior,
+		},
+	}
+}
+
 func flattenRateLimitLabelNamespace(apiObject *awstypes.RateLimitLabelNamespace) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -3023,6 +3071,12 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 			tfMap["ip"] = []interface{}{
 				map[string]interface{}{},
 			}
+		}
+		if o.JA3Fingerprint != nil {
+			tfMap["ja3_fingerprint"] = flattenRateLimitJa3FingerPrint(o.JA3Fingerprint)
+		}
+		if o.JA4Fingerprint != nil {
+			tfMap["ja4_fingerprint"] = flattenRateLimitJa4FingerPrint(o.JA4Fingerprint)
 		}
 		if o.LabelNamespace != nil {
 			tfMap["label_namespace"] = flattenRateLimitLabelNamespace(o.LabelNamespace)

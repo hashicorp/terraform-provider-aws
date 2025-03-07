@@ -2063,6 +2063,124 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysBasic(webACLName, "cookie", "testcookie"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                    "1",
+						"statement.0.rate_based_statement.#":                                             "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
+						"statement.0.rate_based_statement.0.limit":                                       "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.0.text_transformation.#": "1",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysJa3Fingerprint(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                        "1",
+						"statement.0.rate_based_statement.#":                                                 "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                    "2",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                              "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                           "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                           "1",
+						"statement.0.rate_based_statement.0.limit":                                           "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                           "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                               "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                   "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                         "0",
+						"statement.0.rate_based_statement.0.custom_key.1.ja3_signature.#":                    "1",
+						"statement.0.rate_based_statement.0.custom_key.1.ja3_signature.0.fallback_behaviour": "NO_MATCH",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysBasic(webACLName, "cookie", "testcookie"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                    "1",
+						"statement.0.rate_based_statement.#":                                             "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
+						"statement.0.rate_based_statement.0.limit":                                       "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.0.text_transformation.#": "1",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysJa4Fingerprint(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                        "1",
+						"statement.0.rate_based_statement.#":                                                 "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                    "2",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                              "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                           "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                           "1",
+						"statement.0.rate_based_statement.0.limit":                                           "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                           "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                               "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                   "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                         "0",
+						"statement.0.rate_based_statement.0.custom_key.1.ja4_signature.#":                    "1",
+						"statement.0.rate_based_statement.0.custom_key.1.ja4_signature.0.fallback_behaviour": "NO_MATCH",
+					}),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -5367,6 +5485,144 @@ resource "aws_wafv2_web_acl" "test" {
 
         custom_key {
           http_method {}
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_rateBasedStatement_customKeysJa3Fingerprint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit              = 50000
+
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
+
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          ja3_fingerprint {
+            fallback_behavior = "NO_MATCH"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_rateBasedStatement_customKeysJa4Fingerprint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit              = 50000
+
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
+
+        custom_key {
+          cookie {
+            name = "cookie-name"
+
+            text_transformation {
+              type     = "NONE"
+              priority = 0
+            }
+          }
+        }
+
+        custom_key {
+          ja4_fingerprint {
+            fallback_behavior = "NO_MATCH"
+          }
         }
       }
     }

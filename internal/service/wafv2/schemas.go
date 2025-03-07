@@ -504,6 +504,23 @@ var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var jaXFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
+				},
+			},
+		},
+	}
+})
+
 var textTransformationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -1078,7 +1095,9 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 									},
 								},
 							},
-							"ip": emptySchema(),
+							"ip":              emptySchema(),
+							"ja3_fingerprint": jaXFingerprintConfigSchema(),
+							"ja4_fingerprint": jaXFingerprintConfigSchema(),
 							"label_namespace": {
 								Type:     schema.TypeList,
 								Optional: true,
