@@ -55,6 +55,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -921,7 +922,7 @@ func PartitionDNSSuffix() string {
 }
 
 func PartitionReverseDNSPrefix() string {
-	return conns.ReverseDNS(PartitionDNSSuffix())
+	return dns.Reverse(PartitionDNSSuffix())
 }
 
 func alternateRegionPartition() string {
