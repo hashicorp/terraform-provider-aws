@@ -1233,6 +1233,54 @@ func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ByteMatchStatement_ja4fingerprint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatementJA4Fingerprint(webACLName, string(awstypes.FallbackBehaviorMatch)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.ja4_fingerprint.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja4_fingerprint.0.fallback_behavior": "MATCH",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatementJA4Fingerprint(webACLName, string(awstypes.FallbackBehaviorNoMatch)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.ja4_fingerprint.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja4_fingerprint.0.fallback_behavior": "NO_MATCH",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
@@ -3513,6 +3561,57 @@ resource "aws_wafv2_web_acl" "test" {
       byte_match_statement {
         field_to_match {
           ja3_fingerprint {
+            fallback_behavior = %[2]q
+          }
+        }
+        positional_constraint = "EXACTLY"
+        search_string         = "abcdef1234567890abcdef1234567890"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, fallbackBehavior)
+}
+
+func testAccWebACLConfig_byteMatchStatementJA4Fingerprint(rName, fallbackBehavior string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          ja4_fingerprint {
             fallback_behavior = %[2]q
           }
         }

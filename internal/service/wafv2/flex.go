@@ -586,6 +586,10 @@ func expandFieldToMatch(l []interface{}) *awstypes.FieldToMatch {
 		f.JA3Fingerprint = expandJA3Fingerprint(v.([]interface{}))
 	}
 
+	if v, ok := m["ja4_fingerprint"]; ok && len(v.([]interface{})) > 0 {
+		f.JA4Fingerprint = expandJA4Fingerprint(v.([]interface{}))
+	}
+
 	if v, ok := m["single_query_argument"]; ok && len(v.([]interface{})) > 0 {
 		f.SingleQueryArgument = expandSingleQueryArgument(m["single_query_argument"].([]interface{}))
 	}
@@ -714,6 +718,20 @@ func expandJA3Fingerprint(l []interface{}) *awstypes.JA3Fingerprint {
 	}
 
 	return ja3fingerprint
+}
+
+func expandJA4Fingerprint(l []interface{}) *awstypes.JA4Fingerprint {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	ja4fingerprint := &awstypes.JA4Fingerprint{
+		FallbackBehavior: awstypes.FallbackBehavior(m["fallback_behavior"].(string)),
+	}
+
+	return ja4fingerprint
 }
 
 func expandJSONMatchPattern(l []interface{}) *awstypes.JsonMatchPattern {
@@ -2150,6 +2168,10 @@ func flattenFieldToMatch(f *awstypes.FieldToMatch) interface{} {
 		m["ja3_fingerprint"] = flattenJA3Fingerprint(f.JA3Fingerprint)
 	}
 
+	if f.JA4Fingerprint != nil {
+		m["ja4_fingerprint"] = flattenJA4Fingerprint(f.JA4Fingerprint)
+	}
+
 	if f.JsonBody != nil {
 		m["json_body"] = flattenJSONBody(f.JsonBody)
 	}
@@ -2236,6 +2258,18 @@ func flattenCookiesMatchPattern(c *awstypes.CookieMatchPattern) interface{} {
 }
 
 func flattenJA3Fingerprint(j *awstypes.JA3Fingerprint) interface{} {
+	if j == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"fallback_behavior": j.FallbackBehavior,
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJA4Fingerprint(j *awstypes.JA4Fingerprint) interface{} {
 	if j == nil {
 		return []interface{}{}
 	}

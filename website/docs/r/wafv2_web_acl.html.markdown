@@ -881,6 +881,7 @@ The `field_to_match` block supports the following arguments:
 * `header_order` - (Optional) Inspect a string containing the list of the request's header names, ordered as they appear in the web request that AWS WAF receives for inspection. See [`header_order`](#header_order-block) below for details.
 * `headers` - (Optional) Inspect the request headers. See [`headers`](#headers-block) below for details.
 * `ja3_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3_fingerprint`](#ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja4_fingerprint`](#ja3_fingerprint-block) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [`json_body`](#json_body-block) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -933,6 +934,12 @@ The `headers` block supports the following arguments:
 The `ja3_fingerprint` block supports the following arguments:
 
 * `fallback_behavior` - (Required) The match status to assign to the web request if the request doesn't have a JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### `ja4_fingerprint` Block
+
+The `ja4_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) The match status to assign to the web request if the request doesn't have a JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### `json_body` Block
 

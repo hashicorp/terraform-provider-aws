@@ -379,7 +379,8 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 			"cookies":             cookiesSchema(),
 			"header_order":        headerOrderSchema(),
 			"headers":             headersSchema(),
-			"ja3_fingerprint":     ja3fingerprintSchema(),
+			"ja3_fingerprint":     jaFingerprintSchema(),
+			"ja4_fingerprint":     jaFingerprintSchema(),
 			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
@@ -877,7 +878,7 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
-func ja3fingerprintSchema() *schema.Schema {
+func jaFingerprintSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
