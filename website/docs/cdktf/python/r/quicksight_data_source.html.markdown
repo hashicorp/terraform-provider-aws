@@ -295,7 +295,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### rds Argument Reference
 
 * `database` - (Required) The database to which to connect.
-* `instance_id` - (Optional) The instance ID to which to connect.
+* `instance_id` - (Optional) The instance Identifier to which to connect.
 
 ### redshift Argument Reference
 
