@@ -4,7 +4,6 @@
 package eks_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestClusterStateUpgradeV0(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	t.Parallel()
 
 	testCases := []struct {

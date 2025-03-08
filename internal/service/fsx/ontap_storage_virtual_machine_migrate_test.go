@@ -4,7 +4,6 @@
 package fsx
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -24,9 +23,9 @@ func testOntapStorageVirtualMachineStateDataV1() map[string]interface{} {
 }
 
 func TestOntapStorageVirtualMachineStateUpgradeV0(t *testing.T) {
-	ctx := context.Background() // Don't use acctest.Context as it leads to an import cycle.
 	t.Parallel()
 
+	ctx := t.Context()
 	want := testOntapStorageVirtualMachineStateDataV1()
 	got, err := resourceONTAPStorageVirtualMachineStateUpgradeV0(ctx, testOntapStorageVirtualMachineStateDataV0(), nil)
 
