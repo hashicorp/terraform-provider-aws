@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,7 +60,7 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 func testAccAccountRegionsDataSourceConfig_disabled() string {
 	return fmt.Sprintf(`
 data "aws_account_regions" "test" {
-	region_opt_status_contains = ["%s"]	
+  region_opt_status_contains = ["%s"]
 }
 `, disabled)
 }
