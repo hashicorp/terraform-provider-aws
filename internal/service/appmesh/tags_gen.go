@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *appmesh.Client, identifier string, optF
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists appmesh service tags and set them in Context.
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.TagRef {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from appmesh service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from appmesh service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.TagRef {
 // setTagsOut sets appmesh service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.TagRef) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

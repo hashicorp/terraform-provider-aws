@@ -29,7 +29,7 @@ func listTags(ctx context.Context, conn *mediaconvert.Client, identifier string,
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.ResourceTags.Tags), nil
+	return keyValueTags(ctx, output.ResourceTags.Tags), nil
 }
 
 // ListTags lists mediaconvert service tags and set them in Context.
@@ -55,8 +55,8 @@ func Tags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates tftags.KeyValueTags from mediaconvert service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from mediaconvert service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -75,7 +75,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 // setTagsOut sets mediaconvert service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

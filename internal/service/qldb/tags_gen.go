@@ -29,7 +29,7 @@ func listTags(ctx context.Context, conn *qldb.Client, identifier string, optFns 
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists qldb service tags and set them in Context.
@@ -55,8 +55,8 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 	return aws.StringMap(tags.Map())
 }
 
-// KeyValueTags creates tftags.KeyValueTags from qldb service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from qldb service tags.
+func keyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -75,7 +75,7 @@ func getTagsIn(ctx context.Context) map[string]*string {
 // setTagsOut sets qldb service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

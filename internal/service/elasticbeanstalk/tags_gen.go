@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier str
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.ResourceTags), nil
+	return keyValueTags(ctx, output.ResourceTags), nil
 }
 
 // ListTags lists elasticbeanstalk service tags and set them in Context.
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from elasticbeanstalk service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from elasticbeanstalk service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets elasticbeanstalk service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

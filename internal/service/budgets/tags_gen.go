@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *budgets.Client, identifier string, optF
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.ResourceTags), nil
+	return keyValueTags(ctx, output.ResourceTags), nil
 }
 
 // ListTags lists budgets service tags and set them in Context.
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from budgets service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from budgets service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
 // setTagsOut sets budgets service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.ResourceTag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

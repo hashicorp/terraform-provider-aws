@@ -472,7 +472,7 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 			tfMap["lifecycle"] = flattenLifecycle(v)
 		}
 
-		if v := KeyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
+		if v := keyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
 			tfMap["recovery_point_tags"] = v
 		}
 

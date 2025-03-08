@@ -234,7 +234,7 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("repository_policy", policyToSet)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }

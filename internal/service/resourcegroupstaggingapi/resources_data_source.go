@@ -175,7 +175,7 @@ func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMap
 	for _, i := range list {
 		l := map[string]interface{}{
 			names.AttrResourceARN: aws.ToString(i.ResourceARN),
-			names.AttrTags:        KeyValueTags(ctx, i.Tags).Map(),
+			names.AttrTags:        keyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {

@@ -34,8 +34,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from lightsail service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from lightsail service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -60,7 +60,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets lightsail service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -70,7 +70,7 @@ func createTags(ctx context.Context, conn *lightsail.Client, identifier string, 
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
+	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates lightsail service tags.

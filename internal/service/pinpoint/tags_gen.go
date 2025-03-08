@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *pinpoint.Client, identifier string, opt
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagsModel.Tags), nil
+	return keyValueTags(ctx, output.TagsModel.Tags), nil
 }
 
 // ListTags lists pinpoint service tags and set them in Context.
@@ -56,8 +56,8 @@ func Tags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates tftags.KeyValueTags from pinpoint service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from pinpoint service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -76,7 +76,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 // setTagsOut sets pinpoint service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

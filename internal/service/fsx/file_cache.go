@@ -585,7 +585,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 	var flattenedDataRepositoryAssociations []interface{}
 
 	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
-		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := keyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
 			names.AttrAssociationID:          dataRepositoryAssociation.AssociationId,

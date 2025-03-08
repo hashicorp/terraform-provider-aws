@@ -57,7 +57,7 @@ func createTags(ctx context.Context, conn *inspector.Client, identifier string, 
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 // UpdateTags updates Inspector Classic service tags.

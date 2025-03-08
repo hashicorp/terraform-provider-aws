@@ -24,7 +24,7 @@ const (
 	defaultCreateTagsFunc         = "createTags"
 	defaultGetTagFunc             = "findTag"
 	defaultGetTagsInFunc          = "getTagsIn"
-	defaultKeyValueTagsFunc       = "KeyValueTags"
+	defaultKeyValueTagsFunc       = "keyValueTags"
 	defaultListTagsFunc           = "listTags"
 	defaultSetTagsOutFunc         = "setTagsOut"
 	defaultTagsFunc               = "Tags"

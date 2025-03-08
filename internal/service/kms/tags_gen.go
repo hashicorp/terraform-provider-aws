@@ -49,7 +49,7 @@ func listTags(ctx context.Context, conn *kms.Client, identifier string, optFns .
 		}
 	}
 
-	return KeyValueTags(ctx, output), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists kms service tags and set them in Context.
@@ -86,8 +86,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from kms service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from kms service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -112,7 +112,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets kms service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

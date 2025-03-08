@@ -1226,7 +1226,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
+	config[names.AttrTags] = keyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = ecsParameters.EnableExecuteCommand
 	config["enable_ecs_managed_tags"] = ecsParameters.EnableECSManagedTags
 	config["task_count"] = aws.ToInt32(ecsParameters.TaskCount)

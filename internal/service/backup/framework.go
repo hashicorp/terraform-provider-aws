@@ -498,7 +498,7 @@ func flattenControlScope(ctx context.Context, apiObject *awstypes.ControlScope) 
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{tfMap}
