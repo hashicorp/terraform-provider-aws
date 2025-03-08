@@ -5,8 +5,6 @@ package logs
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -94,7 +92,6 @@ func findLogDestinationsByPrefix(ctx context.Context, conn *cloudwatchlogs.Clien
 		}
 
 		for _, dest := range page.Destinations {
-			fmt.Printf("Destination: %v\n", *dest.DestinationName)
 			out = append(out, dest)
 		}
 	}
