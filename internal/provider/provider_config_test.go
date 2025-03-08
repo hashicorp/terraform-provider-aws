@@ -28,7 +28,7 @@ import (
 // * https://github.com/aws/aws-sdk-go-v2/issues/2363: leading whitespace
 // * https://github.com/aws/aws-sdk-go-v2/issues/2369: trailing `#` in, e.g. SSO Start URLs
 func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
-	ctx := context.TODO()
+	ctx := t.Context()
 	testcases := map[string]struct {
 		Config                  map[string]any
 		SharedConfigurationFile string
@@ -120,7 +120,7 @@ region = us-west-2
 sso_start_url = https://d-123456789a.awsapps.com/start#
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
-				awsConfig := meta.AwsConfig(context.TODO())
+				awsConfig := meta.AwsConfig(t.Context())
 				var ssoStartUrl string
 				for _, source := range awsConfig.ConfigSources {
 					if shared, ok := source.(config.SharedConfig); ok {
@@ -136,7 +136,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 
 	for name, tc := range testcases { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			servicemocks.InitSessionTestEnv(t)
 
@@ -574,7 +574,7 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 
 	for name, tc := range testCases { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			servicemocks.InitSessionTestEnv(t)
 

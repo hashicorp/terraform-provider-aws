@@ -74,7 +74,7 @@ func TestPrefixNoneOfValidator(t *testing.T) {
 				ConfigValue: test.in,
 			}
 			res := validator.StringResponse{}
-			validators.PrefixNoneOf(test.prefixNoneOfValues...).ValidateString(context.TODO(), req, &res)
+			validators.PrefixNoneOf(test.prefixNoneOfValues...).ValidateString(t.Context(), req, &res)
 
 			if !res.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
