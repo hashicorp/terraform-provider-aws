@@ -4,7 +4,6 @@
 package conns_test
 
 import (
-	"context"
 	"fmt"
 	"maps"
 	"net/http"
@@ -439,7 +438,7 @@ func TestProxyConfig(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 
 			config := map[string]any{
 				"access_key":                  "StaticAccessKey",

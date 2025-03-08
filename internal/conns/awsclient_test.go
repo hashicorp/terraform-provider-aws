@@ -4,7 +4,6 @@
 package conns
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -18,7 +17,7 @@ var (
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -59,7 +58,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -102,7 +101,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -145,7 +144,7 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
