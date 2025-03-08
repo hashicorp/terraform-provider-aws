@@ -42,7 +42,7 @@ func main() {
 	log.SetFlags(0)
 
 	seed := int64(1) // Default rand seed
-	rand.Seed(seed)
+	r := rand.New(rand.NewSource(seed))
 	faker.Seed(seed)
 
 	entitiesFile, err := os.OpenFile("./test-fixtures/entity_recognizer/entitylist.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
@@ -73,13 +73,13 @@ func main() {
 
 	for i := 0; i < 1000; i++ {
 		name := faker.Name().Name()
-		entity := entities[rand.Intn(len(entities))]
+		entity := entities[r.Intn(len(entities))]
 
 		if _, err := fmt.Fprintf(entitiesFile, "%s,%s\n", name, entity); err != nil {
 			log.Fatalf("error writing to file %q: %s", "entitylist.csv", err)
 		}
 
-		sentence := sentences[rand.Intn(len(sentences))]
+		sentence := sentences[r.Intn(len(sentences))]
 		line := fmt.Sprintf(sentence, name, strings.ToLower(entity))
 		if _, err := fmt.Fprintln(documentFile, line); err != nil {
 			log.Fatalf("error writing to file %q: %s", "documents.txt", err)
