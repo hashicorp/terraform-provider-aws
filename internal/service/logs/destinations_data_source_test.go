@@ -15,8 +15,6 @@ import (
 
 func TestAccLogsDestinationsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -42,10 +40,46 @@ func TestAccLogsDestinationsDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccLogsDestinationsDataSource_destinationNamePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cloudwatch_log_destinations.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDestinationsDataSourceConfig_destinationNamePrefix(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "destinations.#", 1),
+				),
+			},
+		},
+	})
+}
+
 func testAccDestinationsDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDestinationConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDestinationConfig_basic(rName), `
 data "aws_cloudwatch_log_destinations" "test" {
   depends_on = [aws_cloudwatch_log_destination.test]
 }
-`))
+`)
+}
+
+func testAccDestinationsDataSourceConfig_destinationNamePrefix(rName string) string {
+	return acctest.ConfigCompose(testAccDestinationConfig_basic(rName), fmt.Sprintf(`
+data "aws_cloudwatch_log_destinations" "test" {
+  destination_name_prefix = "%s"
+  depends_on = [aws_cloudwatch_log_destination.test]
+}
+`, rName))
 }

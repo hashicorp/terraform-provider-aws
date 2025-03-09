@@ -5,6 +5,7 @@ package logs
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -30,8 +31,8 @@ type dataSourceDestinations struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDestinations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_logs_destinations"
+func (d *dataSourceDestinations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = "aws_cloudwatch_log_destinations"
 }
 
 func (d *dataSourceDestinations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -57,7 +58,6 @@ func (d *dataSourceDestinations) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	// TIP: -- 3. Get information about a resource from AWS
 	out, err := findLogDestinationsByPrefix(ctx, conn, data.DestinationNamePrefix.ValueStringPointer())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -91,9 +91,7 @@ func findLogDestinationsByPrefix(ctx context.Context, conn *cloudwatchlogs.Clien
 			return nil, err
 		}
 
-		for _, dest := range page.Destinations {
-			out = append(out, dest)
-		}
+		out = append(out, page.Destinations...)
 	}
 
 	destinationsLogOut := &cloudwatchlogs.DescribeDestinationsOutput{
