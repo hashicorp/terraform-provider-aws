@@ -5,6 +5,7 @@ package flex
 
 import (
 	"bytes"
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -355,7 +356,7 @@ func TestExpand(t *testing.T) {
 		},
 		"plural ordinary field names": {
 			Source: &tfSingluarListOfNestedObjects{
-				Field: fwtypes.NewListNestedObjectValueOfPtrMust(t.Context(), &tfSingleStringField{
+				Field: fwtypes.NewListNestedObjectValueOfPtrMust(context.Background(), &tfSingleStringField{
 					Field1: types.StringValue("a"),
 				}),
 			},
@@ -569,7 +570,7 @@ func TestExpand(t *testing.T) {
 func TestExpandGeneric(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"complex Source and complex Target": {
@@ -2912,7 +2913,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 		Field1 aws01
 	}
 
-	ctx := t.Context()
+	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		"single nested block pointer": {
 			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
@@ -2986,7 +2987,7 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 		Field1 *aws02
 	}
 
-	ctx := t.Context()
+	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		"single nested block pointer": {
 			Source: &tf03{
@@ -3425,7 +3426,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 func TestExpandStructListOfStringEnum(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"valid value": {
@@ -3484,7 +3485,7 @@ func TestExpandStructListOfStringEnum(t *testing.T) {
 func TestExpandStructSetOfStringEnum(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"valid value": {
@@ -3543,7 +3544,7 @@ func TestExpandStructSetOfStringEnum(t *testing.T) {
 func TestExpandTopLevelListOfNestedObject(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"valid value to []struct": {
@@ -3687,7 +3688,7 @@ func TestExpandTopLevelListOfNestedObject(t *testing.T) {
 func TestExpandSetOfNestedObject(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"valid value to []struct": {
@@ -3902,7 +3903,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 		Field2 *aws02
 	}
 
-	ctx := t.Context()
+	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		"single nested valid value": {
 			Source: &tf02{
@@ -3962,7 +3963,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 func TestExpandListOfNestedObjectField(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := map[string]autoFlexTestCases{
 		"ListNestedObject to *struct": {
@@ -4088,7 +4089,7 @@ func TestExpandListOfNestedObjectField(t *testing.T) {
 func TestExpandSetOfNestedObjectField(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := map[string]autoFlexTestCases{
 		"SetNestedObject to *struct": {
@@ -4189,7 +4190,7 @@ func TestExpandSetOfNestedObjectField(t *testing.T) {
 func TestExpandMapBlock(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"nil map block key": {
@@ -4490,7 +4491,7 @@ func TestExpandOptions(t *testing.T) {
 		Tags   map[string]string
 	}
 
-	ctx := t.Context()
+	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		"empty source with tags": {
 			Source:     &tf01{},
@@ -4609,7 +4610,7 @@ func TestExpandIgnoreStructTag(t *testing.T) {
 func TestExpandInterface(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	var targetInterface awsInterfaceInterface
 
@@ -4843,7 +4844,7 @@ func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInte
 func TestExpandExpander(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"top level struct Target": {
@@ -5241,7 +5242,7 @@ func TestExpandExpander(t *testing.T) {
 func TestExpandInterfaceTypedExpander(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	var targetInterface awsInterfaceInterface
 
@@ -5471,7 +5472,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 func TestExpandTypedExpander(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
+	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
 		"top level struct Target": {
@@ -5859,7 +5860,7 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
+			ctx := context.Background()
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)
