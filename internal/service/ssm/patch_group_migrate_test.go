@@ -4,6 +4,7 @@
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -29,7 +30,7 @@ func testResourcePatchGroupStateDataV1() map[string]interface{} {
 }
 
 func TestPatchGroupStateUpgradeV0(t *testing.T) {
-	ctx := t.Context()
+	ctx := context.Background()
 	t.Parallel()
 
 	expected := testResourcePatchGroupStateDataV1()

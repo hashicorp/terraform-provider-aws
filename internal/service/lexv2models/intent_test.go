@@ -47,7 +47,7 @@ import (
 func TestIntentAutoFlex(t *testing.T) {
 	t.Parallel()
 
-	ctx := acctest.Context(t)
+	ctx := context.Background()
 	testString := "b72d06fd-2b78-5fe2-a6a3-e06e5efde347"
 	testString2 := "a47c2004-f58b-5982-880a-f68c80f6307c"
 

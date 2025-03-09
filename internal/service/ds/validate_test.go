@@ -4,6 +4,7 @@
 package ds
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -56,7 +57,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
+			ctx := context.Background()
 
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
@@ -109,7 +110,7 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
+			ctx := context.Background()
 
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
@@ -159,7 +160,7 @@ func TestTrustPasswordValidator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
+			ctx := context.Background()
 
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
