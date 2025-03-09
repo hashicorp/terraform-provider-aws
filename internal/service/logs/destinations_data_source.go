@@ -31,10 +31,6 @@ type dataSourceDestinations struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDestinations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "aws_cloudwatch_log_destinations"
-}
-
 func (d *dataSourceDestinations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -79,7 +79,7 @@ func testAccDestinationsDataSourceConfig_destinationNamePrefix(rName string) str
 	return acctest.ConfigCompose(testAccDestinationConfig_basic(rName), fmt.Sprintf(`
 data "aws_cloudwatch_log_destinations" "test" {
   destination_name_prefix = "%s"
-  depends_on = [aws_cloudwatch_log_destination.test]
+  depends_on              = [aws_cloudwatch_log_destination.test]
 }
 `, rName))
 }

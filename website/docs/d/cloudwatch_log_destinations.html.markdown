@@ -1,20 +1,12 @@
 ---
 subcategory: "CloudWatch Logs"
 layout: "aws"
-page_title: "AWS: aws_logs_destinations"
+page_title: "AWS: aws_cloudwatch_log_destinations"
 description: |-
   Terraform data source for managing an AWS CloudWatch Logs Destinations.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->
 
-# Data Source: aws_logs_destinations
+# Data Source: aws_cloudwatch_log_destinations
 
 Terraform data source for managing an AWS CloudWatch Logs Destinations.
 
@@ -23,23 +15,33 @@ Terraform data source for managing an AWS CloudWatch Logs Destinations.
 ### Basic Usage
 
 ```terraform
-data "aws_logs_destinations" "example" {
+data "aws_cloudwatch_log_destinations" "example" {
+}
+
+data "aws_cloudwatch_log_destinations" "example_with_prefix" {
+  destination_name_prefix = "example"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
-
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `destination_name_prefix` - (Optional) Prefix to match. If you don't specify a value, no prefix filter is applied.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Destinations. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `destinations` - A list of CloudWatch Log Destinations. Check the [Cloudwatch Log Destination](#cloudwatch-log-destination) below for details.
+
+### Cloudwatch Log Destination
+
+The following attributes are exported:
+
+* `arn` - ARN of the CloudWatch Log Destination.
+* `creation_time` - Creation time of the CloudWatch Log Destination.
+* `destination_name` - Name of the CloudWatch Log Destination.
+* `role_arn` - ARN of the IAM role that grants Amazon CloudWatch Logs permissions to put data into the target.
+* `target_arn` - ARN of the physical target where the log data will be delivered (eg. ARN of a Kinesis stream).
+* `access_policy` - IAM policy document that governs which AWS accounts can create subscription filters against this destination.
