@@ -69,7 +69,7 @@ func TestSuffixNoneOfValidator(t *testing.T) {
 				ConfigValue: test.in,
 			}
 			res := validator.StringResponse{}
-			validators.SuffixNoneOf(test.suffixNoneOfValues...).ValidateString(t.Context(), req, &res)
+			validators.SuffixNoneOf(test.suffixNoneOfValues...).ValidateString(context.TODO(), req, &res)
 
 			if !res.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
