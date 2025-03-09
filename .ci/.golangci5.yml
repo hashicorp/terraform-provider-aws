@@ -27,6 +27,8 @@ linters:
 linters-settings:
   usetesting:
     os-setenv: true
+    context-background: false
+    context-todo: false
 
 run:
   timeout: 75m
