@@ -185,6 +185,11 @@ func resourceApp() *schema.Resource {
 					},
 				},
 			},
+			"compute_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"custom_headers": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -344,6 +349,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("cache_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CacheConfig = expandCacheConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("compute_role_arn"); ok {
+		input.ComputeRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("custom_headers"); ok {
@@ -506,6 +515,10 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			if v, ok := d.GetOk("cache_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.CacheConfig = expandCacheConfig(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		if d.HasChange("compute_role_arn") {
+			input.ComputeRoleArn = aws.String(d.Get("compute_role_arn").(string))
 		}
 
 		if d.HasChange("custom_headers") {
