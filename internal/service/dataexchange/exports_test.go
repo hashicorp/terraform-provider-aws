@@ -5,5 +5,7 @@ package dataexchange
 
 // Exports for use in tests only.
 var (
+	ResourceEventAction = newEventActionResource
+
 	FindEventActionByID = findEventActionByID
 )
