@@ -1329,7 +1329,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T, regions ...string) {
 	}
 }
 
-func testAccCodePipelineConfig_baseServiceIAMRole(rName string) string {
+func testAccCodePipelineConfig_baseServiceIAMRole(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%[1]s"
@@ -1385,7 +1385,7 @@ EOF
 `, rName)
 }
 
-func testAccCodePipelineConfig_baseServiceIAMRoleWithAssumeRole(rName string) string {
+func testAccCodePipelineConfig_baseServiceIAMRoleWithAssumeRole(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%[1]s"
@@ -1514,7 +1514,7 @@ resource "aws_codestarconnections_connection" "test" {
 func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccCodePipelineConfig_baseS3DefaultBucket(rName),
-		testAccS3Bucket("updated", rName),
+		testAccCodePipelineConfig_baseS3Bucket("updated", rName),
 		testAccCodePipelineConfig_baseServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -1643,7 +1643,7 @@ resource "aws_codestarconnections_connection" "test" {
 func testAccCodePipelineConfig_pipelineTypeUpdated1(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccCodePipelineConfig_baseS3DefaultBucket(rName),
-		testAccS3Bucket("updated", rName),
+		testAccCodePipelineConfig_baseS3Bucket("updated", rName),
 		testAccCodePipelineConfig_baseServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -1755,7 +1755,7 @@ resource "aws_codestarconnections_connection" "test" {
 func testAccCodePipelineConfig_pipelineTypeUpdated2(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccCodePipelineConfig_baseS3DefaultBucket(rName),
-		testAccS3Bucket("updated", rName),
+		testAccCodePipelineConfig_baseS3Bucket("updated", rName),
 		testAccCodePipelineConfig_baseServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -1867,7 +1867,7 @@ resource "aws_codestarconnections_connection" "test" {
 func testAccCodePipelineConfig_pipelineTypeUpdated3(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccCodePipelineConfig_baseS3DefaultBucket(rName),
-		testAccS3Bucket("updated", rName),
+		testAccCodePipelineConfig_baseS3Bucket("updated", rName),
 		testAccCodePipelineConfig_baseServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -2470,11 +2470,11 @@ func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:c
 	)
 }
 
-func testAccCodePipelineConfig_baseS3DefaultBucket(rName string) string {
-	return testAccS3Bucket("test", rName)
+func testAccCodePipelineConfig_baseS3DefaultBucket(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return testAccCodePipelineConfig_baseS3Bucket("test", rName)
 }
 
-func testAccS3Bucket(bucket, rName string) string {
+func testAccCodePipelineConfig_baseS3Bucket(bucket, rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[1]s" {
   bucket = "tf-test-pipeline-%[1]s-%[2]s"
@@ -2482,7 +2482,7 @@ resource "aws_s3_bucket" "%[1]s" {
 `, bucket, rName)
 }
 
-func testAccCodePipelineConfig_baseS3BucketWithProvider(bucket, rName, provider string) string {
+func testAccCodePipelineConfig_baseS3BucketWithProvider(bucket, rName, provider string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[1]s" {
   bucket   = "tf-test-pipeline-%[1]s-%[2]s"
