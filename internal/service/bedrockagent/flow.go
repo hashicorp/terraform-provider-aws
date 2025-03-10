@@ -803,9 +803,48 @@ type flowNodeConfigurationMemberRetrievalModel struct {
 	ServiceConfiguration fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
-// TODO: tagged union
+// awstypes.RetrievalFlowNodeServiceConfigurationMemberS3 is a tagged union
 type retrievalFlowNodeServiceConfigurationModel struct {
 	S3 fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
+}
+
+func (m *retrievalFlowNodeServiceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.FlowNodeConfigurationMemberStorage:
+		var model retrievalFlowNodeServiceConfigurationMemberS3Model
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.S3 = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m retrievalFlowNodeServiceConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.S3.IsNull():
+		retrievalFlowNodeServiceConfigurationS3, d := m.S3.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.RetrievalFlowNodeServiceConfigurationMemberS3
+		diags.Append(flex.Expand(ctx, retrievalFlowNodeServiceConfigurationS3, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type retrievalFlowNodeServiceConfigurationMemberS3Model struct {
@@ -816,9 +855,48 @@ type flowNodeConfigurationMemberStorageModel struct {
 	ServiceConfiguration fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
-// TODO: tagged union
+// awstypes.FlowNodeConfigurationMemberStorage is a tagged union
 type storageFlowNodeServiceConfigurationModel struct {
 	S3 fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
+}
+
+func (m *storageFlowNodeServiceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.FlowNodeConfigurationMemberStorage:
+		var model storageFlowNodeServiceConfigurationMemberS3Model
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.S3 = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m storageFlowNodeServiceConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.S3.IsNull():
+		storageFlowNodeServiceConfigurationS3, d := m.S3.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageFlowNodeServiceConfigurationMemberS3
+		diags.Append(flex.Expand(ctx, storageFlowNodeServiceConfigurationS3, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type storageFlowNodeServiceConfigurationMemberS3Model struct {
