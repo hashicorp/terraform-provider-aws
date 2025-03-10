@@ -312,6 +312,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.test"
 	epResourceName := "aws_route53_resolver_endpoint.test.0"
 	domainName := acctest.RandomDomainName()
+	serverNameIndication := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -354,6 +355,23 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 						"ip":               "192.0.2.6",
 						names.AttrPort:     "53",
 						names.AttrProtocol: "DoH",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleConfig_forwardMultiProtocol_serverNameIndication(rName, domainName, serverNameIndication),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":                     "192.0.2.6",
+						names.AttrPort:           "443",
+						names.AttrProtocol:       "DoH",
+						"server_name_indication": serverNameIndication,
 					}),
 				),
 			},
@@ -717,6 +735,25 @@ resource "aws_route53_resolver_rule" "test" {
   }
 }
 `, rName, domainName, protocol))
+}
+
+func testAccRuleConfig_forwardMultiProtocol_serverNameIndication(rName, domainName, sni string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointMultiProtocolBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
+  rule_type   = "FORWARD"
+  name        = %[1]q
+
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[0].id
+
+  target_ip {
+    ip                     = "192.0.2.6"
+    protocol               = "DoH"
+    port                   = 443
+    server_name_indication = %[3]q
+  }
+}
+`, rName, domainName, sni))
 }
 
 func testAccRuleConfig_forwardTargetIPChanged(rName, domainName string) string {
