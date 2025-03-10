@@ -522,6 +522,25 @@ func resourceProject() *schema.Resource {
 				MaxItems: 12,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auth": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.AuthType](),
+									},
+								},
+							},
+						},
 						"build_status_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -613,6 +632,25 @@ func resourceProject() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auth": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.AuthType](),
+									},
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"build_status_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1638,6 +1676,21 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		}
 	}
 
+	if v, ok := tfMap["auth"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		sourceAuthConfig := &types.SourceAuth{}
+
+		if v, ok := tfMap["resource"].(string); ok && v != "" {
+			sourceAuthConfig.Resource = aws.String(v)
+		}
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+			sourceAuthConfig.Type = types.SourceAuthType(v)
+		}
+
+		apiObject.Auth = sourceAuthConfig
+	}
+
 	return apiObject
 }
 
@@ -1903,6 +1956,8 @@ func flattenProjectSource(apiObject *types.ProjectSource) map[string]interface{}
 		tfMap["source_identifier"] = aws.ToString(apiObject.SourceIdentifier)
 	}
 
+	tfMap["auth"] = flattenSourceAuth(apiObject.Auth)
+
 	return tfMap
 }
 
@@ -2018,6 +2073,19 @@ func flattenEnvironmentVariables(apiObjects []types.EnvironmentVariable) []inter
 	}
 
 	return tfList
+}
+
+func flattenSourceAuth(apiObject *types.SourceAuth) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"resource":     aws.ToString(apiObject.Resource),
+		names.AttrType: apiObject.Type,
+	}
+
+	return []interface{}{tfMap}
 }
 
 func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
