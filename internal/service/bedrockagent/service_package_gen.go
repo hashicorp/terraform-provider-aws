@@ -63,6 +63,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Data Source",
 		},
 		{
+			Factory:  newResourceFlow,
+			TypeName: "aws_bedrockagent_flow",
+			Name:     "Flow",
+		},
+		{
 			Factory:  newKnowledgeBaseResource,
 			TypeName: "aws_bedrockagent_knowledge_base",
 			Name:     "Knowledge Base",
