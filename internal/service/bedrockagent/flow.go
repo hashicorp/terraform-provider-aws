@@ -706,10 +706,74 @@ type messageModel struct {
 	Role    fwtypes.StringEnum[awstypes.ConversationRole]      `tfsdk:"role"`
 }
 
-// TODO: tagged union
+// tagged union
 type contentBlockModel struct {
 	CachePoint fwtypes.ObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
 	Text       fwtypes.ObjectValueOf[contentBlockMemberTextModel]       `tfsdk:"text"`
+}
+
+func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ContentBlockMemberCachePoint:
+		var model contentBlockMemberCachePointModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.CachePoint = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.ContentBlockMemberText:
+		var model contentBlockMemberTextModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m contentBlockModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.CachePoint.IsNull():
+		contentBlockCachePoint, d := m.CachePoint.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ContentBlockMemberCachePoint
+		diags.Append(flex.Expand(ctx, contentBlockCachePoint, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Text.IsNull():
+		contentBlockText, d := m.Text.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ContentBlockMemberText
+		diags.Append(flex.Expand(ctx, contentBlockText, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type contentBlockMemberCachePointModel struct {
@@ -724,10 +788,74 @@ type promptInputVariableModel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-// TODO: tagged union
+// tagged union
 type systemContentBlockModel struct {
 	CachePoint fwtypes.ObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
 	Text       fwtypes.ObjectValueOf[systemContentBlockMemberTextModel]       `tfsdk:"text"`
+}
+
+func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.SystemContentBlockMemberCachePoint:
+		var model systemContentBlockMemberCachePointModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.CachePoint = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.SystemContentBlockMemberText:
+		var model systemContentBlockMemberTextModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.CachePoint.IsNull():
+		systemContentBlockCachePoint, d := m.CachePoint.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.SystemContentBlockMemberCachePoint
+		diags.Append(flex.Expand(ctx, systemContentBlockCachePoint, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Text.IsNull():
+		systemContentBlockText, d := m.Text.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.SystemContentBlockMemberText
+		diags.Append(flex.Expand(ctx, systemContentBlockText, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type systemContentBlockMemberCachePointModel struct {
