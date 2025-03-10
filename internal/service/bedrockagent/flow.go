@@ -688,10 +688,74 @@ type promptFlowNodeSourceConfigurationMemberInlineModel struct {
 	InferenceConfiguration       fwtypes.ObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_configuration"`
 }
 
-// TODO: Tagged union
+// Tagged union
 type templateConfigurationModel struct {
 	Chat fwtypes.ObjectValueOf[promptTemplateConfigurationMemberChatModel] `tfsdk:"chat"`
 	Text fwtypes.ObjectValueOf[promptTemplateConfigurationMemberTextModel] `tfsdk:"text"`
+}
+
+func (m *templateConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.PromptTemplateConfigurationMemberChat:
+		var model promptTemplateConfigurationMemberChatModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Chat = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.PromptTemplateConfigurationMemberText:
+		var model promptTemplateConfigurationMemberTextModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m templateConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Chat.IsNull():
+		promptTemplateConfigurationChat, d := m.Chat.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PromptTemplateConfigurationMemberChat
+		diags.Append(flex.Expand(ctx, promptTemplateConfigurationChat, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Text.IsNull():
+		promptTemplateConfigurationText, d := m.Text.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PromptTemplateConfigurationMemberText
+		diags.Append(flex.Expand(ctx, promptTemplateConfigurationText, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type promptTemplateConfigurationMemberChatModel struct {
