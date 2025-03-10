@@ -5,15 +5,12 @@ package provider
 
 import (
 	"context"
-	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Implemented by (schema.ResourceData|schema.ResourceDiff).GetOk().
@@ -50,10 +47,10 @@ func (w *wrappedDataSource) read(f schema.ReadContextFunc) schema.ReadContextFun
 
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext       contextFunc
-	interceptors           interceptorItems
-	typeName               string
-	usesTransparentTagging bool
+	bootstrapContext   contextFunc
+	customizeDiffFuncs []schema.CustomizeDiffFunc
+	interceptors       interceptorItems
+	typeName           string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 resource.
@@ -127,12 +124,12 @@ func (w *wrappedResource) state(f schema.StateContextFunc) schema.StateContextFu
 }
 
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	if w.opts.usesTransparentTagging {
-		if f == nil {
-			return w.customizeDiffWithBootstrappedContext(setTagsAll)
-		} else {
-			return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(setTagsAll, f))
+	if len(w.opts.customizeDiffFuncs) > 0 {
+		customizeDiffFuncs := slices.Clone(w.opts.customizeDiffFuncs)
+		if f != nil {
+			customizeDiffFuncs = append(customizeDiffFuncs, f)
 		}
+		return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(customizeDiffFuncs...))
 	}
 
 	if f == nil {
@@ -166,58 +163,4 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 
 		return f(ctx, rawState, meta)
 	}
-}
-
-// setTagsAll is a CustomizeDiff function that calculates the new value for the `tags_all` attribute.
-func setTagsAll(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	c := meta.(*conns.AWSClient)
-
-	if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
-		if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
-			return fmt.Errorf("setting tags_all to Computed: %w", err)
-		}
-		return nil
-	}
-
-	newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
-	allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
-	if d.HasChange(names.AttrTags) {
-		if newTags.HasZeroValue() {
-			if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
-				return fmt.Errorf("setting tags_all to Computed: %w", err)
-			}
-		}
-
-		if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
-			if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
-				return fmt.Errorf("setting new tags_all diff: %w", err)
-			}
-		}
-
-		if len(allTags) == 0 {
-			if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
-				return fmt.Errorf("setting new tags_all diff: %w", err)
-			}
-		}
-	} else {
-		if len(allTags) > 0 && !allTags.HasZeroValue() {
-			if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
-				return fmt.Errorf("setting new tags_all diff: %w", err)
-			}
-			return nil
-		}
-
-		var newTagsAll tftags.KeyValueTags
-		if v, ok := d.Get(names.AttrTagsAll).(map[string]interface{}); ok {
-			newTagsAll = tftags.New(ctx, v)
-		}
-		if len(allTags) > 0 && !newTagsAll.DeepEqual(allTags) && allTags.HasZeroValue() {
-			if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
-				return fmt.Errorf("setting tags_all to Computed: %w", err)
-			}
-			return nil
-		}
-	}
-
-	return nil
 }
