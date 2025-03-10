@@ -17,6 +17,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_codebuild_report_group", sweepReportGroups)
 	awsv2.Register("aws_codebuild_project", sweepProjects)
 	awsv2.Register("aws_codebuild_source_credential", sweepSourceCredentials)
+	awsv2.Register("aws_codebuild_fleet", sweepFleets)
 }
 
 func sweepReportGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -88,6 +89,31 @@ func sweepSourceCredentials(ctx context.Context, client *conns.AWSClient) ([]swe
 		d.SetId(id)
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	return sweepResources, nil
+}
+
+func sweepFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CodeBuildClient(ctx)
+	var input codebuild.ListFleetsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := codebuild.NewListFleetsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Fleets {
+			r := resourceFleet()
+			d := r.Data(nil)
+			d.SetId(v)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
 	return sweepResources, nil
