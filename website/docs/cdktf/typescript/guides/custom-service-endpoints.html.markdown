@@ -320,7 +320,7 @@ class MyConvertedCode extends TerraformStack {
 |S3 Control|`s3Control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3Outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3Outposts`|
 |S3 Tables|`s3Tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3Tables`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
@@ -473,4 +473,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-97c3cb707d3a062177488b18e495f9ee8ec86f4e047798c29565c3ba117a5c1a -->
+<!-- cache-key: cdktf-0.20.8 input-11399ce897c01f5968f8952f815f4ac55d3fb7cbb6ba03da989e19ca3c04e49f -->

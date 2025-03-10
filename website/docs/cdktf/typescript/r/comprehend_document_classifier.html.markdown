@@ -98,7 +98,7 @@ The following arguments are optional:
 
 ### `inputDataConfig` Configuration Block
 
-* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `dataFormat` is `AUGMENTED_MANIFEST`.
   See the [`augmentedManifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `dataFormat` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -181,4 +181,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.20.8 input-a689b77e9127f554d6b24d469619d4447111d1c1ecaba540e62fc55a5cce60c1 -->

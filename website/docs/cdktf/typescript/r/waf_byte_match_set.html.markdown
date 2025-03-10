@@ -93,6 +93,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Byte Match Set.
+* `arn` - Amazon Resource Name (ARN) of the byte match set.
 
 ## Import
 
@@ -126,4 +127,4 @@ Using `terraform import`, import WAF Byte Match Set using the id. For example:
 % terraform import aws_waf_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a06ceb0ddbbc765dc1c16cfd7dbd1d081a410429cadf571ebee08f28fa270e27 -->
+<!-- cache-key: cdktf-0.20.8 input-3d0271dd7f9cc2e1eb9dd17031964a6c38310327f4ba7afef26041f47d5ec39b -->

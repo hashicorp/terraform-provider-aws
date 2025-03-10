@@ -124,9 +124,9 @@ This resource supports the following arguments:
 * `disableApiTermination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebsOptimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elasticGpuSpecifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
+* `elasticGpuSpecifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
-* `elasticInferenceAccelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
+* `elasticInferenceAccelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclaveOptions` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -237,7 +237,7 @@ The `elasticGpuSpecifications` block supports the following:
 
 ### Elastic Inference Accelerator
 
-Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
+**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
 
 The `elasticInferenceAccelerator` configuration block supports the following:
 
@@ -548,4 +548,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bcdfddfd49f8dc36d24631b66a3e531a7b80e076a234a73d6d5299332317437b -->
+<!-- cache-key: cdktf-0.20.8 input-2013a21ae1f3cfd85ce5b7ee3423d5d1a9fa481ce7b46946a2cb5e72d129ea9f -->

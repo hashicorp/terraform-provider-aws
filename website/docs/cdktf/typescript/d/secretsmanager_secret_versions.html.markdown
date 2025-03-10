@@ -99,9 +99,9 @@ This data source exports the following attributes in addition to the arguments a
 
 ### versions
 
-* `createdDate` - Date and time this version of the secret was created.
+* `createdTime` - Date and time this version of the secret was created.
 * `lastAccessedDate` - Date that this version of the secret was last accessed.
 * `versionId` - Unique version identifier of this version of the secret.
-* `versionStage` - Staging label attached to the version.
+* `versionStages` - List of staging labels attached to the version.
 
-<!-- cache-key: cdktf-0.20.8 input-596ee491979af3a0973c463d5c307cdbedc26652f3a013026f6591e3a4084f60 -->
+<!-- cache-key: cdktf-0.20.8 input-2bb8af18ad6498bf9721e1fb842f8dd0446a3e68a97092f4f16b02f49d560e63 -->

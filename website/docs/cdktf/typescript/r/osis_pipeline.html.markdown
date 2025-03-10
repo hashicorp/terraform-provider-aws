@@ -129,6 +129,7 @@ The following arguments are optional:
 
 * `subnetIds` - (Required) A list of subnet IDs associated with the VPC endpoint.
 * `securityGroupIds` - (Optional) A list of security groups associated with the VPC endpoint.
+* `vpcEndpointManagement` - (Optional) Whether you or Amazon OpenSearch Ingestion service create and manage the VPC endpoint configured for the pipeline. Valid values are `CUSTOMER` or `SERVICE`
 
 ## Attribute Reference
 
@@ -174,4 +175,4 @@ Using `terraform import`, import OpenSearch Ingestion Pipeline using the `id`. F
 % terraform import aws_osis_pipeline.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-102e9aec43b3118029eeda9efb34ad22903eda3b2298d7b6960f663cf5642db3 -->
+<!-- cache-key: cdktf-0.20.8 input-134e17d9770cd5502f9bf14e16ac29a0ac8e5df68321a1c639433c32b796d042 -->

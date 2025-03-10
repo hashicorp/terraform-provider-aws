@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks NodeJS application layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -83,4 +85,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-1df307b6876d1bd2e727d6c0695efb82596dffc396372dbe164d5ffca9daf825 -->
+<!-- cache-key: cdktf-0.20.8 input-12f95ff7e20531ad4dccea43ef140b8edf48c64a77b061d3950f892aaf591233 -->

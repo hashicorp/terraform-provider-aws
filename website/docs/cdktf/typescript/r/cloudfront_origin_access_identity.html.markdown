@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+* `arn` - The origin access identity ARN.
 * `callerReference` - Internal value used by CloudFront to allow future
    updates to the origin access identity.
 * `cloudfrontAccessIdentityPath` - A shortcut to the full path for the
@@ -59,6 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `iamArn` - A pre-generated ARN for use in S3 bucket policies (see below).
    Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
    E2QWRUHAPOMQZL`.
+* `id` - The identifier for the origin access identity.
 * `s3CanonicalUserId` - The Amazon S3 canonical user ID for the origin
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
@@ -193,4 +194,4 @@ Using `terraform import`, import Cloudfront Origin Access Identities using the `
 % terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c8db3d8043e295b534d10a38305c84400f283c41376e39cd1df56d209827b719 -->
+<!-- cache-key: cdktf-0.20.8 input-d6ab820ca9c6701346daa4f24f66335dfd1791bcfe90ac8786425aadde39b3b3 -->

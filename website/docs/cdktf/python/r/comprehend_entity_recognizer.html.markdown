@@ -96,7 +96,7 @@ The following arguments are optional:
 * `annotations` - (Optional) Specifies location of the document annotation data.
   See the [`annotations` Configuration Block](#annotations-configuration-block) section below.
   One of `annotations` or `entity_list` is required.
-* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `data_format` is `AUGMENTED_MANIFEST`.
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -188,4 +188,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5a4f330d945c67ebd2c327cc9ed1a4d3cbd7331cc6eefe3c8b6a54590b34a394 -->
+<!-- cache-key: cdktf-0.20.8 input-eb76cf76bcd9ae3f63202cc7186a5ea4ba2a43a084b6d50a4124097787c31abc -->
