@@ -1,5 +1,9 @@
 ## 5.90.1 (Unreleased)
 
+NOTES:
+
+* provider: Restore the `godebug tlskyber=0` directive in `go.mod`. This disables the experimental the post-quantum key exchange mechanism `X25519Kyber768Draft00`, fixing failed or hanging network connections to various AWS services. This fixes a regression introduced in [v5.90.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5900-march--6-2025) ([#41740](https://github.com/hashicorp/terraform-provider-aws/issues/41740))
+
 FEATURES:
 
 * **New Data Source:** `aws_datazone_domain` ([#41480](https://github.com/hashicorp/terraform-provider-aws/issues/41480))
@@ -8,6 +12,10 @@ ENHANCEMENTS:
 
 * resource/aws_codepipeline: Add `stage.before_entry`, `stage.on_success` and `stage.on_failure` configuration blocks ([#41663](https://github.com/hashicorp/terraform-provider-aws/issues/41663))
 * resource/aws_mskconnect_connector: Allow `connector_configuration` to be updated in-place ([#41685](https://github.com/hashicorp/terraform-provider-aws/issues/41685))
+* resource/aws_wafv2_rule_group: Add `ja3_fingerprint` and `ja4_fingerprint` to `custom_key` configuration blocks ([#41719](https://github.com/hashicorp/terraform-provider-aws/issues/41719))
+* resource/aws_wafv2_rule_group: Add `ja4_fingerprint` to `field_to_match` configuration blocks ([#41719](https://github.com/hashicorp/terraform-provider-aws/issues/41719))
+* resource/aws_wafv2_web_acl: Add `ja3_fingerprint` and `ja4_fingerprint` to `custom_key` configuration blocks ([#41719](https://github.com/hashicorp/terraform-provider-aws/issues/41719))
+* resource/aws_wafv2_web_acl: Add `ja4_fingerprint` to `field_to_match` configuration blocks ([#41719](https://github.com/hashicorp/terraform-provider-aws/issues/41719))
 
 ## 5.90.0 (March  6, 2025)
 
