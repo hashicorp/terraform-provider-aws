@@ -1257,6 +1257,52 @@ func TestAccCodePipeline_commands(t *testing.T) {
 	})
 }
 
+func TestAccCodePipeline_trigger(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p types.PipelineDeclaration
+	rName := sdkacctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodePipelineConfig_trigger(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.provider_type", "CodeStarSourceConnection"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.0.source_action_name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.0.push.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.0.push.0.branches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.0.push.0.branches.0.includes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.0.push.0.branches.0.includes.0", "main"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodePipelineConfig_noTrigger(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"), // Until we find a way to update to no triggers...
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPipelineExists(ctx context.Context, n string, v *types.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3491,6 +3537,140 @@ resource "aws_codepipeline" "test" {
       commands         = ["ls", "echo hello"]
     }
   }
+}
+`, rName))
+}
+
+func testAccCodePipelineConfig_trigger(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccCodePipelineConfig_baseS3DefaultBucket(rName),
+		testAccCodePipelineConfig_baseServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  pipeline_type = "V2"
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "my-organization/example"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["source_output"]
+      output_artifacts = ["build_output"]
+      version          = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+    git_configuration {
+      source_action_name = "Source"
+      push {
+        branches {
+          includes = ["main"]
+        }
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName))
+}
+
+func testAccCodePipelineConfig_noTrigger(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccCodePipelineConfig_baseS3DefaultBucket(rName),
+		testAccCodePipelineConfig_baseServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  pipeline_type = "V2"
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "my-organization/example"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["source_output"]
+      output_artifacts = ["build_output"]
+      version          = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
 }
 `, rName))
 }
