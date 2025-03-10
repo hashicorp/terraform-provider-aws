@@ -123,7 +123,8 @@ func categoryFilterSchema() *schema.Schema {
 						},
 					},
 				},
-				"filter_id": idSchema(),
+				"filter_id":                            idSchema(),
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
 			},
 		},
 	}
@@ -137,13 +138,14 @@ func numericEqualityFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":            idSchema(),
-				"match_operator":       stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
-				"null_option":          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
-				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-				"parameter_name":       parameterNameSchema(false),
-				"select_all_options":   stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
+				"column":                               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":                            idSchema(),
+				"match_operator":                       stringEnumSchema[awstypes.CategoryFilterMatchOperator](attrRequired),
+				"null_option":                          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				"aggregation_function":                 aggregationFunctionSchema(false),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
+				"parameter_name":                       parameterNameSchema(false),
+				"select_all_options":                   stringEnumSchema[awstypes.NumericFilterSelectAllOptions](attrOptional),
 				names.AttrValue: {
 					Type:     schema.TypeFloat,
 					Optional: true,
@@ -161,10 +163,11 @@ func numericRangeFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":            idSchema(),
-				"null_option":          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
-				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+				"column":                               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":                            idSchema(),
+				"null_option":                          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				"aggregation_function":                 aggregationFunctionSchema(false),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
 				"include_maximum": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -201,14 +204,15 @@ func relativeDatesFilterSchema() *schema.Schema {
 						},
 					},
 				},
-				"column":                       columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":                    idSchema(),
-				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](attrRequired),
-				"relative_date_type":           stringEnumSchema[awstypes.RelativeDateType](attrRequired),
-				"time_granularity":             stringEnumSchema[awstypes.TimeGranularity](attrRequired),
-				"exclude_period_configuration": excludePeriodConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
-				"minimum_granularity":          stringEnumSchema[awstypes.TimeGranularity](attrRequired),
-				"parameter_name":               parameterNameSchema(false),
+				"column":                               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":                            idSchema(),
+				"null_option":                          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				"relative_date_type":                   stringEnumSchema[awstypes.RelativeDateType](attrRequired),
+				"time_granularity":                     stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
+				"exclude_period_configuration":         excludePeriodConfigurationSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
+				"minimum_granularity":                  stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+				"parameter_name":                       parameterNameSchema(false),
 				"relative_date_value": {
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -226,10 +230,11 @@ func timeEqualityFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":           columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":        idSchema(),
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
-				"parameter_name":   parameterNameSchema(false),
+				"column":                               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":                            idSchema(),
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
+				"parameter_name":                       parameterNameSchema(false),
+				"time_granularity":                     stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 				names.AttrValue: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -248,10 +253,11 @@ func timeRangeFilterSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"column":                       columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id":                    idSchema(),
-				"null_option":                  stringEnumSchema[awstypes.FilterNullOption](attrRequired),
-				"exclude_period_configuration": excludePeriodConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
+				"column":                               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":                            idSchema(),
+				"null_option":                          stringEnumSchema[awstypes.FilterNullOption](attrRequired),
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
+				"exclude_period_configuration":         excludePeriodConfigurationSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
 				"include_maximum": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -262,7 +268,7 @@ func timeRangeFilterSchema() *schema.Schema {
 				},
 				"range_maximum_value": timeRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
 				"range_minimum_value": timeRangeFilterValueSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
-				"time_granularity":    stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				"time_granularity":    stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 			},
 		},
 	}
@@ -289,14 +295,15 @@ func topBottomFilterSchema() *schema.Schema {
 						},
 					},
 				},
-				"column":    columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id": idSchema(),
+				"column":                               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":                            idSchema(),
+				"default_filter_control_configuration": defaultFilterControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
 				"limit": {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
 				"parameter_name":   parameterNameSchema(false),
-				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+				"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrOptional),
 			},
 		},
 	}
@@ -462,6 +469,13 @@ var filterScopeConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"all_sheets": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AllSheetsFilterScopeConfiguration.html
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Optional: true,
+					Elem:     &schema.Resource{},
+				},
 				"selected_sheets": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SelectedSheetsFilterScopeConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -495,6 +509,161 @@ var filterScopeConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 		},
 	}
 })
+
+func defaultFilterControlConfigurationSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlConfiguration.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"control_options": defaultFilterControlOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlOptions.html
+				"title":           stringLenBetweenSchema(attrRequired, 1, 2048),
+			},
+		},
+	}
+}
+
+func defaultFilterControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterControlOptions.html
+		Type:     schema.TypeList,
+		MinItems: 1,
+		MaxItems: 1,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"default_date_time_picker_options":   defaultDateTimePickerControlOptionsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultDateTimePickerControlOptions.html
+				"default_dropdown_options":           defaultFilterDropDownControlOptionsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterDropDownControlOptions.html
+				"default_list_options":               defaultFilterListControlOptionsSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterListControlOptions.html
+				"default_relative_date_time_options": defaultRelativeDateTimeControlOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultRelativeDateTimeControlOptions.html
+				"default_slider_options":             defaultSliderControlOptionsSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultSliderControlOptions.html
+				"default_text_area_options":          defaultTextAreaControlOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultTextAreaControlOptions.html
+				"default_text_field_options":         defaultTextFieldControlOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultTextFieldControlOptions.html
+			},
+		},
+	}
+}
+
+func defaultDateTimePickerControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultDateTimePickerControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"commit_mode":     stringEnumSchema[awstypes.CommitMode](attrOptional),
+				"display_options": dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
+				names.AttrType:    stringEnumSchema[awstypes.SheetControlDateTimePickerType](attrOptional),
+			},
+		},
+	}
+}
+
+func defaultFilterDropDownControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterDropDownControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"commit_mode":       stringEnumSchema[awstypes.CommitMode](attrOptional),
+				"display_options":   dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
+				"selectable_values": filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
+				names.AttrType:      stringEnumSchema[awstypes.SheetControlListType](attrOptional),
+			},
+		},
+	}
+}
+
+func defaultFilterListControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultFilterListControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"display_options":   listControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
+				"selectable_values": filterSelectableValuesSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
+				names.AttrType:      stringEnumSchema[awstypes.SheetControlListType](attrOptional),
+			},
+		},
+	}
+}
+
+func defaultRelativeDateTimeControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultRelativeDateTimeControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"commit_mode":     stringEnumSchema[awstypes.CommitMode](attrOptional),
+				"display_options": relativeDateTimeControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
+			},
+		},
+	}
+}
+
+func defaultSliderControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultSliderControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"maximum_value": {
+					Type:     schema.TypeFloat,
+					Required: true,
+				},
+				"minimum_value": {
+					Type:     schema.TypeFloat,
+					Required: true,
+				},
+				"step_size": {
+					Type:     schema.TypeFloat,
+					Required: true,
+				},
+				"display_options": sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+				names.AttrType:    stringEnumSchema[awstypes.SheetControlSliderType](attrOptional),
+			},
+		},
+	}
+}
+
+func defaultTextAreaControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultTextAreaControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"delimiter":       stringLenBetweenSchema(attrOptional, 1, 2048),
+				"display_options": textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
+			},
+		},
+	}
+}
+
+func defaultTextFieldControlOptionsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultTextFieldControlOptions.html
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"display_options": textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
+			},
+		},
+	}
+}
 
 func expandFilters(tfList []interface{}) []awstypes.Filter {
 	if len(tfList) == 0 {
@@ -572,6 +741,9 @@ func expandCategoryFilter(tfList []interface{}) *awstypes.CategoryFilter {
 	}
 	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
 		apiObject.Configuration = expandCategoryFilterConfiguration(v)
+	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
 	}
 
 	return apiObject
@@ -722,6 +894,9 @@ func expandNumericEqualityFilter(tfList []interface{}) *awstypes.NumericEquality
 	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
+	}
 
 	return apiObject
 }
@@ -737,6 +912,10 @@ func expandFilterScopeConfiguration(tfList []interface{}) *awstypes.FilterScopeC
 	}
 
 	apiObject := &awstypes.FilterScopeConfiguration{}
+
+	if v, ok := tfMap["all_sheets"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AllSheets = &awstypes.AllSheetsFilterScopeConfiguration{}
+	}
 
 	if v, ok := tfMap["selected_sheets"].([]interface{}); ok && len(v) > 0 {
 		apiObject.SelectedSheets = expandSelectedSheetsFilterScopeConfiguration(v)
@@ -847,6 +1026,9 @@ func expandNumericRangeFilter(tfList []interface{}) *awstypes.NumericRangeFilter
 	if v, ok := tfMap["range_minimum"].([]interface{}); ok && len(v) > 0 {
 		apiObject.RangeMinimum = expandNumericRangeFilterValue(v)
 	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
+	}
 
 	return apiObject
 }
@@ -914,6 +1096,9 @@ func expandRelativeDatesFilter(tfList []interface{}) *awstypes.RelativeDatesFilt
 	}
 	if v, ok := tfMap["exclude_period_configuration"].([]interface{}); ok && len(v) > 0 {
 		apiObject.ExcludePeriodConfiguration = expandExcludePeriodConfiguration(v)
+	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
 	}
 
 	return apiObject
@@ -994,6 +1179,9 @@ func expandTimeEqualityFilter(tfList []interface{}) *awstypes.TimeEqualityFilter
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
 		apiObject.Value = aws.Time(t)
 	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
+	}
 
 	return apiObject
 }
@@ -1036,6 +1224,9 @@ func expandTimeRangeFilter(tfList []interface{}) *awstypes.TimeRangeFilter {
 	}
 	if v, ok := tfMap["range_minimum_value"].([]interface{}); ok && len(v) > 0 {
 		apiObject.RangeMinimumValue = expandTimeRangeFilterValue(v)
+	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
 	}
 
 	return apiObject
@@ -1097,6 +1288,9 @@ func expandTopBottomFilter(tfList []interface{}) *awstypes.TopBottomFilter {
 	if v, ok := tfMap["aggregation_sort_configuration"].([]interface{}); ok && len(v) > 0 {
 		apiObject.AggregationSortConfigurations = expandAggregationSortConfigurations(v)
 	}
+	if v, ok := tfMap["default_filter_control_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultFilterControlConfiguration = expandDefaultFilterControlConfiguration(v)
+	}
 
 	return apiObject
 }
@@ -1140,6 +1334,237 @@ func expandAggregationSortConfiguration(tfMap map[string]interface{}) *awstypes.
 	}
 	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultFilterControlConfiguration(tfList []interface{}) *awstypes.DefaultFilterControlConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultFilterControlConfiguration{}
+
+	if v, ok := tfMap["control_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ControlOptions = expandDefaultFilterControlOptions(v)
+	}
+	if v, ok := tfMap["title"].(string); ok && v != "" {
+		apiObject.Title = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultFilterControlOptions(tfList []interface{}) *awstypes.DefaultFilterControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultFilterControlOptions{}
+
+	if v, ok := tfMap["default_date_time_picker_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultDateTimePickerOptions = expandDefaultDateTimePickerControlOptions(v)
+	}
+	if v, ok := tfMap["default_dropdown_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultDropdownOptions = expandDefaultFilterDropDownControlOptions(v)
+	}
+	if v, ok := tfMap["default_list_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultListOptions = expandDefaultFilterListControlOptions(v)
+	}
+	if v, ok := tfMap["default_relative_date_time_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultRelativeDateTimeOptions = expandDefaultRelativeDateTimeControlOptions(v)
+	}
+	if v, ok := tfMap["default_slider_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultSliderOptions = expandDefaultSliderControlOptions(v)
+	}
+	if v, ok := tfMap["default_text_area_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultTextAreaOptions = expandDefaultTextAreaControlOptions(v)
+	}
+	if v, ok := tfMap["default_text_field_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DefaultTextFieldOptions = expandDefaultTextFieldControlOptions(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultDateTimePickerControlOptions(tfList []interface{}) *awstypes.DefaultDateTimePickerControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultDateTimePickerControlOptions{}
+
+	if v, ok := tfMap["commit_mode"].(string); ok && v != "" {
+		apiObject.CommitMode = awstypes.CommitMode(v)
+	}
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandDateTimePickerControlDisplayOptions(v)
+	}
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.SheetControlDateTimePickerType(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultFilterDropDownControlOptions(tfList []interface{}) *awstypes.DefaultFilterDropDownControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultFilterDropDownControlOptions{}
+
+	if v, ok := tfMap["commit_mode"].(string); ok && v != "" {
+		apiObject.CommitMode = awstypes.CommitMode(v)
+	}
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandDropDownControlDisplayOptions(v)
+	}
+	if v, ok := tfMap["selectable_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.SelectableValues = expandFilterSelectableValues(v)
+	}
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.SheetControlListType(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultFilterListControlOptions(tfList []interface{}) *awstypes.DefaultFilterListControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultFilterListControlOptions{}
+
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandListControlDisplayOptions(v)
+	}
+	if v, ok := tfMap["selectable_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.SelectableValues = expandFilterSelectableValues(v)
+	}
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.SheetControlListType(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultRelativeDateTimeControlOptions(tfList []interface{}) *awstypes.DefaultRelativeDateTimeControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultRelativeDateTimeControlOptions{}
+
+	if v, ok := tfMap["commit_mode"].(string); ok && v != "" {
+		apiObject.CommitMode = awstypes.CommitMode(v)
+	}
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandRelativeDateTimeControlDisplayOptions(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultSliderControlOptions(tfList []interface{}) *awstypes.DefaultSliderControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultSliderControlOptions{}
+
+	if v, ok := tfMap["maximum_value"].(float64); ok {
+		apiObject.MaximumValue = v
+	}
+	if v, ok := tfMap["minimum_value"].(float64); ok {
+		apiObject.MinimumValue = v
+	}
+	if v, ok := tfMap["step_size"].(float64); ok {
+		apiObject.StepSize = v
+	}
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandSliderControlDisplayOptions(v)
+	}
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.SheetControlSliderType(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultTextAreaControlOptions(tfList []interface{}) *awstypes.DefaultTextAreaControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultTextAreaControlOptions{}
+
+	if v, ok := tfMap["delimiter"].(string); ok && v != "" {
+		apiObject.Delimiter = aws.String(v)
+	}
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandTextAreaControlDisplayOptions(v)
+	}
+
+	return apiObject
+}
+
+func expandDefaultTextFieldControlOptions(tfList []interface{}) *awstypes.DefaultTextFieldControlOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.DefaultTextFieldControlOptions{}
+
+	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DisplayOptions = expandTextFieldControlDisplayOptions(v)
 	}
 
 	return apiObject
@@ -1316,6 +1741,9 @@ func flattenCategoryFilter(apiObject *awstypes.CategoryFilter) []interface{} {
 	if apiObject.FilterId != nil {
 		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
 	}
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1418,6 +1846,9 @@ func flattenNumericEqualityFilter(apiObject *awstypes.NumericEqualityFilter) []i
 	if apiObject.Value != nil {
 		tfMap[names.AttrValue] = aws.ToFloat64(apiObject.Value)
 	}
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1452,6 +1883,9 @@ func flattenNumericRangeFilter(apiObject *awstypes.NumericRangeFilter) []interfa
 		tfMap["range_minimum"] = flattenNumericRangeFilterValue(apiObject.RangeMinimum)
 	}
 	tfMap["select_all_options"] = apiObject.SelectAllOptions
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1502,6 +1936,9 @@ func flattenRelativeDatesFilter(apiObject *awstypes.RelativeDatesFilter) []inter
 		tfMap["relative_date_value"] = aws.ToInt32(apiObject.RelativeDateValue)
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1557,6 +1994,9 @@ func flattenTimeEqualityFilter(apiObject *awstypes.TimeEqualityFilter) []interfa
 	if apiObject.Value != nil {
 		tfMap[names.AttrValue] = apiObject.Value.Format(time.RFC3339)
 	}
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1591,6 +2031,9 @@ func flattenTimeRangeFilter(apiObject *awstypes.TimeRangeFilter) []interface{} {
 		tfMap["range_minimum_value"] = flattenTimeRangeFilterValue(apiObject.RangeMinimumValue)
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1638,6 +2081,9 @@ func flattenTopBottomFilter(apiObject *awstypes.TopBottomFilter) []interface{} {
 		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
+	if apiObject.DefaultFilterControlConfiguration != nil {
+		tfMap["default_filter_control_configuration"] = flattenDefaultFilterControlConfiguration(apiObject.DefaultFilterControlConfiguration)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1666,12 +2112,182 @@ func flattenAggregationSortConfigurations(apiObjects []awstypes.AggregationSortC
 	return tfList
 }
 
+func flattenDefaultFilterControlConfiguration(apiObject *awstypes.DefaultFilterControlConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.ControlOptions != nil {
+		tfMap["control_options"] = flattenDefaultFilterControlOptions(apiObject.ControlOptions)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = aws.ToString(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultFilterControlOptions(apiObject *awstypes.DefaultFilterControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.DefaultDateTimePickerOptions != nil {
+		tfMap["default_date_time_picker_options"] = flattenDefaultDateTimePickerControlOptions(apiObject.DefaultDateTimePickerOptions)
+	}
+	if apiObject.DefaultDropdownOptions != nil {
+		tfMap["default_dropdown_options"] = flattenDefaultFilterDropDownControlOptions(apiObject.DefaultDropdownOptions)
+	}
+	if apiObject.DefaultListOptions != nil {
+		tfMap["default_list_options"] = flattenDefaultFilterListControlOptions(apiObject.DefaultListOptions)
+	}
+	if apiObject.DefaultRelativeDateTimeOptions != nil {
+		tfMap["default_relative_date_time_options"] = flattenDefaultRelativeDateTimeControlOptions(apiObject.DefaultRelativeDateTimeOptions)
+	}
+	if apiObject.DefaultSliderOptions != nil {
+		tfMap["default_slider_options"] = flattenDefaultSliderControlOptions(apiObject.DefaultSliderOptions)
+	}
+	if apiObject.DefaultTextAreaOptions != nil {
+		tfMap["default_text_area_options"] = flattenDefaultTextAreaControlOptions(apiObject.DefaultTextAreaOptions)
+	}
+	if apiObject.DefaultTextFieldOptions != nil {
+		tfMap["default_text_field_options"] = flattenDefaultTextFieldControlOptions(apiObject.DefaultTextFieldOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultDateTimePickerControlOptions(apiObject *awstypes.DefaultDateTimePickerControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["commit_mode"] = apiObject.CommitMode
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenDateTimePickerControlDisplayOptions(apiObject.DisplayOptions)
+	}
+	tfMap[names.AttrType] = apiObject.Type
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultFilterDropDownControlOptions(apiObject *awstypes.DefaultFilterDropDownControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["commit_mode"] = apiObject.CommitMode
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenDropDownControlDisplayOptions(apiObject.DisplayOptions)
+	}
+	if apiObject.SelectableValues != nil {
+		tfMap["selectable_values"] = flattenFilterSelectableValues(apiObject.SelectableValues)
+	}
+	tfMap[names.AttrType] = apiObject.Type
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultFilterListControlOptions(apiObject *awstypes.DefaultFilterListControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenListControlDisplayOptions(apiObject.DisplayOptions)
+	}
+	if apiObject.SelectableValues != nil {
+		tfMap["selectable_values"] = flattenFilterSelectableValues(apiObject.SelectableValues)
+	}
+	tfMap[names.AttrType] = apiObject.Type
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultRelativeDateTimeControlOptions(apiObject *awstypes.DefaultRelativeDateTimeControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["commit_mode"] = apiObject.CommitMode
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenRelativeDateTimeControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultSliderControlOptions(apiObject *awstypes.DefaultSliderControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["maximum_value"] = apiObject.MaximumValue
+	tfMap["minimum_value"] = apiObject.MinimumValue
+	tfMap["step_size"] = apiObject.StepSize
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenSliderControlDisplayOptions(apiObject.DisplayOptions)
+	}
+	tfMap[names.AttrType] = apiObject.Type
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultTextAreaControlOptions(apiObject *awstypes.DefaultTextAreaControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.Delimiter != nil {
+		tfMap["delimiter"] = aws.ToString(apiObject.Delimiter)
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenTextAreaControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultTextFieldControlOptions(apiObject *awstypes.DefaultTextFieldControlOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenTextFieldControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenFilterScopeConfiguration(apiObject *awstypes.FilterScopeConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if apiObject.AllSheets != nil {
+		tfMap["all_sheets"] = []interface{}{}
+	}
 
 	if apiObject.SelectedSheets != nil {
 		tfMap["selected_sheets"] = flattenSelectedSheetsFilterScopeConfiguration(apiObject.SelectedSheets)
