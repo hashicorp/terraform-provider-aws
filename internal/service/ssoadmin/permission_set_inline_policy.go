@@ -23,6 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// 32 KB. Refer https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_PutInlinePolicyToPermissionSet.html#API_PutInlinePolicyToPermissionSet_RequestParameters
+const inlinePolicyMaxSize = 32768
+
 // @SDKResource("aws_ssoadmin_permission_set_inline_policy", name="Permission Set Inline Policy")
 func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
@@ -44,7 +47,7 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 			"inline_policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(inlinePolicyMaxSize),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {

@@ -32,6 +32,7 @@ import (
 const (
 	policyNameMaxLen       = 128
 	policyNamePrefixMaxLen = policyNameMaxLen - id.UniqueIDSuffixLength
+	policyMaxSize          = 6144
 )
 
 // @SDKResource("aws_iam_policy", name="Policy")
@@ -87,7 +88,7 @@ func resourcePolicy() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(policyMaxSize),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {

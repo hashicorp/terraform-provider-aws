@@ -24,6 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// 20KB. Refer https://docs.aws.amazon.com/amazonglacier/latest/dev/api-SetVaultAccessPolicy.html
+const policyMaxSize = 20480
+
 // @SDKResource("aws_glacier_vault_lock", name="Vault Lock")
 func resourceVaultLock() *schema.Resource {
 	return &schema.Resource{
@@ -53,7 +56,7 @@ func resourceVaultLock() *schema.Resource {
 				ForceNew:              true,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(policyMaxSize),
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
