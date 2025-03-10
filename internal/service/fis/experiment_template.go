@@ -1072,6 +1072,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Cluster",
 		"Clusters",
 		"DBInstances",
+		"Functions",
 		"Instances",
 		"Nodegroups",
 		"Pods",
