@@ -528,11 +528,11 @@ type flowConnectionConfigurationModel struct {
 	Conditional fwtypes.ObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
 }
 
-type flowConnectionConfigurationMemberDataModel struct {
+type flowConnectionConfigurationMemberConditionalModel struct {
 	Condition types.String `tfsdk:"condition"`
 }
 
-type flowConnectionConfigurationMemberConditionalModel struct {
+type flowConnectionConfigurationMemberDataModel struct {
 	SourceOutput types.String `tfsdk:"source_output"`
 	TargetInput  types.String `tfsdk:"target_input"`
 }
@@ -630,6 +630,7 @@ type flowNodeConfigurationMemberAgentModel struct {
 }
 
 type flowNodeConfigurationMemberCollectorModel struct {
+	// No fields
 }
 
 type flowNodeConfigurationMemberConditionModel struct {
@@ -642,9 +643,11 @@ type flowConditionModel struct {
 }
 
 type flowNodeConfigurationMemberInputModel struct {
+	// No fields
 }
 
 type flowNodeConfigurationMemberIteratorModel struct {
+	// No fields
 }
 
 type flowNodeConfigurationMemberKnowledgeBaseModel struct {
@@ -663,6 +666,7 @@ type flowNodeConfigurationMemberLexModel struct {
 }
 
 type flowNodeConfigurationMemberOutputModel struct {
+	// No fields
 }
 
 type flowNodeConfigurationMemberPromptModel struct {
@@ -722,8 +726,12 @@ type promptInputVariableModel struct {
 
 // TODO: tagged union
 type systemContentBlockModel struct {
-	CachePoint fwtypes.ObjectValueOf[cachePointModel]                   `tfsdk:"cache_point"`
-	Text       fwtypes.ObjectValueOf[systemContentBlockMemberTextModel] `tfsdk:"text"`
+	CachePoint fwtypes.ObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
+	Text       fwtypes.ObjectValueOf[systemContentBlockMemberTextModel]       `tfsdk:"text"`
+}
+
+type systemContentBlockMemberCachePointModel struct {
+	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
 }
 
 type systemContentBlockMemberTextModel struct {
@@ -737,8 +745,12 @@ type toolConfigurationModel struct {
 
 // TODO: tagged union
 type toolModel struct {
-	CachePoint fwtypes.ObjectValueOf[cachePointModel]         `tfsdk:"cache_point"`
-	ToolSpec   fwtypes.ObjectValueOf[toolMemberToolSpecModel] `tfsdk:"tool_spec"`
+	CachePoint fwtypes.ObjectValueOf[toolMemberCachePointModel] `tfsdk:"cache_point"`
+	ToolSpec   fwtypes.ObjectValueOf[toolMemberToolSpecModel]   `tfsdk:"tool_spec"`
+}
+
+type toolMemberCachePointModel struct {
+	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
 }
 
 type toolMemberToolSpecModel struct {
@@ -758,9 +770,9 @@ type toolInputSchemaMemberJsonModel struct {
 
 // TODO: tagged union
 type toolChoiceModel struct {
-	Any   fwtypes.ObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
-	Auto  fwtypes.ObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
-	Toold fwtypes.ObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
+	Any  fwtypes.ObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
+	Auto fwtypes.ObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
+	Tool fwtypes.ObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
 }
 
 type toolChoiceMemberAnyModel struct {
