@@ -17,6 +17,11 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newDataSourceDestination,
+			TypeName: "aws_cloudwatch_log_destination",
+			Name:     "Destination",
+		},
+		{
 			Factory:  newDataSourceDestinations,
 			TypeName: "aws_cloudwatch_log_destinations",
 			Name:     "Destinations",
