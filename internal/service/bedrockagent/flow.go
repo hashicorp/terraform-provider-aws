@@ -674,10 +674,74 @@ type flowNodeConfigurationMemberPromptModel struct {
 	GuardrailConfiguration fwtypes.ObjectValueOf[guardrailConfigurationModel]            `tfsdk:"guardrail_configuration"`
 }
 
-// TODO: Tagged union
+// Tagged union
 type promptFlowNodeSourceConfigurationModel struct {
 	Inline   fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationMemberInlineModel]   `tfsdk:"inline"`
 	Resource fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationMemberResourceModel] `tfsdk:"resource"`
+}
+
+func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.PromptFlowNodeSourceConfigurationMemberInline:
+		var model promptFlowNodeSourceConfigurationMemberInlineModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Inline = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.PromptFlowNodeSourceConfigurationMemberResource:
+		var model promptFlowNodeSourceConfigurationMemberResourceModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Resource = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Inline.IsNull():
+		promptFlowNodeSourceConfigurationInline, d := m.Inline.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PromptFlowNodeSourceConfigurationMemberInline
+		diags.Append(flex.Expand(ctx, promptFlowNodeSourceConfigurationInline, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Resource.IsNull():
+		promptFlowNodeSourceConfigurationResource, d := m.Resource.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PromptFlowNodeSourceConfigurationMemberResource
+		diags.Append(flex.Expand(ctx, promptFlowNodeSourceConfigurationResource, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type promptFlowNodeSourceConfigurationMemberInlineModel struct {
@@ -770,7 +834,7 @@ type messageModel struct {
 	Role    fwtypes.StringEnum[awstypes.ConversationRole]      `tfsdk:"role"`
 }
 
-// tagged union
+// Tagged union
 type contentBlockModel struct {
 	CachePoint fwtypes.ObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
 	Text       fwtypes.ObjectValueOf[contentBlockMemberTextModel]       `tfsdk:"text"`
@@ -852,7 +916,7 @@ type promptInputVariableModel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-// tagged union
+// Tagged union
 type systemContentBlockModel struct {
 	CachePoint fwtypes.ObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
 	Text       fwtypes.ObjectValueOf[systemContentBlockMemberTextModel]       `tfsdk:"text"`
@@ -935,7 +999,7 @@ type toolConfigurationModel struct {
 	ToolChoice fwtypes.ObjectValueOf[toolChoiceModel]     `tfsdk:"tool_choice"`
 }
 
-// tagged union
+// Tagged union
 type toolModel struct {
 	CachePoint fwtypes.ObjectValueOf[toolMemberCachePointModel] `tfsdk:"cache_point"`
 	ToolSpec   fwtypes.ObjectValueOf[toolMemberToolSpecModel]   `tfsdk:"tool_spec"`
@@ -1015,7 +1079,7 @@ type toolMemberToolSpecModel struct {
 	Description types.String                                `tfsdk:"description"`
 }
 
-// tagged union
+// Tagged union
 type toolInputSchemaModel struct {
 	Json fwtypes.ObjectValueOf[toolInputSchemaMemberJsonModel] `tfsdk:"json"`
 }
@@ -1063,7 +1127,7 @@ type toolInputSchemaMemberJsonModel struct {
 	Value types.Object `tfsdk:"value"` // TODO: how do i handle document.Interface?
 }
 
-// tagged union
+// Tagged union
 type toolChoiceModel struct {
 	Any  fwtypes.ObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
 	Auto fwtypes.ObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
@@ -1187,7 +1251,7 @@ type flowNodeConfigurationMemberRetrievalModel struct {
 	ServiceConfiguration fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
-// tagged union
+// Tagged union
 type retrievalFlowNodeServiceConfigurationModel struct {
 	S3 fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
 }
@@ -1239,7 +1303,7 @@ type flowNodeConfigurationMemberStorageModel struct {
 	ServiceConfiguration fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
-// tagged union
+// Tagged union
 type storageFlowNodeServiceConfigurationModel struct {
 	S3 fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
 }
