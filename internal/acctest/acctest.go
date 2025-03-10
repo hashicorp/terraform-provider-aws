@@ -313,6 +313,7 @@ func PreCheck(ctx context.Context, t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
+		Provider.TerraformVersion = "1.0.0"
 		diags := Provider.Configure(ctx, terraformsdk.NewResourceConfigRaw(nil))
 		if err := sdkdiag.DiagnosticsError(diags); err != nil {
 			t.Fatalf("configuring provider: %s", err)
