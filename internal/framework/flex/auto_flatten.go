@@ -1513,21 +1513,23 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 			continue
 		}
 
-		fieldVal := valTo.Field(i)
-
-		if _, ok := fieldVal.Interface().(basetypes.StringValue); ok {
-			fieldVal.Set(reflect.ValueOf(basetypes.NewStringValue(key.String())))
+		fieldVal := valTo.Field(i)                            // vTo
+		fieldAttrVal, ok := fieldVal.Interface().(attr.Value) // valTo
+		if !ok {
+			tflog.SubsystemError(ctx, subsystemName, "Target does not implement attr.Value")
+			diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(fieldVal.Interface())))
 			return diags
 		}
+		tTo := fieldAttrVal.Type(ctx)
 
-		fieldType := valTo.Field(i).Type()
-
-		method, found := fieldType.MethodByName("StringEnumValue")
-		if found {
-			result := fieldType.Method(method.Index).Func.Call([]reflect.Value{fieldVal, key})
-			if len(result) > 0 {
-				fieldVal.Set(result[0])
+		switch tTo := tTo.(type) {
+		case basetypes.StringTypable:
+			v, d := tTo.ValueFromString(ctx, types.StringValue(key.String()))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
 			}
+			fieldVal.Set(reflect.ValueOf(v))
 		}
 
 		return diags
