@@ -1513,8 +1513,10 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 			continue
 		}
 
-		if _, ok := valTo.Field(i).Interface().(basetypes.StringValue); ok {
-			valTo.Field(i).Set(reflect.ValueOf(basetypes.NewStringValue(key.String())))
+		fieldVal := valTo.Field(i)
+
+		if _, ok := fieldVal.Interface().(basetypes.StringValue); ok {
+			fieldVal.Set(reflect.ValueOf(basetypes.NewStringValue(key.String())))
 			return diags
 		}
 
@@ -1522,9 +1524,9 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 
 		method, found := fieldType.MethodByName("StringEnumValue")
 		if found {
-			result := fieldType.Method(method.Index).Func.Call([]reflect.Value{valTo.Field(i), key})
+			result := fieldType.Method(method.Index).Func.Call([]reflect.Value{fieldVal, key})
 			if len(result) > 0 {
-				valTo.Field(i).Set(result[0])
+				fieldVal.Set(result[0])
 			}
 		}
 
