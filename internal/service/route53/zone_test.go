@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -602,8 +603,9 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 			return err
 		}
 
+		timeout := 30 * time.Minute
 		if output.ChangeInfo != nil {
-			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 				return err
 			}
 		}
