@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
-	golang.org/x/exp v0.0.0-20250228200357-dead58393ab7
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 )
 
 require (
@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.51.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.27.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.28.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.2.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.30.1 // indirect
@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.9.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.27.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.48.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.48.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.44.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.46.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.34.1 // indirect
@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.22.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.94.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.32.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.46.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.30.1 // indirect
@@ -243,7 +243,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.180.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.56.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.20.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.25.1 // indirect
@@ -280,10 +280,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/waf v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.57.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.58.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.54.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.31.1 // indirect
 	github.com/aws/smithy-go v1.22.3 // indirect
@@ -307,7 +307,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637 // indirect
+	github.com/hashicorp/go-cty v1.4.1 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.3 // indirect
@@ -355,10 +355,10 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.59.0 // indirect
-	go.opentelemetry.io/otel v1.34.0 // indirect
-	go.opentelemetry.io/otel/metric v1.34.0 // indirect
-	go.opentelemetry.io/otel/trace v1.34.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.60.0 // indirect
+	go.opentelemetry.io/otel v1.35.0 // indirect
+	go.opentelemetry.io/otel/metric v1.35.0 // indirect
+	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.37.0 // indirect
@@ -368,7 +368,7 @@ require (
 	golang.org/x/tools v0.31.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
-	google.golang.org/grpc v1.70.0 // indirect
+	google.golang.org/grpc v1.71.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

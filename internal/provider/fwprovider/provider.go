@@ -404,6 +404,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			typeName := v.TypeName
+			var modifyPlanFuncs []modifyPlanFunc
 			interceptors := resourceInterceptors{}
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
@@ -430,6 +431,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
+				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)
 				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
 
@@ -447,9 +449,9 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 					return ctx, diags
 				},
-				interceptors:           interceptors,
-				typeName:               typeName,
-				usesTransparentTagging: v.Tags != nil,
+				interceptors:    interceptors,
+				modifyPlanFuncs: modifyPlanFuncs,
+				typeName:        typeName,
 			}
 			resources = append(resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)

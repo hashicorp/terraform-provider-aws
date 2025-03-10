@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks static web server layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -113,4 +115,4 @@ Using `terraform import`, import OpsWorks static web server Layers using the `id
 % terraform import aws_opsworks_static_web_layer.bar 00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b665b8ab1c91c89ecda4cd4ed2a377ea3926ce423b0553dcf7179d8cd94006c6 -->
+<!-- cache-key: cdktf-0.20.8 input-41acf7f3bd91c1d11c29911541e4b4cff3a87a017b754e7606c6a5b6810cdbe6 -->
