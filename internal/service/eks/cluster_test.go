@@ -292,7 +292,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 
 func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 types.Cluster
+	var cluster1, cluster2, cluster3, cluster4 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -338,10 +338,12 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// omitting compute_config and storage_config after having auto mode enabled before will not cleanly import as
+				// the API will now return enabled=false for both whereas a clean cluster with auto mode disabled will return null.
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "compute_config", "storage_config"},
 			},
 			{
 				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
@@ -360,6 +362,27 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_computeConfig_omitted(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster4),
+					testAccCheckClusterNotRecreated(&cluster3, &cluster4),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "172.20.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "compute_config", "storage_config"},
 			},
 		},
 	})
@@ -1646,6 +1669,43 @@ resource "aws_eks_cluster" "test" {
   ]
 }
 `, rName, enabled, role))
+}
+
+func testAccClusterConfig_computeConfig_omitted(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_computeConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with compute config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  bootstrap_self_managed_addons = false
+
+  # Cannot omit kubernetes_network_config because it is a computed/optional attribute, those default
+  # to the previous value if not set (see hashicorp/terraform-plugin-sdk#1101).
+  kubernetes_network_config {
+    elastic_load_balancing {
+      enabled = false
+    }
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSComputePolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSBlockStoragePolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSLoadBalancingPolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSNetworkingPolicy,
+  ]
+}
+`, rName))
 }
 
 func testAccClusterConfig_computeConfig_onUpdateSetup(rName string) string {
