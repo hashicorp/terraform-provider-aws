@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_codepipeline: Add `stage.before_entry`, `stage.on_success` and `stage.on_failure` configuration blocks ([#41663](https://github.com/hashicorp/terraform-provider-aws/issues/41663))
 * resource/aws_mskconnect_connector: Allow `connector_configuration` to be updated in-place ([#41685](https://github.com/hashicorp/terraform-provider-aws/issues/41685))
 
 ## 5.90.0 (March  6, 2025)
