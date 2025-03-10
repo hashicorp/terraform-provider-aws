@@ -1,4 +1,9 @@
 ## 5.91.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Add `secondary_sources.auth` configuration block ([#40191](https://github.com/hashicorp/terraform-provider-aws/issues/40191))
+
 ## 5.90.1 (March 10, 2025)
 
 NOTES:
