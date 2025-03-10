@@ -523,6 +523,7 @@ type flowConnectionModel struct {
 	Configuration fwtypes.ObjectValueOf[flowConnectionConfigurationModel] `tfsdk:"configuration"`
 }
 
+// Tagged union
 type flowConnectionConfigurationModel struct {
 	Data        fwtypes.ObjectValueOf[flowConnectionConfigurationMemberDataModel]        `tfsdk:"data"`
 	Conditional fwtypes.ObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
@@ -609,7 +610,7 @@ type flowNodeModel struct {
 	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel] `tfsdk:"outputs"`
 }
 
-// TODO: Tagged union
+// Tagged union
 type flowNodeConfigurationModel struct {
 	Agent          fwtypes.ObjectValueOf[flowNodeConfigurationMemberAgentModel]          `tfsdk:"agent"`
 	Collector      fwtypes.ObjectValueOf[flowNodeConfigurationMemberCollectorModel]      `tfsdk:"collector"`
@@ -623,6 +624,320 @@ type flowNodeConfigurationModel struct {
 	Prompt         fwtypes.ObjectValueOf[flowNodeConfigurationMemberPromptModel]         `tfsdk:"prompt"`
 	Retrieval      fwtypes.ObjectValueOf[flowNodeConfigurationMemberRetrievalModel]      `tfsdk:"retrieval"`
 	Storage        fwtypes.ObjectValueOf[flowNodeConfigurationMemberStorageModel]        `tfsdk:"storage"`
+}
+
+func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.FlowNodeConfigurationMemberAgent:
+		var model flowNodeConfigurationMemberAgentModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Agent = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberCollector:
+		var model flowNodeConfigurationMemberCollectorModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Collector = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberCondition:
+		var model flowNodeConfigurationMemberConditionModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Condition = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberInput:
+		var model flowNodeConfigurationMemberInputModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Input = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberIterator:
+		var model flowNodeConfigurationMemberIteratorModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Iterator = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberKnowledgeBase:
+		var model flowNodeConfigurationMemberKnowledgeBaseModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.KnowledgeBase = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberLambdaFunction:
+		var model flowNodeConfigurationMemberLambdaFunctionModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.LambdaFunction = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberLex:
+		var model flowNodeConfigurationMemberLexModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Lex = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberOutput:
+		var model flowNodeConfigurationMemberOutputModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Output = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberPrompt:
+		var model flowNodeConfigurationMemberPromptModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Prompt = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberRetrieval:
+		var model flowNodeConfigurationMemberRetrievalModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Retrieval = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.FlowNodeConfigurationMemberStorage:
+		var model flowNodeConfigurationMemberStorageModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Storage = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Agent.IsNull():
+		flowNodeConfigurationAgent, d := m.Agent.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberAgent
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationAgent, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Collector.IsNull():
+		flowNodeConfigurationCollector, d := m.Collector.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberCollector
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationCollector, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Condition.IsNull():
+		flowNodeConfigurationCondition, d := m.Condition.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberCondition
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationCondition, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Input.IsNull():
+		flowNodeConfigurationInput, d := m.Input.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberInput
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationInput, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Iterator.IsNull():
+		flowNodeConfigurationIterator, d := m.Iterator.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberIterator
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationIterator, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.KnowledgeBase.IsNull():
+		flowNodeConfigurationKnowledgeBase, d := m.KnowledgeBase.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberKnowledgeBase
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationKnowledgeBase, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.LambdaFunction.IsNull():
+		flowNodeConfigurationLambdaFunction, d := m.LambdaFunction.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberLambdaFunction
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationLambdaFunction, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Lex.IsNull():
+		flowNodeConfigurationLex, d := m.Lex.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberLex
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationLex, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Output.IsNull():
+		flowNodeConfigurationOutput, d := m.Output.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberOutput
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationOutput, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Prompt.IsNull():
+		flowNodeConfigurationPrompt, d := m.Prompt.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberPrompt
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationPrompt, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Retrieval.IsNull():
+		flowNodeConfigurationRetrieval, d := m.Retrieval.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberRetrieval
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationRetrieval, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Storage.IsNull():
+		flowNodeConfigurationStorage, d := m.Storage.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.FlowNodeConfigurationMemberStorage
+		diags.Append(flex.Expand(ctx, flowNodeConfigurationStorage, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type flowNodeConfigurationMemberAgentModel struct {
