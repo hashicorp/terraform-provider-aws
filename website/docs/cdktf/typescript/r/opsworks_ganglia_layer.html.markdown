@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks Ganglia layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -86,4 +88,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-cd3f72f3fcce85e722f3f818cc5881919d478fd39c4c26ac44c9940408fce59f -->
+<!-- cache-key: cdktf-0.20.8 input-6cf84e2229146fc13778fce43c653889116720610f111d0e798571926fa1f214 -->
