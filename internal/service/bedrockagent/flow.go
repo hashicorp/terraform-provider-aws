@@ -759,16 +759,55 @@ type toolMemberToolSpecModel struct {
 	Description types.String                                `tfsdk:"description"`
 }
 
-// TODO: tagged union
+// tagged union
 type toolInputSchemaModel struct {
 	Json fwtypes.ObjectValueOf[toolInputSchemaMemberJsonModel] `tfsdk:"json"`
+}
+
+func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ToolInputSchemaMemberJson:
+		var model toolInputSchemaMemberJsonModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Json = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Json.IsNull():
+		toolInputSchemaJson, d := m.Json.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ToolInputSchemaMemberJson
+		diags.Append(flex.Expand(ctx, toolInputSchemaJson, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type toolInputSchemaMemberJsonModel struct {
 	Value types.Object `tfsdk:"value"` // TODO: how do i handle document.Interface?
 }
 
-// TODO: tagged union
+// tagged union
 type toolChoiceModel struct {
 	Any  fwtypes.ObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
 	Auto fwtypes.ObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
@@ -892,7 +931,7 @@ type flowNodeConfigurationMemberRetrievalModel struct {
 	ServiceConfiguration fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
-// awstypes.RetrievalFlowNodeServiceConfigurationMemberS3 is a tagged union
+// tagged union
 type retrievalFlowNodeServiceConfigurationModel struct {
 	S3 fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
 }
@@ -944,7 +983,7 @@ type flowNodeConfigurationMemberStorageModel struct {
 	ServiceConfiguration fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
-// awstypes.FlowNodeConfigurationMemberStorage is a tagged union
+// tagged union
 type storageFlowNodeServiceConfigurationModel struct {
 	S3 fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
 }
