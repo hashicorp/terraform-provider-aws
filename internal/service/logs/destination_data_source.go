@@ -31,22 +31,22 @@ type dataSourceDestination struct {
 func (d *dataSourceDestination) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			"access_policy": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrCreationTime: schema.Int64Attribute{
 				Computed: true,
 			},
 			"destination_name": schema.StringAttribute{
 				Required: true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"access_policy": schema.StringAttribute{
-				Computed: true,
-			},
-			"target_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"creation_time": schema.Int64Attribute{
+			names.AttrTargetARN: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -56,7 +56,6 @@ func (d *dataSourceDestination) Schema(ctx context.Context, req datasource.Schem
 func (d *dataSourceDestination) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().LogsClient(ctx)
 
-	// TIP: -- 2. Fetch the config
 	var data dataSourceDestinationModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
