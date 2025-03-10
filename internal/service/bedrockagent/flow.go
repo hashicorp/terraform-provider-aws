@@ -775,6 +775,95 @@ type toolChoiceModel struct {
 	Tool fwtypes.ObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
 }
 
+func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ToolChoiceMemberAny:
+		var model toolChoiceMemberAnyModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Any = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.ToolChoiceMemberAuto:
+		var model toolChoiceMemberAutoModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Auto = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.ToolChoiceMemberTool:
+		var model toolChoiceMemberToolModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Tool = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Any.IsNull():
+		toolChoiceAny, d := m.Any.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ToolChoiceMemberAny
+		diags.Append(flex.Expand(ctx, toolChoiceAny, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Auto.IsNull():
+		toolChoiceAuto, d := m.Any.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ToolChoiceMemberAuto
+		diags.Append(flex.Expand(ctx, toolChoiceAuto, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.Tool.IsNull():
+		toolChoiceTool, d := m.Any.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ToolChoiceMemberTool
+		diags.Append(flex.Expand(ctx, toolChoiceTool, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
 type toolChoiceMemberAnyModel struct {
 }
 
