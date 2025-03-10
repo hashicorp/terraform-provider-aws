@@ -1164,7 +1164,7 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 	tflog.SubsystemError(ctx, subsystemName, "Source has no map block key")
 	diags.Append(diagExpandingNoMapBlockKey(valFrom.Type()))
 
-	return reflect.Zero(reflect.TypeOf("")), diags
+	return reflect.Zero(reflect.TypeFor[string]()), diags
 }
 
 func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Value) diag.Diagnostics {
