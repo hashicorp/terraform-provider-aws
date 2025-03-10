@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -124,8 +123,6 @@ func resourceClusterSnapshot() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -339,9 +336,9 @@ func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) r
 	}
 }
 
-func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) {
+func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{clusterSnapshotStatusCreating},
+		Pending:    []string{clusterSnapshotStatusCreating, clusterSnapshotStatusCopying},
 		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusDBClusterSnapshot(ctx, conn, id),
 		Timeout:    timeout,

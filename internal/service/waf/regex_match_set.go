@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -127,13 +127,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading WAF Regex Match Set (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "regexmatchset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, regexMatchSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, regexMatchSet.Name)
 	if err := d.Set("regex_match_tuple", flattenRegexMatchTuples(regexMatchSet.RegexMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regex_match_tuple: %s", err)
@@ -264,7 +258,7 @@ func diffRegexMatchSetTuples(oldT, newT []interface{}) []awstypes.RegexMatchSetU
 		tuple := ot.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newT, tuple); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 
@@ -301,4 +295,9 @@ func regexMatchSetTupleHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
 
 	return create.StringHashcode(buf.String())
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func regexMatchSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "regexmatchset/"+id)
 }

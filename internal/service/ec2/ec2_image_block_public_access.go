@@ -50,19 +50,19 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	state := d.Get(names.AttrState).(string)
 
 	if slices.Contains(imageBlockPublicAccessEnabledState_Values(), state) {
-		input := &ec2.EnableImageBlockPublicAccessInput{
+		input := ec2.EnableImageBlockPublicAccessInput{
 			ImageBlockPublicAccessState: types.ImageBlockPublicAccessEnabledState(state),
 		}
 
-		_, err := conn.EnableImageBlockPublicAccess(ctx, input)
+		_, err := conn.EnableImageBlockPublicAccess(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling EC2 Image Block Public Access: %s", err)
 		}
 	} else {
-		input := &ec2.DisableImageBlockPublicAccessInput{}
+		input := ec2.DisableImageBlockPublicAccessInput{}
 
-		_, err := conn.DisableImageBlockPublicAccess(ctx, input)
+		_, err := conn.DisableImageBlockPublicAccess(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling EC2 Image Block Public Access: %s", err)
@@ -70,7 +70,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if err := waitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {

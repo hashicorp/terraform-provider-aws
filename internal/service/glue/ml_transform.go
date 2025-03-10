@@ -37,8 +37,6 @@ func ResourceMLTransform() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -271,8 +269,8 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 	mlTransformArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("mlTransform/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, mlTransformArn)

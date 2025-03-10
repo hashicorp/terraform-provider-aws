@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cleanrooms_collaboration")
+// @SDKResource("aws_cleanrooms_collaboration", name="Collaboration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,
@@ -148,7 +148,6 @@ func ResourceCollaboration() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -274,9 +273,10 @@ func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
-	_, err := conn.DeleteCollaboration(ctx, &cleanrooms.DeleteCollaborationInput{
+	input := cleanrooms.DeleteCollaborationInput{
 		CollaborationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCollaboration(ctx, &input)
 
 	if errs.IsA[*types.AccessDeniedException](err) {
 		return diags

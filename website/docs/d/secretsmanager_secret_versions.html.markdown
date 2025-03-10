@@ -57,7 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### versions
 
-* `created_date` - Date and time this version of the secret was created.
+* `created_time` - Date and time this version of the secret was created.
 * `last_accessed_date` - Date that this version of the secret was last accessed.
 * `version_id` - Unique version identifier of this version of the secret.
-* `version_stage` - Staging label attached to the version.
+* `version_stages` - List of staging labels attached to the version.

@@ -1,0 +1,124 @@
+---
+subcategory: "Lake Formation"
+layout: "aws"
+page_title: "AWS: aws_lakeformation_opt_in"
+description: |-
+  Terraform resource for managing an AWS Lake Formation Opt In.
+---
+
+# Resource: aws_lakeformation_opt_in
+
+Terraform resource for managing an AWS Lake Formation Opt In.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_lakeformation_opt_in" "example" {
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `principal` - (Required) Lake Formation principal. Supported principals are IAM users or IAM roles. See [Principal](#principal) for more details.
+* `resource_data` - (Required) Structure for the resource. See [Resource](#resource) for more details.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `condition` - Lake Formation condition, which applies to permissions and opt-ins that contain an expression.
+* `last_modified` - Last modified date and time of the record.
+* `last_updated` - User who updated the record.
+
+### Principal
+
+* `data_lake_principal` - Identifier for the Lake Formation principal.
+
+### Resource
+
+* `catalog` - Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment. See [Catalog](#catalog) for more details.
+* `data_cells_filter` - Data cell filter. See [Data Cells Filter](#data-cells-filter) for more details.
+* `data_location` - Location of an Amazon S3 path where permissions are granted or revoked. See [Data Location](#data-location) for more details.
+* `database` - Database for the resource. Unique to the Data Catalog. A database is a set of associated table definitions organized into a logical group. You can Grant and Revoke database permissions to a principal. See [Database](#database) for more details.
+* `lf_tag` - LF-tag key and values attached to a resource.
+* `lf_tag_expression` - Logical expression composed of one or more LF-Tag key:value pairs. See [LF-Tag Expression](#lf-tag-expression) for more details.
+* `lf_tag_policy` - List of LF-Tag conditions or saved LF-Tag expressions that define a resource's LF-Tag policy. See [LF-Tag Policy](#lf-tag-policy) for more details.
+* `table` - Table for the resource. A table is a metadata definition that represents your data. You can Grant and Revoke table privileges to a principal. See [Table](#table) for more details.
+* `table_with_columns` - Table with columns for the resource. A principal with permissions to this resource can select metadata from the columns of a table in the Data Catalog and the underlying data in Amazon S3. See [Table With Columns](#table-with-columns) for more details.
+
+### Catalog
+
+* `id` - Identifier for the catalog resource.
+
+### Data Cells Filter
+
+* `database_name` - Database in the Glue Data Catalog.
+* `name` - Name of the data cells filter.
+* `table_catalog_id` - ID of the catalog to which the table belongs.
+* `table_name` - Name of the table.
+
+### Data Location
+
+* `resource_arn` - ARN that uniquely identifies the data location resource.
+* `catalog_id` - Identifier for the Data Catalog where the location is registered with Lake Formation. By default, it is the account ID of the caller.
+
+### Database
+
+* `name` - Name of the database resource.Unique to the Data Catalog.
+* `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### LF-Tag Expression
+
+* `name` - Name of the LF-Tag expression to grand permissions on.
+* `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### LF-Tag Policy
+
+* `resource_type` - Resource type for which the LF-tag policy applies.
+* `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `expression` - List of LF-tag conditions or a saved expression that apply to the resource's LF-Tag policy.
+* `expression_name` - If provided, permissions are granted to the Data Catalog resources whose assigned LF-Tags match the expression body of the saved expression under the provided ExpressionName .
+
+### Table
+
+* `database_name` - The name of the database for the table. Unique to a Data Catalog. A database is a set of associated table definitions organized into a logical group. You can Grant and Revoke database privileges to a principal.
+* `name` - Name of the table.
+* `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
+* `table_wild_card` - Wildcard object representing every table under a database. At least one of TableResource$Name or TableResource$TableWildcard is required.
+
+### Table With Columns
+
+* `database_name` - The name of the database for the table. Unique to a Data Catalog. A database is a set of associated table definitions organized into a logical group. You can Grant and Revoke database privileges to a principal.
+* `name` - Name of the table.
+* `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
+* `column_names` - List of column names for the table. At least one of ColumnNames or ColumnWildcard is required.
+* `column_wildcard` - Wildcard specified by a ColumnWildcard object. At least one of ColumnNames or ColumnWildcard is required.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lake Formation Opt In using the `example_id_arg`. For example:
+
+```terraform
+import {
+  to = aws_lakeformation_opt_in.example
+  id = "opt_in-id-12345678"
+}
+```
+
+Using `terraform import`, import Lake Formation Opt In using the `example_id_arg`. For example:
+
+```console
+% terraform import aws_lakeformation_opt_in.example opt_in-id-12345678
+```

@@ -428,6 +428,11 @@ func DataSourceParametersSchema() *schema.Schema {
 									},
 								},
 							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
@@ -906,6 +911,10 @@ func ExpandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParamet
 				}
 			}
 
+			if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+				ps.Value.RoleArn = aws.String(v)
+			}
+
 			apiObject = ps
 		}
 	}
@@ -1130,6 +1139,7 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 						names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
 					},
 				},
+				names.AttrRoleARN: aws.ToString(v.Value.RoleArn),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberServiceNowParameters:

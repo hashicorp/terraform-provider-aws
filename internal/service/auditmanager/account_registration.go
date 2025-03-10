@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
 func newResourceAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAccountRegistration{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type resourceAccountRegistration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAccountRegistration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_account_registration"
 }
 
 func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -58,7 +54,7 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 	// Registration is applied per region, so use this as the ID
-	id := r.Meta().Region
+	id := r.Meta().Region(ctx)
 
 	var plan resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

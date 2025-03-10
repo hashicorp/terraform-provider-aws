@@ -35,7 +35,7 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("placement-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", fmt.Sprintf("placement-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),

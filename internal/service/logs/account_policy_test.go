@@ -36,7 +36,7 @@ func TestAccLogsAccountPolicy_basicSubscriptionFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPolicyExists(ctx, resourceName, &accountPolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					testAccCheckAccountHasSubscriptionFilterPolicy(resourceName, rName),
+					testAccCheckAccountHasSubscriptionFilterPolicy(ctx, resourceName, rName),
 				),
 			},
 			{
@@ -185,21 +185,6 @@ func testAccCheckAccountPolicyExists(ctx context.Context, n string, v *types.Acc
 	}
 }
 
-func testAccAccountPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		policyName := rs.Primary.ID
-		policyType := rs.Primary.Attributes["policy_type"]
-		stateID := fmt.Sprintf("%s:%s", policyName, policyType)
-
-		return stateID, nil
-	}
-}
-
 func testAccCheckAccountPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
@@ -219,21 +204,36 @@ func testAccCheckAccountPolicyDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			return fmt.Errorf("CloudWatch Logs Resource Policy still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("CloudWatch Logs Account Policy still exists: %s", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAccountHasSubscriptionFilterPolicy(resourceName string, rName string) resource.TestCheckFunc {
+func testAccAccountPolicyImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		policyName := rs.Primary.ID
+		policyType := rs.Primary.Attributes["policy_type"]
+		stateID := fmt.Sprintf("%s:%s", policyName, policyType)
+
+		return stateID, nil
+	}
+}
+
+func testAccCheckAccountHasSubscriptionFilterPolicy(ctx context.Context, resourceName string, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedJSONTemplate := `{
 			"DestinationArn": "arn:%s:lambda:%s:%s:function:%s",
 			"FilterPattern" : " ",
 			"Distribution" : "Random"
 		  }`
-		expectedJSON := fmt.Sprintf(expectedJSONTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(), rName)
+		expectedJSON := fmt.Sprintf(expectedJSONTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
 		return acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", expectedJSON)(s)
 	}
 }

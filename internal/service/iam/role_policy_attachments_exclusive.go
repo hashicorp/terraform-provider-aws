@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,7 +23,6 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,10 +41,6 @@ type resourceRolePolicyAttachmentsExclusive struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRolePolicyAttachmentsExclusive) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_iam_role_policy_attachments_exclusive"
-}
-
 func (r *resourceRolePolicyAttachmentsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -58,7 +54,7 @@ func (r *resourceRolePolicyAttachmentsExclusive) Schema(ctx context.Context, req
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
-					validators.NonNullValues(),
+					setvalidator.NoNullValues(),
 				},
 			},
 		},
@@ -144,10 +140,10 @@ func (r *resourceRolePolicyAttachmentsExclusive) Update(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// syncAttachments handles keeping the configured customer managed policy
+// syncAttachments handles keeping the configured managed IAM policy
 // attachments in sync with the remote resource.
 //
-// Customer managed policies defined on this resource but not attached to
+// Managed IAM policies defined on this resource but not attached to
 // the role will be added. Policies attached to the role but not configured
 // on this resource will be removed.
 func (r *resourceRolePolicyAttachmentsExclusive) syncAttachments(ctx context.Context, roleName string, want []string) error {

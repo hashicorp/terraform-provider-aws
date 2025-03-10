@@ -92,7 +92,7 @@ func sweepAccountAssignments(region string) error {
 
 		for _, permissionSetArn := range permissionSetArns {
 			input := &ssoadmin.ListAccountAssignmentsInput{
-				AccountId:        aws.String(client.AccountID),
+				AccountId:        aws.String(client.AccountID(ctx)),
 				InstanceArn:      aws.String(instanceArn),
 				PermissionSetArn: aws.String(permissionSetArn),
 			}

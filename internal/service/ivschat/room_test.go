@@ -45,7 +45,7 @@ func TestAccIVSChatRoom_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`room/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`room/.+`)),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_message_length", maximumMessageLength),
 					resource.TestCheckResourceAttr(resourceName, "maximum_message_rate_per_second", maximumMessageRatePerSecond),
 					resource.TestCheckResourceAttr(resourceName, "message_review_handler.0.fallback_result", fallbackResult),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "message_review_handler.0.uri", "lambda", fmt.Sprintf("function:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "message_review_handler.0.uri", "lambda", fmt.Sprintf("function:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},

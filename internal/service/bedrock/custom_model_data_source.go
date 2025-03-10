@@ -19,17 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Custom Model")
+// @FrameworkDataSource("aws_bedrock_custom_model", name="Custom Model")
 func newCustomModelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &customModelDataSource{}, nil
 }
 
 type customModelDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*customModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_custom_model"
 }
 
 func (d *customModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

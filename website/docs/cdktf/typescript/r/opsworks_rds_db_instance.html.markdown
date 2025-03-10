@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks RDS DB Instance resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
@@ -55,4 +57,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The computed id. Please note that this is only used internally to identify the stack <-> instance relation. This value is not used in aws.
 
-<!-- cache-key: cdktf-0.20.8 input-817f20cc1cc9aa2f73aef052eaf0556b740b93e3bb7a4c3f68cb42d1fde8afc2 -->
+<!-- cache-key: cdktf-0.20.8 input-689d71f5c8cc32195644158e2cc8e07326324a61fb34a194c835ceab67148d3c -->

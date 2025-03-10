@@ -49,7 +49,7 @@ func TestAccKendraQuerySuggestionsBlockList_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", names.AttrKey),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/query-suggestions-block-list/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/query-suggestions-block-list/.+$`)),
 				),
 			},
 			{

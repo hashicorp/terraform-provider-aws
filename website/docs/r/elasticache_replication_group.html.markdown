@@ -195,6 +195,8 @@ The following arguments are optional:
 
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
+  When `engine` is `redis`, default is `false`.
+  When `engine` is `valkey`, default is `true`.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
@@ -203,7 +205,9 @@ The following arguments are optional:
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `num_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `cluster_mode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
-* `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. Valid values are `redis` or `valkey`.
+* `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
+  Valid values are `redis` or `valkey`.
+  Default is `redis`.
 * `engine_version` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
   If the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
   If the version is 6, the major and minor version can be set, e.g., `6.2`,

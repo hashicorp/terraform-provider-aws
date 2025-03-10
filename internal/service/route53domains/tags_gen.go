@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *route53domains.Client, identifier string, optFns ...func(*route53domains.Options)) (tftags.KeyValueTags, error) {
-	input := &route53domains.ListTagsForDomainInput{
+	input := route53domains.ListTagsForDomainInput{
 		DomainName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForDomain(ctx, input, optFns...)
+	output, err := conn.ListTagsForDomain(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -97,6 +97,15 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
+// createTags creates route53domains service tags for new resources.
+func createTags(ctx context.Context, conn *route53domains.Client, identifier string, tags []awstypes.Tag, optFns ...func(*route53domains.Options)) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
+}
+
 // updateTags updates route53domains service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -109,12 +118,12 @@ func updateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Route53Domains)
 	if len(removedTags) > 0 {
-		input := &route53domains.DeleteTagsForDomainInput{
+		input := route53domains.DeleteTagsForDomainInput{
 			DomainName:   aws.String(identifier),
 			TagsToDelete: removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTagsForDomain(ctx, input, optFns...)
+		_, err := conn.DeleteTagsForDomain(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +133,12 @@ func updateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Route53Domains)
 	if len(updatedTags) > 0 {
-		input := &route53domains.UpdateTagsForDomainInput{
+		input := route53domains.UpdateTagsForDomainInput{
 			DomainName:   aws.String(identifier),
 			TagsToUpdate: Tags(updatedTags),
 		}
 
-		_, err := conn.UpdateTagsForDomain(ctx, input, optFns...)
+		_, err := conn.UpdateTagsForDomain(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

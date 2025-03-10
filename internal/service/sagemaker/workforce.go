@@ -225,13 +225,13 @@ func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.CreateWorkforce(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workforce (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Workforce (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if err := waitWorkforceActive(ctx, conn, name); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Workforce (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWorkforceRead(ctx, d, meta)...)
@@ -244,13 +244,13 @@ func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta int
 	workforce, err := findWorkforceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Workforce (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Workforce (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workforce (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Workforce (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, workforce.WorkforceArn)
@@ -301,11 +301,11 @@ func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.UpdateWorkforce(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker Workforce (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Workforce (%s): %s", d.Id(), err)
 	}
 
 	if err := waitWorkforceActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Workforce (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWorkforceRead(ctx, d, meta)...)
@@ -315,7 +315,7 @@ func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Workforce: %s", d.Id())
 	_, err := conn.DeleteWorkforce(ctx, &sagemaker.DeleteWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
 	})
@@ -325,11 +325,11 @@ func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workforce (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Workforce (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitWorkforceDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Workforce (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

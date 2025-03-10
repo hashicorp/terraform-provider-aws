@@ -190,7 +190,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		})
 	}
 
-	if accountID == "" {
+	if accountID == "" && !awsbaseConfig.SkipRequestingAccountId {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
 			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
@@ -207,17 +207,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 
-	client.AccountID = accountID
+	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
-	client.Region = c.Region
+	client.region = c.Region
 	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.session = session
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
 	client.clients = make(map[string]any, 0)
-	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle

@@ -279,7 +279,7 @@ func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value,
 	case basetypes.Float32Typable:
 		// Only returns an error when the target type is Float32Typable to prevent breaking existing resources
 		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
-		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
+		diags.Append(DiagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
 		return diags
 	}
 
@@ -405,7 +405,7 @@ func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, s
 	case basetypes.Int32Typable:
 		// Only returns an error when the target type is Int32Typeable to prevent breaking existing resources
 		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
-		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
+		diags.Append(DiagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
 		return diags
 	}
 
@@ -1671,7 +1671,7 @@ func diagFlatteningMarshalSmithyDocument(sourceType reflect.Type, err error) dia
 	)
 }
 
-func diagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.ErrorDiagnostic {
+func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic(
 		"Incompatible Types",
 		"An unexpected error occurred while flattening configuration. "+

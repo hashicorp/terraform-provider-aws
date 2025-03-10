@@ -38,7 +38,7 @@ func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.1.16/28"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", names.AttrPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func TestAccVPCSubnetCIDRReservation_ipv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "explicit"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 				),
 			},
 			{

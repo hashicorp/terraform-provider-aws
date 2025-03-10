@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_attachment")
+// @SDKResource("aws_lightsail_lb_attachment", name="Load Balancer Attachment")
 func ResourceLoadBalancerAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerAttachmentCreate,

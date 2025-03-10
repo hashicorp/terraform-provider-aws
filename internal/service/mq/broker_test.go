@@ -114,21 +114,21 @@ func TestDiffUsers(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		OldUsers []interface{}
-		NewUsers []interface{}
+		OldUsers []any
+		NewUsers []any
 
 		Creations []*mq.CreateUserInput
 		Deletions []*mq.DeleteUserInput
 		Updates   []*mq.UpdateUserInput
 	}{
 		{
-			OldUsers: []interface{}{},
-			NewUsers: []interface{}{
-				map[string]interface{}{
+			OldUsers: []any{},
+			NewUsers: []any{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
-					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"groups":           schema.NewSet(schema.HashString, []any{"admin"}),
 					"replication_user": false,
 				},
 			},
@@ -146,16 +146,16 @@ func TestDiffUsers(t *testing.T) {
 			Updates:   nil,
 		},
 		{
-			OldUsers: []interface{}{
-				map[string]interface{}{
+			OldUsers: []any{
+				map[string]any{
 					"console_access":   true,
 					names.AttrUsername: "first",
 					names.AttrPassword: "TestTest1111",
 					"replication_user": false,
 				},
 			},
-			NewUsers: []interface{}{
-				map[string]interface{}{
+			NewUsers: []any{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
@@ -177,26 +177,26 @@ func TestDiffUsers(t *testing.T) {
 			Updates: nil,
 		},
 		{
-			OldUsers: []interface{}{
-				map[string]interface{}{
+			OldUsers: []any{
+				map[string]any{
 					"console_access":   true,
 					names.AttrUsername: "first",
 					names.AttrPassword: "TestTest1111updated",
 					"replication_user": false,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
 					"replication_user": false,
 				},
 			},
-			NewUsers: []interface{}{
-				map[string]interface{}{
+			NewUsers: []any{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
-					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"groups":           schema.NewSet(schema.HashString, []any{"admin"}),
 					"replication_user": false,
 				},
 			},
@@ -350,7 +350,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -587,7 +587,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -678,7 +678,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -807,7 +807,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -1519,7 +1519,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com$`)),
@@ -1610,7 +1610,7 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					testAccCheckBrokerExistsWithProvider(ctx, primaryBrokerResourceName, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckBrokerExistsWithProvider(ctx, primaryBrokerResourceName, &brokerAlternate, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", string(types.DeploymentModeActiveStandbyMultiAz)),
 					// data_replication_mode is not returned until after reboot
@@ -1634,11 +1634,11 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				PreConfig: func() {
 					// In order to delete, replicated brokers must first be unpaired by setting
 					// data replication mode on the primary broker to "NONE".
-					testAccUnpairBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
+					testAccUnpairBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers))
 					// The primary broker must be deleted before replica broker. The direct
 					// dependency in the Terraform configuration would cause this to happen
 					// in the opposite order, so delete the primary out of band instead.
-					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
+					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers))
 				},
 				Config:             testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
 				PlanOnly:           true,

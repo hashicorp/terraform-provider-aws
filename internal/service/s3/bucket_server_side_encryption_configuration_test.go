@@ -490,6 +490,9 @@ func testAccCheckBucketServerSideEncryptionConfigurationExists(ctx context.Conte
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
@@ -647,7 +650,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 }
 
 func testAccBucketServerSideEncryptionConfigurationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

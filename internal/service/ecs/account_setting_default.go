@@ -140,8 +140,8 @@ func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   names.ECSEndpointID,
 		Resource:  "cluster/" + d.Id(),
 	}.String())

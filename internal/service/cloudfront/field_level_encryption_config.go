@@ -35,6 +35,10 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,6 +187,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, fieldLevelEncryptionConfigARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.FieldLevelEncryptionConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set(names.AttrComment, apiObject.Comment)
@@ -245,10 +250,11 @@ func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
-	_, err := conn.DeleteFieldLevelEncryptionConfig(ctx, &cloudfront.DeleteFieldLevelEncryptionConfigInput{
+	input := cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteFieldLevelEncryptionConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionConfig](err) {
 		return diags
@@ -578,4 +584,9 @@ func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interf
 	}
 
 	return tfList
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func fieldLevelEncryptionConfigARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "field-level-encryption-config/"+id)
 }

@@ -65,7 +65,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 		prefixListIDs = append(prefixListIDs, aws.ToString(v.PrefixListId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, prefixListIDs)
 
 	return diags

@@ -37,7 +37,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`launch-template/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`launch-template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "0"),
@@ -1096,6 +1096,38 @@ func TestAccEC2LaunchTemplate_networkInterfaceIPv6Prefixes(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_networkInterfaceConnectionTrackingSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceConnectionTrackingSpecification(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.0.tcp_established_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.0.udp_stream_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.connection_tracking_specification.0.udp_timeout", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -1345,6 +1377,41 @@ func TestAccEC2LaunchTemplate_NetworkInterface_ipv6AddressCount(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_NetworkInterface_enaSrd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"network_interfaces.0.ena_srd_specification.0.ena_srd_udp_specification.0.ena_srd_udp_enabled", // <-- Nested path
+						acctest.CtTrue,
+					),
+				),
 			},
 		},
 	})
@@ -3479,6 +3546,44 @@ resource "aws_launch_template" "test" {
 `, rName, deleteOnTermination)
 }
 
+func testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName string, enaSrdEnabled, enaSrdUdpEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    device_index = 0
+    subnet_id    = aws_subnet.test.id
+
+    ena_srd_specification {
+      ena_srd_enabled = %[2]t
+
+      ena_srd_udp_specification {
+        ena_srd_udp_enabled = %[3]t
+      }
+    }
+  }
+}
+`, rName, enaSrdEnabled, enaSrdUdpEnabled)
+}
+
 func testAccLaunchTemplateConfig_ebsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -4043,6 +4148,22 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     ipv6_prefixes = ["2001:db8::/80"]
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_networkInterfaceConnectionTrackingSpecification(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    connection_tracking_specification {
+      tcp_established_timeout = 60
+      udp_stream_timeout      = 60
+      udp_timeout             = 30
+    }
   }
 }
 `, rName)

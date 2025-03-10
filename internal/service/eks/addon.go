@@ -43,8 +43,6 @@ func resourceAddon() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
@@ -115,7 +113,7 @@ func resourceAddon() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				Deprecated:       `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
+				Deprecated:       `resolve_conflicts is deprecated. The resolve_conflicts attribute can't be set to "PRESERVE" on initial resource creation. Use resolve_conflicts_on_create and/or resolve_conflicts_on_update instead.`,
 			},
 			"resolve_conflicts_on_create": {
 				Type:     schema.TypeString,
@@ -270,7 +268,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
+	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values", "pod_identity_association") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
 			ClientRequestToken: aws.String(sdkid.UniqueId()),
@@ -286,8 +284,10 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("pod_identity_association") {
-			if v, ok := d.GetOk("pod_identity_association"); ok && len(v.([]interface{})) > 0 {
-				input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.([]interface{}))
+			if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
+				input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.(*schema.Set).List())
+			} else {
+				input.PodIdentityAssociations = []types.AddonPodIdentityAssociations{}
 			}
 		}
 

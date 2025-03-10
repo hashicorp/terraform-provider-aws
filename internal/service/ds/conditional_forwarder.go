@@ -157,10 +157,11 @@ func resourceConditionalForwarderDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting Directory Conditional Forwarder: %s", d.Id())
-	_, err = conn.DeleteConditionalForwarder(ctx, &directoryservice.DeleteConditionalForwarderInput{
+	input := directoryservice.DeleteConditionalForwarderInput{
 		DirectoryId:      aws.String(directoryID),
 		RemoteDomainName: aws.String(domainName),
-	})
+	}
+	_, err = conn.DeleteConditionalForwarder(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return diags

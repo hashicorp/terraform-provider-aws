@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Service")
+// @FrameworkDataSource("aws_service", name="Service")
 func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &serviceDataSource{}
 
@@ -27,10 +27,6 @@ func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 
 type serviceDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*serviceDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service"
 }
 
 func (d *serviceDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -110,7 +106,7 @@ func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.Region.IsNull() {
-		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Region)
+		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Region(ctx))
 	}
 
 	if data.ServiceID.IsNull() {

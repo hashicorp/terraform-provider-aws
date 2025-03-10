@@ -40,7 +40,7 @@ func TestAccSageMakerHub_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_config.#", "0"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -55,7 +55,7 @@ func TestAccSageMakerHub_basic(t *testing.T) {
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rNameUpdated),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -231,7 +231,7 @@ func testAccCheckHubDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Hub (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Hub (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Hub %s still exists", rs.Primary.ID)

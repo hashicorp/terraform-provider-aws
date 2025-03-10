@@ -4,6 +4,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -18,10 +20,7 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_imagebuilder_component", &resource.Sweeper{
-		Name: "aws_imagebuilder_component",
-		F:    sweepComponents,
-	})
+	awsv2.Register("aws_imagebuilder_component", sweepComponents)
 
 	resource.AddTestSweepers("aws_imagebuilder_distribution_configuration", &resource.Sweeper{
 		Name: "aws_imagebuilder_distribution_configuration",
@@ -59,47 +58,45 @@ func RegisterSweepers() {
 	})
 }
 
-func sweepComponents(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepComponents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.ImageBuilderClient(ctx)
-	input := &imagebuilder.ListComponentsInput{
+
+	var sweepResources []sweep.Sweepable
+
+	r := resourceComponent()
+	input := imagebuilder.ListComponentsInput{
 		Owner: types.OwnershipSelf,
 	}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	pages := imagebuilder.NewListComponentsPaginator(conn, input)
+	pages := imagebuilder.NewListComponentsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Image Builder Component sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Image Builder Components (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ComponentVersionList {
-			r := resourceComponent()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.Arn))
+			// The Delete operation needs the Component Build Version ARN, not just the Component Version ARN
+			input := imagebuilder.ListComponentBuildVersionsInput{
+				ComponentVersionArn: v.Arn,
+			}
+			pages := imagebuilder.NewListComponentBuildVersionsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				for _, v := range page.ComponentSummaryList {
+					d := r.Data(nil)
+					d.SetId(aws.ToString(v.Arn))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Image Builder Components (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepDistributionConfigurations(region string) error {

@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *sagemaker.Client, identifier string, optFns ...func(*sagemaker.Options)) (tftags.KeyValueTags, error) {
-	input := &sagemaker.ListTagsInput{
+	input := sagemaker.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
 	var output []awstypes.Tag
 
-	pages := sagemaker.NewListTagsPaginator(conn, input)
+	pages := sagemaker.NewListTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -117,12 +117,12 @@ func updateTags(ctx context.Context, conn *sagemaker.Client, identifier string, 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SageMaker)
 	if len(removedTags) > 0 {
-		input := &sagemaker.DeleteTagsInput{
+		input := sagemaker.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTags(ctx, input, optFns...)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -132,12 +132,12 @@ func updateTags(ctx context.Context, conn *sagemaker.Client, identifier string, 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.SageMaker)
 	if len(updatedTags) > 0 {
-		input := &sagemaker.AddTagsInput{
+		input := sagemaker.AddTagsInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

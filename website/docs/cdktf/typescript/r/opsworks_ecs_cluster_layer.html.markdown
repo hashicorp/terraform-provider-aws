@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks ECS Cluster layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -83,4 +85,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 
-<!-- cache-key: cdktf-0.20.8 input-c41ce615eb693afa2fd19a1947549ef7ba89f9ef8c5826b9d872e80f1d738e7f -->
+<!-- cache-key: cdktf-0.20.8 input-ce5f51349e2e1842f3b0fcabe5aa7c4e551aaf9553553381863579ed8dc66caf -->

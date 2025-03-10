@@ -13,6 +13,7 @@ import (
 	_ "github.com/aws/aws-sdk-go-v2/service/ecs" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -223,9 +224,26 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 		if itypes.IsZero(&apiObject) {
 			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
 		}
+		if !isValidVersionConsistency(apiObject) {
+			return nil, fmt.Errorf("invalid version consistency value (%[1]s) for container definition supplied at index (%[2]d)", apiObject.VersionConsistency, i)
+		}
 	}
 
 	containerDefinitions(apiObjects).compactArrays()
 
 	return apiObjects, nil
+}
+
+func isValidVersionConsistency(cd awstypes.ContainerDefinition) bool {
+	if cd.VersionConsistency == "" {
+		return true
+	}
+
+	for _, v := range enum.EnumValues[awstypes.VersionConsistency]() {
+		if cd.VersionConsistency == v {
+			return true
+		}
+	}
+
+	return false
 }

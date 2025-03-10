@@ -36,7 +36,7 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_app_type", "JupyterServer"),
 					resource.TestCheckResourceAttrSet(resourceName, "studio_lifecycle_config_content"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -140,7 +140,7 @@ func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Studio Lifecycle Config %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Studio Lifecycle Config %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -155,7 +155,7 @@ func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, n string, conf
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
+			return fmt.Errorf("No SageMaker AI Studio Lifecycle Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

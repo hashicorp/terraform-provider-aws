@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/aws-sdk-go-v2/service/chime"
@@ -125,6 +126,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	"github.com/aws/aws-sdk-go-v2/service/iotanalytics"
 	"github.com/aws/aws-sdk-go-v2/service/iotevents"
@@ -155,8 +157,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	"github.com/aws/aws-sdk-go-v2/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/service/mgn"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
@@ -204,6 +208,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
+	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
@@ -235,6 +240,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	"github.com/aws/aws-sdk-go-v2/service/taxsettings"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
+	"github.com/aws/aws-sdk-go-v2/service/timestreamquery"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -362,6 +368,10 @@ func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock.Client {
 
 func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client {
 	return errs.Must(client[*bedrockagent.Client](ctx, c, names.BedrockAgent, make(map[string]any)))
+}
+
+func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
+	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
 }
 
 func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets.Client {
@@ -740,6 +750,10 @@ func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.
 	return errs.Must(client[*internetmonitor.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
 }
 
+func (c *AWSClient) InvoicingClient(ctx context.Context) *invoicing.Client {
+	return errs.Must(client[*invoicing.Client](ctx, c, names.Invoicing, make(map[string]any)))
+}
+
 func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {
 	return errs.Must(client[*iot.Client](ctx, c, names.IoT, make(map[string]any)))
 }
@@ -864,12 +878,20 @@ func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2.Cl
 	return errs.Must(client[*mediapackagev2.Client](ctx, c, names.MediaPackageV2, make(map[string]any)))
 }
 
+func (c *AWSClient) MediaPackageVODClient(ctx context.Context) *mediapackagevod.Client {
+	return errs.Must(client[*mediapackagevod.Client](ctx, c, names.MediaPackageVOD, make(map[string]any)))
+}
+
 func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore.Client {
 	return errs.Must(client[*mediastore.Client](ctx, c, names.MediaStore, make(map[string]any)))
 }
 
 func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb.Client {
 	return errs.Must(client[*memorydb.Client](ctx, c, names.MemoryDB, make(map[string]any)))
+}
+
+func (c *AWSClient) MgnClient(ctx context.Context) *mgn.Client {
+	return errs.Must(client[*mgn.Client](ctx, c, names.Mgn, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneClient(ctx context.Context) *neptune.Client {
@@ -1052,6 +1074,10 @@ func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {
 	return errs.Must(client[*s3outposts.Client](ctx, c, names.S3Outposts, make(map[string]any)))
 }
 
+func (c *AWSClient) S3TablesClient(ctx context.Context) *s3tables.Client {
+	return errs.Must(client[*s3tables.Client](ctx, c, names.S3Tables, make(map[string]any)))
+}
+
 func (c *AWSClient) SESClient(ctx context.Context) *ses.Client {
 	return errs.Must(client[*ses.Client](ctx, c, names.SES, make(map[string]any)))
 }
@@ -1174,6 +1200,10 @@ func (c *AWSClient) TaxSettingsClient(ctx context.Context) *taxsettings.Client {
 
 func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb.Client {
 	return errs.Must(client[*timestreaminfluxdb.Client](ctx, c, names.TimestreamInfluxDB, make(map[string]any)))
+}
+
+func (c *AWSClient) TimestreamQueryClient(ctx context.Context) *timestreamquery.Client {
+	return errs.Must(client[*timestreamquery.Client](ctx, c, names.TimestreamQuery, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite.Client {

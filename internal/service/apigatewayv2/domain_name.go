@@ -123,8 +123,6 @@ func resourceDomainName() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -175,7 +173,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  "/domainnames/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -242,9 +240,10 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Domain Name: %s", d.Id())
-	_, err := conn.DeleteDomainName(ctx, &apigatewayv2.DeleteDomainNameInput{
+	input := apigatewayv2.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDomainName(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

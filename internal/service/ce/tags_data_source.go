@@ -124,7 +124,7 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Tags: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	d.Set(names.AttrTags, output.Tags)
 
 	return diags

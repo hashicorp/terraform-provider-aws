@@ -11,6 +11,7 @@ var (
 	ResourceCoreNetwork                          = resourceCoreNetwork
 	ResourceCustomerGatewayAssociation           = resourceCustomerGatewayAssociation
 	ResourceDevice                               = resourceDevice
+	ResourceDirectConnectGatewayAttachment       = newDirectConnectGatewayAttachmentResource
 	ResourceGlobalNetwork                        = resourceGlobalNetwork
 	ResourceLink                                 = resourceLink
 	ResourceLinkAssociation                      = resourceLinkAssociation
@@ -29,6 +30,7 @@ var (
 	FindCoreNetworkPolicyByTwoPartKey                    = findCoreNetworkPolicyByTwoPartKey
 	FindCustomerGatewayAssociationByTwoPartKey           = findCustomerGatewayAssociationByTwoPartKey
 	FindDeviceByTwoPartKey                               = findDeviceByTwoPartKey
+	FindDirectConnectGatewayAttachmentByID               = findDirectConnectGatewayAttachmentByID
 	FindGlobalNetworkByID                                = findGlobalNetworkByID
 	FindLinkAssociationByThreePartKey                    = findLinkAssociationByThreePartKey
 	FindLinkByTwoPartKey                                 = findLinkByTwoPartKey
