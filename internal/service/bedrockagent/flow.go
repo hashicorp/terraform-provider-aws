@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -136,6 +137,63 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *resourceFlow) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("connections").AtAnyListIndex().AtName("configuration").AtName("conditional"),
+			path.MatchRoot("connections").AtAnyListIndex().AtName("configuration").AtName("data"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("agent"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("collector"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("condition"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("input"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("iterator"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("knowledge_base"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("lambda_function"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("lex"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("output"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("storage"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("resource"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("text"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("cache_point"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("text"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("cache_point"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("text"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("cache_point"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec").AtName("input_schema").AtName("json"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("any"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("auto"),
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("tool"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval").AtName("service_configuration").AtName("s3"),
+		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("storage").AtName("service_configuration").AtName("s3"),
+		),
 	}
 }
 
