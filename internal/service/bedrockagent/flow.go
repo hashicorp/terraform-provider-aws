@@ -743,10 +743,74 @@ type toolConfigurationModel struct {
 	ToolChoice fwtypes.ObjectValueOf[toolChoiceModel]     `tfsdk:"tool_choice"`
 }
 
-// TODO: tagged union
+// tagged union
 type toolModel struct {
 	CachePoint fwtypes.ObjectValueOf[toolMemberCachePointModel] `tfsdk:"cache_point"`
 	ToolSpec   fwtypes.ObjectValueOf[toolMemberToolSpecModel]   `tfsdk:"tool_spec"`
+}
+
+func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ToolMemberCachePoint:
+		var model toolMemberCachePointModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.CachePoint = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	case awstypes.ToolMemberToolSpec:
+		var model toolMemberToolSpecModel
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.ToolSpec = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m toolModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.CachePoint.IsNull():
+		toolCachePoint, d := m.CachePoint.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ToolMemberCachePoint
+		diags.Append(flex.Expand(ctx, toolCachePoint, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	case !m.ToolSpec.IsNull():
+		toolToolSpec, d := m.ToolSpec.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ToolMemberToolSpec
+		diags.Append(flex.Expand(ctx, toolToolSpec, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type toolMemberCachePointModel struct {
