@@ -5,12 +5,9 @@ package codebuild
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -19,11 +16,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_codebuild_report_group", sweepReportGroups)
 	awsv2.Register("aws_codebuild_project", sweepProjects)
-
-	resource.AddTestSweepers("aws_codebuild_source_credential", &resource.Sweeper{
-		Name: "aws_codebuild_source_credential",
-		F:    sweepSourceCredentials,
-	})
+	awsv2.Register("aws_codebuild_source_credential", sweepSourceCredentials)
 }
 
 func sweepReportGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -77,25 +70,15 @@ func sweepProjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	return sweepResources, nil
 }
 
-func sweepSourceCredentials(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepSourceCredentials(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.CodeBuildClient(ctx)
-	input := &codebuild.ListSourceCredentialsInput{}
+	var input codebuild.ListSourceCredentialsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.ListSourceCredentials(ctx, input)
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeBuild Source Credential sweep for %s: %s", region, err)
-		return nil
-	}
+	output, err := conn.ListSourceCredentials(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error listing CodeBuild Source Credentials (%s): %w", region, err)
+		return nil, err
 	}
 
 	for _, v := range output.SourceCredentialsInfos {
@@ -107,11 +90,5 @@ func sweepSourceCredentials(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CodeBuild Source Credentials (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
