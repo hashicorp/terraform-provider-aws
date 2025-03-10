@@ -1145,18 +1145,13 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 		if field.Name == mapBlockKeyFieldName {
 			fieldVal := valFrom.Field(i)
 
-			if v, ok := fieldVal.Interface().(basetypes.StringValue); ok {
-				return reflect.ValueOf(v.ValueString()), diags
-			}
-
-			// this handles things like StringEnum which has a ValueString method but is tricky to get a generic instantiation of
-			fieldType := fieldVal.Type()
-			method, found := fieldType.MethodByName("ValueString")
-			if found {
-				result := fieldType.Method(method.Index).Func.Call([]reflect.Value{fieldVal})
-				if len(result) > 0 {
-					return result[0], diags
+			if v, ok := fieldVal.Interface().(basetypes.StringValuable); ok {
+				v, d := v.ToStringValue(ctx)
+				diags.Append(d...)
+				if d.HasError() {
+					return reflect.Zero(reflect.TypeFor[string]()), diags
 				}
+				return reflect.ValueOf(v.ValueString()), diags
 			}
 
 			// this is not ideal but perhaps better than a panic?
