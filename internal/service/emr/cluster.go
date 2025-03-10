@@ -132,6 +132,12 @@ func resourceCluster() *schema.Resource {
 											},
 										},
 									},
+									"custom_ami_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validCustomAMIID,
+									},
 									"ebs_config": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -2114,6 +2120,10 @@ func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecifi
 			tfMap["bid_price_as_percentage_of_on_demand_price"] = aws.ToFloat64(apiObject.BidPriceAsPercentageOfOnDemandPrice)
 		}
 
+		if apiObject.CustomAmiId != nil {
+			tfMap["custom_ami_id"] = aws.ToString(apiObject.CustomAmiId)
+		}
+
 		tfMap["ebs_config"] = flattenEBSConfig(apiObject.EbsBlockDevices)
 		tfMap[names.AttrInstanceType] = aws.ToString(apiObject.InstanceType)
 		tfMap["weighted_capacity"] = int(aws.ToInt32(apiObject.WeightedCapacity))
@@ -2211,6 +2221,10 @@ func expandInstanceTypeConfigs(tfList []any) []awstypes.InstanceTypeConfig {
 
 		if v, ok := tfMap["bid_price_as_percentage_of_on_demand_price"].(float64); ok && v != 0 {
 			apiObject.BidPriceAsPercentageOfOnDemandPrice = aws.Float64(v)
+		}
+
+		if v, ok := tfMap["custom_ami_id"].(string); ok && v != "" {
+			apiObject.CustomAmiId = aws.String(v)
 		}
 
 		if v, ok := tfMap["weighted_capacity"].(int); ok {
