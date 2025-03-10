@@ -52,7 +52,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the traffic policy
+* `arn` - Amazon Resource Name (ARN) of the traffic policy.
+* `id` - ID of the traffic policy.
 * `type` - DNS type of the resource record sets that Amazon Route 53 creates when you use a traffic policy to create a traffic policy instance.
 * `version` - Version number of the traffic policy. This value is automatically incremented by AWS after each update of this resource.
 
@@ -88,4 +89,4 @@ Using `terraform import`, import Route53 Traffic Policy using the `id` and `vers
 % terraform import aws_route53_traffic_policy.example 01a52019-d16f-422a-ae72-c306d2b6df7e/1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b96db7d2de859a1798fa4d7060a0fcce7e3e2591a6bc52e84df625b66db068e3 -->
+<!-- cache-key: cdktf-0.20.8 input-4cf1be0b43ca690b1cf7c27ee50b990dc469b386d7750587ff796636c19cf4d5 -->

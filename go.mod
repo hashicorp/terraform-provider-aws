@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.10.1
@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.58.1
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.45.1
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.27.1
@@ -68,8 +68,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.1
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.2
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.52.1
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.207.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.208.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.54.1
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.44.1
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/emr v1.48.1
@@ -172,7 +172,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.1
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.8.1
