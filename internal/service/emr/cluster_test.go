@@ -3918,9 +3918,33 @@ resource "aws_emr_cluster" "test" {
 `, rName, volumesPerInstance))
 }
 
+func configLatestAmazonLinux2FullHVMEBSAMI(architecture ec2types.ArchitectureValues) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn2-ami-hvm-ebs-%[1]s" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = [%[1]q]
+  }
+}
+`, architecture)
+}
+
 func testAccClusterConfig_customAMIID(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		configLatestAmazonLinux2FullHVMEBSAMI(ec2types.ArchitectureValuesX8664),
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
@@ -3930,7 +3954,7 @@ data "aws_partition" "current" {}
 
 resource "aws_emr_cluster" "test" {
   name          = %[1]q
-  release_label = "emr-5.7.0"
+  release_label = "emr-5.36.2"
   applications  = ["Spark"]
 
   ec2_attributes {
@@ -3971,7 +3995,7 @@ resource "aws_emr_cluster" "test" {
   service_role         = aws_iam_role.emr_service.arn
   autoscaling_role     = aws_iam_role.emr_autoscaling_role.arn
   ebs_root_volume_size = 48
-  custom_ami_id        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  custom_ami_id        = data.aws_ami.amzn2-ami-hvm-ebs-x86_64.id
 }
 `, rName))
 }
