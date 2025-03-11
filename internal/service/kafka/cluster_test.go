@@ -1094,11 +1094,27 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageMode(rName, "TIERED", "2.8.2.tiered"),
+				Config: testAccClusterConfig_storageMode(rName, "LOCAL", "3.7.x"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "storage_mode", "LOCAL"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_storageMode(rName, "TIERED", "3.7.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_mode", "TIERED"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_storageMode(rName, "LOCAL", "3.7.x"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "storage_mode", "LOCAL"),
 				),
 			},
 		},
@@ -2068,7 +2084,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, enhancedMonitoring))
 }
 
-func testAccClusterConfig_storageMode(rName string, storageMode string, kafkaVersion string) string {
+func testAccClusterConfig_storageMode(rName, storageMode, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
