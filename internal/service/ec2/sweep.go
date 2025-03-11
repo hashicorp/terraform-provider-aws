@@ -410,10 +410,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_vpc_ipam", &resource.Sweeper{
-		Name: "aws_vpc_ipam",
-		F:    sweepIPAMs,
-	})
+	awsv2.Register("aws_vpc_ipam", sweepIPAMs)
 
 	resource.AddTestSweepers("aws_vpc_ipam_resource_discovery", &resource.Sweeper{
 		Name: "aws_vpc_ipam_resource_discovery",
@@ -2664,29 +2661,17 @@ func sweepCustomerGateways(region string) error {
 	return nil
 }
 
-func sweepIPAMs(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepIPAMs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
-	input := ec2.DescribeIpamsInput{}
+	var input ec2.DescribeIpamsInput
 	var sweepResources []sweep.Sweepable
 
 	pages := ec2.NewDescribeIpamsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Ipams {
@@ -2699,13 +2684,7 @@ func sweepIPAMs(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepIPAMResourceDiscoveries(region string) error {
