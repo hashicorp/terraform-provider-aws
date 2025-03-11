@@ -122,7 +122,6 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
     id          = "e1"
     expression  = "ANOMALY_DETECTION_BAND(m1)"
     label       = "CPUUtilization (Expected)"
-    return_data = "true"
   }
 
   metric_query {
