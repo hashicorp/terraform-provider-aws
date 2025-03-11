@@ -6,14 +6,16 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -39,13 +41,21 @@ func TestAccVPCIPv6CIDRBlockAssociation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
-					resource.TestCheckResourceAttr(resource1Name, "ip_source", "amazon"),
-					resource.TestCheckResourceAttr(resource2Name, "ip_source", "amazon"),
-					resource.TestCheckResourceAttr(resource1Name, "ipv6_address_attribute", "public"),
-					resource.TestCheckResourceAttr(resource2Name, "ipv6_address_attribute", "public"),
-					resource.TestCheckResourceAttr(resource1Name, "ipv6_pool", "Amazon"),
-					resource.TestCheckResourceAttr(resource2Name, "ipv6_pool", "Amazon"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resource2Name, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resource1Name, tfjsonpath.New("ip_source"), knownvalue.StringExact("amazon")),
+					statecheck.ExpectKnownValue(resource2Name, tfjsonpath.New("ip_source"), knownvalue.StringExact("amazon")),
+					statecheck.ExpectKnownValue(resource1Name, tfjsonpath.New("ipv6_address_attribute"), knownvalue.StringExact("public")),
+					statecheck.ExpectKnownValue(resource2Name, tfjsonpath.New("ipv6_address_attribute"), knownvalue.StringExact("public")),
+					statecheck.ExpectKnownValue(resource1Name, tfjsonpath.New("ipv6_pool"), knownvalue.StringExact("Amazon")),
+					statecheck.ExpectKnownValue(resource2Name, tfjsonpath.New("ipv6_pool"), knownvalue.StringExact("Amazon")),
+				},
 			},
 			{
 				ResourceName:      resource1Name,
@@ -120,10 +130,6 @@ func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPC IPv6 CIDR Block Association is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, _, err := tfec2.FindVPCIPv6CIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
@@ -133,16 +139,6 @@ func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, n string
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckVPCAssociationIPv6CIDRPrefix(association *awstypes.VpcIpv6CidrBlockAssociation, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if strings.Split(aws.ToString(association.Ipv6CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.ToString(association.Ipv6CidrBlock))
-		}
 
 		return nil
 	}
