@@ -39,7 +39,6 @@ The following arguments are required:
 * `account_id` - (Required) The Amazon Web Services account ID.
 * `permission` - (Required) The type of permission to grant. Valid values are `INSTANCE-ATTACH` or `EIP-ASSOCIATE`.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
