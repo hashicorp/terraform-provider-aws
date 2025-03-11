@@ -12,7 +12,7 @@ import (
 // If the struct contains an embedded struct, the fields of the embedded struct have the index in both structs.
 func StructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return func(yield func(reflect.StructField) bool) {
-		for i := 0; i < typ.NumField(); i++ {
+		for i := range typ.NumField() {
 			field := typ.Field(i)
 
 			if field.Anonymous {
