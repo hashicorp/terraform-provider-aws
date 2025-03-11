@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"errors"
-
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
