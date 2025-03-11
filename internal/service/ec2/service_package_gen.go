@@ -94,7 +94,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "EIP Domain Name",
 		},
 		{
-			Factory:  newNetworkInterfacePermission,
+			Factory:  newNetworkInterfacePermissionResource,
 			TypeName: "aws_network_interface_permission",
 			Name:     "Network Interface Permission",
 		},

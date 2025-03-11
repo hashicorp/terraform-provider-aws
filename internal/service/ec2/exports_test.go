@@ -61,7 +61,7 @@ var (
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
-	ResourceNetworkInterfacePermission                    = newNetworkInterfacePermission
+	ResourceNetworkInterfacePermission                    = newNetworkInterfacePermissionResource
 	ResourceNetworkInterfaceSGAttachment                  = resourceNetworkInterfaceSGAttachment
 	ResourceNetworkPerformanceMetricSubscription          = resourceNetworkPerformanceMetricSubscription
 	ResourcePlacementGroup                                = resourcePlacementGroup

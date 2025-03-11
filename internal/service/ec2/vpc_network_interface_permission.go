@@ -5,7 +5,7 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -17,20 +17,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_network_interface_permission", name="Network Interface Permission")
-// @Testing(tagsTest=false)
-func newNetworkInterfacePermission(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &networkInterfacePermission{}
+func newNetworkInterfacePermissionResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &networkInterfacePermissionResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
@@ -38,27 +38,24 @@ func newNetworkInterfacePermission(_ context.Context) (resource.ResourceWithConf
 	return r, nil
 }
 
-const (
-	ResNameNetworkInterfacePermission = "Network Interface Permission"
-)
-
-type networkInterfacePermission struct {
+type networkInterfacePermissionResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *networkInterfacePermission) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*networkInterfacePermissionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_network_interface_permission"
 }
 
-func (r *networkInterfacePermission) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *networkInterfacePermissionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrAccountID: schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					fwvalidators.AWSAccountID(),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -69,6 +66,7 @@ func (r *networkInterfacePermission) Schema(ctx context.Context, request resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"network_interface_permission_id": framework.IDAttribute(),
 			"permission": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InterfacePermissionType](),
 				Required:   true,
@@ -80,15 +78,14 @@ func (r *networkInterfacePermission) Schema(ctx context.Context, request resourc
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *networkInterfacePermission) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceNetworkInterfacePermission
+func (r *networkInterfacePermissionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data networkInterfacePermissionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -96,45 +93,33 @@ func (r *networkInterfacePermission) Create(ctx context.Context, request resourc
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateNetworkInterfacePermissionInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.CreateNetworkInterfacePermissionInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := conn.CreateNetworkInterfacePermission(ctx, input)
+	output, err := conn.CreateNetworkInterfacePermission(ctx, &input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameNetworkInterfacePermission, data.NetworkInterfaceID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if output == nil || output.InterfacePermission == nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameNetworkInterfacePermission, data.NetworkInterfaceID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating EC2 Network Interface (%s) Permission", data.NetworkInterfaceID.ValueString()), err.Error())
+
 		return
 	}
 
 	data.NetworkInterfacePermissionID = fwflex.StringToFramework(ctx, output.InterfacePermission.NetworkInterfacePermissionId)
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	_, err = waitNetworkInterfacePermissionCreated(ctx, conn, data.NetworkInterfacePermissionID.ValueString(), createTimeout)
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameNetworkInterfacePermission, data.NetworkInterfaceID.String(), err),
-			err.Error(),
-		)
+	if _, err := waitNetworkInterfacePermissionCreated(ctx, conn, data.NetworkInterfacePermissionID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Network Interface Permission (%s) create", data.NetworkInterfacePermissionID.ValueString()), err.Error())
+
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *networkInterfacePermission) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceNetworkInterfacePermission
+func (r *networkInterfacePermissionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data networkInterfacePermissionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -149,11 +134,10 @@ func (r *networkInterfacePermission) Read(ctx context.Context, request resource.
 		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameNetworkInterfacePermission, data.NetworkInterfacePermissionID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Network Interface Permission (%s)", data.NetworkInterfacePermissionID.ValueString()), err.Error())
+
 		return
 	}
 
@@ -165,8 +149,8 @@ func (r *networkInterfacePermission) Read(ctx context.Context, request resource.
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *networkInterfacePermission) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceNetworkInterfacePermission
+func (r *networkInterfacePermissionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data networkInterfacePermissionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -185,32 +169,26 @@ func (r *networkInterfacePermission) Delete(ctx context.Context, request resourc
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameNetworkInterfacePermission, data.NetworkInterfacePermissionID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Network Interface Permission (%s)", data.NetworkInterfacePermissionID.ValueString()), err.Error())
+
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	_, err = waitNetworkInterfacePermissionDeleted(ctx, conn, data.NetworkInterfacePermissionID.ValueString(), deleteTimeout)
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameNetworkInterfacePermission, data.NetworkInterfacePermissionID.String(), err),
-			err.Error(),
-		)
+	if _, err := waitNetworkInterfacePermissionDeleted(ctx, conn, data.NetworkInterfacePermissionID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Network Interface Permission (%s) delete", data.NetworkInterfacePermissionID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *networkInterfacePermission) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+func (r *networkInterfacePermissionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("network_interface_permission_id"), request, response)
 }
 
-type resourceNetworkInterfacePermission struct {
-	NetworkInterfacePermissionID types.String                                         `tfsdk:"id"`
+type networkInterfacePermissionResourceModel struct {
+	AWSAccountID                 types.String                                         `tfsdk:"aws_account_id"`
 	NetworkInterfaceID           types.String                                         `tfsdk:"network_interface_id"`
-	AWSAccountID                 types.String                                         `tfsdk:"account_id"`
+	NetworkInterfacePermissionID types.String                                         `tfsdk:"network_interface_permission_id"`
 	Permission                   fwtypes.StringEnum[awstypes.InterfacePermissionType] `tfsdk:"permission"`
 	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
 }

@@ -26,7 +26,7 @@ resource "aws_network_interface" "test" {
 
 resource "aws_network_interface_permission" "test" {
   network_interface_id = aws_network_interface.test.id
-  account_id           = "123456789000"
+  aws_account_id       = "123456789012"
   permission           = "INSTANCE-ATTACH"
 }
 ```
@@ -36,18 +36,18 @@ resource "aws_network_interface_permission" "test" {
 The following arguments are required:
 
 * `network_interface_id` - (Required) The ID of the network interface.
-* `account_id` - (Required) The Amazon Web Services account ID.
+* `aws_account_id` - (Required) The Amazon Web Services account ID.
 * `permission` - (Required) The type of permission to grant. Valid values are `INSTANCE-ATTACH` or `EIP-ASSOCIATE`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ENI permission ID.
+* `network_interface_permission_id` - ENI permission ID.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interfaces using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interfaces using the `network_interface_permission_id`. For example:
 
 ```terraform
 import {
@@ -56,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Network Interfaces using the `id`. For example:
+Using `terraform import`, import Network Interfaces using the `network_interface_permission_id`. For example:
 
 ```console
 % terraform import aws_network_interface.test eni-perm-056ad97ce2ac377ed

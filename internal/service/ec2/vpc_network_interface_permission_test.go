@@ -37,16 +37,17 @@ func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 				Config: testAccNetworkInterfacePermissionConfig_basic(rName, targetAccount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, "permission"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccNetworkInterfacePermissionImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "network_interface_permission_id",
 			},
 		},
 	})
@@ -107,7 +108,7 @@ func testAccCheckNetworkInterfacePermissionDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes[names.AttrID])
+			_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes["network_interface_permission_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -133,9 +134,20 @@ func testAccCheckNetworkInterfacePermissionExists(ctx context.Context, n string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes[names.AttrID])
+		_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes["network_interface_permission_id"])
 
 		return err
+	}
+}
+
+func testAccNetworkInterfacePermissionImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["network_interface_permission_id"], nil
 	}
 }
 
@@ -174,7 +186,7 @@ func testAccNetworkInterfacePermissionConfig_basic(rName, targetAccountID string
 	return acctest.ConfigCompose(testAccNetworkInterfacePermissionConfig_base(rName), fmt.Sprintf(`
 resource "aws_network_interface_permission" "test" {
   network_interface_id = aws_network_interface.test.id
-  account_id           = %[1]q
+  aws_account_id       = %[1]q
   permission           = "INSTANCE-ATTACH"
 }
 `, targetAccountID))
@@ -186,7 +198,7 @@ data "aws_caller_identity" "test" {}
 
 resource "aws_network_interface_permission" "test" {
   network_interface_id = aws_network_interface.test.id
-  account_id           = data.aws_caller_identity.test.account_id
+  aws_account_id       = data.aws_caller_identity.test.account_id
   permission           = "INSTANCE-ATTACH"
 }
 `)
