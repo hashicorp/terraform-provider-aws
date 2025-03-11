@@ -1868,9 +1868,9 @@ func testAccBucketLifecycleConfigurationConfig_V5_86_0(config string) string {
 	return acctest.ConfigCompose(
 		config, `
 resource "time_sleep" "eventual_consistency" {
-	depends_on = [aws_s3_bucket_lifecycle_configuration.test]
+  depends_on = [aws_s3_bucket_lifecycle_configuration.test]
 
-	create_duration = "2m"
+  create_duration = "2m"
 }
 `)
 }
