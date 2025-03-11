@@ -472,10 +472,10 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI User Profile (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SageMaker User Profile %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI User Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -189,6 +189,50 @@ A `stage` block supports the following arguments:
 
 * `name` - (Required) The name of the stage.
 * `action` - (Required) The action(s) to include in the stage. Defined as an `action` block below
+* `before_entry` - (Optional) The method to use when a stage allows entry. For example, configuring this field for conditions will allow entry to the stage when the conditions are met.
+* `on_success` - (Optional) The method to use when a stage has succeeded. For example, configuring this field for conditions will allow the stage to succeed when the conditions are met.
+* `on_failure` - (Optional) The method to use when a stage has not completed successfully. For example, configuring this field for rollback will roll back a failed stage automatically to the last successful pipeline execution in the stage.
+
+A `before_entry` block supports the following arguments:
+
+* `condition` - (Required) The conditions that are configured as entry condition. Defined as a `condition` block below.
+
+A `on_success` block supports the following arguments:
+
+* `condition` - (Required) The conditions that are success conditions. Defined as a `condition` block below.
+
+A `on_failure` block supports the following arguments:
+
+* `condition` - (Optional) The conditions that are failure conditions. Defined as a `condition` block below.
+* `result` - (Optional) The conditions that are configured as failure conditions. Possible values are `ROLLBACK`,  `FAIL`, `RETRY` and `SKIP`.
+* `retry_configuration` - (Optional) The retry configuration specifies automatic retry for a failed stage, along with the configured retry mode. Defined as a `retry_configuration` block below.
+
+A `condition` block supports the following arguments:
+
+* `result` - (Optional) The action to be done when the condition is met. For example, rolling back an execution for a failure condition. Possible values are `ROLLBACK`, `FAIL`, `RETRY` and `SKIP`.
+* `rule` - (Optional) The rules that make up the condition. Defined as a `rule` block below.
+
+A `rule` block supports the following arguments:
+
+* `name` - (Required) The name of the rule that is created for the condition, such as `VariableCheck`.
+* `rule_type_id` - (Required) The ID for the rule type, which is made up of the combined values for `category`, `owner`, `provider`, and `version`. Defined as an `rule_type_id` block below.
+* `commands` - (Optional) The shell commands to run with your commands rule in CodePipeline. All commands are supported except multi-line formats.
+* `configuration` - (Optional) The action configuration fields for the rule. Configurations options for rule types and providers can be found in the [Rule structure reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/rule-reference.html).
+* `input_artifacts` - (Optional) The list of the input artifacts fields for the rule, such as specifying an input file for the rule.
+* `region` - (Optional) The Region for the condition associated with the rule.
+* `role_arn` - (Optional) The pipeline role ARN associated with the rule.
+* `timeout_in_minutes` - (Optional) The action timeout for the rule.
+
+A `rule_type_id` block supports the following arguments:
+
+* `category` - (Required) A category defines what kind of rule can be run in the stage, and constrains the provider type for the rule. The valid category is `Rule`.
+* `provider` - (Required) The rule provider, such as the DeploymentWindow rule. For a list of rule provider names, see the rules listed in the [AWS CodePipeline rule reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/rule-reference.html).
+* `owner` - (Optional) The creator of the rule being called. The valid value for the Owner field in the rule category is `AWS`.
+* `version` - (Optional) A string that describes the rule version.
+
+A `retry_configuration` block supports the following arguments:
+
+* `retry_mode` - (Optional) The method that you want to configure for automatic stage retry on stage failure. You can specify to retry only failed action in the stage or all actions in the stage. Possible values are `FAILED_ACTIONS` and `ALL_ACTIONS`.
 
 An `action` block supports the following arguments:
 
@@ -284,4 +328,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-33146aeb6f82e395d952df81565ba762b324c46eb51cf7e6935b24becccc0aea -->
+<!-- cache-key: cdktf-0.20.8 input-5cddb871d3b30c1797279bdd589f11753c086e17bde812322ecf8734f59d86fa -->

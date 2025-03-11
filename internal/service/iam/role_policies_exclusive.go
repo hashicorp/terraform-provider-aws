@@ -41,10 +41,6 @@ type resourceRolePoliciesExclusive struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRolePoliciesExclusive) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_iam_role_policies_exclusive"
-}
-
 func (r *resourceRolePoliciesExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

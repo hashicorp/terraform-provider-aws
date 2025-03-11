@@ -74,6 +74,8 @@ var (
 
 	CreateResourceID = createResourceID
 	ParseResourceID  = parseResourceID
+
+	DirectoryBucketNameRegex = directoryBucketNameRegex
 )
 
 type (

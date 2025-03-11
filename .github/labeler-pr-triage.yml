@@ -477,6 +477,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_dashboard*'
               - 'website/**/cloudwatch_metric_*'
               - 'website/**/cloudwatch_composite_*'
+              - 'website/**/cloudwatch_contributor_*'
 service/codeartifact:
   - any:
       - changed-files:

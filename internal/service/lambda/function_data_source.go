@@ -194,7 +194,7 @@ func dataSourceFunction() *schema.Resource {
 			"source_code_hash": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
+				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,

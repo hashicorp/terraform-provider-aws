@@ -9,7 +9,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,8 +87,6 @@ func resourceRateBasedRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -144,26 +140,18 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading WAF Rate Based Rule (%s): %s", d.Id(), err)
 	}
 
-	var predicates []map[string]interface{}
-
-	for _, predicateSet := range rule.MatchPredicates {
-		predicates = append(predicates, map[string]interface{}{
-			"data_id":      aws.ToString(predicateSet.DataId),
-			"negated":      aws.ToBool(predicateSet.Negated),
-			names.AttrType: predicateSet.Type,
-		})
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "ratebasedrule/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, rateBasedRuleARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrMetricName, rule.MetricName)
 	d.Set(names.AttrName, rule.Name)
-	if err := d.Set("predicates", predicates); err != nil {
+	var tfList []interface{}
+	for _, matchPredicate := range rule.MatchPredicates {
+		tfList = append(tfList, map[string]interface{}{
+			"data_id":      aws.ToString(matchPredicate.DataId),
+			"negated":      aws.ToBool(matchPredicate.Negated),
+			names.AttrType: matchPredicate.Type,
+		})
+	}
+	if err := d.Set("predicates", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predicates: %s", err)
 	}
 	d.Set("rate_key", rule.RateKey)
@@ -263,4 +251,9 @@ func updateRateBasedRule(ctx context.Context, conn *waf.Client, id string, oldP,
 	}
 
 	return nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func rateBasedRuleARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "ratebasedrule/"+id)
 }

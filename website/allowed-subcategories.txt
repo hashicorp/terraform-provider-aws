@@ -111,6 +111,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
 End User Messaging SMS
@@ -222,7 +223,7 @@ SSO Admin
 SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
-SageMaker
+SageMaker AI
 Secrets Manager
 Security Hub
 Security Lake

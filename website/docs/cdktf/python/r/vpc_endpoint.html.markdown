@@ -162,14 +162,13 @@ from cdktf import Token, TerraformStack
 #
 from imports.aws.vpc_endpoint import VpcEndpoint
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, serviceName):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         VpcEndpoint(self, "example",
-            resource_configuration_arn=aws_vpclattice_resource_configuration_example.arn,
+            resource_configuration_arn=Token.as_string(aws_vpclattice_resource_configuration_example.arn),
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
             vpc_endpoint_type="Resource",
-            vpc_id=Token.as_string(aws_vpc_example.id),
-            service_name=service_name
+            vpc_id=Token.as_string(aws_vpc_example.id)
         )
 ```
 
@@ -185,14 +184,13 @@ from cdktf import Token, TerraformStack
 #
 from imports.aws.vpc_endpoint import VpcEndpoint
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, serviceName):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         VpcEndpoint(self, "example",
-            service_network_arn=aws_vpclattice_service_network_example.arn,
+            service_network_arn=Token.as_string(aws_vpclattice_service_network_example.arn),
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
             vpc_endpoint_type="ServiceNetwork",
-            vpc_id=Token.as_string(aws_vpc_example.id),
-            service_name=service_name
+            vpc_id=Token.as_string(aws_vpc_example.id)
         )
 ```
 
@@ -254,7 +252,7 @@ Defaults to `false`.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `resource_configuration_arn` - (Optional) The ARN of a Resource Configuration to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
-* `service_name` - (Optional) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`). Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
+* `service_name` - (Optional) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`). Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `service_network_arn` - (Optional) The ARN of a Service Network to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `service_region` - (Optional) - The AWS region of the VPC Endpoint Service. If specified, the VPC endpoint will connect to the service in the provided region. Applicable for endpoints of type `Interface`.
 * `subnet_configuration` - (Optional) Subnet configuration for the endpoint, used to select specific IPv4 and/or IPv6 addresses to the endpoint. See subnet_configuration below.
@@ -328,4 +326,4 @@ Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For 
 % terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bcc9e09c1e5ae94c5f0da40f7dac8fae2d95d271f693bc51d4724106171c88b9 -->
+<!-- cache-key: cdktf-0.20.8 input-3a77f977a389df0cb617ede4085afa1ca5f0717cf173d7df5bc143a45f162bd1 -->

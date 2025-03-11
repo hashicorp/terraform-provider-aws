@@ -117,10 +117,11 @@ func resourceFleetStackAssociationDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream Fleet Stack Association ID (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DisassociateFleet(ctx, &appstream.DisassociateFleetInput{
+	input := appstream.DisassociateFleetInput{
 		StackName: aws.String(stackName),
 		FleetName: aws.String(fleetName),
-	})
+	}
+	_, err = conn.DisassociateFleet(ctx, &input)
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {

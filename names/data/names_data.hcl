@@ -1451,7 +1451,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
+  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
   brand                    = "AWS"
 }
 
@@ -3259,6 +3259,10 @@ service "mediapackagevod" {
     human_friendly      = "Elemental MediaPackage VOD"
   }
 
+  endpoint_info {
+    endpoint_api_call = "ListPackagingGroups"
+  }
+
   resource_prefix {
     correct = "aws_mediapackagevod_"
   }
@@ -3266,7 +3270,6 @@ service "mediapackagevod" {
   provider_package_correct = "mediapackagevod"
   doc_prefix               = ["mediapackagevod_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "mediastore" {
@@ -6980,7 +6983,7 @@ service "sagemaker" {
 
   names {
     provider_name_upper = "SageMaker"
-    human_friendly      = "SageMaker"
+    human_friendly      = "SageMaker AI"
   }
 
   endpoint_info {
@@ -6993,7 +6996,7 @@ service "sagemaker" {
 
   provider_package_correct = "sagemaker"
   doc_prefix               = ["sagemaker_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "sagemakera2iruntime" {

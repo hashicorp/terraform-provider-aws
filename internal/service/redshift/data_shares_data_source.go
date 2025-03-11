@@ -30,10 +30,6 @@ type dataSourceDataShares struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataShares) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_redshift_data_shares"
-}
-
 func (d *dataSourceDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

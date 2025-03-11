@@ -37,7 +37,8 @@ func dataSourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+	input := ec2.GetSerialConsoleAccessStatusInput{}
+	output, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Serial Console Access: %s", err)

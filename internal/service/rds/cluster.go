@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -107,14 +109,6 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-			names.AttrClusterIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validIdentifier,
-				ConflictsWith: []string{"cluster_identifier_prefix"},
-			},
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,6 +117,14 @@ func resourceCluster() *schema.Resource {
 			"ca_certificate_valid_till": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrClusterIdentifier: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validIdentifier,
+				ConflictsWith: []string{"cluster_identifier_prefix"},
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
@@ -142,10 +144,23 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cluster_scalability_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ClusterScalabilityType](),
+			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"database_insights_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
 			},
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
@@ -242,7 +257,13 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineModeProvisioned,
-				ValidateFunc: validation.StringInSlice(engineMode_Values(), false),
+				ValidateFunc: validation.StringInSlice(append(engineMode_Values(), ""), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == engineModeProvisioned && new == "" {
+						return true
+					}
+					return new == old
+				},
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -303,7 +324,7 @@ func resourceCluster() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"master_password"},
+				ConflictsWith: []string{"master_password", "master_password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -335,7 +356,20 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "master_password_wo"},
+			},
+			"master_password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				WriteOnly:     true,
+				ConflictsWith: []string{"manage_master_user_password", "master_password"},
+				RequiredWith:  []string{"master_password_wo_version"},
+			},
+			"master_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"master_password_wo"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -637,7 +671,6 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
 				return !strings.HasPrefix(d.Get(names.AttrEngine).(string), "aurora")
@@ -671,6 +704,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 
+	// get write-only value from configuration
+	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
 	// parameters or unsupported configurations, we may need to call
@@ -687,7 +727,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
 			Tags:                getTagsIn(ctx),
 		}
@@ -733,6 +772,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("engine_mode"); ok {
+			input.EngineMode = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -748,6 +791,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if masterPasswordWO != "" {
+			modifyDbClusterInput.MasterUserPassword = aws.String(masterPasswordWO)
 			requiresModifyDbCluster = true
 		}
 
@@ -899,6 +947,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if masterPasswordWO != "" {
+			input.MasterUserPassword = aws.String(masterPasswordWO)
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -1009,6 +1061,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if masterPasswordWO != "" {
+			modifyDbClusterInput.MasterUserPassword = aws.String(masterPasswordWO)
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
@@ -1094,7 +1151,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			Tags:                getTagsIn(ctx),
 		}
 
@@ -1116,6 +1172,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v := d.Get("ca_certificate_identifier"); v.(string) != "" {
 			input.CACertificateIdentifier = aws.String(v.(string))
+		}
+
+		if v := d.Get("cluster_scalability_type"); v.(string) != "" {
+			input.ClusterScalabilityType = types.ClusterScalabilityType(v.(string))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
@@ -1166,6 +1230,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("engine_mode"); ok {
+			input.EngineMode = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -1197,6 +1265,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if masterPasswordWO != "" {
+			input.MasterUserPassword = aws.String(masterPasswordWO)
 		}
 
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
@@ -1338,6 +1410,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
 		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
 	}
+	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
 	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
 	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
@@ -1345,6 +1418,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}))
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
+	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
@@ -1521,6 +1595,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		}
 
+		if d.HasChange("database_insights_mode") {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
+		}
+
 		if d.HasChange("db_cluster_instance_class") {
 			input.DBClusterInstanceClass = aws.String(d.Get("db_cluster_instance_class").(string))
 		}
@@ -1596,6 +1674,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("master_password") {
 			if v, ok := d.GetOk("master_password"); ok {
 				input.MasterUserPassword = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("master_password_wo_version") {
+			masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
 			}
 		}
 

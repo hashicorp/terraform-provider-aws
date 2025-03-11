@@ -84,8 +84,6 @@ func resourceVPCIngressConnection() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -160,9 +158,10 @@ func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner VPC Ingress Connection: %s", d.Id())
-	_, err := conn.DeleteVpcIngressConnection(ctx, &apprunner.DeleteVpcIngressConnectionInput{
+	input := apprunner.DeleteVpcIngressConnectionInput{
 		VpcIngressConnectionArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcIngressConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

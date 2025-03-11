@@ -1533,9 +1533,10 @@ func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Connector Profile: %s", d.Id())
-	_, err := conn.DeleteConnectorProfile(ctx, &appflow.DeleteConnectorProfileInput{
+	input := appflow.DeleteConnectorProfileInput{
 		ConnectorProfileName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteConnectorProfile(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

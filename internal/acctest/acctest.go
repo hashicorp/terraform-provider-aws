@@ -101,7 +101,7 @@ const (
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
-const regionRegexp = `[a-z]{2}(-[a-z]+)+-\d`
+const regionRegexp = `[a-z]{2}(-[a-z]+)+-\d{1,2}`
 const accountIDRegexp = `(aws|aws-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
@@ -700,7 +700,7 @@ func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestC
 
 func CheckResourceAttrJSONNoDiff(n, key, expectedJSON string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
-		if diff := jsoncmp.Diff(expectedJSON, value); diff != "" {
+		if diff := jsoncmp.Diff(value, expectedJSON); diff != "" {
 			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 
