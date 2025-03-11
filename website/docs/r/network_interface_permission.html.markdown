@@ -6,7 +6,7 @@ description: |-
   Grant cross-account access to an Elastic network interface (ENI).
 ---
 
-# Resource: aws_ec2_network_interface_permission
+# Resource: aws_network_interface_permission
 
 Grant cross-account access to an Elastic network interface (ENI).
 
