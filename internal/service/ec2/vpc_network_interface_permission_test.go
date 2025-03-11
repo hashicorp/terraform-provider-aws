@@ -107,7 +107,7 @@ func testAccCheckNetworkInterfacePermissionDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes["id"])
+			_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes[names.AttrID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -133,7 +133,7 @@ func testAccCheckNetworkInterfacePermissionExists(ctx context.Context, n string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes["id"])
+		_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes[names.AttrID])
 
 		return err
 	}

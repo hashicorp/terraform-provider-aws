@@ -204,7 +204,7 @@ func (r *networkInterfacePermission) Delete(ctx context.Context, request resourc
 }
 
 func (r *networkInterfacePermission) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceNetworkInterfacePermission struct {
