@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkInterfacePermission_basic(t *testing.T) {
+func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,7 +52,7 @@ func TestAccNetworkInterfacePermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInterfacePermission_disappears(t *testing.T) {
+func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -78,7 +78,7 @@ func TestAccNetworkInterfacePermission_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInterfacePermission_ownerExpectError(t *testing.T) {
+func TestAccVPCNetworkInterfacePermission_ownerExpectError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
