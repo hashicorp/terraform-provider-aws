@@ -663,6 +663,7 @@ func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id 
 func statusNetworkInterfacePermission(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findNetworkInterfacePermissionByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}

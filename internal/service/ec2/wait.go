@@ -1459,13 +1459,14 @@ func waitNetworkInterfacePermissionCreated(ctx context.Context, conn *ec2.Client
 		Target:                    []string{"GRANTED"},
 		Refresh:                   statusNetworkInterfacePermission(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+
 		return output, err
 	}
 
@@ -1481,8 +1482,11 @@ func waitNetworkInterfacePermissionDeleted(ctx context.Context, conn *ec2.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
