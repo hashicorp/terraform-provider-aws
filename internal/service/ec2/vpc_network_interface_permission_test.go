@@ -139,10 +139,8 @@ func testAccCheckNetworkInterfacePermissionExists(ctx context.Context, n string)
 	}
 }
 
-func testAccNetworkInterfacePermissionConfig_basic(rName string, targetAccount string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccNetworkInterfacePermissionConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -164,48 +162,32 @@ resource "aws_subnet" "test" {
 
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
+func testAccNetworkInterfacePermissionConfig_basic(rName, targetAccountID string) string {
+	return acctest.ConfigCompose(testAccNetworkInterfacePermissionConfig_base(rName), fmt.Sprintf(`
 resource "aws_network_interface_permission" "test" {
-    network_interface_id = aws_network_interface.test.id
-    account_id           = %[2]q
-    permission           = "INSTANCE-ATTACH"
+  network_interface_id = aws_network_interface.test.id
+  account_id           = %[1]q
+  permission           = "INSTANCE-ATTACH"
 }
-`, rName, targetAccount))
+`, targetAccountID))
 }
 
 func testAccNetworkInterfacePermissionConfig_accountOwner(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "172.16.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.16.10.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test" {
-  subnet_id = aws_subnet.test.id
-}
-
+	return acctest.ConfigCompose(testAccNetworkInterfacePermissionConfig_base(rName), `
 data "aws_caller_identity" "test" {}
 
 resource "aws_network_interface_permission" "test" {
-    network_interface_id = aws_network_interface.test.id
-    account_id           = data.aws_caller_identity.test.account_id
-    permission           = "INSTANCE-ATTACH"
+  network_interface_id = aws_network_interface.test.id
+  account_id           = data.aws_caller_identity.test.account_id
+  permission           = "INSTANCE-ATTACH"
 }
-`, rName))
+`)
 }
