@@ -26,8 +26,8 @@ resource "aws_network_interface" "test" {
 
 resource "aws_network_interface_permission" "test" {
   network_interface_id = aws_network_interface.test.id
-  account_id = "123456789000"
-  permission = "INSTANCE-ATTACH"
+  account_id           = "123456789000"
+  permission           = "INSTANCE-ATTACH"
 }
 ```
 
