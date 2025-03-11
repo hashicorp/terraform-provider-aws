@@ -32,7 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_dataexchange_event_action", name="Event Action")
-func ResourceEventAction(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newEventActionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceEventAction{}, nil
 }
 
