@@ -9,7 +9,8 @@ import (
 )
 
 // StructFields returns an iterator that lists all fields in a struct, including unexported fields.
-// If the struct contains an embedded struct, the fields of the embedded struct have the index in both structs.
+// If the struct contains an embedded struct, the fields of the embedded struct will have
+// index components from each struct as used by `reflect.Value.FieldByIndex`
 func StructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return func(yield func(reflect.StructField) bool) {
 		for i := range typ.NumField() {
@@ -49,7 +50,8 @@ func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.Struc
 
 // ExportedStructFields returns an iterator that lists all exported fields in a struct. If an unexported embedded field
 // includes exported fields, the exported embedded fields will be included.
-// If the struct contains an embedded struct, the fields of the embedded struct have the index in both structs.
+// If the struct contains an embedded struct, the fields of the embedded struct will have
+// index components from each struct as used by `reflect.Value.FieldByIndex`
 func ExportedStructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return exportedFields(StructFields(typ))
 }
