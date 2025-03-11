@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -98,6 +99,8 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var associationSecondary awstypes.VpcCidrBlockAssociation
 	resourceName := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
+	ipamPoolResourceName := "aws_vpc_ipam_pool.test"
+	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,6 +136,19 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 				},
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }
@@ -141,6 +157,8 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	var associationSecondary awstypes.VpcCidrBlockAssociation
 	resourceName := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
+	ipamPoolResourceName := "aws_vpc_ipam_pool.test"
+	vpcResourceName := "aws_vpc.test"
 	cidr := "172.2.0.32/28"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -176,6 +194,20 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 					return fmt.Sprintf("%s,%s", rs.Primary.ID, rs.Primary.Attributes["ipv4_ipam_pool_id"]), nil
 				},
 				ImportStateVerify: true,
+			},
+			// Work around "Error: waiting for IPAM Pool CIDR (...) delete: unexpected state 'failed-deprovision', wanted target ''. last error: : The CIDR has one or more allocations".
+			{
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -225,6 +257,30 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx context.Context, nIPAMPool, nVPC string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rsIPAMPool, ok := s.RootModule().Resources[nIPAMPool]
+		if !ok {
+			return fmt.Errorf("Not found: %s", nIPAMPool)
+		}
+		rsVPC, ok := s.RootModule().Resources[nVPC]
+		if !ok {
+			return fmt.Errorf("Not found: %s", nVPC)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		const (
+			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+			return tfec2.FindIPAMPoolAllocationsForVPC(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
+		})
+
+		return err
 	}
 }
 
