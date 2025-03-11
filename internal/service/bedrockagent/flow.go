@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+
+	// "github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -115,16 +117,17 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"execution_role_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
+				// CustomType: fwtypes.ARNType,
+				Required: true,
 			},
 			"customer_encryption_key_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				// CustomType: fwtypes.ARNType,
+				Optional: true,
 			},
-			"definition": schema.ListAttribute{
-				ElementType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
-				Optional:    true,
+			"definition": schema.ObjectAttribute{
+				// ElementType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
+				CustomType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
+				Optional:   true,
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -140,62 +143,62 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-func (r *resourceFlow) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("connections").AtAnyListIndex().AtName("configuration").AtName("conditional"),
-			path.MatchRoot("connections").AtAnyListIndex().AtName("configuration").AtName("data"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("agent"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("collector"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("condition"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("input"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("iterator"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("knowledge_base"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("lambda_function"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("lex"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("output"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("storage"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("resource"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("text"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("cache_point"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("text"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("cache_point"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("text"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("cache_point"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec").AtName("input_schema").AtName("json"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("any"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("auto"),
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("tool"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval").AtName("service_configuration").AtName("s3"),
-		),
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("nodes").AtAnyListIndex().AtName("configuration").AtName("storage").AtName("service_configuration").AtName("s3"),
-		),
-	}
-}
+// func (r *resourceFlow) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+// 	return []resource.ConfigValidator{
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("connections").AtAnyListIndex().AtName("configuration").AtName("conditional"),
+// 			path.MatchRoot("definition").AtName("connections").AtAnyListIndex().AtName("configuration").AtName("data"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("agent"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("collector"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("condition"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("input"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("iterator"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("knowledge_base"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("lambda_function"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("lex"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("output"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("storage"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("resource"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("text"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("cache_point"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("text"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("cache_point"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("text"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("cache_point"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec").AtName("input_schema").AtName("json"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("any"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("auto"),
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("tool"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval").AtName("service_configuration").AtName("s3"),
+// 		),
+// 		resourcevalidator.ExactlyOneOf(
+// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("storage").AtName("service_configuration").AtName("s3"),
+// 		),
+// 	}
+// }
 
 func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// TIP: -- 1. Get a client connection to the relevant service
@@ -319,6 +322,8 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
+		input.FlowIdentifier = plan.ID.ValueStringPointer()
+
 		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateFlow(ctx, &input)
 		if err != nil {
@@ -388,17 +393,6 @@ func (r *resourceFlow) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
-
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitFlowDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForDeletion, ResNameFlow, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
 }
 
 // TIP: ==== TERRAFORM IMPORTING ====
@@ -411,17 +405,6 @@ func (r *resourceFlow) Delete(ctx context.Context, req resource.DeleteRequest, r
 func (r *resourceFlow) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
 
 // TIP: ==== WAITERS ====
 // Some resources of some services have waiters provided by the AWS API.
@@ -439,7 +422,7 @@ const (
 func waitFlowCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{statusNormal},
+		Target:                    enum.Slice(awstypes.FlowStatusNotPrepared),
 		Refresh:                   statusFlow(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -460,30 +443,12 @@ func waitFlowCreated(ctx context.Context, conn *bedrockagent.Client, id string, 
 // key resource argument is updated to a new value or not.
 func waitFlowUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
+		Pending:                   []string{},
+		Target:                    enum.Slice(awstypes.FlowStatusNotPrepared),
 		Refresh:                   statusFlow(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagent.GetFlowOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitFlowDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusFlow(ctx, conn, id),
-		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
