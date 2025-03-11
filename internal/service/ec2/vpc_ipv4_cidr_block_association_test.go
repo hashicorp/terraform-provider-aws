@@ -6,14 +6,17 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -38,10 +41,18 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
-					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
-					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationTertiary, "170.2.0.0/16"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resource2Name, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resource1Name, tfjsonpath.New(names.AttrCIDRBlock), knownvalue.StringExact("172.2.0.0/16")),
+					statecheck.ExpectKnownValue(resource2Name, tfjsonpath.New(names.AttrCIDRBlock), knownvalue.StringExact("170.2.0.0/16")),
+				},
 			},
 			{
 				ResourceName:      resource1Name,
@@ -85,11 +96,8 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 
 func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var associationSecondary awstypes.VpcCidrBlockAssociation
+	resourceName := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,9 +109,29 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, "aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, "28"),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resourceName, &associationSecondary),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCIDRBlock), knownvalue.StringRegexp(regexache.MustCompile(`^([0-9]{1,3}\.){3}[0-9]{1,3}/`+`28$`))),
+				},
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Not Found: %s", resourceName)
+					}
+
+					return fmt.Sprintf("%s,%s,%s", rs.Primary.ID, rs.Primary.Attributes["ipv4_ipam_pool_id"], rs.Primary.Attributes["ipv4_netmask_length"]), nil
+				},
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -111,11 +139,8 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 
 func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var associationSecondary awstypes.VpcCidrBlockAssociation
+	resourceName := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
 	cidr := "172.2.0.32/28"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -128,32 +153,32 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, "aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resourceName, &associationSecondary),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCIDRBlock), knownvalue.StringExact(cidr)),
+				},
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Not Found: %s", resourceName)
+					}
+
+					return fmt.Sprintf("%s,%s", rs.Primary.ID, rs.Primary.Attributes["ipv4_ipam_pool_id"]), nil
+				},
+				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func testAccCheckAdditionalVPCIPv4CIDRBlock(association *awstypes.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		CIDRBlock := association.CidrBlock
-		if *CIDRBlock != expected {
-			return fmt.Errorf("Bad CIDR: %s", *association.CidrBlock)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVPCAssociationCIDRPrefix(association *awstypes.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if strings.Split(aws.ToString(association.CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.ToString(association.CidrBlock))
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -187,10 +212,6 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPC IPv4 CIDR Block Association is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)

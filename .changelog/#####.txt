@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc_ipv4_cidr_block_association: Support optional import of the `ipv4_ipam_pool_id` and `ipv4_netmask_length` attributes
+```
