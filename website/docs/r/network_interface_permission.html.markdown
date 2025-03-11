@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interfaces using the `network_interface_permission_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interface Permissions using the `network_interface_permission_id`. For example:
 
 ```terraform
 import {
@@ -56,8 +56,8 @@ import {
 }
 ```
 
-Using `terraform import`, import Network Interfaces using the `network_interface_permission_id`. For example:
+Using `terraform import`, import Network Interface Permissions using the `network_interface_permission_id`. For example:
 
 ```console
-% terraform import aws_network_interface.test eni-perm-056ad97ce2ac377ed
+% terraform import aws_network_interface_permission.test eni-perm-056ad97ce2ac377ed
 ```
