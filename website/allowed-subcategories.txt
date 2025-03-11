@@ -209,7 +209,6 @@ S3 Control
 S3 Glacier
 S3 Tables
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
 SFN (Step Functions)
