@@ -38,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -115,7 +116,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
 							Validators: []validator.String{
-								warnExactlyOneOf(
+								tfstringvalidator.WarnExactlyOneOf(
 									path.MatchRelative().AtParent().AtName(names.AttrFilter),
 								),
 							},
@@ -201,7 +202,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										Validators: []validator.String{
-											warnExactlyOneOf(
+											tfstringvalidator.WarnExactlyOneOf(
 												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
 												path.MatchRelative().AtParent().AtName("object_size_less_than"),
 												path.MatchRelative().AtParent().AtName("and"),

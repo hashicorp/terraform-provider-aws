@@ -8,8 +8,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
@@ -23,6 +25,17 @@ func objectWarnExactlyOneOfChildren(expressions ...path.Expression) validator.Ob
 
 type ExactlyOneOfChildrenValidator struct {
 	PathExpressions path.Expressions
+}
+
+type ExactlyOneOfValidatorRequest struct {
+	Config         tfsdk.Config
+	ConfigValue    attr.Value
+	Path           path.Path
+	PathExpression path.Expression
+}
+
+type ExactlyOneOfValidatorResponse struct {
+	Diagnostics diag.Diagnostics
 }
 
 func (av ExactlyOneOfChildrenValidator) Description(ctx context.Context) string {
