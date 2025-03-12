@@ -328,7 +328,7 @@ misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] 
 
 modern-check: ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
-	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
 
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
