@@ -155,7 +155,7 @@ func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullSecurityGroupDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullSecurityGroupDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -188,7 +188,7 @@ func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *te
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullSecurityGroupDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullSecurityGroupDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -198,8 +198,8 @@ func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *te
 	})
 }
 
-func expectFullSecurityGroupDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullSecurityGroupDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 	}, knownValue)
 }

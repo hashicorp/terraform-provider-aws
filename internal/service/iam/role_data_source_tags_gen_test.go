@@ -155,7 +155,7 @@ func TestAccIAMRoleDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullRoleDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullRoleDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -188,7 +188,7 @@ func TestAccIAMRoleDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) 
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullRoleDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullRoleDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -198,8 +198,8 @@ func TestAccIAMRoleDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) 
 	})
 }
 
-func expectFullRoleDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullRoleDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrName,
 		ResourceType:        "Role",
 	}, knownValue)

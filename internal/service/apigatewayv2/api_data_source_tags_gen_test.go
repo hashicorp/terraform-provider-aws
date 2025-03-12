@@ -155,7 +155,7 @@ func TestAccAPIGatewayV2APIDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullAPIDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullAPIDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -188,7 +188,7 @@ func TestAccAPIGatewayV2APIDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullAPIDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullAPIDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -198,8 +198,8 @@ func TestAccAPIGatewayV2APIDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 	})
 }
 
-func expectFullAPIDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigatewayv2.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullAPIDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigatewayv2.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

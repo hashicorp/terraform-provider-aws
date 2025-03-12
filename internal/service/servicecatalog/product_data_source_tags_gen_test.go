@@ -155,7 +155,7 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullProductDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProductDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -188,7 +188,7 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_ResourceTag(
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullProductDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProductDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -198,8 +198,8 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_ResourceTag(
 	})
 }
 
-func expectFullProductDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullProductDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Product",
 	}, knownValue)

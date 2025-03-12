@@ -170,7 +170,7 @@ func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *t
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullServiceMeshDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullServiceMeshDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -203,7 +203,7 @@ func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullServiceMeshDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullServiceMeshDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -213,8 +213,8 @@ func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *
 	})
 }
 
-func expectFullServiceMeshDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullServiceMeshDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 	}, knownValue)
 }

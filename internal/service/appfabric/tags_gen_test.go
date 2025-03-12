@@ -11,6 +11,6 @@ import (
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfappfabric.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfappfabric.ServicePackage(ctx), resourceAddress, knownValue)
 }

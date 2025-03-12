@@ -1945,7 +1945,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1994,7 +1994,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2043,7 +2043,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2105,7 +2105,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2168,7 +2168,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2231,7 +2231,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
@@ -2274,8 +2274,8 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 	})
 }
 
-func expectFullPortfolioResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullPortfolioResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Portfolio",
 	}, knownValue)

@@ -11,10 +11,10 @@ import (
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfsesv2.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfsesv2.ServicePackage(ctx), resourceAddress, knownValue)
 }
 
-func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTags(tfsesv2.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfsesv2.ServicePackage(ctx), resourceAddress, knownValue)
 }
