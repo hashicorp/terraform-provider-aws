@@ -555,7 +555,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -612,7 +612,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -661,7 +661,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						"key3":                 knownvalue.StringExact("value3"),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
 						"key3":                 knownvalue.StringExact("value3"),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),

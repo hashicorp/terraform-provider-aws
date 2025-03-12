@@ -87,6 +87,7 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
+	ctx := t.Context()
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
 	// Cost and Usage Report uses a regional endpoint but is only available in one region or a limited number of regions.
 	// The provider overrides the region for Cost and Usage Report, but the AWS SDK's endpoint resolution returns one for the current region.
@@ -95,7 +96,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(t, expectedEndpointRegion),
+			expected: expectDefaultEndpoint(ctx, t, expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -278,7 +279,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(t, expectedEndpointRegion),
+			expected: expectDefaultFIPSEndpoint(ctx, t, expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -292,15 +293,15 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
 		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, providerRegion, testcase, callService)
+			testEndpointCase(ctx, t, providerRegion, testcase, callService)
 		})
 	}
 }
 
-func defaultEndpoint(region string) (url.URL, error) {
+func defaultEndpoint(ctx context.Context, region string) (url.URL, error) {
 	r := costandusagereportservice.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), costandusagereportservice.EndpointParameters{
+	ep, err := r.ResolveEndpoint(ctx, costandusagereportservice.EndpointParameters{
 		Region: aws.String(region),
 	})
 	if err != nil {
@@ -314,10 +315,10 @@ func defaultEndpoint(region string) (url.URL, error) {
 	return ep.URI, nil
 }
 
-func defaultFIPSEndpoint(region string) (url.URL, error) {
+func defaultFIPSEndpoint(ctx context.Context, region string) (url.URL, error) {
 	r := costandusagereportservice.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), costandusagereportservice.EndpointParameters{
+	ep, err := r.ResolveEndpoint(ctx, costandusagereportservice.EndpointParameters{
 		Region:  aws.String(region),
 		UseFIPS: aws.Bool(true),
 	})
@@ -411,10 +412,10 @@ func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
 
-func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
+func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) caseExpectations {
 	t.Helper()
 
-	endpoint, err := defaultEndpoint(region)
+	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
 		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
 	}
@@ -425,10 +426,10 @@ func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
 	}
 }
 
-func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
+func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string) caseExpectations {
 	t.Helper()
 
-	endpoint, err := defaultFIPSEndpoint(region)
+	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
 		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
 	}
@@ -436,7 +437,7 @@ func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
 	hostname := endpoint.Hostname()
 	_, err = net.LookupHost(hostname)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
-		return expectDefaultEndpoint(t, region)
+		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
 		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
 	}
@@ -489,10 +490,8 @@ func expectBaseConfigFileEndpoint() caseExpectations {
 	}
 }
 
-func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, callF callFunc) {
+func testEndpointCase(ctx context.Context, t *testing.T, region string, testcase endpointTestCase, callF callFunc) {
 	t.Helper()
-
-	ctx := context.Background()
 
 	setup := caseSetup{
 		config:               map[string]any{},
