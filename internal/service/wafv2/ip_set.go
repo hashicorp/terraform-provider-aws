@@ -38,7 +38,7 @@ func resourceIPSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceIPSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -122,7 +122,7 @@ func resourceIPSet() *schema.Resource {
 	}
 }
 
-func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -154,7 +154,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -182,7 +182,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -214,7 +214,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -229,7 +229,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFAssociatedItemException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.WAFAssociatedItemException](ctx, timeout, func() (any, error) {
 		return conn.DeleteIPSet(ctx, input)
 	})
 
