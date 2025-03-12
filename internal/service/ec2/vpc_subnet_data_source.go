@@ -177,7 +177,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

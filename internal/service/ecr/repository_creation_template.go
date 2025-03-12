@@ -172,7 +172,7 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
 	output, err := conn.CreateRepositoryCreationTemplate(ctx, input)
@@ -289,7 +289,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrResourceTags) {
-		input.ResourceTags = Tags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]interface{})))
+		input.ResourceTags = svcTags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]interface{})))
 	}
 
 	_, err := conn.UpdateRepositoryCreationTemplate(ctx, input)

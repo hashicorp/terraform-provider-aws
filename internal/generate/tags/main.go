@@ -27,7 +27,7 @@ const (
 	defaultKeyValueTagsFunc       = "keyValueTags"
 	defaultListTagsFunc           = "listTags"
 	defaultSetTagsOutFunc         = "setTagsOut"
-	defaultTagsFunc               = "Tags"
+	defaultTagsFunc               = "svcTags"
 	defaultUpdateTagsFunc         = "updateTags"
 	defaultWaitTagsPropagatedFunc = "waitTagsPropagated"
 )

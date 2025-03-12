@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns ce service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
+// svcTags returns ce service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
 	result := make([]awstypes.ResourceTag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -82,7 +82,7 @@ func keyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyVa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *costexplorer.Client, identifier strin
 	if len(updatedTags) > 0 {
 		input := costexplorer.TagResourceInput{
 			ResourceArn:  aws.String(identifier),
-			ResourceTags: Tags(updatedTags),
+			ResourceTags: svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

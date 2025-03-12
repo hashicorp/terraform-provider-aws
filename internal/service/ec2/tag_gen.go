@@ -54,7 +54,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	key := d.Get(names.AttrKey).(string)
 	value := d.Get(names.AttrValue).(string)
 
-	if err := createTags(ctx, conn, identifier, Tags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
+	if err := createTags(ctx, conn, identifier, svcTags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 

@@ -403,7 +403,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 			return nil, fmt.Errorf("listing tags for KMS Key (%s): %w", keyID, err)
 		}
 
-		key.tags = Tags(tags)
+		key.tags = svcTags(tags)
 
 		return &key, nil
 	}, isNewResource)

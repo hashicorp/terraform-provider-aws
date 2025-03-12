@@ -40,7 +40,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 	input := ec2.DescribePublicIpv4PoolsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(

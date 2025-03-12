@@ -313,7 +313,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
-			input.AddTags = Tags(updatedTags)
+			input.AddTags = svcTags(updatedTags)
 		}
 	}
 

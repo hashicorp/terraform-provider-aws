@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns appmesh service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.TagRef {
+// svcTags returns appmesh service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.TagRef {
 	result := make([]awstypes.TagRef, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -82,7 +82,7 @@ func keyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.TagRef {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *appmesh.Client, identifier string, ol
 	if len(updatedTags) > 0 {
 		input := appmesh.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

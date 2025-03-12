@@ -45,7 +45,7 @@ func dataSourceTransitGatewayRouteTablesRead(ctx context.Context, d *schema.Reso
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(

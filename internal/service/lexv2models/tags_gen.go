@@ -50,8 +50,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // map[string]string handling
 
-// Tags returns lexv2models service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
+// svcTags returns lexv2models service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
@@ -64,7 +64,7 @@ func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -108,7 +108,7 @@ func updateTags(ctx context.Context, conn *lexmodelsv2.Client, identifier string
 	if len(updatedTags) > 0 {
 		input := lexmodelsv2.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

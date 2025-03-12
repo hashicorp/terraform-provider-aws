@@ -2238,7 +2238,7 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 
 	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
-			apiObject.Tags = Tags(v)
+			apiObject.Tags = svcTags(v)
 		}
 	}
 

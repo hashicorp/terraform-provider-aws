@@ -52,8 +52,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 // []*SERVICE.Tag handling
 
-// Tags returns route53 service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns route53 service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -83,7 +83,7 @@ func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -132,7 +132,7 @@ func updateTags(ctx context.Context, conn *route53.Client, identifier, resourceT
 	}
 
 	if len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags)
+		input.AddTags = svcTags(updatedTags)
 	}
 
 	if len(removedTags) > 0 {

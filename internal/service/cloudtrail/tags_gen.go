@@ -59,8 +59,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns cloudtrail service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns cloudtrail service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -90,7 +90,7 @@ func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -119,7 +119,7 @@ func updateTags(ctx context.Context, conn *cloudtrail.Client, identifier string,
 	if len(removedTags) > 0 {
 		input := cloudtrail.RemoveTagsInput{
 			ResourceId: aws.String(identifier),
-			TagsList:   Tags(removedTags),
+			TagsList:   svcTags(removedTags),
 		}
 
 		_, err := conn.RemoveTags(ctx, &input, optFns...)
@@ -134,7 +134,7 @@ func updateTags(ctx context.Context, conn *cloudtrail.Client, identifier string,
 	if len(updatedTags) > 0 {
 		input := cloudtrail.AddTagsInput{
 			ResourceId: aws.String(identifier),
-			TagsList:   Tags(updatedTags),
+			TagsList:   svcTags(updatedTags),
 		}
 
 		_, err := conn.AddTags(ctx, &input, optFns...)

@@ -353,7 +353,7 @@ func expandBackupRuleInputs(ctx context.Context, tfList []interface{}) []awstype
 			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]interface{}))
 		}
 		if v, ok := tfMap["recovery_point_tags"].(map[string]interface{}); ok && len(v) > 0 {
-			apiObject.RecoveryPointTags = Tags(tftags.New(ctx, v).IgnoreAWS())
+			apiObject.RecoveryPointTags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 		}
 		if v, ok := tfMap["rule_name"].(string); ok && v != "" {
 			apiObject.RuleName = aws.String(v)

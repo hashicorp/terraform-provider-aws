@@ -677,7 +677,7 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
-			lustreConfig.FinalBackupTags = Tags(tftags.New(ctx, v))
+			lustreConfig.FinalBackupTags = svcTags(tftags.New(ctx, v))
 		}
 
 		input.LustreConfiguration = lustreConfig

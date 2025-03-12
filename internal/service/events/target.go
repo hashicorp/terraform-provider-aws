@@ -992,7 +992,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		}
 
 		if len(tags) > 0 {
-			ecsParameters.Tags = Tags(tags.IgnoreAWS())
+			ecsParameters.Tags = svcTags(tags.IgnoreAWS())
 		}
 
 		ecsParameters.EnableExecuteCommand = tfMap["enable_execute_command"].(bool)

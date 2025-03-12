@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns sesv2 service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns sesv2 service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -82,7 +82,7 @@ func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *sesv2.Client, identifier string, oldT
 	if len(updatedTags) > 0 {
 		input := sesv2.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

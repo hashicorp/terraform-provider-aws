@@ -286,7 +286,7 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
-		setTagsOut(ctx, Tags(tags))
+		setTagsOut(ctx, svcTags(tags))
 	}
 
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, subscriberIdentity, output)...)

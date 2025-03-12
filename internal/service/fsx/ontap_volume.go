@@ -576,7 +576,7 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.OntapConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+		input.OntapConfiguration.FinalBackupTags = svcTags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())

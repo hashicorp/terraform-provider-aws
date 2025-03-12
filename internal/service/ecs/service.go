@@ -2468,7 +2468,7 @@ func expandTagSpecifications(ctx context.Context, ts []interface{}) []awstypes.E
 		}
 		if v, ok := raw[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 			if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
-				config.Tags = Tags(v)
+				config.Tags = svcTags(v)
 			}
 		}
 		s = append(s, config)
