@@ -909,7 +909,7 @@ var (
 )
 
 type lifecycleExpirationModel struct {
-	Date                      timetypes.RFC3339 `tfsdk:"date" autoflex:",legacy"`
+	Date                      timetypes.RFC3339 `tfsdk:"date"`
 	Days                      types.Int32       `tfsdk:"days" autoflex:",legacy"`
 	ExpiredObjectDeleteMarker types.Bool        `tfsdk:"expired_object_delete_marker" autoflex:",legacy"`
 }
