@@ -5499,7 +5499,8 @@ func findKeyPairs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeKeyP
 
 func findKeyPairByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.KeyPairInfo, error) {
 	input := ec2.DescribeKeyPairsInput{
-		KeyNames: []string{name},
+		KeyNames:         []string{name},
+		IncludePublicKey: aws.Bool(true),
 	}
 
 	output, err := findKeyPair(ctx, conn, &input)

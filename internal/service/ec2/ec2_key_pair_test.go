@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,14 +46,19 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPublicKey, func(v string) error {
+						if !verify.SuppressEquivalentOpenSSHPublicKeyDiffs("", v, publicKey, nil) {
+							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
+						}
+
+						return nil
+					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -81,13 +87,19 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPublicKey, func(v string) error {
+						if !verify.SuppressEquivalentOpenSSHPublicKeyDiffs("", v, publicKey, nil) {
+							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
+						}
+
+						return nil
+					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccKeyPairConfig_tags2(rName, publicKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -132,13 +144,19 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "key_name"),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", "terraform-"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPublicKey, func(v string) error {
+						if !verify.SuppressEquivalentOpenSSHPublicKeyDiffs("", v, publicKey, nil) {
+							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
+						}
+
+						return nil
+					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -166,13 +184,19 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "key_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPublicKey, func(v string) error {
+						if !verify.SuppressEquivalentOpenSSHPublicKeyDiffs("", v, publicKey, nil) {
+							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
+						}
+
+						return nil
+					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
