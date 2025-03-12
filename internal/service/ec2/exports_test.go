@@ -155,6 +155,7 @@ var (
 	FindHostByID                                               = findHostByID
 	FindIPAMByID                                               = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                         = findIPAMPoolAllocationByTwoPartKey
+	FindIPAMPoolAllocationsForVPC                              = findIPAMPoolAllocationsForVPC
 	FindIPAMPoolByID                                           = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                               = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                   = findIPAMResourceDiscoveryAssociationByID
