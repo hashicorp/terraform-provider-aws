@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks User Profile resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```python
@@ -47,4 +49,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Same value as `user_arn`
 
-<!-- cache-key: cdktf-0.20.8 input-731328ff75f486df9bef040dc213e2c98c675ba2402982b18b6e320cea2b89f9 -->
+<!-- cache-key: cdktf-0.20.8 input-3f3f1e745da963172b594169d735fca2ebd37a54c4071122a88277d2b4f26619 -->

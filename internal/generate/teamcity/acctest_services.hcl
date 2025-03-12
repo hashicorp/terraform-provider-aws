@@ -56,6 +56,10 @@ service "cloudhsmv2" {
   vpc_lock = true
 }
 
+service "cloudtrail" {
+  parallelism = 5
+}
+
 service "comprehend" {
   parallelism = 10
 }
@@ -281,6 +285,11 @@ service "vpc" {
   vpc_lock                   = true
   pattern_override           = "TestAccVPC"
   split_package_real_package = "ec2"
+}
+
+service "vpclattice" {
+  vpc_lock    = true
+  parallelism = 10
 }
 
 service "vpnclient" {

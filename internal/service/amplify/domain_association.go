@@ -327,6 +327,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 			types.DomainStatusPendingVerification,
 			types.DomainStatusPendingDeployment,
 			types.DomainStatusAvailable,
+			types.DomainStatusAwaitingAppCname,
 		),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,
@@ -354,6 +355,8 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 			types.DomainStatusUpdating,
 			types.DomainStatusInProgress,
 			types.DomainStatusPendingVerification,
+			types.DomainStatusAwaitingAppCname,
+			types.DomainStatusImportingCustomCertificate,
 		),
 		Target: enum.Slice(
 			types.DomainStatusPendingDeployment,

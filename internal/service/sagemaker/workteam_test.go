@@ -374,7 +374,7 @@ func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Workteam %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Workteam %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -389,7 +389,7 @@ func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *awstype
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Workteam ID is set")
+			return fmt.Errorf("No SageMaker AI Workteam ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

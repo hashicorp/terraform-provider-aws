@@ -42,7 +42,6 @@ func resourceApp() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta interface{}) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""

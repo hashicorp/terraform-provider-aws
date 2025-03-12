@@ -1197,7 +1197,7 @@ func TestAccELBV2Listener_attributes_alb_HTTPRequestHeaders(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_attributes_albHTTPRequestHeaders(rName),
+				Config: testAccListenerConfig_attributes_albHTTPRequestHeaders(rName, "https://example.com", "DENY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -1223,6 +1223,26 @@ func TestAccELBV2Listener_attributes_alb_HTTPRequestHeaders(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
 				},
+			},
+			{
+				Config: testAccListenerConfig_attributes_albHTTPRequestHeaders(rName, "https://www.example.com", "SAMEORIGIN"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_server_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value", "max-age=31536000; includeSubDomains"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value", "https://www.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value", "GET,POST,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value", "Content-Type,X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value", "X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", "default-src 'self'"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", "nosniff"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "SAMEORIGIN"),
+				),
 			},
 		},
 	})
@@ -3238,7 +3258,7 @@ resource "aws_lb_target_group" "test" {
 `, rName, seconds))
 }
 
-func testAccListenerConfig_attributes_albHTTPRequestHeaders(rName string) string {
+func testAccListenerConfig_attributes_albHTTPRequestHeaders(rName, allowOriginHeaderValue, frameOptionsHeaderValue string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
@@ -3248,7 +3268,7 @@ resource "aws_lb_listener" "test" {
 
   routing_http_response_server_enabled                                = true
   routing_http_response_strict_transport_security_header_value        = "max-age=31536000; includeSubDomains"
-  routing_http_response_access_control_allow_origin_header_value      = "https://example.com"
+  routing_http_response_access_control_allow_origin_header_value      = %[2]q
   routing_http_response_access_control_allow_methods_header_value     = "GET,POST,OPTIONS"
   routing_http_response_access_control_allow_headers_header_value     = "Content-Type,X-Custom-Header"
   routing_http_response_access_control_allow_credentials_header_value = "true"
@@ -3256,7 +3276,7 @@ resource "aws_lb_listener" "test" {
   routing_http_response_access_control_max_age_header_value           = "3600"
   routing_http_response_content_security_policy_header_value          = "default-src 'self'"
   routing_http_response_x_content_type_options_header_value           = "nosniff"
-  routing_http_response_x_frame_options_header_value                  = "DENY"
+  routing_http_response_x_frame_options_header_value                  = %[3]q
 
   default_action {
     type             = "forward"
@@ -3289,7 +3309,7 @@ resource "aws_lb_target_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, allowOriginHeaderValue, frameOptionsHeaderValue))
 }
 
 func testAccListenerConfig_attributes_albHTTPSRequestHeaders(rName, key, certificate string) string {

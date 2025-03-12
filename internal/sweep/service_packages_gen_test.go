@@ -160,6 +160,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagevod"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -415,6 +416,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		medialive.ServicePackage(ctx),
 		mediapackage.ServicePackage(ctx),
 		mediapackagev2.ServicePackage(ctx),
+		mediapackagevod.ServicePackage(ctx),
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),

@@ -220,10 +220,6 @@ service "apigateway" {
     human_friendly      = "API Gateway"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetAccount"
   }
@@ -266,10 +262,6 @@ service "apigatewayv2" {
   names {
     provider_name_upper = "APIGatewayV2"
     human_friendly      = "API Gateway V2"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -613,11 +605,6 @@ service "appsync" {
   names {
     provider_name_upper = "AppSync"
     human_friendly      = "AppSync"
-  }
-
-  client {
-    go_v1_client_typename = "AppSync"
-    skip_client_generate  = true
   }
 
   endpoint_info {
@@ -984,10 +971,6 @@ service "chatbot" {
     human_friendly      = "Chatbot"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "GetAccountPreferences"
   }
@@ -1285,10 +1268,6 @@ service "cloudformation" {
     human_friendly      = "CloudFormation"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call   = "ListStackInstances"
     endpoint_api_params = "StackSetName: aws.String(\"test\")"
@@ -1369,10 +1348,6 @@ service "cloudhsmv2" {
     aliases             = ["cloudhsm"]
     provider_name_upper = "CloudHSMV2"
     human_friendly      = "CloudHSM"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -1476,7 +1451,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
+  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
   brand                    = "AWS"
 }
 
@@ -2834,10 +2809,6 @@ service "ec2instanceconnect" {
     human_friendly      = "EC2 Instance Connect"
   }
 
-  client {
-    go_v1_client_typename = "EC2InstanceConnect"
-  }
-
   resource_prefix {
     correct = "aws_ec2instanceconnect_"
   }
@@ -3115,10 +3086,6 @@ service "elbv2" {
     human_friendly      = "ELB (Elastic Load Balancing)"
   }
 
-  client {
-    go_v1_client_typename = "ELBV2"
-  }
-
   endpoint_info {
     endpoint_api_call = "DescribeLoadBalancers"
   }
@@ -3292,6 +3259,10 @@ service "mediapackagevod" {
     human_friendly      = "Elemental MediaPackage VOD"
   }
 
+  endpoint_info {
+    endpoint_api_call = "ListPackagingGroups"
+  }
+
   resource_prefix {
     correct = "aws_mediapackagevod_"
   }
@@ -3299,7 +3270,6 @@ service "mediapackagevod" {
   provider_package_correct = "mediapackagevod"
   doc_prefix               = ["mediapackagevod_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "mediastore" {
@@ -3490,10 +3460,6 @@ service "schemas" {
     human_friendly      = "EventBridge Schemas"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListRegistries"
   }
@@ -3586,10 +3552,6 @@ service "fms" {
   names {
     provider_name_upper = "FMS"
     human_friendly      = "FMS (Firewall Manager)"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -4000,10 +3962,6 @@ service "iot1clickdevices" {
     human_friendly      = "IoT 1-Click Devices"
   }
 
-  client {
-    go_v1_client_typename = "IoT1ClickDevicesService"
-  }
-
   resource_prefix {
     correct = "aws_iot1clickdevices_"
   }
@@ -4027,10 +3985,6 @@ service "iot1clickprojects" {
   names {
     provider_name_upper = "IoT1ClickProjects"
     human_friendly      = "IoT 1-Click Projects"
-  }
-
-  client {
-    go_v1_client_typename = "IoT1ClickProjects"
   }
 
   resource_prefix {
@@ -4216,10 +4170,6 @@ service "greengrassv2" {
   names {
     provider_name_upper = "GreengrassV2"
     human_friendly      = "IoT Greengrass V2"
-  }
-
-  client {
-    go_v1_client_typename = "GreengrassV2"
   }
 
   resource_prefix {
@@ -4465,10 +4415,6 @@ service "kinesis" {
     human_friendly      = "Kinesis"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListStreams"
   }
@@ -4515,10 +4461,6 @@ service "kinesisanalyticsv2" {
   names {
     provider_name_upper = "KinesisAnalyticsV2"
     human_friendly      = "Kinesis Analytics V2"
-  }
-
-  client {
-    go_v1_client_typename = "KinesisAnalyticsV2"
   }
 
   endpoint_info {
@@ -4875,10 +4817,6 @@ service "lexruntimev2" {
     human_friendly      = "Lex Runtime V2"
   }
 
-  client {
-    go_v1_client_typename = "LexRuntimeV2"
-  }
-
   resource_prefix {
     correct = "aws_lexruntimev2_"
   }
@@ -4925,10 +4863,6 @@ service "lightsail" {
   names {
     provider_name_upper = "Lightsail"
     human_friendly      = "Lightsail"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -5072,10 +5006,6 @@ service "macie2" {
     human_friendly      = "Macie"
   }
 
-  client {
-    go_v1_client_typename = "Macie2"
-  }
-
   endpoint_info {
     endpoint_api_call = "ListFindings"
   }
@@ -5190,10 +5120,6 @@ service "kafka" {
     aliases             = ["msk"]
     provider_name_upper = "Kafka"
     human_friendly      = "Managed Streaming for Kafka"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   endpoint_info {
@@ -5860,10 +5786,6 @@ service "organizations" {
     human_friendly      = "Organizations"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListAccounts"
   }
@@ -6156,10 +6078,6 @@ service "pinpointsmsvoicev2" {
   names {
     provider_name_upper = "PinpointSMSVoiceV2"
     human_friendly      = "End User Messaging SMS"
-  }
-
-  client {
-    go_v1_client_typename = "PinpointSMSVoiceV2"
   }
 
   endpoint_info {
@@ -6836,10 +6754,6 @@ service "route53recoverycluster" {
     human_friendly      = "Route 53 Recovery Cluster"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryCluster"
-  }
-
   resource_prefix {
     correct = "aws_route53recoverycluster_"
   }
@@ -6865,13 +6779,11 @@ service "route53recoverycontrolconfig" {
     human_friendly      = "Route 53 Recovery Control Config"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryControlConfig"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListClusters"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
@@ -6898,13 +6810,11 @@ service "route53recoveryreadiness" {
     human_friendly      = "Route 53 Recovery Readiness"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryReadiness"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListCells"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
@@ -6924,10 +6834,6 @@ service "route53resolver" {
   names {
     provider_name_upper = "Route53Resolver"
     human_friendly      = "Route 53 Resolver"
-  }
-
-  client {
-    go_v1_client_typename = "Route53Resolver"
   }
 
   endpoint_info {
@@ -6958,10 +6864,6 @@ service "s3" {
     aliases             = ["s3api"]
     provider_name_upper = "S3"
     human_friendly      = "S3 (Simple Storage)"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   env_var {
@@ -7061,10 +6963,6 @@ service "s3outposts" {
     human_friendly      = "S3 on Outposts"
   }
 
-  client {
-    go_v1_client_typename = "S3Outposts"
-  }
-
   endpoint_info {
     endpoint_api_call = "ListEndpoints"
   }
@@ -7085,7 +6983,7 @@ service "sagemaker" {
 
   names {
     provider_name_upper = "SageMaker"
-    human_friendly      = "SageMaker"
+    human_friendly      = "SageMaker AI"
   }
 
   endpoint_info {
@@ -7098,7 +6996,7 @@ service "sagemaker" {
 
   provider_package_correct = "sagemaker"
   doc_prefix               = ["sagemaker_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "sagemakera2iruntime" {
@@ -7891,10 +7789,6 @@ service "ssoadmin" {
     human_friendly      = "SSO Admin"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   endpoint_info {
     endpoint_api_call = "ListInstances"
   }
@@ -7988,10 +7882,6 @@ service "sts" {
   names {
     provider_name_upper = "STS"
     human_friendly      = "STS (Security Token)"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   env_var {
@@ -8693,14 +8583,11 @@ service "dynamodb" {
     human_friendly      = "DynamoDB"
   }
 
-  client {
-    skip_client_generate = true
-  }
-
   env_var {
     deprecated_env_var = "AWS_DYNAMODB_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_DYNAMODB_ENDPOINT"
   }
+
   endpoint_info {
     endpoint_api_call = "ListTables"
   }
@@ -8722,11 +8609,6 @@ service "ec2" {
   names {
     provider_name_upper = "EC2"
     human_friendly      = "EC2 (Elastic Compute Cloud)"
-  }
-
-  client {
-    go_v1_client_typename = "EC2"
-    skip_client_generate  = true
   }
 
   endpoint_info {

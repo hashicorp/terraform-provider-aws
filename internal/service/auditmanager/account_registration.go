@@ -31,10 +31,6 @@ type resourceAccountRegistration struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAccountRegistration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_account_registration"
-}
-
 func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

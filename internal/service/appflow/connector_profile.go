@@ -1151,6 +1151,10 @@ func resourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
+												"use_privatelink_for_metadata_and_authorization": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
 											},
 										},
 									},
@@ -1529,9 +1533,10 @@ func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Connector Profile: %s", d.Id())
-	_, err := conn.DeleteConnectorProfile(ctx, &appflow.DeleteConnectorProfileInput{
+	input := appflow.DeleteConnectorProfileInput{
 		ConnectorProfileName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteConnectorProfile(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -2102,6 +2107,10 @@ func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *types
 		properties.IsSandboxEnvironment = v
 	}
 
+	if v, ok := m["use_privatelink_for_metadata_and_authorization"].(bool); ok {
+		properties.UsePrivateLinkForMetadataAndAuthorization = v
+	}
+
 	return properties
 }
 
@@ -2333,6 +2342,7 @@ func flattenSalesforceConnectorProfileProperties(properties *types.SalesforceCon
 		m["instance_url"] = aws.ToString(properties.InstanceUrl)
 	}
 	m["is_sandbox_environment"] = properties.IsSandboxEnvironment
+	m["use_privatelink_for_metadata_and_authorization"] = properties.UsePrivateLinkForMetadataAndAuthorization
 
 	return []interface{}{m}
 }

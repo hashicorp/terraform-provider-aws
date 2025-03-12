@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,8 +103,6 @@ func resourceProject() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -128,13 +125,13 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return conn.CreateProject(ctx, input)
 	}, ErrCodeValidationException)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI project: %s", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitProjectCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Project (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
@@ -148,12 +145,12 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Project (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Project (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Project (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Project (%s): %s", d.Id(), err)
 	}
 
 	d.Set("project_name", project.ProjectName)
@@ -188,11 +185,11 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateProject(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Project (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Project (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitProjectUpdated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to be updated: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Project (%s) to be updated: %s", d.Id(), err)
 		}
 	}
 
@@ -203,7 +200,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Project: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Project: %s", d.Id())
 	_, err := conn.DeleteProject(ctx, &sagemaker.DeleteProjectInput{
 		ProjectName: aws.String(d.Id()),
 	})
@@ -214,11 +211,11 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Project (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Project (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitProjectDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Project (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

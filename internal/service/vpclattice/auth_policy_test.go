@@ -95,9 +95,10 @@ func testAccCheckAuthPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			policy, err := conn.GetAuthPolicy(ctx, &vpclattice.GetAuthPolicyInput{
+			input := vpclattice.GetAuthPolicyInput{
 				ResourceIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			policy, err := conn.GetAuthPolicy(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {
@@ -127,9 +128,10 @@ func testAccCheckAuthPolicyExists(ctx context.Context, name string, authpolicy *
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetAuthPolicy(ctx, &vpclattice.GetAuthPolicyInput{
+		input := vpclattice.GetAuthPolicyInput{
 			ResourceIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetAuthPolicy(ctx, &input)
 
 		if err != nil {
 			//return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAuthPolicy, rs.Primary.ID, err)

@@ -166,9 +166,10 @@ func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[INFO] Deleting Appsync API Cache: %s", d.Id())
-	_, err := conn.DeleteApiCache(ctx, &appsync.DeleteApiCacheInput{
+	input := appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApiCache(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

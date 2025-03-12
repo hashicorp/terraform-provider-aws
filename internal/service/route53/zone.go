@@ -11,7 +11,6 @@ import (
 	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -27,7 +26,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -115,8 +113,6 @@ func resourceZone() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -191,12 +187,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "hostedzone/" + zoneID,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), zoneID))
 	d.Set(names.AttrComment, "")
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
@@ -351,6 +342,10 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting Route53 Hosted Zone (%s): %w", hostedZoneID, err)
 	}
 
 	if output.ChangeInfo != nil {
@@ -545,4 +540,9 @@ func findPublicHostedZoneIDByDomainName(ctx context.Context, conn *route53.Clien
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 
 	return &hostedZoneID, nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func zoneARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "hostedzone/"+id)
 }

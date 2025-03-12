@@ -50,7 +50,7 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypeOfferingsInput{}
+	input := ec2.DescribeInstanceTypeOfferingsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
@@ -60,7 +60,7 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 		input.LocationType = awstypes.LocationType(v.(string))
 	}
 
-	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, input)
+	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type Offerings: %s", err)

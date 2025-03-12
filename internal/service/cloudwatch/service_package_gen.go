@@ -15,11 +15,34 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceContributorManagedInsightRules,
+			TypeName: "aws_cloudwatch_contributor_managed_insight_rules",
+			Name:     "Contributor Managed Insight Rules",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceContributorInsightRule,
+			TypeName: "aws_cloudwatch_contributor_insight_rule",
+			Name:     "Contributor Insight Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrResourceARN,
+			},
+		},
+		{
+			Factory:  newResourceContributorManagedInsightRule,
+			TypeName: "aws_cloudwatch_contributor_managed_insight_rule",
+			Name:     "Contributor Managed Insight Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

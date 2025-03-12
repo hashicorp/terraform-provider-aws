@@ -60,10 +60,6 @@ type agentResource struct {
 	framework.WithTimeouts
 }
 
-func (*agentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent"
-}
-
 func (r *agentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -388,10 +384,11 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	agentID := data.ID.ValueString()
-	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
+	input := bedrockagent.DeleteAgentInput{
 		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
-	})
+	}
+	_, err := conn.DeleteAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -414,10 +411,6 @@ func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStat
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	// Set prepare_agent to default value on import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
-}
-
-func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {

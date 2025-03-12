@@ -46,10 +46,6 @@ type anomalyDetectorResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*anomalyDetectorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_anomaly_detector"
-}
-
 func (r *anomalyDetectorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -182,7 +178,7 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().LogsClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -234,10 +230,6 @@ func (r *anomalyDetectorResource) Delete(ctx context.Context, request resource.D
 
 func (r *anomalyDetectorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
-}
-
-func (r *anomalyDetectorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findLogAnomalyDetectorByARN(ctx context.Context, conn *cloudwatchlogs.Client, arn string) (*cloudwatchlogs.GetLogAnomalyDetectorOutput, error) {
