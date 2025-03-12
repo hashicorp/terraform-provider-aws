@@ -472,6 +472,43 @@ func TestAccCloudFormationStackInstances_concurrencyMode(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStackInstances_regionOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstances tfcloudformation.StackInstances
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_instances.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackInstancesConfig_regionOrder(rName, []string{acctest.Region(), acctest.AlternateRegion()}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackInstancesForOrganizationalUnitExists(ctx, resourceName, stackInstances),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", "SEQUENTIAL"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_order.0", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_order.1", acctest.AlternateRegion()),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/32536.
 func TestAccCloudFormationStackInstances_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -920,7 +957,7 @@ resource "aws_cloudformation_stack_instances" "test" {
 `, value1, value2))
 }
 
-func testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName string) string {
+func testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName string, autoDeployment bool) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1019,7 +1056,7 @@ resource "aws_cloudformation_stack_set" "test" {
   permission_model = "SERVICE_MANAGED"
 
   auto_deployment {
-    enabled                          = true
+    enabled                          = %[3]t
     retain_stacks_on_account_removal = false
   }
 
@@ -1033,11 +1070,11 @@ TEMPLATE
     ignore_changes = [administration_role_arn]
   }
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName))
+`, rName, testAccStackSetTemplateBodyVPC(rName), autoDeployment)
 }
 
 func testAccStackInstancesConfig_deploymentTargets(rName string) string {
-	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName), `
+	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName, true), `
 resource "aws_cloudformation_stack_instances" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 
@@ -1053,7 +1090,7 @@ resource "aws_cloudformation_stack_instances" "test" {
 }
 
 func testAccStackInstancesConfig_DeploymentTargets_emptyOU(rName string) string {
-	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName, true), fmt.Sprintf(`
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
   parent_id = data.aws_organizations_organization.test.roots[0].id
@@ -1072,7 +1109,7 @@ resource "aws_cloudformation_stack_instances" "test" {
 }
 
 func testAccStackInstancesConfig_operationPreferences(rName string) string {
-	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName), `
+	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName, true), `
 resource "aws_cloudformation_stack_instances" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 
@@ -1091,7 +1128,7 @@ resource "aws_cloudformation_stack_instances" "test" {
 }
 
 func testAccStackInstancesConfig_concurrencyMode(rName string) string {
-	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName), `
+	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName, true), `
 resource "aws_cloudformation_stack_instances" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 
@@ -1108,6 +1145,29 @@ resource "aws_cloudformation_stack_instances" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 }
 `)
+}
+
+func testAccStackInstancesConfig_regionOrder(rName string, regionOrder []string) string {
+	return acctest.ConfigCompose(testAccStackInstancesBaseConfig_ServiceManagedStackSet(rName, false),
+		fmt.Sprintf(`
+resource "aws_cloudformation_stack_instances" "test" {
+  stack_set_name = aws_cloudformation_stack_set.test.name
+
+  operation_preferences {
+    failure_tolerance_count = 1
+    max_concurrent_count    = 10
+    concurrency_mode        = "SOFT_FAILURE_TOLERANCE"
+    region_concurrency_type = "SEQUENTIAL"
+    region_order            = ["%[1]s"]
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+  }
+
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+}
+`, strings.Join(regionOrder, `", "`)))
 }
 
 func testAccStackInstancesConfig_delegatedAdministrator(rName string) string {
