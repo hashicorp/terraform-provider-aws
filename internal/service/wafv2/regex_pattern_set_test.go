@@ -364,15 +364,15 @@ resource "aws_wafv2_regex_pattern_set" "test" {
     regex_string = "two"
   }
 }
-  `
+`
 }
 
 func testAccRegexPatternSetConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name_prefix  = %[1]q
-  description  = %[1]q
-  scope        = "REGIONAL"
+  name_prefix = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
 
   regular_expression {
     regex_string = "one"
@@ -382,7 +382,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
     regex_string = "two"
   }
 }
-  `, namePrefix)
+`, namePrefix)
 }
 
 func testAccRegexPatternSetConfig_update(name string) string {

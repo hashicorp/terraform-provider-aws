@@ -3436,15 +3436,15 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-  `
+`
 }
 
 func testAccWebACLConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name_prefix  = %[1]q
-  description  = %[1]q
-  scope        = "REGIONAL"
+  name_prefix = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
@@ -3456,7 +3456,7 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-  `, namePrefix)
+`, namePrefix)
 }
 
 func testAccWebACLConfig_basicRule(rName string) string {
