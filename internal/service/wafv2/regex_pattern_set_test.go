@@ -6,11 +6,11 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,6 +39,7 @@ func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/regexpatternset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "2"),
