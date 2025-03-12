@@ -76,10 +76,10 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	conn.SetServicePackages(ctx, map[string]conns.ServicePackage{
 		"Test": &mockService{},
 	})
-	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]interface{}{
+	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]any{
 		"tag": "",
 	}))
-	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]interface{}{
+	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]any{
 		"tag2": "tag",
 	}))
 
@@ -147,7 +147,7 @@ func (d *resourceData) Set(string, any) error {
 	return nil
 }
 
-func (d *resourceData) GetChange(key string) (interface{}, interface{}) {
+func (d *resourceData) GetChange(key string) (any, any) {
 	return nil, nil
 }
 
