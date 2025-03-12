@@ -233,7 +233,6 @@ func TestAccTimestreamInfluxDBDBInstance_networkType(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
-				Destroy:                 true, // network_type cannot be updated.
 			},
 			{
 				Config: testAccDBInstanceConfig_networkTypeDual(rName),
@@ -247,7 +246,6 @@ func TestAccTimestreamInfluxDBDBInstance_networkType(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
-				Destroy:                 true,
 			},
 		},
 	})
