@@ -1532,14 +1532,14 @@ resource "aws_cloudformation_stack_set" "test" {
   permission_model = "SERVICE_MANAGED"
 
   auto_deployment {
-    enabled                          = false
+    enabled = false
   }
 
   operation_preferences {
     failure_tolerance_count = 1
     max_concurrent_count    = 10
     region_concurrency_type = "SEQUENTIAL"
-	region_order            = ["%[3]s"]
+    region_order            = ["%[3]s"]
   }
 
   template_body = <<TEMPLATE
