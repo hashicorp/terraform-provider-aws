@@ -1,68 +1,56 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package s3
+package objectvalidator
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
 
-// objectWarnExactlyOneOfChildren acts similarly to `objectvalidator.ExactlyOneOf` except that it returns a Warning and
+// WarnExactlyOneOfChildren acts similarly to `objectvalidator.ExactlyOneOf` except that it returns a Warning and
 // that it doesn't include the Object in the count of matched attributes.
-func objectWarnExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
-	return ExactlyOneOfChildrenValidator{
-		PathExpressions: expressions,
+func WarnExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
+	return exactlyOneOfChildrenValidator{
+		pathExpressions: expressions,
 	}
 }
 
-type ExactlyOneOfChildrenValidator struct {
-	PathExpressions path.Expressions
+type exactlyOneOfChildrenValidator struct {
+	pathExpressions path.Expressions
 }
 
-type ExactlyOneOfValidatorRequest struct {
-	Config         tfsdk.Config
-	ConfigValue    attr.Value
-	Path           path.Path
-	PathExpression path.Expression
-}
-
-type ExactlyOneOfValidatorResponse struct {
-	Diagnostics diag.Diagnostics
-}
-
-func (av ExactlyOneOfChildrenValidator) Description(ctx context.Context) string {
+func (av exactlyOneOfChildrenValidator) Description(ctx context.Context) string {
 	return av.MarkdownDescription(ctx)
 }
 
-func (av ExactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.PathExpressions)
+func (av exactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.pathExpressions)
 }
 
-func (av ExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	validateReq := ExactlyOneOfValidatorRequest{
+func (av exactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	validateReq := internal.ExactlyOneOfValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
 		Path:           req.Path,
 		PathExpression: req.PathExpression,
 	}
-	var validateResp ExactlyOneOfValidatorResponse
+	var validateResp internal.ExactlyOneOfValidatorResponse
 
 	av.Validate(ctx, validateReq, &validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av ExactlyOneOfChildrenValidator) Validate(ctx context.Context, req ExactlyOneOfValidatorRequest, res *ExactlyOneOfValidatorResponse) {
+func (av exactlyOneOfChildrenValidator) Validate(ctx context.Context, req internal.ExactlyOneOfValidatorRequest, res *internal.ExactlyOneOfValidatorResponse) {
 	count := 0
-	expressions := req.PathExpression.MergeExpressions(av.PathExpressions...)
+	expressions := req.PathExpression.MergeExpressions(av.pathExpressions...)
 
 	// If current attribute is unknown, delay validation
 	if req.ConfigValue.IsUnknown() {

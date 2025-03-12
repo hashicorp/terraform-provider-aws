@@ -38,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -169,7 +170,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									},
 								},
 								Validators: []validator.Object{
-									objectWarnExactlyOneOfChildren(
+									tfobjectvalidator.WarnExactlyOneOfChildren(
 										path.MatchRelative().AtName("date"),
 										path.MatchRelative().AtName("days"),
 										path.MatchRelative().AtName("expired_object_delete_marker"),
