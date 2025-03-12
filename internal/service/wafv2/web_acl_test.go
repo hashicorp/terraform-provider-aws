@@ -2746,6 +2746,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						names.AttrPriority: "1",
 						"captcha_config.#": "1",
 						"captcha_config.0.immunity_time_property.0.immunity_time": "240",
+						"challenge_config.#": "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
@@ -2775,7 +2776,10 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.#":   "0",
 						"action.0.challenge.#": "1",
 						"action.0.count.#":     "0",
-						names.AttrPriority:     "1",
+						"challenge_config.#":   "1",
+						"challenge_config.0.immunity_time_property.#":               "1",
+						"challenge_config.0.immunity_time_property.0.immunity_time": "300",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
@@ -4200,6 +4204,12 @@ resource "aws_wafv2_web_acl" "test" {
 
     action {
       challenge {}
+    }
+
+    challenge_config {
+      immunity_time_property {
+        immunity_time = 300
+      }
     }
 
     statement {

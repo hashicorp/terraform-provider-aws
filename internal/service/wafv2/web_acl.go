@@ -42,7 +42,7 @@ func resourceWebACL() *schema.Resource {
 		DeleteWithoutTimeout: resourceWebACLDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -123,7 +123,7 @@ func resourceWebACL() *schema.Resource {
 					ConflictsWith:    []string{names.AttrRule},
 					ValidateFunc:     validation.StringIsJSON,
 					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-					StateFunc: func(v interface{}) string {
+					StateFunc: func(v any) string {
 						json, _ := structure.NormalizeJsonString(v)
 						return json
 					},
@@ -148,7 +148,8 @@ func resourceWebACL() *schema.Resource {
 									},
 								},
 							},
-							"captcha_config": outerCaptchaConfigSchema(),
+							"captcha_config":   outerCaptchaConfigSchema(),
+							"challenge_config": outerChallengeConfigSchema(),
 							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
@@ -200,20 +201,20 @@ func resourceWebACL() *schema.Resource {
 	}
 }
 
-func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateWebACLInput{
-		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
-		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
-		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
-		DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
+		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]any)),
+		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]any)),
+		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]any)),
+		DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 		Name:              aws.String(name),
 		Scope:             awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:              getTagsIn(ctx),
-		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]any)),
 	}
 
 	if v, ok := d.GetOk(names.AttrRule); ok {
@@ -243,7 +244,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 		return conn.CreateWebACL(ctx, input)
 	})
 
@@ -259,7 +260,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
 
-func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -315,7 +316,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -356,16 +357,16 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		input := &wafv2.UpdateWebACLInput{
-			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
-			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
-			ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
-			DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
+			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]any)),
+			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]any)),
+			ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]any)),
+			DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 			Id:                aws.String(d.Id()),
 			LockToken:         aws.String(aclLockToken),
 			Name:              aws.String(aclName),
 			Rules:             rules,
 			Scope:             awstypes.Scope(aclScope),
-			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]any)),
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -383,7 +384,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		const (
 			timeout = 5 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 			return conn.UpdateWebACL(ctx, input)
 		})
 
@@ -398,7 +399,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
 				// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 				input.LockToken = aws.String(newLockToken)
-				_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+				_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 					return conn.UpdateWebACL(ctx, input)
 				})
 
@@ -416,7 +417,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
 
-func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -434,7 +435,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 		return conn.DeleteWebACL(ctx, input)
 	})
 
@@ -449,7 +450,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
 			// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 			input.LockToken = aws.String(newLockToken)
-			_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+			_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 				return conn.DeleteWebACL(ctx, input)
 			})
 
