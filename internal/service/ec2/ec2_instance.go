@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -40,8 +42,6 @@ import (
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"maps"
-	"slices"
 )
 
 // @SDKResource("aws_instance", name="Instance")

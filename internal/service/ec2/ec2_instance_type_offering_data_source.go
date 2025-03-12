@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"slices"
 )
 
 // @SDKDataSource("aws_ec2_instance_type_offering", name="Instance Type Offering")
