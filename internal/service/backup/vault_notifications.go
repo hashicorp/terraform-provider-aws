@@ -118,9 +118,10 @@ func resourceVaultNotificationsDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Notifications: %s", d.Id())
-	_, err := conn.DeleteBackupVaultNotifications(ctx, &backup.DeleteBackupVaultNotificationsInput{
+	input := backup.DeleteBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultNotifications(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

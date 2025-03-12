@@ -69,7 +69,7 @@ func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
-					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need DX Connection for testing
 					resource.TestCheckResourceAttrPair(accepterResourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, names.AttrID),
@@ -124,7 +124,7 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
-					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need DX Connection for testing
 					resource.TestCheckResourceAttrPair(accepterResourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
@@ -150,7 +150,7 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
-					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need DX Connection for testing
 					resource.TestCheckResourceAttrPair(accepterResourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),

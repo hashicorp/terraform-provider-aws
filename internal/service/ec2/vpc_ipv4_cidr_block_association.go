@@ -5,7 +5,9 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,7 +31,23 @@ func resourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPCIPv4CIDRBlockAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				switch parts := strings.Split(d.Id(), ","); len(parts) {
+				case 1:
+					break
+				case 2:
+					d.SetId(parts[0])
+					d.Set("ipv4_ipam_pool_id", parts[1])
+				case 3:
+					d.SetId(parts[0])
+					d.Set("ipv4_ipam_pool_id", parts[1])
+					d.Set("ipv4_netmask_length", flex.StringValueToInt64Value(parts[2]))
+				default:
+					return nil, fmt.Errorf("invalid import ID (%s)", d.Id())
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -139,9 +158,10 @@ func resourceVPCIPv4CIDRBlockAssociationDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC IPv4 CIDR Block Association: %s", d.Id())
-	_, err := conn.DisassociateVpcCidrBlock(ctx, &ec2.DisassociateVpcCidrBlockInput{
+	input := ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateVpcCidrBlock(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return diags

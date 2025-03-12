@@ -114,8 +114,6 @@ func resourceAnalysis() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

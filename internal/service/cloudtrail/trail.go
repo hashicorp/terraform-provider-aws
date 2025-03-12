@@ -253,6 +253,10 @@ func resourceTrail() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
+			names.AttrSNSTopicARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"sns_topic_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -260,8 +264,6 @@ func resourceTrail() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -376,8 +378,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	trail := outputRaw.(*types.Trail)
-	arn := aws.ToString(trail.TrailARN)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trail.TrailARN)
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
 	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
 	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
@@ -389,11 +390,25 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrName, trail.Name)
 	d.Set(names.AttrS3BucketName, trail.S3BucketName)
 	d.Set(names.AttrS3KeyPrefix, trail.S3KeyPrefix)
-	d.Set("sns_topic_name", trail.SnsTopicName)
+	d.Set(names.AttrSNSTopicARN, trail.SnsTopicARN)
+	if trail.SnsTopicARN != nil {
+		parsedSNSTopicARN, err := arn.Parse(*trail.SnsTopicARN)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "parsing SNS Topic ARN (%s): %s", aws.ToString(trail.SnsTopicARN), err)
+		}
+		if parsedSNSTopicARN.Region != aws.ToString(trail.HomeRegion) || parsedSNSTopicARN.AccountID != meta.(*conns.AWSClient).AccountID(ctx) {
+			d.Set("sns_topic_name", trail.SnsTopicARN)
+		} else {
+			d.Set("sns_topic_name", parsedSNSTopicARN.Resource)
+		}
+	} else {
+		d.Set("sns_topic_name", nil)
+	}
 
-	if output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+	input := cloudtrail.GetTrailStatusInput{
 		Name: aws.String(d.Id()),
-	}); err != nil {
+	}
+	if output, err := conn.GetTrailStatus(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) status: %s", d.Id(), err)
 	} else {
 		d.Set("enable_logging", output.IsLogging)
@@ -536,9 +551,10 @@ func resourceTrailDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Trail: %s", d.Id())
-	_, err := conn.DeleteTrail(ctx, &cloudtrail.DeleteTrailInput{
+	input := cloudtrail.DeleteTrailInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrail(ctx, &input)
 
 	if errs.IsA[*types.TrailNotFoundException](err) {
 		return diags

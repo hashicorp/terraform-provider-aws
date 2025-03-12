@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Finding Ids")
+// @FrameworkDataSource("aws_guardduty_finding_ids", name="Finding Ids")
 func newDataSourceFindingIds(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFindingIds{}, nil
 }
@@ -31,10 +31,6 @@ const (
 
 type dataSourceFindingIds struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceFindingIds) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_guardduty_finding_ids"
 }
 
 func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

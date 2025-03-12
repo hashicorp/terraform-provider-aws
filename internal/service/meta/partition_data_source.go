@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Partition")
+// @FrameworkDataSource("aws_partition", name="Partition")
 func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &partitionDataSource{}
 
@@ -23,10 +23,6 @@ func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure
 
 type partitionDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*partitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_partition"
 }
 
 func (d *partitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

@@ -40,7 +40,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
-				Deprecated:   "Use auto_enable_organization_members instead",
+				Deprecated:   "auto_enable is deprecated. Use auto_enable_organization_members instead.",
 			},
 			"auto_enable_organization_members": {
 				Type:             schema.TypeString,

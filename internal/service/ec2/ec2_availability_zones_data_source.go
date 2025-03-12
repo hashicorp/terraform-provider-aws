@@ -76,14 +76,14 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 
-	request := &ec2.DescribeAvailabilityZonesInput{}
+	input := ec2.DescribeAvailabilityZonesInput{}
 
 	if v, ok := d.GetOk("all_availability_zones"); ok {
-		request.AllAvailabilityZones = aws.Bool(v.(bool))
+		input.AllAvailabilityZones = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(names.AttrState); ok {
-		request.Filters = []awstypes.Filter{
+		input.Filters = []awstypes.Filter{
 			{
 				Name:   aws.String(names.AttrState),
 				Values: []string{v.(string)},
@@ -92,18 +92,18 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
-		request.Filters = append(request.Filters, newCustomFilterList(
+		input.Filters = append(input.Filters, newCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}
 
-	if len(request.Filters) == 0 {
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		request.Filters = nil
+		input.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading Availability Zones: %s", d.Id())
-	resp, err := conn.DescribeAvailabilityZones(ctx, request)
+	resp, err := conn.DescribeAvailabilityZones(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "fetching Availability Zones: %s", err)
 	}

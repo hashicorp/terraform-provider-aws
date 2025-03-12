@@ -297,9 +297,10 @@ func resourceTrafficMirrorFilterRuleDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Filter Rule: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorFilterRule(ctx, &ec2.DeleteTrafficMirrorFilterRuleInput{
+	input := ec2.DeleteTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorFilterRule(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterRuleIdNotFound) {
 		return diags

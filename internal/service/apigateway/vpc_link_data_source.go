@@ -66,9 +66,9 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName)
-	input := &apigateway.GetVpcLinksInput{}
+	input := apigateway.GetVpcLinksInput{}
 
-	match, err := findVPCLink(ctx, conn, input, func(v *types.VpcLink) bool {
+	match, err := findVPCLink(ctx, conn, &input, func(v *types.VpcLink) bool {
 		return aws.ToString(v.Name) == name
 	})
 

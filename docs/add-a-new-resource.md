@@ -55,10 +55,6 @@ Resources use a self-registration process that adds them to the provider using t
     type resourceExample struct {
     	framework.ResourceWithConfigure
     }
-
-    func (r *resourceExample) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-    	response.TypeName = "aws_something_example"
-    }
     ```
 
 === "Terraform Plugin SDK V2"

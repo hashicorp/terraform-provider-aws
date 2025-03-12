@@ -193,9 +193,10 @@ func resourceApprovalRuleTemplateDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCommit Approval Rule Template: %s", d.Id())
-	_, err := conn.DeleteApprovalRuleTemplate(ctx, &codecommit.DeleteApprovalRuleTemplateInput{
+	input := codecommit.DeleteApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApprovalRuleTemplate(ctx, &input)
 
 	if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) {
 		return diags

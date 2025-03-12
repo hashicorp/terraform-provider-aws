@@ -109,8 +109,6 @@ func resourceEnvironmentEC2() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -213,9 +211,10 @@ func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
 	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
-	_, err := conn.DeleteEnvironment(ctx, &cloud9.DeleteEnvironmentInput{
+	input := cloud9.DeleteEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags

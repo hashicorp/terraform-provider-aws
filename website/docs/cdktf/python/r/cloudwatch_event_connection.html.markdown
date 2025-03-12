@@ -178,6 +178,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
 * `authorization_type` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
+* `invocation_connectivity_parameters` - (Optional) The parameters to use for invoking a private API. Documented below.
 
 `auth_parameters` support the following:
 
@@ -222,6 +223,14 @@ This resource supports the following arguments:
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
     * `is_value_secret` - (Optional) Specified whether the value is secret.
 
+`invocation_connectivity_parameters` supports the following:
+
+* `resource_parameters` - (Required) The parameters for EventBridge to use when invoking the resource endpoint. Documented below.
+
+`resource_parameters` supports the following:
+
+* `resource_configuration_arn` - (Required) ARN of the Amazon VPC Lattice [resource configuration](vpclattice_resource_configuration) for the resource endpoint.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -254,4 +263,4 @@ Using `terraform import`, import EventBridge EventBridge connection using the `n
 % terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6a64e18f1cbb83509a228aa3d7c17d6e961eec87beb305f9c6ec8edf596253a7 -->
+<!-- cache-key: cdktf-0.20.8 input-4c536b6621880325d9396c38e3b5fda02d79f7501fa85f8ac8dc1f4cb11a8665 -->

@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_dhcp_options")
+// @SDKDataSource("aws_vpc_dhcp_options", name="DHCP Options")
 func dataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCDHCPOptionsRead,

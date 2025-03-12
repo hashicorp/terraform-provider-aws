@@ -23,6 +23,7 @@ import (
 // @SDKResource("aws_opsworks_permission", name="Permission")
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceSetPermission,
 		ReadWithoutTimeout:   resourcePermissionRead,
 		UpdateWithoutTimeout: resourceSetPermission,

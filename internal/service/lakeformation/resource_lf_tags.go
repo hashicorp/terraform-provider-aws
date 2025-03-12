@@ -30,7 +30,7 @@ const (
 	ResNameLFTags = "Resource LF Tags"
 )
 
-// @SDKResource("aws_lakeformation_resource_lf_tags")
+// @SDKResource("aws_lakeformation_resource_lf_tags", name="Resource LF Tags")
 func ResourceResourceLFTags() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceLFTagsCreate,

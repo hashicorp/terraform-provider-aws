@@ -55,6 +55,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -106,9 +107,6 @@ type resource{{ .Resource }} struct {
 	framework.WithTimeouts
 }
 
-func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the attributes in snake case (e.g.,
@@ -155,8 +153,8 @@ func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.Metad
 func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			{{- if .IncludeComments }}
@@ -166,8 +164,8 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 			//
 			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
 			{{- end }}
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				{{- if .IncludeComments }}
 				// TIP: ==== PLAN MODIFIERS ====
@@ -227,7 +225,7 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -365,6 +363,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	// TIP: -- 4. Remove resource from state if it is not found
 	{{- end }}
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -426,13 +425,15 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Populate a modify input structure and check for changes
+	// TIP: -- 3. Get the difference between the plan and state, if any
 	{{- end }}
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-		!plan.Type.Equal(state.Type) {
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
+	if diff.HasChanges() {
 		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
 		if resp.Diagnostics.HasError() {
@@ -563,14 +564,8 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 // https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 {{- end }}
 func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
-
-{{ if .IncludeTags -}}
-func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-{{- end }}
 
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
@@ -668,7 +663,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -689,16 +684,16 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 // is good practice to define it separately.
 {{- end }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
-	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
+	input := {{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}(ctx, in)
+	out, err := conn.Get{{ .Resource }}(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
+				LastRequest: &input,
 			}
 		}
 
@@ -706,7 +701,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return out.{{ .Resource }}, nil

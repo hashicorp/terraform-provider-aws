@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_account_alternate_contact")
+// @SDKResource("aws_account_alternate_contact", name="Alternate Contact")
 func resourceAlternateContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAlternateContactCreate,

@@ -49,7 +49,7 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 				Config: testAccEventIntegrationConfig_basic(rName, originalDescription, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "app-integrations", "event-integration/"+rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "app-integrations", "event-integration/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
@@ -66,7 +66,7 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 				Config: testAccEventIntegrationConfig_basic(rName, updatedDescription, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "app-integrations", "event-integration/"+rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "app-integrations", "event-integration/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),

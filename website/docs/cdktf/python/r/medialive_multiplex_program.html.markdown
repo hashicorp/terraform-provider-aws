@@ -107,6 +107,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30s`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
@@ -132,4 +138,4 @@ Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a
 % terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0f4d6ecf5fbb8e34c4bfcc4ff4baddff29c0893a211fa29af99ff4cfade72b1 -->
+<!-- cache-key: cdktf-0.20.8 input-50463f6750f983f26a2c5878b8216e3c6810685cf668ae90ea59643f826b228d -->

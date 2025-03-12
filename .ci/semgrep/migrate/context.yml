@@ -24,6 +24,8 @@ rules:
       include:
         - internal/service/*
         - internal/acctest/*
+      exclude:
+        - internal/service/*/sweep.go
     patterns:
       - pattern-either:
           - pattern: $D.Create($DATA, $META)

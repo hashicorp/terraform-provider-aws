@@ -136,6 +136,7 @@ func TestAccS3Object_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrContent),
@@ -1596,6 +1597,7 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC32"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", "q/d4Ig=="),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 				),
@@ -1615,8 +1617,22 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA256"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "1uxomN6H3axuWzYRcIp6ocLSmCkzScwabCmaHbcUnTg="),
+				),
+			},
+			{
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC64NVME"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC64NVME"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", "easTZmYRIl8="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 				),
 			},
 		},
@@ -1683,6 +1699,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrContent),
@@ -2236,7 +2253,7 @@ func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestChe
 }
 
 func testAccObjectCreateTempFile(t *testing.T, data string) string {
-	tmpFile, err := os.CreateTemp("", "tf-acc-s3-obj")
+	tmpFile, err := os.CreateTemp(t.TempDir(), "tf-acc-s3-obj")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3089,7 +3106,7 @@ resource "aws_s3_object" "object" {
 }
 
 func testAccObjectConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 
