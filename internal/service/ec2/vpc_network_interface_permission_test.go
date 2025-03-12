@@ -23,18 +23,18 @@ func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetAccount := acctest.SkipIfEnvVarNotSet(t, "AWS_NETWORK_INTERFACE_PERMISSION_TARGET_ACCOUNT")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfacePermissionConfig_basic(rName, targetAccount),
+				Config: testAccNetworkInterfacePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
@@ -57,18 +57,18 @@ func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetAccount := acctest.SkipIfEnvVarNotSet(t, "AWS_NETWORK_INTERFACE_PERMISSION_TARGET_ACCOUNT")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfacePermissionConfig_basic(rName, targetAccount),
+				Config: testAccNetworkInterfacePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterfacePermission, resourceName),
@@ -182,14 +182,18 @@ resource "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccNetworkInterfacePermissionConfig_basic(rName, targetAccountID string) string {
-	return acctest.ConfigCompose(testAccNetworkInterfacePermissionConfig_base(rName), fmt.Sprintf(`
+func testAccNetworkInterfacePermissionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccNetworkInterfacePermissionConfig_base(rName), `
+data "aws_caller_identity" "peer" {
+  provider = "awsalternate"
+}
+
 resource "aws_network_interface_permission" "test" {
   network_interface_id = aws_network_interface.test.id
-  aws_account_id       = %[1]q
+  aws_account_id       = data.aws_caller_identity.peer.account_id
   permission           = "INSTANCE-ATTACH"
 }
-`, targetAccountID))
+`)
 }
 
 func testAccNetworkInterfacePermissionConfig_accountOwner(rName string) string {
