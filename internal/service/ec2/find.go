@@ -2117,11 +2117,11 @@ func findNetworkInterfacePermission(ctx context.Context, conn *ec2.Client, input
 }
 
 func findNetworkInterfacePermissionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterfacePermission, error) {
-	input := &ec2.DescribeNetworkInterfacePermissionsInput{
+	input := ec2.DescribeNetworkInterfacePermissionsInput{
 		NetworkInterfacePermissionIds: []string{id},
 	}
 
-	output, err := findNetworkInterfacePermission(ctx, conn, input)
+	output, err := findNetworkInterfacePermission(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
