@@ -24,8 +24,8 @@ including fixes for potential error messages in this process,
 can be found in the [`generate` package documentation](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md).
 
 The generator will create several types of tagging-related code.
-All services that support tagging will generate the function `KeyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
-and the function `Tags`, which converts from the common format back to the service-specific structs.
+All services that support tagging will generate the function `keyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
+and the function `svcTags`, which converts from the common format back to the service-specific structs.
 In addition, many services have separate functions to list or update tags, so the corresponding `listTags` and `updateTags` can be generated.
 Optionally, to retrieve a specific tag, you can generate the `GetTag` function.
 
@@ -312,7 +312,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 
     input := eks.CreateClusterInput{
       /* ... other configuration ... */
-      Tags: Tags(tags.IgnoreAWS()),
+      Tags: svcTags(tags.IgnoreAWS()),
     }
     ```
 
@@ -329,7 +329,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
     }
 
     if len(tags) > 0 {
-      input.Tags = Tags(tags.IgnoreAWS())
+      input.Tags = svcTags(tags.IgnoreAWS())
     }
     ```
 
@@ -379,7 +379,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
 
     /* ... other d.Set(...) logic ... */
 
-    tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+    tags := keyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
     if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
       return fmt.Errorf("setting tags: %w", err)
