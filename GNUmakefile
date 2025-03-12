@@ -326,7 +326,7 @@ lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
-modern-check: ## Check for modern Go code (best run in individual services)
+modern-check: ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
 	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
 
