@@ -59,5 +59,5 @@ import {
 Using `terraform import`, import Network Interface Permissions using the `network_interface_permission_id`. For example:
 
 ```console
-% terraform import aws_network_interface_permission.test eni-perm-056ad97ce2ac377ed
+% terraform import aws_network_interface_permission.example eni-perm-056ad97ce2ac377ed
 ```
