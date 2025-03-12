@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -33,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -239,7 +240,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"secondary_availability_zone": schema.StringAttribute{
 				Computed: true,
-				Default:  nil,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
@@ -364,17 +367,15 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in := timestreaminfluxdb.CreateDbInstanceInput{}
-
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
-
+	input := timestreaminfluxdb.CreateDbInstanceInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in.Tags = getTagsIn(ctx)
+	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateDbInstance(ctx, &in)
+	out, err := conn.CreateDbInstance(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), err),
@@ -392,12 +393,12 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	state := plan
-	state.ID = flex.StringToFramework(ctx, out.Id)
+	state.ID = fwflex.StringToFramework(ctx, out.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	output, err := waitDBInstanceCreated(ctx, conn, state.ID.ValueString(), createTimeout)
-
 	if err != nil {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id)...)
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDBInstance, plan.Name.String(), err),
 			err.Error(),
@@ -405,14 +406,13 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
-
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// flatten using legacy since this computed output may be null
-	state.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+	state.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -427,7 +427,6 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	output, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
-
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -442,14 +441,13 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
-
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// flatten using legacy since this computed output may be null
-	state.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+	state.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -464,78 +462,22 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
-		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) ||
-		!plan.DBInstanceType.Equal(state.DBInstanceType) ||
-		!plan.DeploymentType.Equal(state.DeploymentType) ||
-		!plan.Port.Equal(state.Port) ||
-		!plan.AllocatedStorage.Equal(state.AllocatedStorage) ||
-		!plan.DBStorageType.Equal(state.DBStorageType) {
-		in := timestreaminfluxdb.UpdateDbInstanceInput{
+	diff, d := fwflex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := timestreaminfluxdb.UpdateDbInstanceInput{
 			Identifier: plan.ID.ValueStringPointer(),
 		}
-
-		// If any argument is updated with the same value, a ValidationException will occur. Arguments should only
-		// be updated if they have changed. For this reason, flex.Expand cannot be used for all arguments.
-		if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
-			in.DbParameterGroupIdentifier = plan.DBParameterGroupIdentifier.ValueStringPointer()
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
-			flex.Expand(ctx, plan.LogDeliveryConfiguration, &in.LogDeliveryConfiguration)
-		}
-
-		if !plan.DBInstanceType.Equal(state.DBInstanceType) {
-			in.DbInstanceType = awstypes.DbInstanceType(plan.DBInstanceType.ValueString())
-		}
-
-		if !plan.DeploymentType.Equal(state.DeploymentType) {
-			in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
-		}
-
-		if !plan.DBStorageType.Equal(state.DBStorageType) {
-			in.DbStorageType = awstypes.DbStorageType(plan.DBStorageType.ValueString())
-		}
-
-		if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
-			if plan.AllocatedStorage.ValueInt64() > math.MaxInt32 {
-				err := errors.New("allocated_storage was greater than the maximum allowed value for int32")
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-					err.Error(),
-				)
-				return
-			} else if plan.AllocatedStorage.ValueInt64() < math.MinInt32 {
-				err := errors.New("allocated_storage was less than the minimum allowed value for int32")
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-					err.Error(),
-				)
-				return
-			}
-			in.AllocatedStorage = aws.Int32(int32(plan.AllocatedStorage.ValueInt64()))
-		}
-
-		if !plan.Port.Equal(state.Port) {
-			if plan.Port.ValueInt64() > math.MaxInt32 {
-				err := errors.New("port was greater than the maximum allowed value for int32")
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-					err.Error(),
-				)
-				return
-			} else if plan.Port.ValueInt64() < math.MinInt32 {
-				err := errors.New("port was less than the minimum allowed value for int32")
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-					err.Error(),
-				)
-				return
-			}
-			in.Port = aws.Int32(int32(plan.Port.ValueInt64()))
-		}
-
-		_, err := conn.UpdateDbInstance(ctx, &in)
+		_, err := conn.UpdateDbInstance(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
@@ -554,21 +496,123 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
-
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		// flatten using legacy since this computed output may be null
-		plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+		plan.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 	}
 
-	// Updating tags can leave SecondaryAvailabilityZone unknown, as tags cannot be included in UpdateDbInstanceInput above.
-	// To get around this, if SecondaryAvailabilityZone is unknown after an update, set it to its previous value.
 	if plan.SecondaryAvailabilityZone.IsUnknown() {
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
+
+	//if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
+	//	!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) ||
+	//	!plan.DBInstanceType.Equal(state.DBInstanceType) ||
+	//	!plan.DeploymentType.Equal(state.DeploymentType) ||
+	//	!plan.Port.Equal(state.Port) ||
+	//	!plan.AllocatedStorage.Equal(state.AllocatedStorage) ||
+	//	!plan.DBStorageType.Equal(state.DBStorageType) {
+	//	in := timestreaminfluxdb.UpdateDbInstanceInput{
+	//		Identifier: plan.ID.ValueStringPointer(),
+	//	}
+	//
+	//	// If any argument is updated with the same value, a ValidationException will occur. Arguments should only
+	//	// be updated if they have changed. For this reason, flex.Expand cannot be used for all arguments.
+	//	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
+	//		in.DbParameterGroupIdentifier = plan.DBParameterGroupIdentifier.ValueStringPointer()
+	//	}
+	//
+	//	if !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
+	//		fwflex.Expand(ctx, plan.LogDeliveryConfiguration, &in.LogDeliveryConfiguration)
+	//	}
+	//
+	//	if !plan.DBInstanceType.Equal(state.DBInstanceType) {
+	//		in.DbInstanceType = awstypes.DbInstanceType(plan.DBInstanceType.ValueString())
+	//	}
+	//
+	//	if !plan.DeploymentType.Equal(state.DeploymentType) {
+	//		in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
+	//	}
+	//
+	//	if !plan.DBStorageType.Equal(state.DBStorageType) {
+	//		in.DbStorageType = awstypes.DbStorageType(plan.DBStorageType.ValueString())
+	//	}
+	//
+	//	if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
+	//		if plan.AllocatedStorage.ValueInt64() > math.MaxInt32 {
+	//			err := errors.New("allocated_storage was greater than the maximum allowed value for int32")
+	//			resp.Diagnostics.AddError(
+	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+	//				err.Error(),
+	//			)
+	//			return
+	//		} else if plan.AllocatedStorage.ValueInt64() < math.MinInt32 {
+	//			err := errors.New("allocated_storage was less than the minimum allowed value for int32")
+	//			resp.Diagnostics.AddError(
+	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+	//				err.Error(),
+	//			)
+	//			return
+	//		}
+	//		in.AllocatedStorage = aws.Int32(int32(plan.AllocatedStorage.ValueInt64()))
+	//	}
+	//
+	//	if !plan.Port.Equal(state.Port) {
+	//		if plan.Port.ValueInt64() > math.MaxInt32 {
+	//			err := errors.New("port was greater than the maximum allowed value for int32")
+	//			resp.Diagnostics.AddError(
+	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+	//				err.Error(),
+	//			)
+	//			return
+	//		} else if plan.Port.ValueInt64() < math.MinInt32 {
+	//			err := errors.New("port was less than the minimum allowed value for int32")
+	//			resp.Diagnostics.AddError(
+	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+	//				err.Error(),
+	//			)
+	//			return
+	//		}
+	//		in.Port = aws.Int32(int32(plan.Port.ValueInt64()))
+	//	}
+	//
+	//	_, err := conn.UpdateDbInstance(ctx, &in)
+	//	if err != nil {
+	//		resp.Diagnostics.AddError(
+	//			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+	//			err.Error(),
+	//		)
+	//		return
+	//	}
+	//
+	//	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	//	output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	//	if err != nil {
+	//		resp.Diagnostics.AddError(
+	//			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
+	//			err.Error(),
+	//		)
+	//		return
+	//	}
+	//
+	//	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
+	//
+	//	if resp.Diagnostics.HasError() {
+	//		return
+	//	}
+	//
+	//	// flatten using legacy since this computed output may be null
+	//	plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+	//}
+
+	// Updating tags can leave SecondaryAvailabilityZone unknown, as tags cannot be included in UpdateDbInstanceInput above.
+	// To get around this, if SecondaryAvailabilityZone is unknown after an update, set it to its previous value.
+	//if plan.SecondaryAvailabilityZone.IsUnknown() {
+	//	plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
+	//}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -606,6 +650,51 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 			err.Error(),
 		)
 		return
+	}
+}
+
+func (r *resourceDBInstance) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var port, allocatedStorage types.Int64
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrPort), &port)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !port.IsNull() || !port.IsUnknown() {
+		if port.ValueInt64() > math.MaxInt32 {
+			resp.Diagnostics.AddError(
+				"Invalid port number",
+				"port was greater than the maximum allowed value for int32",
+			)
+			return
+		}
+
+		if port.ValueInt64() < math.MinInt32 {
+			resp.Diagnostics.AddError(
+				"Invalid port number",
+				"port was less than the minimum allowed value for int32",
+			)
+			return
+		}
+	}
+
+	if !allocatedStorage.IsNull() || !allocatedStorage.IsUnknown() {
+		if allocatedStorage.ValueInt64() > math.MaxInt32 {
+			resp.Diagnostics.AddError(
+				"Invalid value for allocated_storage",
+				"allocated_storage was greater than the maximum allowed value for int32",
+			)
+			return
+		}
+
+		if allocatedStorage.ValueInt64() < math.MinInt32 {
+			resp.Diagnostics.AddError(
+				"Invalid value for allocated_storage",
+				"allocated_storage was less than the minimum allowed value for int32",
+			)
+			return
+		}
 	}
 }
 
@@ -697,7 +786,7 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	if out == nil || out.Id == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
-
+	
 	return out, nil
 }
 
