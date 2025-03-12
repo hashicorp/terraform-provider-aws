@@ -6,6 +6,7 @@ package wafregional
 import (
 	"context"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"slices"
 )
 
 // @SDKResource("aws_wafregional_web_acl", name="Web ACL")
