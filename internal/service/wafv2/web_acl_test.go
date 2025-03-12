@@ -2686,6 +2686,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						names.AttrPriority: "1",
 						"captcha_config.#": "1",
 						"captcha_config.0.immunity_time_property.0.immunity_time": "240",
+						"challenge_config.#": "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),

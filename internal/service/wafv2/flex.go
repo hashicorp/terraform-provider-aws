@@ -2640,8 +2640,8 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["challenge_config"] = flattenChallengeConfig(rule.ChallengeConfig)
-		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrName] = aws.ToString(rule.Name)
+		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
