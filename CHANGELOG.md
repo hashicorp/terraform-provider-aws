@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `secondary_sources.auth` configuration block ([#40191](https://github.com/hashicorp/terraform-provider-aws/issues/40191))
 
+BUG FIXES:
+
+* resource/aws_msk_cluster: Ensure that `storage_mode` updates are actually applied to the cluster ([#41773](https://github.com/hashicorp/terraform-provider-aws/issues/41773))
+
 ## 5.90.1 (March 10, 2025)
 
 NOTES:

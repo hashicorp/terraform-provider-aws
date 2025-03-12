@@ -61,6 +61,7 @@ var (
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
+	ResourceNetworkInterfacePermission                    = newNetworkInterfacePermissionResource
 	ResourceNetworkInterfaceSGAttachment                  = resourceNetworkInterfaceSGAttachment
 	ResourceNetworkPerformanceMetricSubscription          = resourceNetworkPerformanceMetricSubscription
 	ResourcePlacementGroup                                = resourcePlacementGroup
@@ -181,6 +182,7 @@ var (
 	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                   = findNetworkInterfaceByID
+	FindNetworkInterfacePermissionByID                         = findNetworkInterfacePermissionByID
 	FindNetworkInterfaceSecurityGroup                          = findNetworkInterfaceSecurityGroup
 	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
 	FindPlacementGroupByName                                   = findPlacementGroupByName

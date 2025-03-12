@@ -1527,6 +1527,15 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 	}
 }
 
+func ErrorCheckSequence(funcs ...resource.ErrorCheckFunc) resource.ErrorCheckFunc {
+	return func(err error) error {
+		for _, f := range funcs {
+			err = f(err)
+		}
+		return err
+	}
+}
+
 // ErrorCheckSkipMessagesContaining skips tests based on error messages that contain one of the specified needles.
 func ErrorCheckSkipMessagesContaining(t *testing.T, needles ...string) resource.ErrorCheckFunc {
 	t.Helper()
