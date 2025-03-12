@@ -2708,6 +2708,29 @@ service "ds" {
   brand                    = "AWS"
 }
 
+service "dsql" {
+  sdk {
+    id = "DSQL"
+  }
+
+  names {
+    provider_name_upper = "DSQL"
+    human_friendly      = "DSQL"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_dsql_"
+  }
+
+  provider_package_correct = "dsql"
+  doc_prefix               = ["dsql_"]
+  brand                    = "AWS"
+}
+
 service "dax" {
   sdk {
     id = "DAX"
