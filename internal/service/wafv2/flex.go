@@ -1105,6 +1105,7 @@ func expandWebACLRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
 		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
+		ChallengeConfig:  expandChallengeConfig(m["challenge_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
 		Priority:         int32(m[names.AttrPriority].(int)),
@@ -2638,8 +2639,9 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 		m := make(map[string]interface{})
 		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
-		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
+		m["challenge_config"] = flattenChallengeConfig(rule.ChallengeConfig)
 		m[names.AttrName] = aws.ToString(rule.Name)
+		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
