@@ -6,7 +6,6 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"regexp"
 	"testing"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -62,6 +62,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
