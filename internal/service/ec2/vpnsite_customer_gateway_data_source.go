@@ -76,7 +76,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeCustomerGatewaysInput{}
+	input := ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
@@ -86,7 +86,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		input.CustomerGatewayIds = []string{v.(string)}
 	}
 
-	cgw, err := findCustomerGateway(ctx, conn, input)
+	cgw, err := findCustomerGateway(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))

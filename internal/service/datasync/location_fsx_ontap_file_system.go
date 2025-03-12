@@ -188,8 +188,6 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

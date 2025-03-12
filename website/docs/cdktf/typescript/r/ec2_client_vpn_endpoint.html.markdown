@@ -58,6 +58,7 @@ This resource supports the following arguments:
 * `clientLoginBannerOptions` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
 * `connectionLogOptions` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
+* `disconnectOnSessionTimeout` - (Optional) Indicates whether the client VPN session is disconnected after the maximum `sessionTimeoutHours` is reached. If `true`, users are prompted to reconnect client VPN. If `false`, client VPN attempts to reconnect automatically. The default value is `false`.
 * `dnsServers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
 * `securityGroupIds` - (Optional) The IDs of one or more security groups to apply to the target network. You must also specify the ID of the VPC that contains the security groups.
 * `selfServicePortal` - (Optional) Specify whether to enable the self-service portal for the Client VPN endpoint. Values can be `enabled` or `disabled`. Default value is `disabled`.
@@ -139,4 +140,4 @@ Using `terraform import`, import AWS Client VPN endpoints using the `id` value f
 % terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-668469ff889101884cb8259cd8c05b2008ff8bae928811357f2cfcabe260d50a -->
+<!-- cache-key: cdktf-0.20.8 input-a7b30641f97381b4cc31aa8e291cc15302c0eb2873ac8be3a779ddd0a525f188 -->

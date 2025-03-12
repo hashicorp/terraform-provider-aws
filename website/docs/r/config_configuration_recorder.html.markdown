@@ -114,7 +114,7 @@ This resource supports the following arguments:
 
 ### recording_mode Configuration Block
 
-* `recording_frequency` - (Required) Default reecording frequency. `CONTINUOUS` or `DAILY`.
+* `recording_frequency` - (Required) Default recording frequency. `CONTINUOUS` or `DAILY`.
 * `recording_mode_override` - (Optional) Recording mode overrides. Detailed below.
 
 #### recording_mode_override Configuration Block

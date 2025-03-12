@@ -23,6 +23,8 @@ phase because a modification has not yet taken place. You can use the
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```typescript
@@ -79,8 +81,11 @@ This resource supports the following arguments:
     made.
 * `globalClusterIdentifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kmsKeyId`, `storageEncrypted` needs to be set to true.
-* `masterPassword` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints.
+* `masterPassword` - (Optional, required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
+    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPasswordWo`.
+* `masterPasswordWo` - (Optional, Write-Only, required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
+  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPassword`.
+* `masterPasswordWoVersion` - (Optional) Used together with `masterPasswordWo` to trigger an update. Increment this value when an update to the `masterPasswordWo` is required.
 * `masterUsername` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferredBackupWindow` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
@@ -158,4 +163,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-904fc284b6c7a5652f0f5b0730354356928abca9165b63fc07d46db96fa506c9 -->
+<!-- cache-key: cdktf-0.20.8 input-94dc28f4c731c3fea3b96e91a9c30b57b0b547714f0aa8f8d174f9d492b570e2 -->

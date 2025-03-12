@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
           arn: thisVar.arn,
           httpPort: 8080,
           httpsPort: 8443,
-          name: "Example VPC Origin",
+          name: "example-vpc-origin",
           originProtocolPolicy: "https-only",
           originSslProtocols: [
             {
@@ -117,4 +117,4 @@ Using `terraform import`, import Cloudfront VPC origins using the `id`. For exam
 % terraform import aws_cloudfront_vpc_origin vo_JQEa410sssUFoY6wMkx69j
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-187cf38c97ac211aea4b679f94d3c76f36282959a1becf8fe51ae560fd45e2b4 -->
+<!-- cache-key: cdktf-0.20.8 input-6016cdb864e6c3ddc6c09e96a8ebce64ab5bee836f037a632ebedb340cb4b5b9 -->

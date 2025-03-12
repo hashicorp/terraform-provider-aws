@@ -297,8 +297,6 @@ func resourceWindowsFileSystem() *schema.Resource {
 				),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

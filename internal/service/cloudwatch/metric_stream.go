@@ -47,8 +47,6 @@ func resourceMetricStream() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -351,9 +349,10 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
-	_, err := conn.DeleteMetricStream(ctx, &cloudwatch.DeleteMetricStreamInput{
+	input := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMetricStream(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)

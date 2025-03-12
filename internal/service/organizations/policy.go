@@ -72,8 +72,6 @@ func resourcePolicy() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_workforce"
 description: |-
-  Provides a SageMaker Workforce resource.
+  Provides a SageMaker AI Workforce resource.
 ---
 
 # Resource: aws_sagemaker_workforce
 
-Provides a SageMaker Workforce resource.
+Provides a SageMaker AI Workforce resource.
 
 ## Example Usage
 
@@ -108,7 +108,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workforces using the `workforce_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Workforces using the `workforce_name`. For example:
 
 ```terraform
 import {
@@ -117,7 +117,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Workforces using the `workforce_name`. For example:
+Using `terraform import`, import SageMaker AI Workforces using the `workforce_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_workforce.example example

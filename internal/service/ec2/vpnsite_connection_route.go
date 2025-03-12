@@ -48,12 +48,12 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
 	id := vpnConnectionRouteCreateResourceID(cidrBlock, vpnConnectionID)
-	input := &ec2.CreateVpnConnectionRouteInput{
+	input := ec2.CreateVpnConnectionRouteInput{
 		DestinationCidrBlock: aws.String(cidrBlock),
 		VpnConnectionId:      aws.String(vpnConnectionID),
 	}
 
-	_, err := conn.CreateVpnConnectionRoute(ctx, input)
+	_, err := conn.CreateVpnConnectionRoute(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection Route (%s): %s", id, err)
@@ -105,10 +105,11 @@ func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection Route: %s", d.Id())
-	_, err = conn.DeleteVpnConnectionRoute(ctx, &ec2.DeleteVpnConnectionRouteInput{
+	input := ec2.DeleteVpnConnectionRouteInput{
 		DestinationCidrBlock: aws.String(cidrBlock),
 		VpnConnectionId:      aws.String(vpnConnectionID),
-	})
+	}
+	_, err = conn.DeleteVpnConnectionRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return diags

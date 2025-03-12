@@ -45,7 +45,6 @@ func resourceServer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("endpoint_details.0.vpc_id", func(_ context.Context, old, new, meta interface{}) bool {
 				// "InvalidRequestException: Changing VpcId is not supported".
 				if old, new := old.(string), new.(string); old != "" && new != old {

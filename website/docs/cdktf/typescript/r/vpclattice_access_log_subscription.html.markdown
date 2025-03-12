@@ -41,8 +41,12 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `destinationArn` - (Required) Amazon Resource Name (ARN) of the log destination.
-* `resourceIdentifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
+* `destinationArn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the log destination.
+* `resourceIdentifier` - (Required, Forces new resource) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
+
+The following arguments are optional:
+
+* `serviceNetworkLogType` - (Optional, Forces new resource) Type of log that monitors your Amazon VPC Lattice service networks. Valid values are: `SERVICE`, `RESOURCE`. Defaults to `SERVICE`.
 
 ## Attribute Reference
 
@@ -84,4 +88,4 @@ Using `terraform import`, import VPC Lattice Access Log Subscription using the a
 % terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-071e5e00ee8c7257836217b64dd4601a37eae349f38d2cca190da1ad40bc2a7d -->
+<!-- cache-key: cdktf-0.20.8 input-d49c363c05e95a1a2bce9d8c3ba707a2ac4e34511bda7ca56b2f39b66f9796a6 -->

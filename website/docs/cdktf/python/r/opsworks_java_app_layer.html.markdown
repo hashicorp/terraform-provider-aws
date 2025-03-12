@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks Java application layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```python
@@ -84,4 +86,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-22f1dac0366505ea416dcd52815ba922756da61064d917cfb0310e814c99266a -->
+<!-- cache-key: cdktf-0.20.8 input-500cf4c013a4cdba0ea3ba591ebff3fdf226b4f5dcef6f6f5e6c09a1c13a6212 -->

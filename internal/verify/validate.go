@@ -29,7 +29,7 @@ import (
 
 var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
 var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
-var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d{1,2}$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)

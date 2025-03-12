@@ -125,9 +125,10 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription: %s", d.Id())
-	_, err := conn.DeleteMonitoringSubscription(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
+	input := cloudfront.DeleteMonitoringSubscriptionInput{
 		DistributionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMonitoringSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
 		return diags

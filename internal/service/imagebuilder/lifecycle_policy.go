@@ -45,10 +45,6 @@ type lifecyclePolicyResource struct {
 	framework.WithImportByID
 }
 
-func (*lifecyclePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_imagebuilder_lifecycle_policy"
-}
-
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	lifecyclePolicyStatusType := fwtypes.StringEnumType[awstypes.LifecyclePolicyStatus]()
 
@@ -451,10 +447,6 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 
 		return
 	}
-}
-
-func (r *lifecyclePolicyResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.LifecyclePolicy, error) {

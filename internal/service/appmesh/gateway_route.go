@@ -91,8 +91,6 @@ func resourceGatewayRoute() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

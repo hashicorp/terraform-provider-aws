@@ -175,10 +175,11 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
-	_, err := conn.DeletePublicKey(ctx, &cloudfront.DeletePublicKeyInput{
+	input := cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeletePublicKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return diags

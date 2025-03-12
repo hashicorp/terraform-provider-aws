@@ -37,7 +37,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkmonitor", fmt.Sprintf("monitor/%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "monitor/{monitor_name}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "monitor_name"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 				),

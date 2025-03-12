@@ -29,10 +29,6 @@ type securityGroupRuleDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*securityGroupRuleDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rule"
-}
-
 func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -118,7 +114,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
 	data.Description = flex.StringToFramework(ctx, output.Description)
-	data.FromPort = flex.Int32ToFramework(ctx, output.FromPort)
+	data.FromPort = flex.Int32ToFrameworkInt64(ctx, output.FromPort)
 	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
 	data.IsEgress = flex.BoolToFramework(ctx, output.IsEgress)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
@@ -126,7 +122,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-	data.ToPort = flex.Int32ToFramework(ctx, output.ToPort)
+	data.ToPort = flex.Int32ToFrameworkInt64(ctx, output.ToPort)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

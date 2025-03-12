@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -112,6 +113,16 @@ func NewAttributeRequiredWhenError(neededPath, otherPath cty.Path, value string)
 			PathString(otherPath),
 			value,
 		),
+	)
+}
+
+// NewAtLeastOneOfChildrenError returns an error diagnostic indicating that at least on of the named children of
+// parentPath is required.
+func NewAtLeastOneOfChildrenError(parentPath cty.Path, paths ...cty.Path) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("At least one attribute out of [%s] must be specified", strings.Join(tfslices.ApplyToAll(paths, PathString), ", ")),
 	)
 }
 

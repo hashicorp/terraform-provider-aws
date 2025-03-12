@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,6 +20,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_xray_group", sweepGroups)
 
 	awsv2.Register("aws_xray_sampling_rule", sweepSamplingRules)
+
+	awsv2.Register("aws_xray_resource_policy", sweepResourcePolicy)
 }
 
 func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -77,6 +80,29 @@ func sweepSamplingRules(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 			d.SetId(aws.ToString(v.SamplingRule.RuleName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepResourcePolicy(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.XRayClient(ctx)
+	input := xray.ListResourcePoliciesInput{}
+
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := xray.NewListResourcePoliciesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ResourcePolicies {
+			name := aws.ToString(v.PolicyName)
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceResourcePolicy, client, framework.NewAttribute("policy_name", name)))
 		}
 	}
 

@@ -46,10 +46,6 @@ type resourceInstanceState struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceInstanceState) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rds_instance_state"
-}
-
 func (r *resourceInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

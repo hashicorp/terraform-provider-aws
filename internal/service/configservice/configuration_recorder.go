@@ -220,9 +220,10 @@ func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ConfigService Configuration Recorder: %s", d.Id())
-	_, err := conn.DeleteConfigurationRecorder(ctx, &configservice.DeleteConfigurationRecorderInput{
+	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationRecorder(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return diags

@@ -116,8 +116,6 @@ func resourceCachediSCSIVolume() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

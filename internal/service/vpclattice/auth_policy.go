@@ -137,9 +137,10 @@ func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AuthPolicy: %s", d.Id())
-	_, err := conn.DeleteAuthPolicy(ctx, &vpclattice.DeleteAuthPolicyInput{
+	input := vpclattice.DeleteAuthPolicyInput{
 		ResourceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAuthPolicy(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

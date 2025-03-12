@@ -180,10 +180,11 @@ func resourceTransitGatewayPrefixListReferenceDelete(ctx context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Prefix List Reference: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayPrefixListReference(ctx, &ec2.DeleteTransitGatewayPrefixListReferenceInput{
+	input := ec2.DeleteTransitGatewayPrefixListReferenceInput{
 		PrefixListId:               aws.String(prefixListID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DeleteTransitGatewayPrefixListReference(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound, errCodeInvalidPrefixListIDNotFound) {
 		return diags

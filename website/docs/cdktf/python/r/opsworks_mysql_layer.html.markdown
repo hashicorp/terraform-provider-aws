@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks MySQL layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ~> **Note:** All arguments including the root password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
@@ -84,4 +86,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-6fb3f9c0066341ee3cdf3144e8a066c0d6087b4103a19b780640998ecba59777 -->
+<!-- cache-key: cdktf-0.20.8 input-8ba9c0170aad9c26f0ff2955518bad7bafe1cbde6440846f649e7dd6fe602f1b -->

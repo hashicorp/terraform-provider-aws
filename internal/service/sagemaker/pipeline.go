@@ -118,8 +118,6 @@ func resourcePipeline() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -155,7 +153,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreatePipeline(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Pipeline (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Pipeline (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -170,13 +168,13 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pipeline, err := findPipelineByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Pipeline (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Pipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Pipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Pipeline (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, pipeline.PipelineArn)
@@ -228,7 +226,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdatePipeline(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Pipeline (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Pipeline (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -239,7 +237,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Pipeline: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(ctx, &sagemaker.DeletePipelineInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		PipelineName:       aws.String(d.Id()),
@@ -250,7 +248,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Pipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Pipeline (%s): %s", d.Id(), err)
 	}
 
 	return diags

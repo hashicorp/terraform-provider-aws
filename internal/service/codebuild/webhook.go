@@ -224,9 +224,10 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Webhook: %s", d.Id())
-	_, err := conn.DeleteWebhook(ctx, &codebuild.DeleteWebhookInput{
+	input := codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteWebhook(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

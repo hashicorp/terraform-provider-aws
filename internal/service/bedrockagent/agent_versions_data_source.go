@@ -32,10 +32,6 @@ type dataSourceAgentVersions struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceAgentVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_bedrockagent_agent_versions"
-}
-
 func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -48,6 +48,17 @@ func TestFloat64ToFramework(t *testing.T) {
 	}
 }
 
+func BenchmarkFloat64ToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Float64(42.1)
+	for n := 0; n < b.N; n++ {
+		r := flex.Float64ToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
 func TestFloat64ToFrameworkLegacy(t *testing.T) {
 	t.Parallel()
 
@@ -83,7 +94,18 @@ func TestFloat64ToFrameworkLegacy(t *testing.T) {
 	}
 }
 
-func TestFloat32ToFramework(t *testing.T) {
+func BenchmarkFloat64ToFrameworkLegacy(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Float64(42.1)
+	for n := 0; n < b.N; n++ {
+		r := flex.Float64ToFrameworkLegacy(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestFloat32ToFrameworkFloat64(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -109,7 +131,7 @@ func TestFloat32ToFramework(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.Float32ToFramework(context.Background(), test.input)
+			got := flex.Float32ToFrameworkFloat64(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -118,7 +140,18 @@ func TestFloat32ToFramework(t *testing.T) {
 	}
 }
 
-func TestFloat32ToFrameworkLegacy(t *testing.T) {
+func BenchmarkFloat32ToFrameworkFloat64(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Float32(42.1)
+	for n := 0; n < b.N; n++ {
+		r := flex.Float32ToFrameworkFloat64(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestFloat32ToFrameworkFloat64Legacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -144,11 +177,22 @@ func TestFloat32ToFrameworkLegacy(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.Float32ToFrameworkLegacy(context.Background(), test.input)
+			got := flex.Float32ToFrameworkFloat64Legacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
+	}
+}
+
+func BenchmarkFloat32ToFrameworkFloat64Legacy(b *testing.B) {
+	ctx := context.Background()
+	input := aws.Float32(42.1)
+	for n := 0; n < b.N; n++ {
+		r := flex.Float32ToFrameworkFloat64Legacy(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
 	}
 }

@@ -43,10 +43,6 @@ type crossAccountAttachmentResource struct {
 	framework.WithImportByID
 }
 
-func (*crossAccountAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_globalaccelerator_cross_account_attachment"
-}
-
 func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -273,10 +269,6 @@ func (r *crossAccountAttachmentResource) Delete(ctx context.Context, request res
 
 		return
 	}
-}
-
-func (r *crossAccountAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Attachment, error) {

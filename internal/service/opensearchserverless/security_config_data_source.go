@@ -30,10 +30,6 @@ type dataSourceSecurityConfig struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceSecurityConfig) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_security_config"
-}
-
 func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -57,7 +53,7 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"saml_options": schema.SingleNestedBlock{
+			"saml_options": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Attributes: map[string]schema.Attribute{
 					"group_attribute": schema.StringAttribute{
 						Computed: true,

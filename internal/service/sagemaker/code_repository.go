@@ -80,8 +80,6 @@ func resourceCodeRepository() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -99,7 +97,7 @@ func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *input)
 	_, err := conn.CreateCodeRepository(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker code repository: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI code repository: %s", err)
 	}
 
 	d.SetId(name)
@@ -115,10 +113,10 @@ func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find CodeRepository") {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker code repository (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker AI code repository (%s); removing from state", d.Id())
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker code repository (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI code repository (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.ToString(codeRepository.CodeRepositoryArn)
@@ -145,7 +143,7 @@ func resourceCodeRepositoryUpdate(ctx context.Context, d *schema.ResourceData, m
 		log.Printf("[DEBUG] sagemaker code repository update config: %#v", *input)
 		_, err := conn.UpdateCodeRepository(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker code repository: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI code repository: %s", err)
 		}
 	}
 
@@ -164,7 +162,7 @@ func resourceCodeRepositoryDelete(ctx context.Context, d *schema.ResourceData, m
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find CodeRepository") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker code repository (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI code repository (%s): %s", d.Id(), err)
 	}
 
 	return diags

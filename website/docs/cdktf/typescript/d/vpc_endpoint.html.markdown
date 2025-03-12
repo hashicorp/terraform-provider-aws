@@ -48,7 +48,7 @@ The given filters must match exactly one VPC endpoint whose data will be exporte
 
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
-* `serviceName` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `serviceName` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the specific VPC Endpoint to retrieve.
@@ -102,4 +102,4 @@ DNS options (for `dnsOptions`) support the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-4f0e8fcaf3803ffa7c58af668a56247f7f26ea4640aea7c4154cfad227c76bf4 -->
+<!-- cache-key: cdktf-0.20.8 input-98e29977e2149b3dfef0df54a69ee6043ad07505b5918db102c1f781bff48695 -->

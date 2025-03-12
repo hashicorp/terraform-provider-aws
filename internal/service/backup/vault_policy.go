@@ -131,9 +131,10 @@ func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())
-	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &backup.DeleteBackupVaultAccessPolicyInput{
+	input := backup.DeleteBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return diags

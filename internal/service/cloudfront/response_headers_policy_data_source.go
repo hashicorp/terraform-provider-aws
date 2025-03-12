@@ -21,6 +21,10 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -340,7 +344,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(responseHeadersPolicyID)
-
+	d.Set(names.AttrARN, responseHeadersPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {

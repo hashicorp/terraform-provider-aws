@@ -30,13 +30,12 @@ const (
 	DSNameOriginAccessControl = "Origin Access Control Data Source"
 )
 
-func (d *dataSourceOriginAccessControl) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_origin_access_control"
-}
-
 func (d *dataSourceOriginAccessControl) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
@@ -67,7 +66,6 @@ func (d *dataSourceOriginAccessControl) Read(ctx context.Context, request dataso
 	var data dataSourceOriginAccessControlData
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -83,17 +81,18 @@ func (d *dataSourceOriginAccessControl) Read(ctx context.Context, request dataso
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.OriginAccessControl.OriginAccessControlConfig, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	data.ARN = fwflex.StringValueToFramework(ctx, originAccessControlARN(ctx, d.Meta(), data.ID.ValueString()))
 	data.Etag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSourceOriginAccessControlData struct {
+	ARN                           types.String `tfsdk:"arn"`
 	Description                   types.String `tfsdk:"description"`
 	Etag                          types.String `tfsdk:"etag"`
 	ID                            types.String `tfsdk:"id"`

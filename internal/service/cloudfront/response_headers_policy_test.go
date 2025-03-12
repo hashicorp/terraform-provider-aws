@@ -32,8 +32,9 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyConfig_cors(rName1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "response-headers-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", acctest.CtFalse),

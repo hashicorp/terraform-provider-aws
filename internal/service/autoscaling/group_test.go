@@ -4280,9 +4280,10 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, v *elasticloadbalanc
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		output, err := conn.DescribeTargetHealth(ctx, &elasticloadbalancingv2.DescribeTargetHealthInput{
+		input := elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: v.TargetGroupArn,
-		})
+		}
+		output, err := conn.DescribeTargetHealth(ctx, &input)
 
 		if err != nil {
 			return err

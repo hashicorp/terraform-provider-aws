@@ -55,6 +55,10 @@ func resourceTrafficPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -127,6 +131,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Traffic Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, trafficPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrComment, trafficPolicy.Comment)
 	d.Set("document", trafficPolicy.Document)
 	d.Set(names.AttrName, trafficPolicy.Name)
@@ -290,4 +295,9 @@ func findTrafficPolicyVersions(ctx context.Context, conn *route53.Client, input 
 	}
 
 	return output, nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func trafficPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "trafficpolicy/"+id)
 }

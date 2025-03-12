@@ -108,7 +108,6 @@ func resourceNetworkProfile() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -285,9 +284,10 @@ func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Network Profile: %s", d.Id())
-	_, err := conn.DeleteNetworkProfile(ctx, &devicefarm.DeleteNetworkProfileInput{
+	input := devicefarm.DeleteNetworkProfileInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNetworkProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

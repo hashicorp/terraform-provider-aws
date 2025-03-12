@@ -152,7 +152,7 @@ func dataSourceUser() *schema.Resource {
 				},
 			},
 			names.AttrFilter: {
-				Deprecated:    "Use the alternate_identifier attribute instead.",
+				Deprecated:    "filter is deprecated. Use alternate_identifier instead.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,

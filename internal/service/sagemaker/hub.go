@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -90,8 +89,6 @@ func resourceHub() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -120,13 +117,13 @@ func resourceHubCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	_, err := conn.CreateHub(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Hub %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Hub %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitHubInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Hub (%s) to be InService: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Hub (%s) to be InService: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceHubRead(ctx, d, meta)...)
@@ -140,12 +137,12 @@ func resourceHubRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Hub (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Hub (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Hub (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Hub (%s): %s", d.Id(), err)
 	}
 
 	d.Set("hub_name", hub.HubName)
@@ -155,7 +152,7 @@ func resourceHubRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("hub_search_keywords", flex.FlattenStringValueSet(hub.HubSearchKeywords))
 
 	if err := d.Set("s3_storage_config", flattenS3StorageConfig(hub.S3StorageConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting s3_storage_config for SageMaker Hub (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting s3_storage_config for SageMaker AI Hub (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -183,11 +180,11 @@ func resourceHubUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if _, err := conn.UpdateHub(ctx, modifyOpts); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Hub (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Hub (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitHubUpdated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Hub (%s) to be updated: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Hub (%s) to be updated: %s", d.Id(), err)
 		}
 	}
 
@@ -206,11 +203,11 @@ func resourceHubDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		if errs.IsA[*awstypes.ResourceNotFound](err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Hub (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Hub (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitHubDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Hub (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Hub (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

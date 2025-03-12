@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks haproxy layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -89,4 +91,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-d7e3b606c224ad4d900794b3922f5773ba5b6e0545823dc60bc75ee69f563826 -->
+<!-- cache-key: cdktf-0.20.8 input-d90b749fb3aa68c3dc46d36590ab21a04d4cca60f863f4e5e3051539ac2ad566 -->

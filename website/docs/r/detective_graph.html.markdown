@@ -30,7 +30,6 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the Detective Graph.
 * `graph_arn` - ARN of the Detective Graph.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
 

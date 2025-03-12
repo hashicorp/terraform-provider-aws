@@ -452,8 +452,6 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -498,7 +496,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	_, err := conn.CreateDataQualityJobDefinition(ctx, createOpts)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Data Quality Job Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Data Quality Job Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -513,13 +511,13 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 	jobDefinition, err := findDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Data Quality Job Definition (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Data Quality Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, jobDefinition.JobDefinitionArn)
@@ -527,31 +525,31 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
 
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_baseline_config", flattenDataQualityBaselineConfig(jobDefinition.DataQualityBaselineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_job_input", flattenDataQualityJobInput(jobDefinition.DataQualityJobInput)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_job_output_config", flattenMonitoringOutputConfig(jobDefinition.DataQualityJobOutputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("job_resources", flattenMonitoringResources(jobDefinition.JobResources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("network_config", flattenMonitoringNetworkConfig(jobDefinition.NetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("stopping_condition", flattenMonitoringStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 	return diags
 }
@@ -568,7 +566,7 @@ func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Data Quality Job Definition: %s", d.Id())
 	_, err := conn.DeleteDataQualityJobDefinition(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(d.Id()),
 	})
@@ -578,7 +576,7 @@ func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	return diags

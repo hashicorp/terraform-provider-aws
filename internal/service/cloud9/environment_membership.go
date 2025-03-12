@@ -148,10 +148,11 @@ func resourceEnvironmentMembershipDelete(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[INFO] Deleting Cloud9 Environment Membership: %s", d.Id())
-	_, err = conn.DeleteEnvironmentMembership(ctx, &cloud9.DeleteEnvironmentMembershipInput{
+	input := cloud9.DeleteEnvironmentMembershipInput{
 		EnvironmentId: aws.String(envID),
 		UserArn:       aws.String(userARN),
-	})
+	}
+	_, err = conn.DeleteEnvironmentMembership(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags

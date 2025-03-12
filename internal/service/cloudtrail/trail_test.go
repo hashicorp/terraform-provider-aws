@@ -878,9 +878,10 @@ func testAccCheckLoggingEnabled(ctx context.Context, n string, want bool) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
 
-		output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+		input := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
-		})
+		}
+		output, err := conn.GetTrailStatus(ctx, &input)
 
 		if err != nil {
 			return err

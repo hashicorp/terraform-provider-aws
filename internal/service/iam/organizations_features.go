@@ -36,10 +36,6 @@ type organizationsFeaturesResource struct {
 	framework.WithImportByID
 }
 
-func (*organizationsFeaturesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_iam_organizations_features"
-}
-
 func (r *organizationsFeaturesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

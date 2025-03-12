@@ -219,7 +219,6 @@ func resourceFleet() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -424,9 +423,10 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Fleet: %s", d.Id())
-	_, err := conn.DeleteFleet(ctx, &codebuild.DeleteFleetInput{
+	input := codebuild.DeleteFleetInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFleet(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

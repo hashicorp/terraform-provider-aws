@@ -220,8 +220,9 @@ func resourceLaunchTemplate() *schema.Resource {
 				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"elastic_gpu_specifications": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
+				Type:       schema.TypeList,
+				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -232,9 +233,10 @@ func resourceLaunchTemplate() *schema.Resource {
 				},
 			},
 			"elastic_inference_accelerator": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -793,6 +795,32 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"ena_srd_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ena_srd_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"ena_srd_udp_specification": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ena_srd_udp_enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1011,7 +1039,6 @@ func resourceLaunchTemplate() *schema.Resource {
 				}
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }
@@ -1021,7 +1048,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &ec2.CreateLaunchTemplateInput{
+	input := ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
@@ -1037,7 +1064,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := conn.CreateLaunchTemplate(ctx, input)
+	output, err := conn.CreateLaunchTemplate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
@@ -1138,7 +1165,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 	latestVersion := int64(d.Get("latest_version").(int))
 
 	if d.HasChanges(updateKeys...) {
-		input := &ec2.CreateLaunchTemplateVersionInput{
+		input := ec2.CreateLaunchTemplateVersionInput{
 			ClientToken:      aws.String(id.UniqueId()),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
@@ -1153,7 +1180,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		output, err := conn.CreateLaunchTemplateVersion(ctx, input)
+		output, err := conn.CreateLaunchTemplateVersion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s) Version: %s", d.Id(), err)
@@ -1163,7 +1190,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
-		input := &ec2.ModifyLaunchTemplateInput{
+		input := ec2.ModifyLaunchTemplateInput{
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
@@ -1173,7 +1200,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.DefaultVersion = flex.IntValueToString(d.Get("default_version").(int))
 		}
 
-		_, err := conn.ModifyLaunchTemplate(ctx, input)
+		_, err := conn.ModifyLaunchTemplate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
@@ -1192,9 +1219,10 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
-	_, err := conn.DeleteLaunchTemplate(ctx, &ec2.DeleteLaunchTemplateInput{
+	input := ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLaunchTemplate(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound) {
 		return diags
@@ -2041,6 +2069,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	if v, ok := tfMap["device_index"].(int); ok {
 		apiObject.DeviceIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["ena_srd_specification"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdSpecification = expandEnaSrdSpecificationRequest(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
@@ -2990,6 +3022,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 		tfMap["device_index"] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.EnaSrdSpecification; v != nil {
+		tfMap["ena_srd_specification"] = []interface{}{flattenLaunchTemplateEnaSrdSpecification(v)}
+	}
+
 	if v := apiObject.InterfaceType; v != nil {
 		tfMap["interface_type"] = aws.ToString(v)
 	}
@@ -3178,28 +3214,6 @@ func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []aw
 	return tfList
 }
 
-func flattenConnectionTrackingSpecification(apiObject *awstypes.ConnectionTrackingSpecification) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.TcpEstablishedTimeout; v != nil {
-		tfMap["tcp_established_timeout"] = aws.ToInt32(v)
-	}
-
-	if v := apiObject.UdpStreamTimeout; v != nil {
-		tfMap["udp_stream_timeout"] = aws.ToInt32(v)
-	}
-
-	if v := apiObject.UdpTimeout; v != nil {
-		tfMap["udp_timeout"] = aws.ToInt32(v)
-	}
-
-	return tfMap
-}
-
 func expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString string) awstypes.Ipv4PrefixSpecificationRequest {
 	if tfString == "" {
 		return awstypes.Ipv4PrefixSpecificationRequest{}
@@ -3284,4 +3298,82 @@ func expandConnectionTrackingSpecificationRequest(tfMap map[string]interface{}) 
 	}
 
 	return apiObject
+}
+
+func flattenConnectionTrackingSpecification(apiObject *awstypes.ConnectionTrackingSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TcpEstablishedTimeout; v != nil {
+		tfMap["tcp_established_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpStreamTimeout; v != nil {
+		tfMap["udp_stream_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpTimeout; v != nil {
+		tfMap["udp_timeout"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func expandEnaSrdSpecificationRequest(tfMap map[string]interface{}) *awstypes.EnaSrdSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdSpecificationRequest{
+		EnaSrdEnabled: aws.Bool(tfMap["ena_srd_enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["ena_srd_udp_specification"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdUdpSpecification = expandEnaSrdUdpSpecificationRequest(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func flattenLaunchTemplateEnaSrdSpecification(apiObject *awstypes.LaunchTemplateEnaSrdSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"ena_srd_enabled": aws.ToBool(apiObject.EnaSrdEnabled),
+	}
+
+	if v := apiObject.EnaSrdUdpSpecification; v != nil {
+		tfMap["ena_srd_udp_specification"] = []interface{}{flattenLaunchTemplateEnaSrdUdpSpecification(v)}
+	}
+
+	return tfMap
+}
+
+func expandEnaSrdUdpSpecificationRequest(tfMap map[string]interface{}) *awstypes.EnaSrdUdpSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdUdpSpecificationRequest{
+		EnaSrdUdpEnabled: aws.Bool(tfMap["ena_srd_udp_enabled"].(bool)),
+	}
+
+	return apiObject
+}
+
+func flattenLaunchTemplateEnaSrdUdpSpecification(apiObject *awstypes.LaunchTemplateEnaSrdUdpSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"ena_srd_udp_enabled": aws.ToBool(apiObject.EnaSrdUdpEnabled),
+	}
+
+	return tfMap
 }

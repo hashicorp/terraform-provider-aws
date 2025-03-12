@@ -132,9 +132,10 @@ func resourceSubnetCIDRReservationDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Subnet CIDR Reservation: %s", d.Id())
-	_, err := conn.DeleteSubnetCidrReservation(ctx, &ec2.DeleteSubnetCidrReservationInput{
+	input := ec2.DeleteSubnetCidrReservationInput{
 		SubnetCidrReservationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSubnetCidrReservation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetCIDRReservationIDNotFound) {
 		return diags

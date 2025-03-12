@@ -95,7 +95,6 @@ func resourceDataSet() *schema.Resource {
 				}
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }

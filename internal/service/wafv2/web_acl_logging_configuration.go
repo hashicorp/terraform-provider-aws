@@ -247,9 +247,10 @@ func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Logging Configuration: %s", d.Id())
-	_, err := conn.DeleteLoggingConfiguration(ctx, &wafv2.DeleteLoggingConfigurationInput{
+	input := wafv2.DeleteLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLoggingConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags

@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -201,8 +200,6 @@ func resourceDirectory() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -239,9 +236,10 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 						"directory_id":       d.Id(),
 						names.AttrDomainName: name,
 					})
-					_, deleteErr := conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
+					input := directoryservice.DeleteDirectoryInput{
 						DirectoryId: aws.String(d.Id()),
-					})
+					}
+					_, deleteErr := conn.DeleteDirectory(ctx, &input)
 
 					if deleteErr != nil {
 						diags = append(diags, errs.NewWarningDiagnostic(

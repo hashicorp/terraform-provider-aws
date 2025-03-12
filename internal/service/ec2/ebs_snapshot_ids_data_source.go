@@ -53,7 +53,7 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSnapshotsInput{}
+	input := ec2.DescribeSnapshotsInput{}
 
 	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
 		input.OwnerIds = flex.ExpandStringValueList(v.([]interface{}))
@@ -71,7 +71,7 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)

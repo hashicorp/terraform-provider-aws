@@ -49,8 +49,6 @@ func resourceKey() *schema.Resource {
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,

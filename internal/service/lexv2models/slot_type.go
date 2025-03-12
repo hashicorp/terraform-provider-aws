@@ -54,10 +54,6 @@ type resourceSlotType struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceSlotType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_slot_type"
-}
-
 func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	subSlotTypeCompositionLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotTypeComposition](ctx),

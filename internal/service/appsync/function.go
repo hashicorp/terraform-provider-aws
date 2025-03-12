@@ -311,10 +311,11 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[INFO] Deleting Appsync Function: %s", d.Id())
-	_, err = conn.DeleteFunction(ctx, &appsync.DeleteFunctionInput{
+	input := appsync.DeleteFunctionInput{
 		ApiId:      aws.String(apiID),
 		FunctionId: aws.String(functionID),
-	})
+	}
+	_, err = conn.DeleteFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

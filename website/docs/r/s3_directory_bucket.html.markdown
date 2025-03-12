@@ -12,6 +12,8 @@ Provides an Amazon S3 Express directory bucket resource.
 
 ## Example Usage
 
+### Availability Zone
+
 ```terraform
 resource "aws_s3_directory_bucket" "example" {
   bucket = "example--usw2-az1--x-s3"
@@ -22,12 +24,25 @@ resource "aws_s3_directory_bucket" "example" {
 }
 ```
 
+### Dedicated Local Zone
+
+```
+resource "aws_s3_directory_bucket" "example_local_zone" {
+  bucket = "example--usw2-xxx-lz1--x-s3"
+
+  location {
+    name = "usw2-xxx-lz1" # LocalZone ID
+    type = "LocalZone"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket. The name must be in the format `[bucket_name]--[azid]--x-s3`. Use the [`aws_s3_bucket`](s3_bucket.html) resource to manage general purpose buckets.
-* `data_redundancy` - (Optional, Default:`SingleAvailabilityZone`) Data redundancy. Valid values: `SingleAvailabilityZone`.
+* `data_redundancy` - (Optional) Data redundancy. Valid values: `SingleAvailabilityZone`, `SingleLocalZone`. The default value depends on the value of the `location.type` attribute.
 * `force_destroy` - (Optional, Default:`false`) Boolean that indicates all objects should be deleted from the bucket *when the bucket is destroyed* so that the bucket can be destroyed without error. These objects are *not* recoverable. This only deletes objects when the bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 * `location` - (Required) Bucket location. See [Location](#location) below for more details.
 * `type` - (Optional, Default:`Directory`) Bucket type. Valid values: `Directory`.

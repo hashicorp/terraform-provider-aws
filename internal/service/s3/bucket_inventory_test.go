@@ -311,7 +311,7 @@ resource "aws_s3_bucket_inventory" "test" {
 }
 
 func testAccBucketInventoryConfig_directoryBucket(bucketName, inventoryName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_directory_bucket" "test" {

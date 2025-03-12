@@ -25,6 +25,7 @@ _optionally_ (see below) content of an object stored inside S3 bucket.
 * `application/xml`
 * `application/atom+xml`
 * `application/x-sql`
+* `application/yaml`
 
 This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
@@ -109,6 +110,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cache_control` - Caching behavior along the request/reply chain.
 * `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksum_crc32c` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksum_crc64nvme` - The base64-encoded, 64-bit CRC64NVME checksum of the object.
 * `checksum_sha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksum_sha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `content_disposition` - Presentational information for the object.
@@ -133,4 +135,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.20.8 input-0a61609c9f3ced2163bb0a99add36b83b3ecdc1cdaaf3d66886b0b16cdf8c6cd -->
+<!-- cache-key: cdktf-0.20.8 input-420a2bb9d077886e51a5aa1d3f87297e069b766641d2e3a6388d4688bf1a95cb -->

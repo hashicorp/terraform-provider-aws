@@ -101,7 +101,6 @@ func resourceDomain() *schema.Resource {
 			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
 				return (old.(string) == string(awstypes.IPAddressTypeDualstack)) && old.(string) != new.(string)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -284,6 +283,47 @@ func resourceDomain() *schema.Resource {
 						"multi_az_with_standby_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"node_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"node_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												names.AttrType: {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"node_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.NodeOptionsNodeType](),
+									},
+								},
+							},
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
@@ -489,7 +529,7 @@ func resourceDomain() *schema.Resource {
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "use 'dashboard_endpoint' attribute instead",
+				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
@@ -1302,6 +1342,10 @@ func expandClusterConfig(m map[string]interface{}) *awstypes.ClusterConfig {
 		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := m["node_options"]; ok {
+		config.NodeOptions = expandNodeOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["warm_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.WarmEnabled = aws.Bool(isEnabled)
@@ -1363,6 +1407,50 @@ func expandColdStorageOptions(l []interface{}) *awstypes.ColdStorageOptions {
 	return ColdStorageOptions
 }
 
+func expandNodeOptions(tfList []interface{}) []awstypes.NodeOption {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.NodeOption, 0)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.NodeOption{
+			NodeType: awstypes.NodeOptionsNodeType(tfMap["node_type"].(string)),
+		}
+
+		if v, ok := tfMap["node_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			apiObject.NodeConfig = expandNodeConfig(v[0].(map[string]interface{}))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandNodeConfig(tfMap map[string]interface{}) *awstypes.NodeConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NodeConfig{}
+
+	isEnabled := tfMap[names.AttrEnabled].(bool)
+	apiObject.Enabled = aws.Bool(isEnabled)
+
+	if isEnabled {
+		apiObject.Count = aws.Int32(int32(tfMap["count"].(int)))
+		apiObject.Type = awstypes.OpenSearchPartitionInstanceType(tfMap[names.AttrType].(string))
+	}
+
+	return apiObject
+}
+
 func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
@@ -1390,6 +1478,11 @@ func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
 	if c.MultiAZWithStandbyEnabled != nil {
 		m["multi_az_with_standby_enabled"] = aws.ToBool(c.MultiAZWithStandbyEnabled)
 	}
+
+	if len(c.NodeOptions) > 0 {
+		m["node_options"] = flattenNodeOptions(c.NodeOptions)
+	}
+
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.ToBool(c.WarmEnabled)
 	}
@@ -1424,6 +1517,39 @@ func flattenColdStorageOptions(coldStorageOptions *awstypes.ColdStorageOptions) 
 	}
 
 	return []interface{}{m}
+}
+
+func flattenNodeOptions(apiObjects []awstypes.NodeOption) []interface{} {
+	if len(apiObjects) == 0 {
+		return []interface{}{}
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+		tfMap["node_config"] = flattenNodeConfig(apiObject.NodeConfig)
+		tfMap["node_type"] = apiObject.NodeType
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenNodeConfig(apiObject *awstypes.NodeConfig) []interface{} {
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	if apiObject.Count != nil {
+		tfMap["count"] = aws.ToInt32(apiObject.Count)
+	}
+
+	if apiObject.Type != "" {
+		tfMap[names.AttrType] = apiObject.Type
+	}
+
+	return []interface{}{tfMap}
 }
 
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if

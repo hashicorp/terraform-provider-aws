@@ -52,10 +52,6 @@ type resourceSecurityPolicy struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceSecurityPolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_security_policy"
-}
-
 func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -177,7 +173,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, diags := flex.Calculate(ctx, plan, state)
+	diff, diags := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_monitoring_schedule"
 description: |-
-  Provides a SageMaker Monitoring Schedule resource.
+  Provides a SageMaker AI Monitoring Schedule resource.
 ---
 
 # Resource: aws_sagemaker_monitoring_schedule
 
-Provides a SageMaker monitoring schedule resource.
+Provides a SageMaker AI monitoring schedule resource.
 
 ## Example Usage
 

@@ -10,6 +10,8 @@ description: |-
 
 Provides an OpsWorks Ruby on Rails application layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```terraform

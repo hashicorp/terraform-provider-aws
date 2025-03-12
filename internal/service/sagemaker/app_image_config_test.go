@@ -328,10 +328,10 @@ func testAccCheckAppImageConfigDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI App Image Config (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SageMaker App Image Config %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI App Image Config %q still exists", rs.Primary.ID)
 		}
 
 		return nil

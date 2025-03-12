@@ -30,10 +30,6 @@ type clusterParameterGroupDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *clusterParameterGroupDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_rds_cluster_parameter_group"
-}
-
 func (d *clusterParameterGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

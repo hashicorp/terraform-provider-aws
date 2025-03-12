@@ -29,10 +29,6 @@ type userPoolDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*userPoolDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_cognito_user_pool"
-}
-
 func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

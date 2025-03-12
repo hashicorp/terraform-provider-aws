@@ -164,11 +164,12 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	asn := int32(d.Get("bgp_asn").(int))
 
 	log.Printf("[DEBUG] Deleting Direct Connect BGP peer: %s", d.Id())
-	_, err := conn.DeleteBGPPeer(ctx, &directconnect.DeleteBGPPeerInput{
+	input := directconnect.DeleteBGPPeerInput{
 		Asn:                asn,
 		CustomerAddress:    aws.String(d.Get("customer_address").(string)),
 		VirtualInterfaceId: aws.String(vifID),
-	})
+	}
+	_, err := conn.DeleteBGPPeer(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "The last BGP Peer on a Virtual Interface cannot be deleted") {
 		return diags

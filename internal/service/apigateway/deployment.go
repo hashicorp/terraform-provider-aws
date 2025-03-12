@@ -70,7 +70,7 @@ func resourceDeployment() *schema.Resource {
 						},
 					},
 				},
-				Deprecated: `The attribute "canary_settings" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
+				Deprecated: "canary_settings is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"execution_arn": {
 				Type:     schema.TypeString,
@@ -89,13 +89,13 @@ func resourceDeployment() *schema.Resource {
 				Type:       schema.TypeString,
 				Optional:   true,
 				ForceNew:   true,
-				Deprecated: `The attribute "stage_description" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
+				Deprecated: "stage_description is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"stage_name": {
 				Type:       schema.TypeString,
 				Optional:   true,
 				ForceNew:   true,
-				Deprecated: `The attribute "stage_name" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
+				Deprecated: "stage_name is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			names.AttrTriggers: {
 				Type:     schema.TypeMap,

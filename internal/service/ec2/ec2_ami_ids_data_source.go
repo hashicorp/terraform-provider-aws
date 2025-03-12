@@ -77,7 +77,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	input := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
 		Owners:            flex.ExpandStringValueList(d.Get("owners").([]interface{})),
 	}
@@ -90,7 +90,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	images, err := findImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)

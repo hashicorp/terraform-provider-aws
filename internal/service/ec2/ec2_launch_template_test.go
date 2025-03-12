@@ -1382,6 +1382,41 @@ func TestAccEC2LaunchTemplate_NetworkInterface_ipv6AddressCount(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_NetworkInterface_enaSrd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"network_interfaces.0.ena_srd_specification.0.ena_srd_udp_specification.0.ena_srd_udp_enabled", // <-- Nested path
+						acctest.CtTrue,
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_instanceMarketOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -3509,6 +3544,44 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName, deleteOnTermination)
+}
+
+func testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName string, enaSrdEnabled, enaSrdUdpEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    device_index = 0
+    subnet_id    = aws_subnet.test.id
+
+    ena_srd_specification {
+      ena_srd_enabled = %[2]t
+
+      ena_srd_udp_specification {
+        ena_srd_udp_enabled = %[3]t
+      }
+    }
+  }
+}
+`, rName, enaSrdEnabled, enaSrdUdpEnabled)
 }
 
 func testAccLaunchTemplateConfig_ebsOptimized(rName, ebsOptimized string) string {

@@ -91,7 +91,6 @@ func resourceDeviceFleet() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -119,7 +118,7 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 		return conn.CreateDeviceFleet(ctx, input)
 	}, ErrCodeValidationException)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Device Fleet %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Device Fleet %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -134,13 +133,13 @@ func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta i
 	deviceFleet, err := findDeviceFleetByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Unable to find SageMaker Device Fleet (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Device Fleet (%s); removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	d.Set("device_fleet_name", deviceFleet.DeviceFleetName)
@@ -153,7 +152,7 @@ func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("enable_iot_role_alias", len(iotAlias) > 0)
 
 	if err := d.Set("output_config", flattenFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting output_config for SageMaker Device Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting output_config for SageMaker AI Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -178,7 +177,7 @@ func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %#v", input)
 		_, err := conn.UpdateDeviceFleet(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Device Fleet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Device Fleet: %s", err)
 		}
 	}
 
@@ -197,7 +196,7 @@ func resourceDeviceFleetDelete(ctx context.Context, d *schema.ResourceData, meta
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "DeviceFleet with name") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	return diags

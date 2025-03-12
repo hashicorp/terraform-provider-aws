@@ -226,7 +226,6 @@ func resourceFirewallPolicy() *schema.Resource {
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				return forceNewIfNotRuleOrderDefault("firewall_policy.0.stateful_engine_options.0.rule_order", d)
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }

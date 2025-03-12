@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A custom description of the custom data identifier. The description can contain as many as 512 characters.
 * `maximum_match_distance` - (Optional) The maximum number of characters that can exist between text that matches the regex pattern and the character sequences specified by the keywords array. Macie includes or excludes a result based on the proximity of a keyword to text that matches the regex pattern. The distance can be 1 - 300 characters. The default value is 50.
-* `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the custom data identifier.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -62,6 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `deleted` - Specifies whether the custom data identifier was deleted. If you delete a custom data identifier, Amazon Macie doesn't delete it permanently. Instead, it soft deletes the identifier.
 * `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
 * `arn` - The Amazon Resource Name (ARN) of the custom data identifier.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +89,4 @@ Using `terraform import`, import `aws_macie2_custom_data_identifier` using the i
 % terraform import aws_macie2_custom_data_identifier.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7f26274861db2152fb5a3ebcdbcf38c145ad1a6560147c223131748340ff5d98 -->
+<!-- cache-key: cdktf-0.20.8 input-2ef5791510792d10b0121d02b3bf5fffe405ce4050bdd4df6230e7b12d7f1126 -->

@@ -170,10 +170,11 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Model: %s", d.Id())
-	_, err := conn.DeleteModel(ctx, &apigatewayv2.DeleteModelInput{
+	input := apigatewayv2.DeleteModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteModel(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

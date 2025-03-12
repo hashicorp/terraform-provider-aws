@@ -44,10 +44,6 @@ type resourceLifecyclePolicy struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceLifecyclePolicy) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
-}
-
 func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

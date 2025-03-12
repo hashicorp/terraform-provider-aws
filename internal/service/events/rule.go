@@ -88,7 +88,7 @@ func resourceRule() *schema.Resource {
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Deprecated: `Use "state" instead`,
+				Deprecated: "is_enabled is deprecated. Use state instead.",
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 					rawPlan := d.GetRawPlan()
 					rawIsEnabled := rawPlan.GetAttr("is_enabled")
@@ -142,8 +142,6 @@ func resourceRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

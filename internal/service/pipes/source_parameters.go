@@ -18,7 +18,7 @@ import (
 )
 
 func sourceParametersSchema() *schema.Schema {
-	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}):(\d{12}):secret:.+)$`), "")
+	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2}):(\d{12}):secret:.+)$`), "")
 
 	return &schema.Schema{
 		Type:     schema.TypeList,

@@ -125,11 +125,12 @@ func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Deleting CodeCatalyst SourceRepository %s", d.Id())
 
-	_, err := conn.DeleteSourceRepository(ctx, &codecatalyst.DeleteSourceRepositoryInput{
+	input := codecatalyst.DeleteSourceRepositoryInput{
 		Name:        aws.String(d.Id()),
 		ProjectName: aws.String(d.Get("project_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-	})
+	}
+	_, err := conn.DeleteSourceRepository(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

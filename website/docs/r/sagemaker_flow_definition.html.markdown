@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_flow_definition"
 description: |-
-  Provides a SageMaker Flow Definition resource.
+  Provides a SageMaker AI Flow Definition resource.
 ---
 
 # Resource: aws_sagemaker_flow_definition
 
-Provides a SageMaker Flow Definition resource.
+Provides a SageMaker AI Flow Definition resource.
 
 ## Example Usage
 
@@ -142,7 +142,7 @@ This resource supports the following arguments:
 
 ### Human Loop Activation Config
 
-* `human_loop_activation_conditions_config` - (Required) defines under what conditions SageMaker creates a human loop. See [Human Loop Activation Conditions Config](#human-loop-activation-conditions-config) details below.
+* `human_loop_activation_conditions_config` - (Required) defines under what conditions SageMaker AI creates a human loop. See [Human Loop Activation Conditions Config](#human-loop-activation-conditions-config) details below.
 
 #### Human Loop Activation Conditions Config
 
@@ -167,7 +167,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Flow Definitions using the `flow_definition_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Flow Definitions using the `flow_definition_name`. For example:
 
 ```terraform
 import {
@@ -176,7 +176,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Flow Definitions using the `flow_definition_name`. For example:
+Using `terraform import`, import SageMaker AI Flow Definitions using the `flow_definition_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_flow_definition.example example

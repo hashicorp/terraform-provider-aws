@@ -1806,7 +1806,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Domain (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker domain %q still exists", rs.Primary.ID)

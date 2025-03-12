@@ -180,10 +180,11 @@ func websiteCertificateAuthorityAssociationStateRefresh(ctx context.Context, con
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeWebsiteCertificateAuthorityOutput{}
 
-		resp, err := conn.DescribeWebsiteCertificateAuthority(ctx, &worklink.DescribeWebsiteCertificateAuthorityInput{
+		input := worklink.DescribeWebsiteCertificateAuthorityInput{
 			FleetArn:    aws.String(arn),
 			WebsiteCaId: aws.String(websiteCaID),
-		})
+		}
+		resp, err := conn.DescribeWebsiteCertificateAuthority(ctx, &input)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return emptyResp, "DELETED", nil
 		}

@@ -42,8 +42,6 @@ func ResourceDevEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"arguments": {
 				Type:     schema.TypeMap,

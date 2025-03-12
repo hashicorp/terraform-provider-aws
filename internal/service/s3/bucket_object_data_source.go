@@ -40,7 +40,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrBucket: {
-				Deprecated: "Use the aws_s3_object data source instead",
+				Deprecated: "bucket is deprecated. Use the aws_s3_object data source instead.",
 				Type:       schema.TypeString,
 				Required:   true,
 			},

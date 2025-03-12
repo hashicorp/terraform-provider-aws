@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceACL() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -301,10 +298,12 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.Client, name string) (*a
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{aclStatusDeleting},
-		Target:  []string{},
-		Refresh: statusACL(ctx, conn, name),
-		Timeout: timeout,
+		Pending:      []string{aclStatusDeleting},
+		Target:       []string{},
+		Refresh:      statusACL(ctx, conn, name),
+		Timeout:      timeout,
+		Delay:        30 * time.Second,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

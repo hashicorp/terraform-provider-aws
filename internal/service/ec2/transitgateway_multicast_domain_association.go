@@ -137,11 +137,12 @@ func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Cl
 	id := transitGatewayMulticastDomainAssociationCreateResourceID(multicastDomainID, attachmentID, subnetID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain Association: %s", id)
-	_, err := conn.DisassociateTransitGatewayMulticastDomain(ctx, &ec2.DisassociateTransitGatewayMulticastDomainInput{
+	input := ec2.DisassociateTransitGatewayMulticastDomainInput{
 		SubnetIds:                       []string{subnetID},
 		TransitGatewayAttachmentId:      aws.String(attachmentID),
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
-	})
+	}
+	_, err := conn.DisassociateTransitGatewayMulticastDomain(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil

@@ -49,10 +49,6 @@ type managedUserPoolClientResource struct {
 	framework.WithNoOpDelete
 }
 
-func (r *managedUserPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cognito_managed_user_pool_client"
-}
-
 // Schema returns the schema for this resource.
 func (r *managedUserPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{

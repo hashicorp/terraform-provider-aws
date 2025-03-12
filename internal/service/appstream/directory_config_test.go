@@ -162,7 +162,8 @@ func testAccCheckDirectoryConfigExists(ctx context.Context, resourceName string,
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-		resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}})
+		input := appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}}
+		resp, err := conn.DescribeDirectoryConfigs(ctx, &input)
 
 		if err != nil {
 			return err
@@ -187,7 +188,8 @@ func testAccCheckDirectoryConfigDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}})
+			input := appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}}
+			resp, err := conn.DescribeDirectoryConfigs(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

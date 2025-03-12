@@ -49,6 +49,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Refresh Schedule",
 		},
 		{
+			Factory:  newResourceRoleMembership,
+			TypeName: "aws_quicksight_role_membership",
+			Name:     "Role Membership",
+		},
+		{
 			Factory:  newTemplateAliasResource,
 			TypeName: "aws_quicksight_template_alias",
 			Name:     "Template Alias",

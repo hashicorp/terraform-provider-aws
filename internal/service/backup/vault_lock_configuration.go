@@ -123,9 +123,10 @@ func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
-	_, err := conn.DeleteBackupVaultLockConfiguration(ctx, &backup.DeleteBackupVaultLockConfigurationInput{
+	input := backup.DeleteBackupVaultLockConfigurationInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultLockConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

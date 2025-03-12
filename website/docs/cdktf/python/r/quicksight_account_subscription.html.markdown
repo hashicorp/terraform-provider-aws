@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS QuickSight Account Subscription.
 
+~> Due to the absence of the `admin_group`, `author_group`, and `reader_group` fields in the [`DescribeAccountSettings`](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DescribeAccountSettings.html) API response, changes made to these groups post-subscription will not be detected by this resource.
+
 ## Example Usage
 
 ```python
@@ -55,7 +57,7 @@ The following arguments are optional:
 * `first_name` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `iam_identity_center_instance_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
 * `last_name` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
-* `reader_group` - (Optional) Reader group associated with your Active Direcrtory.
+* `reader_group` - (Optional) Reader group associated with your Active Directory.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
 
 ## Attribute Reference
@@ -75,4 +77,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-6814e7a35693f8c5c6631a3a5eae738a826b652a72b3cfb8a4b0731b50c2c7fb -->
+<!-- cache-key: cdktf-0.20.8 input-3d3daba85aa714443edc1ec8f92052e8eca320407dc28a84fc7faa49d3c8ac28 -->

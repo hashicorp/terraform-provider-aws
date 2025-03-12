@@ -159,10 +159,11 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting Directory Service Shared Directory: %s", d.Id())
-	_, err = conn.UnshareDirectory(ctx, &directoryservice.UnshareDirectoryInput{
+	input := directoryservice.UnshareDirectoryInput{
 		DirectoryId:   aws.String(ownerDirID),
 		UnshareTarget: expandUnshareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
-	})
+	}
+	_, err = conn.UnshareDirectory(ctx, &input)
 
 	if errs.IsA[*awstypes.DirectoryNotSharedException](err) {
 		return diags

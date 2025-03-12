@@ -40,10 +40,6 @@ type templateAliasResource struct {
 	framework.WithImportByID
 }
 
-func (r *templateAliasResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_quicksight_template_alias"
-}
-
 func (r *templateAliasResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

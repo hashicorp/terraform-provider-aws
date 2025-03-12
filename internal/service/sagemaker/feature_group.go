@@ -310,8 +310,6 @@ func resourceFeatureGroup() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -345,7 +343,7 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ThroughputConfig = expandThroughputConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker AI Feature Group create config: %#v", *input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateFeatureGroup(ctx, input)
 		if err != nil {
@@ -365,13 +363,13 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Feature Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Feature Group: %s", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitFeatureGroupCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
@@ -384,13 +382,13 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := findFeatureGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Feature Group (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Feature Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("feature_group_name", output.FeatureGroupName)
@@ -401,19 +399,19 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, output.FeatureGroupArn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("online_store_config", flattenFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting online_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting online_store_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("offline_store_config", flattenFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("throughput_config", flattenThroughputConfig(output.ThroughputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting throughput_config for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting throughput_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -439,11 +437,11 @@ func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.UpdateFeatureGroup(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Feature Group (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitFeatureGroupUpdated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -462,11 +460,11 @@ func resourceFeatureGroupDelete(ctx context.Context, d *schema.ResourceData, met
 		if errs.IsA[*awstypes.ResourceNotFound](err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFeatureGroupDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

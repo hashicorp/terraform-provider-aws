@@ -185,10 +185,11 @@ func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
-	_, err := conn.DeleteUserPoolDomain(ctx, &cognitoidentityprovider.DeleteUserPoolDomainInput{
+	input := cognitoidentityprovider.DeleteUserPoolDomainInput{
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
-	})
+	}
+	_, err := conn.DeleteUserPoolDomain(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "No such domain") {
 		return diags

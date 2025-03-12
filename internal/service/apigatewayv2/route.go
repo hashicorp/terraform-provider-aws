@@ -304,10 +304,11 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route: %s", d.Id())
-	_, err := conn.DeleteRoute(ctx, &apigatewayv2.DeleteRouteInput{
+	input := apigatewayv2.DeleteRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRoute(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

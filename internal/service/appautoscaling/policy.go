@@ -582,7 +582,7 @@ func expandCustomizedMetricSpecification(configured []interface{}) *awstypes.Cus
 }
 
 func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) []awstypes.TargetTrackingMetricDataQuery {
-	if metricDataQuerySlices == nil || len(metricDataQuerySlices) < 1 {
+	if len(metricDataQuerySlices) < 1 {
 		return nil
 	}
 	metricDataQueries := make([]awstypes.TargetTrackingMetricDataQuery, len(metricDataQuerySlices))

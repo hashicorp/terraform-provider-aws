@@ -33,7 +33,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,7 +77,7 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
@@ -94,8 +93,6 @@ func resourceEnvironment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  EnvironmentMigrateState,

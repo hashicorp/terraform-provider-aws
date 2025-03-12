@@ -54,7 +54,8 @@ func TestAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 func testAccCheckEBSSnapshotBlockAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		response, err := conn.GetSnapshotBlockPublicAccessState(ctx, &ec2.GetSnapshotBlockPublicAccessStateInput{})
+		input := ec2.GetSnapshotBlockPublicAccessStateInput{}
+		response, err := conn.GetSnapshotBlockPublicAccessState(ctx, &input)
 		if err != nil {
 			return err
 		}

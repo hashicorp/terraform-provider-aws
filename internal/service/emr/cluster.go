@@ -53,8 +53,6 @@ func resourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			instanceFleetConfigSchema := func() *schema.Resource {
 				return &schema.Resource{

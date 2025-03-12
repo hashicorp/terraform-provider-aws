@@ -1243,8 +1243,6 @@ func resourceTopicRule() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

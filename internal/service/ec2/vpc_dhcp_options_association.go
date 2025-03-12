@@ -118,10 +118,11 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 	// So, we do this by setting the VPC to the default DHCP Options Set.
 
 	log.Printf("[DEBUG] Deleting EC2 VPC DHCP Options Set Association: %s", d.Id())
-	_, err = conn.AssociateDhcpOptions(ctx, &ec2.AssociateDhcpOptionsInput{
+	input := ec2.AssociateDhcpOptionsInput{
 		DhcpOptionsId: aws.String(defaultDHCPOptionsID),
 		VpcId:         aws.String(vpcID),
-	})
+	}
+	_, err = conn.AssociateDhcpOptions(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags

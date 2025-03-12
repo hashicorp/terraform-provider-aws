@@ -88,10 +88,10 @@ func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d
 		createOpts.OnStart = []awstypes.NotebookInstanceLifecycleHook{hook}
 	}
 
-	log.Printf("[DEBUG] SageMaker notebook instance lifecycle configuration create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker AI notebook instance lifecycle configuration create config: %#v", *createOpts)
 	_, err := conn.CreateNotebookInstanceLifecycleConfig(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker notebook instance lifecycle configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI notebook instance lifecycle configuration: %s", err)
 	}
 	d.SetId(name)
 
@@ -105,33 +105,33 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *
 	output, err := findNotebookInstanceLifecycleConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[INFO] unable to find the SageMaker notebook instance lifecycle configuration (%s); therefore it is removed from the state", d.Id())
+		log.Printf("[INFO] unable to find the SageMaker AI notebook instance lifecycle configuration (%s); therefore it is removed from the state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker notebook instance lifecycle configuration %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI notebook instance lifecycle configuration %s: %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrName, output.NotebookInstanceLifecycleConfigName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting name for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting name for SageMaker AI notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 
 	if len(output.OnCreate) > 0 {
 		if err := d.Set("on_create", output.OnCreate[0].Content); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting on_create for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting on_create for SageMaker AI notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if len(output.OnStart) > 0 {
 		if err := d.Set("on_start", output.OnStart[0].Content); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting on_start for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting on_start for SageMaker AI notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if err := d.Set(names.AttrARN, output.NotebookInstanceLifecycleConfigArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting arn for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting arn for SageMaker AI notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -157,7 +157,7 @@ func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d
 
 	_, err := conn.UpdateNotebookInstanceLifecycleConfig(ctx, updateOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance Lifecycle Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance Lifecycle Configuration: %s", err)
 	}
 	return append(diags, resourceNotebookInstanceLifeCycleConfigurationRead(ctx, d, meta)...)
 }
@@ -169,7 +169,7 @@ func resourceNotebookInstanceLifeCycleConfigurationDelete(ctx context.Context, d
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker Notebook Instance Lifecycle Configuration: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Notebook Instance Lifecycle Configuration: %s", d.Id())
 
 	_, err := conn.DeleteNotebookInstanceLifecycleConfig(ctx, deleteOpts)
 	if err != nil {
@@ -177,7 +177,7 @@ func resourceNotebookInstanceLifeCycleConfigurationDelete(ctx context.Context, d
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Notebook Instance Lifecycle Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Notebook Instance Lifecycle Configuration: %s", err)
 	}
 	return diags
 }

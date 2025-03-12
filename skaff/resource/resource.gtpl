@@ -195,9 +195,6 @@ func Resource{{ .Resource }}() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			{{- end }}
 		},
-		{{- if .IncludeTags }}
-		CustomizeDiff: verify.SetTagsDiff,
-		{{- end }}
 	}
 }
 
@@ -205,7 +202,7 @@ const (
 	ResName{{ .Resource }} = "{{ .HumanResourceName }}"
 )
 
-func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE CREATE ====
@@ -255,11 +252,11 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		in.MaxSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]any)) > 0 {
 		{{- if .IncludeComments }}
 		// TIP: Use an expander to assign a complex argument.
 		{{- end }}
-		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
+		in.ComplexArguments = expandComplexArguments(v.([]any))
 	}
 
 	{{ if .IncludeComments }}
@@ -294,7 +291,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resource{{ .Resource }}Read(ctx, d, meta)...)
 }
 
-func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
@@ -378,7 +375,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE UPDATE ====
@@ -452,7 +449,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resource{{ .Resource }}Read(ctx, d, meta)...)
 }
 
-func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE DELETE ====
@@ -603,7 +600,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -658,12 +655,12 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
-func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[string]interface{} {
+func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.SubFieldOne; v != nil {
 		m["sub_field_one"] = aws.ToString(v)
@@ -681,12 +678,12 @@ func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[
 // that means you'll get back a one-length slice. This plural function works
 // brilliantly for that situation too.
 {{- end }}
-func flattenComplexArguments(apiObjects []*{{ .ServiceLower }}.ComplexArgument) []interface{} {
+func flattenComplexArguments(apiObjects []*{{ .ServiceLower }}.ComplexArgument) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
@@ -706,7 +703,7 @@ func flattenComplexArguments(apiObjects []*{{ .ServiceLower }}.ComplexArgument) 
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
-func expandComplexArgument(tfMap map[string]interface{}) *{{ .ServiceLower }}.ComplexArgument {
+func expandComplexArgument(tfMap map[string]any) *{{ .ServiceLower }}.ComplexArgument {
 	if tfMap == nil {
 		return nil
 	}
@@ -728,7 +725,7 @@ func expandComplexArgument(tfMap map[string]interface{}) *{{ .ServiceLower }}.Co
 // works brilliantly. However, if the AWS API takes a structure rather than a
 // slice of structures, you will not need it.
 {{- end }}
-func expandComplexArguments(tfList []interface{}) []*{{ .ServiceLower }}.ComplexArgument {
+func expandComplexArguments(tfList []any) []*{{ .ServiceLower }}.ComplexArgument {
 	{{- if .IncludeComments }}
 	// TIP: The AWS API can be picky about whether you send a nil or zero-
 	// length for an argument that should be cleared. For example, in some
@@ -757,7 +754,7 @@ func expandComplexArguments(tfList []interface{}) []*{{ .ServiceLower }}.Complex
 	// s := make([]*{{ .ServiceLower }}.ComplexArgument, 0)
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue

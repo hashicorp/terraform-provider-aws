@@ -31,10 +31,6 @@ type standardsControlAssociationsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*standardsControlAssociationsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_securityhub_standards_control_associations"
-}
-
 func (d *standardsControlAssociationsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,8 +39,6 @@ func resourceDataCatalog() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -193,9 +190,10 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog (%s)", d.Id())
-	_, err := conn.DeleteDataCatalog(ctx, &athena.DeleteDataCatalogInput{
+	input := athena.DeleteDataCatalogInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataCatalog(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

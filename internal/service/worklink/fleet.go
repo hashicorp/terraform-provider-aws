@@ -204,17 +204,19 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if output.LastUpdatedTime != nil {
 		d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime.Format(time.RFC3339))
 	}
-	auditStreamConfigurationResp, err := conn.DescribeAuditStreamConfiguration(ctx, &worklink.DescribeAuditStreamConfigurationInput{
+	describeAuditStreamInput := worklink.DescribeAuditStreamConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	auditStreamConfigurationResp, err := conn.DescribeAuditStreamConfiguration(ctx, &describeAuditStreamInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) audit stream configuration: %s", d.Id(), err)
 	}
 	d.Set("audit_stream_arn", auditStreamConfigurationResp.AuditStreamArn)
 
-	companyNetworkConfigurationResp, err := conn.DescribeCompanyNetworkConfiguration(ctx, &worklink.DescribeCompanyNetworkConfigurationInput{
+	describeCompanyNetworkInput := worklink.DescribeCompanyNetworkConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	companyNetworkConfigurationResp, err := conn.DescribeCompanyNetworkConfiguration(ctx, &describeCompanyNetworkInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) company network configuration: %s", d.Id(), err)
 	}
@@ -222,9 +224,10 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting network: %s", err)
 	}
 
-	identityProviderConfigurationResp, err := conn.DescribeIdentityProviderConfiguration(ctx, &worklink.DescribeIdentityProviderConfigurationInput{
+	describeIdentityProviderInput := worklink.DescribeIdentityProviderConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	identityProviderConfigurationResp, err := conn.DescribeIdentityProviderConfiguration(ctx, &describeIdentityProviderInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) identity provider configuration: %s", d.Id(), err)
 	}
@@ -232,9 +235,10 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting identity_provider: %s", err)
 	}
 
-	devicePolicyConfigurationResp, err := conn.DescribeDevicePolicyConfiguration(ctx, &worklink.DescribeDevicePolicyConfigurationInput{
+	describeDevicePolicyInput := worklink.DescribeDevicePolicyConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	devicePolicyConfigurationResp, err := conn.DescribeDevicePolicyConfiguration(ctx, &describeDevicePolicyInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) device policy configuration: %s", d.Id(), err)
 	}
@@ -349,9 +353,10 @@ func fleetStateRefresh(ctx context.Context, conn *worklink.Client, arn string) r
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeFleetMetadataOutput{}
 
-		resp, err := conn.DescribeFleetMetadata(ctx, &worklink.DescribeFleetMetadataInput{
+		input := worklink.DescribeFleetMetadataInput{
 			FleetArn: aws.String(arn),
-		})
+		}
+		resp, err := conn.DescribeFleetMetadata(ctx, &input)
 		if err != nil {
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return emptyResp, "DELETED", nil

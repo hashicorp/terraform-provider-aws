@@ -1150,7 +1150,6 @@ func resourceService() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
 			triggersCustomizeDiff,
 		),
@@ -2156,11 +2155,6 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 }
 
 func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
-	tfList := tfSet.List()
-	if len(tfList) == 0 {
-		return nil
-	}
-
 	apiObjects := make([]awstypes.VpcLatticeConfiguration, 0)
 
 	for _, tfMapRaw := range tfSet.List() {

@@ -48,7 +48,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAddressesInput{}
+	input := ec2.DescribeAddressesInput{}
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
@@ -65,7 +65,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filters = nil
 	}
 
-	output, err := findEIPs(ctx, conn, input)
+	output, err := findEIPs(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)

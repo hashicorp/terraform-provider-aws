@@ -206,7 +206,7 @@ func TestAccECSService_LatticeConfigurations(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccService_vpcLatticeConfiguration_basic(rName),
+				Config: testAccServiceConfig_vpcLatticeConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					testAccCheckServiceExists(ctx, serviceName, &service),
@@ -215,8 +215,15 @@ func TestAccECSService_LatticeConfigurations(t *testing.T) {
 						"port_name": "testvpclattice",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(serviceName, "vpc_lattice_configurations.*", map[string]string{
-						"port_name": "testvpclattice-ipv6",
+						"port_name": "testvpclattice",
 					}),
+				),
+			},
+			{
+				Config: testAccServiceConfig_vpcLatticeConfiguration_removed(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, serviceName, &service),
+					resource.TestCheckResourceAttr(serviceName, "vpc_lattice_configuration.#", "0"),
 				),
 			},
 		},
@@ -4647,35 +4654,12 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccService_vpcLatticeConfiguration_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_ecs_service" "test" {
-  name                   = %[1]q
-  cluster                = aws_ecs_cluster.test.name
-  task_definition        = aws_ecs_task_definition.test.arn
-  desired_count          = 1
-  launch_type            = "FARGATE"
-  enable_execute_command = true
-  network_configuration {
-    subnets          = [aws_subnet.test.id]
-    security_groups  = [aws_security_group.test.id]
-    assign_public_ip = true
-  }
-  vpc_lattice_configurations {
-    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
-    target_group_arn = aws_vpclattice_target_group.test.arn
-    port_name        = "testvpclattice"
-  }
-
-  vpc_lattice_configurations {
-    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
-    target_group_arn = aws_vpclattice_target_group.test_ipv6.arn
-    port_name        = "testvpclattice-ipv6"
-  }
-}
-
+func testAccServiceConfig_baseVPCLattice(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
 
   tags = {
     Name = %[1]q
@@ -4683,25 +4667,21 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id                  = aws_vpc.test.id
-  map_public_ip_on_launch = true
+  cidr_block      = "10.10.0.0/16"
+  ipv6_cidr_block = aws_vpc.test.ipv6_cidr_block
+
+  vpc_id                          = aws_vpc.test.id
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch         = true
 
   tags = {
     Name = %[1]q
   }
 }
-
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-  tags = {
-    Name = %[1]q
-  }
-}
 
-resource "aws_eip" "test" {
-  domain = "vpc"
   tags = {
     Name = %[1]q
   }
@@ -4714,6 +4694,12 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  route {
+    ipv6_cidr_block = "::/0"
+    gateway_id      = aws_internet_gateway.test.id
+  }
+
   tags = {
     Name = %[1]q
   }
@@ -4737,17 +4723,11 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["10.0.0.0/16"]
+    ipv6_cidr_blocks = [aws_vpc.test.ipv6_cidr_block]
   }
 
   ingress {
@@ -4759,20 +4739,26 @@ resource "aws_security_group" "test" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = {
     Name = %[1]q
   }
+
+  # ECS Infrastructure role must exist long enough for the VPC Lattice targets to be deregistered.
+  # Security group removal is a good indicator of this.
+  depends_on = [aws_iam_role.vpc_lattice_infrastructure]
 }
 
 
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
+
   tags = {
     Name = %[1]q
   }
@@ -4780,6 +4766,7 @@ resource "aws_vpclattice_service" "test" {
 
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
+
   tags = {
     Name = %[1]q
   }
@@ -4834,7 +4821,6 @@ resource "aws_vpclattice_listener" "test" {
         weight                  = 20
       }
     }
-
   }
 }
 
@@ -4977,22 +4963,11 @@ resource "aws_ecs_task_definition" "test" {
   {
     "essential": true,
     "image": "nginx:latest",
-    "name": "%[1]s-ipv4-container",
+    "name": "%[1]s-container",
     "portMappings": [
       {
         "containerPort": 80,
         "name": "testvpclattice"
-      }
-    ]
-  },
-{
-    "essential": true,
-    "image": "nginx:latest",
-    "name": "%[1]s-ipv6-container",
-    "portMappings": [
-      {
-        "containerPort": 200,
-        "name": "testvpclattice-ipv6"
       }
     ]
   }
@@ -5003,8 +4978,61 @@ DEFINITION
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
-`, rName),
-	)
+`, rName)
+}
+
+func testAccServiceConfig_vpcLatticeConfiguration_basic(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		testAccServiceConfig_baseVPCLattice(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name                   = %[1]q
+  cluster                = aws_ecs_cluster.test.name
+  task_definition        = aws_ecs_task_definition.test.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+  network_configuration {
+    subnets          = [aws_subnet.test.id]
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+  vpc_lattice_configurations {
+    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
+    target_group_arn = aws_vpclattice_target_group.test.arn
+    port_name        = "testvpclattice"
+  }
+
+  vpc_lattice_configurations {
+    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
+    target_group_arn = aws_vpclattice_target_group.test_ipv6.arn
+    port_name        = "testvpclattice"
+  }
+}
+`, rName))
+}
+
+func testAccServiceConfig_vpcLatticeConfiguration_removed(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		testAccServiceConfig_baseVPCLattice(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name                   = %[1]q
+  cluster                = aws_ecs_cluster.test.name
+  task_definition        = aws_ecs_task_definition.test.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+  wait_for_steady_state  = true
+  network_configuration {
+    subnets          = [aws_subnet.test.id]
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+}
+`, rName))
 }
 
 func testAccServiceConfig_serviceConnectAllAttributes(rName string) string {

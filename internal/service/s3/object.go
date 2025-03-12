@@ -62,7 +62,7 @@ func resourceObject() *schema.Resource {
 				if ignoreProviderDefaultTags(ctx, d) {
 					return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 				}
-				return verify.SetTagsDiff(ctx, d, meta)
+				return nil
 			},
 		),
 
@@ -102,6 +102,10 @@ func resourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc64nvme": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -289,6 +293,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)

@@ -150,11 +150,12 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())
-	_, err = conn.DeleteClientVpnRoute(ctx, &ec2.DeleteClientVpnRouteInput{
+	input := ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
-	})
+	}
+	_, err = conn.DeleteClientVpnRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNRouteNotFound) {
 		return diags

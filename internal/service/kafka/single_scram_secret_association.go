@@ -38,10 +38,6 @@ type singleSCRAMSecretAssociationResource struct {
 	framework.WithImportByID
 }
 
-func (*singleSCRAMSecretAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_msk_single_scram_secret_association"
-}
-
 func (r *singleSCRAMSecretAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

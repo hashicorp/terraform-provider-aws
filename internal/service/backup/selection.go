@@ -303,10 +303,11 @@ func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Selection: %s", d.Id())
-	_, err := conn.DeleteBackupSelection(ctx, &backup.DeleteBackupSelectionInput{
+	input := backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
 		SelectionId:  aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupSelection(ctx, &input)
 
 	if errs.IsA[*awstypes.InvalidParameterValueException](err) {
 		return diags

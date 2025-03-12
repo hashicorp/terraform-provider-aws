@@ -447,9 +447,10 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		result, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+		input := cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
-		})
+		}
+		result, err := conn.DescribeIdentityPool(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -473,9 +474,10 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+			input := cognitoidentity.DescribeIdentityPoolInput{
 				IdentityPoolId: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.DescribeIdentityPool(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

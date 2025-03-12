@@ -301,7 +301,9 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `stream_processor_arn` - ARN of the Stream Processor.
+* `arn` - ARN of the Stream Processor.
+* `stream_processor_arn` - (**Deprecated**) ARN of the Stream Processor.
+  Use `arn` instead.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

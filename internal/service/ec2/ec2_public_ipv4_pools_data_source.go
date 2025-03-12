@@ -37,7 +37,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribePublicIpv4PoolsInput{}
+	input := ec2.DescribePublicIpv4PoolsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
@@ -51,7 +51,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	output, err := findPublicIPv4Pools(ctx, conn, input)
+	output, err := findPublicIPv4Pools(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pools: %s", err)

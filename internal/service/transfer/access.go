@@ -280,10 +280,11 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
-	_, err = conn.DeleteAccess(ctx, &transfer.DeleteAccessInput{
+	input := transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
-	})
+	}
+	_, err = conn.DeleteAccess(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

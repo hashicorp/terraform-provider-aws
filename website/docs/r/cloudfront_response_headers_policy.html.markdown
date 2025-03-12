@@ -174,6 +174,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The response headers policy ARN.
 * `etag` - The current version of the response headers policy.
 * `id` - The identifier for the response headers policy.
 

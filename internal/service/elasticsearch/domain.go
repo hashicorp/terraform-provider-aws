@@ -94,7 +94,6 @@ func resourceDomain() *schema.Resource {
 
 				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{

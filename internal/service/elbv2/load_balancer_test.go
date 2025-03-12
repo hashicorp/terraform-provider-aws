@@ -96,7 +96,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_tls_version_and_cipher_suite_headers", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_xff_client_port", acctest.CtFalse),
-					resource.TestCheckNoResourceAttr(resourceName, "enable_zonal_shift"),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
@@ -640,6 +640,48 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T)
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateZonalShift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, mid, post awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albZonalShift(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albZonalShift(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albZonalShift(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
@@ -3200,4 +3242,24 @@ resource "aws_lb" "test" {
   enable_xff_client_port = %[2]t
 }
 `, rName, enabled))
+}
+
+func testAccLoadBalancerConfig_albZonalShift(rName string, zs bool) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  enable_zonal_shift = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, zs))
 }

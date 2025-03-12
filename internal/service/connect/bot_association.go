@@ -141,13 +141,14 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Bot Association: %s", d.Id())
-	_, err = conn.DisassociateBot(ctx, &connect.DisassociateBotInput{
+	input := connect.DisassociateBotInput{
 		InstanceId: aws.String(instanceID),
 		LexBot: &awstypes.LexBot{
 			Name:      aws.String(name),
 			LexRegion: aws.String(region),
 		},
-	})
+	}
+	_, err = conn.DisassociateBot(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

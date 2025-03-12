@@ -154,9 +154,10 @@ func resourceVPCEndpointConnectionNotificationDelete(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint Connection Notification: %s", d.Id())
-	_, err := conn.DeleteVpcEndpointConnectionNotifications(ctx, &ec2.DeleteVpcEndpointConnectionNotificationsInput{
+	input := ec2.DeleteVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteVpcEndpointConnectionNotifications(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
 		return diags

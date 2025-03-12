@@ -150,10 +150,11 @@ func resourceTransitGatewayPolicyTableAssociationDelete(ctx context.Context, d *
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table Association: %s", d.Id())
-	_, err = conn.DisassociateTransitGatewayPolicyTable(ctx, &ec2.DisassociateTransitGatewayPolicyTableInput{
+	input := ec2.DisassociateTransitGatewayPolicyTableInput{
 		TransitGatewayAttachmentId:  aws.String(transitGatewayAttachmentID),
 		TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
-	})
+	}
+	_, err = conn.DisassociateTransitGatewayPolicyTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound, errCodeInvalidTransitGatewayPolicyTableAssociationNotFound) {
 		return diags

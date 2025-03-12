@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,8 +48,6 @@ func resourceVocabulary() *schema.Resource {
 			// https://docs.aws.amazon.com/connect/latest/adminguide/add-custom-vocabulary.html
 			Delete: schema.DefaultTimeout(100 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -189,10 +186,11 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Vocabulary: %s", d.Id())
-	_, err = conn.DeleteVocabulary(ctx, &connect.DeleteVocabularyInput{
+	input := connect.DeleteVocabularyInput{
 		InstanceId:   aws.String(instanceID),
 		VocabularyId: aws.String(vocabularyID),
-	})
+	}
+	_, err = conn.DeleteVocabulary(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

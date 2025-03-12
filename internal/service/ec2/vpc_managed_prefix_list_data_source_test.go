@@ -23,14 +23,15 @@ func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, name str
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := conn.DescribeManagedPrefixLists(ctx, &ec2.DescribeManagedPrefixListsInput{
+		input := ec2.DescribeManagedPrefixListsInput{
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("prefix-list-name"),
 					Values: []string{name},
 				},
 			},
-		})
+		}
+		output, err := conn.DescribeManagedPrefixLists(ctx, &input)
 
 		if err != nil {
 			return err

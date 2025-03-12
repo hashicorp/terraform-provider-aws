@@ -301,8 +301,6 @@ func resourceTask() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -446,9 +444,10 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Task: %s", d.Id())
-	_, err := conn.DeleteTask(ctx, &datasync.DeleteTaskInput{
+	input := datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTask(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags

@@ -725,7 +725,7 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_iam_policy" "test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.policy.json
 }
 
@@ -908,7 +908,7 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_iam_policy" "test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.policy.json
 }
 

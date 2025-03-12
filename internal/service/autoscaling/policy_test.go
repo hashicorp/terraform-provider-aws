@@ -952,6 +952,7 @@ resource "aws_autoscaling_policy" "test" {
 
       metric_name = "hoge"
       namespace   = "hoge"
+      period      = 10
       statistic   = "Average"
     }
 

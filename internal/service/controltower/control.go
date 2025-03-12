@@ -236,10 +236,11 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	targetIdentifier, controlIdentifier := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting ControlTower Control: %s", d.Id())
-	output, err := conn.DisableControl(ctx, &controltower.DisableControlInput{
+	input := controltower.DisableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
-	})
+	}
+	output, err := conn.DisableControl(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Control (%s): %s", d.Id(), err)

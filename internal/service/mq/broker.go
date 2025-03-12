@@ -375,8 +375,7 @@ func resourceBroker() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
 						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
@@ -391,7 +390,7 @@ func resourceBroker() *schema.Resource {
 	}
 }
 
-func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -413,8 +412,8 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = types.AuthenticationStrategy(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandConfigurationId(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandConfigurationId(v.([]any))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = types.DeploymentMode(v.(string))
@@ -425,17 +424,17 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("data_replication_primary_broker_arn"); ok {
 		input.DataReplicationPrimaryBrokerArn = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]interface{}))
+	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]any))
 	}
-	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]interface{}))
+	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]any))
 	}
-	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Logs = expandLogs(engineType, v.([]interface{}))
+	if v, ok := d.GetOk("logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Logs = expandLogs(engineType, v.([]any))
 	}
-	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
+	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]any))
 	}
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
@@ -463,7 +462,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
-func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -536,7 +535,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -563,9 +562,9 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
-			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
+			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]any)),
 			EngineVersion: aws.String(normalizeEngineVersion(engineType, engineVersion, autoMinorVersionUpgrade)),
-			Logs:          expandLogs(engineType, d.Get("logs").([]interface{})),
+			Logs:          expandLogs(engineType, d.Get("logs").([]any)),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
@@ -625,7 +624,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("maintenance_window_start_time") {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:                   aws.String(d.Id()),
-			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]interface{})),
+			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]any)),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
@@ -667,7 +666,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -718,7 +717,7 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 }
 
 func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -786,10 +785,10 @@ func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout
 	return nil, err
 }
 
-func resourceUserHash(v interface{}) int {
+func resourceUserHash(v any) int {
 	var buf bytes.Buffer
 
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	if ca, ok := m["console_access"]; ok {
 		buf.WriteString(fmt.Sprintf("%t-", ca.(bool)))
 	} else {
@@ -806,7 +805,7 @@ func resourceUserHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func updateBrokerUsers(ctx context.Context, conn *mq.Client, id string, oldUsers, newUsers []interface{}) (bool, error) {
+func updateBrokerUsers(ctx context.Context, conn *mq.Client, id string, oldUsers, newUsers []any) (bool, error) {
 	// If there are any user creates/deletes/updates, updatedUsers will be set to true
 	updatedUsers := false
 
@@ -840,10 +839,10 @@ func updateBrokerUsers(ctx context.Context, conn *mq.Client, id string, oldUsers
 	return updatedUsers, nil
 }
 
-func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.CreateUserInput, di []*mq.DeleteUserInput, ur []*mq.UpdateUserInput, e error) {
-	existingUsers := make(map[string]interface{})
+func DiffBrokerUsers(bId string, oldUsers, newUsers []any) (cr []*mq.CreateUserInput, di []*mq.DeleteUserInput, ur []*mq.UpdateUserInput, e error) {
+	existingUsers := make(map[string]any)
 	for _, ou := range oldUsers {
-		u := ou.(map[string]interface{})
+		u := ou.(map[string]any)
 		username := u[names.AttrUsername].(string)
 		// Convert Set to slice to allow easier comparison
 		if g, ok := u["groups"]; ok {
@@ -858,7 +857,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 		// Still need access to the original map
 		// because Set contents doesn't get copied
 		// Likely related to https://github.com/mitchellh/copystructure/issues/17
-		nuOriginal := nu.(map[string]interface{})
+		nuOriginal := nu.(map[string]any)
 
 		// Create a mutable copy
 		newUser, err := copystructure.Copy(nu)
@@ -866,18 +865,18 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 			return cr, di, ur, err
 		}
 
-		newUserMap := newUser.(map[string]interface{})
+		newUserMap := newUser.(map[string]any)
 		username := newUserMap[names.AttrUsername].(string)
 
 		// Convert Set to slice to allow easier comparison
-		var ng []interface{}
+		var ng []any
 		if g, ok := nuOriginal["groups"]; ok {
 			ng = g.(*schema.Set).List()
 			newUserMap["groups"] = ng
 		}
 
 		if eu, ok := existingUsers[username]; ok {
-			existingUserMap := eu.(map[string]interface{})
+			existingUserMap := eu.(map[string]any)
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {
 				ur = append(ur, &mq.UpdateUserInput{
@@ -951,12 +950,12 @@ func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVe
 	return engineVersion
 }
 
-func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {
+func expandEncryptionOptions(l []any) *types.EncryptionOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	encryptionOptions := &types.EncryptionOptions{
 		UseAwsOwnedKey: aws.Bool(m["use_aws_owned_key"].(bool)),
@@ -969,20 +968,20 @@ func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {
 	return encryptionOptions
 }
 
-func flattenEncryptionOptions(encryptionOptions *types.EncryptionOptions) []interface{} {
+func flattenEncryptionOptions(encryptionOptions *types.EncryptionOptions) []any {
 	if encryptionOptions == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrKMSKeyID:  aws.ToString(encryptionOptions.KmsKeyId),
 		"use_aws_owned_key": aws.ToBool(encryptionOptions.UseAwsOwnedKey),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func ValidBrokerPassword(v interface{}, k string) (ws []string, errors []error) {
+func ValidBrokerPassword(v any, k string) (ws []string, errors []error) {
 	min := 12
 	max := 250
 	value := v.(string)
@@ -1007,10 +1006,10 @@ func ValidBrokerPassword(v interface{}, k string) (ws []string, errors []error) 
 	return
 }
 
-func expandUsers(cfg []interface{}) []types.User {
+func expandUsers(cfg []any) []types.User {
 	users := make([]types.User, len(cfg))
 	for i, m := range cfg {
-		u := m.(map[string]interface{})
+		u := m.(map[string]any)
 		user := types.User{
 			Username: aws.String(u[names.AttrUsername].(string)),
 			Password: aws.String(u[names.AttrPassword].(string)),
@@ -1056,17 +1055,17 @@ func expandUsersForBroker(ctx context.Context, conn *mq.Client, brokerId string,
 }
 
 // We use cfgdUsers to get & set the password
-func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
+func flattenUsers(users []*types.User, cfgUsers []any) *schema.Set {
 	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
-		user := u.(map[string]interface{})
+		user := u.(map[string]any)
 		username := user[names.AttrUsername].(string)
 		existingPairs[username] = user[names.AttrPassword].(string)
 	}
 
-	out := make([]interface{}, 0)
+	out := make([]any, 0)
 	for _, u := range users {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrUsername: aws.ToString(u.Username),
 		}
 		password := ""
@@ -1090,12 +1089,12 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 	return schema.NewSet(resourceUserHash, out)
 }
 
-func expandWeeklyStartTime(cfg []interface{}) *types.WeeklyStartTime {
+func expandWeeklyStartTime(cfg []any) *types.WeeklyStartTime {
 	if len(cfg) < 1 {
 		return nil
 	}
 
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	return &types.WeeklyStartTime{
 		DayOfWeek: types.DayOfWeek(m["day_of_week"].(string)),
 		TimeOfDay: aws.String(m["time_of_day"].(string)),
@@ -1103,11 +1102,11 @@ func expandWeeklyStartTime(cfg []interface{}) *types.WeeklyStartTime {
 	}
 }
 
-func flattenWeeklyStartTime(wst *types.WeeklyStartTime) []interface{} {
+func flattenWeeklyStartTime(wst *types.WeeklyStartTime) []any {
 	if wst == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	if wst.DayOfWeek != "" {
 		m["day_of_week"] = wst.DayOfWeek
 	}
@@ -1117,15 +1116,15 @@ func flattenWeeklyStartTime(wst *types.WeeklyStartTime) []interface{} {
 	if wst.TimeZone != nil {
 		m["time_zone"] = aws.ToString(wst.TimeZone)
 	}
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandConfigurationId(cfg []interface{}) *types.ConfigurationId {
+func expandConfigurationId(cfg []any) *types.ConfigurationId {
 	if len(cfg) < 1 {
 		return nil
 	}
 
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	out := types.ConfigurationId{
 		Id: aws.String(m[names.AttrID].(string)),
 	}
@@ -1136,26 +1135,26 @@ func expandConfigurationId(cfg []interface{}) *types.ConfigurationId {
 	return &out
 }
 
-func flattenConfiguration(config *types.Configurations) []interface{} {
+func flattenConfiguration(config *types.Configurations) []any {
 	if config == nil || config.Current == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrID: aws.ToString(config.Current.Id),
 		"revision":   aws.ToInt32(config.Current.Revision),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
+func flattenBrokerInstances(instances []types.BrokerInstance) []any {
 	if len(instances) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
-	l := make([]interface{}, len(instances))
+	l := make([]any, len(instances))
 	for i, instance := range instances {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		if instance.ConsoleURL != nil {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
@@ -1171,12 +1170,12 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
 	return l
 }
 
-func flattenLogs(logs *types.LogsSummary) []interface{} {
+func flattenLogs(logs *types.LogsSummary) []any {
 	if logs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if logs.General != nil {
 		m["general"] = aws.ToBool(logs.General)
@@ -1186,15 +1185,15 @@ func flattenLogs(logs *types.LogsSummary) []interface{} {
 		m["audit"] = strconv.FormatBool(aws.ToBool(logs.Audit))
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandLogs(engineType string, l []interface{}) *types.Logs {
+func expandLogs(engineType string, l []any) *types.Logs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	logs := &types.Logs{}
 
@@ -1214,12 +1213,12 @@ func expandLogs(engineType string, l []interface{}) *types.Logs {
 	return logs
 }
 
-func flattenLDAPServerMetadata(apiObject *types.LdapServerMetadataOutput, password string) []interface{} {
+func flattenLDAPServerMetadata(apiObject *types.LdapServerMetadataOutput, password string) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Hosts; v != nil {
 		tfMap["hosts"] = v
@@ -1255,20 +1254,20 @@ func flattenLDAPServerMetadata(apiObject *types.LdapServerMetadataOutput, passwo
 		tfMap["user_search_subtree"] = aws.ToBool(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandLDAPServerMetadata(tfList []interface{}) *types.LdapServerMetadataInput {
+func expandLDAPServerMetadata(tfList []any) *types.LdapServerMetadataInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &types.LdapServerMetadataInput{}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["hosts"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Hosts = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := tfMap["hosts"]; ok && len(v.([]any)) > 0 {
+		apiObject.Hosts = flex.ExpandStringValueList(v.([]any))
 	}
 	if v, ok := tfMap["role_base"].(string); ok && v != "" {
 		apiObject.RoleBase = aws.String(v)

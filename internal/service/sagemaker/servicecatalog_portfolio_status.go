@@ -51,7 +51,7 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting SageMaker Servicecatalog Portfolio Status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting SageMaker AI Servicecatalog Portfolio Status: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
@@ -65,7 +65,7 @@ func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.Re
 
 	resp, err := findServicecatalogPortfolioStatus(ctx, conn)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting SageMaker Servicecatalog Portfolio Status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting SageMaker AI Servicecatalog Portfolio Status: %s", err)
 	}
 
 	d.Set(names.AttrStatus, resp.Status)

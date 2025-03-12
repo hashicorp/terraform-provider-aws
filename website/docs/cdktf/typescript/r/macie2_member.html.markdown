@@ -54,6 +54,7 @@ This resource supports the following arguments:
 * `invite` - (Optional) Send an invitation to a member
 * `invitationMessage` - (Optional) A custom message to include in the invitation. Amazon Macie adds this message to the standard content that it sends for an invitation.
 * `invitationDisableEmailNotification` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -65,6 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `administratorAccountId` - The AWS account ID for the administrator account.
 * `invitedAt` - The date and time, in UTC and extended RFC 3339 format, when an Amazon Macie membership invitation was last sent to the account. This value is null if a Macie invitation hasn't been sent to the account.
 * `updatedAt` - The date and time, in UTC and extended RFC 3339 format, of the most recent change to the status of the relationship between the account and the administrator account.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -94,4 +96,4 @@ Using `terraform import`, import `aws_macie2_member` using the account ID of the
 % terraform import aws_macie2_member.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-270188c839fbbf61a15582b99048abc7d28b091c50c92930247fa2315358a77d -->
+<!-- cache-key: cdktf-0.20.8 input-b534054476d5450a93de1b2992374a90b980c2a661465952fc942e863f31fa4e -->

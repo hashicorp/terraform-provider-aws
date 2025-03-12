@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,9 +41,7 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 			Delete: schema.DefaultTimeout(32 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceIPAMPoolCIDRCustomizeDiff,
-		),
+		CustomizeDiff: resourceIPAMPoolCIDRCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -188,10 +185,11 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())
-	_, err = conn.DeprovisionIpamPoolCidr(ctx, &ec2.DeprovisionIpamPoolCidrInput{
+	input := ec2.DeprovisionIpamPoolCidrInput{
 		Cidr:       aws.String(cidrBlock),
 		IpamPoolId: aws.String(poolID),
-	})
+	}
+	_, err = conn.DeprovisionIpamPoolCidr(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return diags

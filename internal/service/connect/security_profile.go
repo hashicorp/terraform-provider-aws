@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +37,6 @@ func resourceSecurityProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -200,10 +197,11 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Security Profile: %s", d.Id())
-	_, err = conn.DeleteSecurityProfile(ctx, &connect.DeleteSecurityProfileInput{
+	input := connect.DeleteSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
 		SecurityProfileId: aws.String(securityProfileID),
-	})
+	}
+	_, err = conn.DeleteSecurityProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

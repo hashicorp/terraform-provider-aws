@@ -340,10 +340,11 @@ func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.Ipam
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
+		input := ec2.ProvisionIpamPoolCidrInput{
 			IpamPoolId: ipampool.IpamPoolId,
 			Cidr:       aws.String("10.0.0.0/16"),
-		})
+		}
+		_, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 		return err
 	}

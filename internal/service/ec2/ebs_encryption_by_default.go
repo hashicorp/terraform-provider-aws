@@ -56,7 +56,8 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+	input := ec2.GetEbsEncryptionByDefaultInput{}
+	resp, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
@@ -94,9 +95,11 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 	var err error
 
 	if enabled {
-		_, err = conn.EnableEbsEncryptionByDefault(ctx, &ec2.EnableEbsEncryptionByDefaultInput{})
+		input := ec2.EnableEbsEncryptionByDefaultInput{}
+		_, err = conn.EnableEbsEncryptionByDefault(ctx, &input)
 	} else {
-		_, err = conn.DisableEbsEncryptionByDefault(ctx, &ec2.DisableEbsEncryptionByDefaultInput{})
+		input := ec2.DisableEbsEncryptionByDefaultInput{}
+		_, err = conn.DisableEbsEncryptionByDefault(ctx, &input)
 	}
 
 	return err

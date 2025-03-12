@@ -105,8 +105,6 @@ func resourceNotificationRule() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -211,9 +209,10 @@ func resourceNotificationRuleDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Notification Rule: %s", d.Id())
-	_, err := conn.DeleteNotificationRule(ctx, &codestarnotifications.DeleteNotificationRuleInput{
+	input := codestarnotifications.DeleteNotificationRuleInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNotificationRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s): %s", d.Id(), err)

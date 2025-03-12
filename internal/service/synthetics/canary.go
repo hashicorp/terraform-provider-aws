@@ -266,8 +266,6 @@ func ResourceCanary() *schema.Resource {
 				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_version"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

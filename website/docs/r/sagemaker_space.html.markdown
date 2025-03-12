@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_space"
 description: |-
-  Provides a SageMaker Space resource.
+  Provides a SageMaker AI Space resource.
 ---
 
 # Resource: aws_sagemaker_space
 
-Provides a SageMaker Space resource.
+Provides a SageMaker AI Space resource.
 
 ## Example Usage
 
@@ -27,7 +27,7 @@ This resource supports the following arguments:
 
 * `domain_id` - (Required) The ID of the associated Domain.
 * `ownership_settings` - (Optional) A collection of ownership settings. Required if `space_sharing_settings` is set. See [`ownership_settings` Block](#ownership_settings-block) below.
-* `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
+* `space_display_name` - (Optional) The name of the space that appears in the SageMaker AI Studio UI.
 * `space_name` - (Required) The name of the space.
 * `space_settings` - (Required) A collection of space settings. See [`space_settings` Block](#space_settings-block) below.
 * `space_sharing_settings` - (Optional) A collection of space sharing settings. Required if `ownership_settings` is set. See [`space_sharing_settings` Block](#space_sharing_settings-block) below.
@@ -45,7 +45,7 @@ The `space_settings` block supports the following arguments:
 
 * `app_type` - (Optional) The type of app created within the space.
 * `code_editor_app_settings` - (Optional) The Code Editor application settings. See [`code_editor_app_settings` Block](#code_editor_app_settings-block) below.
-* `custom_file_system` - (Optional) A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. See [`custom_file_system` Block](#custom_file_system-block) below.
+* `custom_file_system` - (Optional) A file system, created by you, that you assign to a space for an Amazon SageMaker AI Domain. See [`custom_file_system` Block](#custom_file_system-block) below.
 * `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
@@ -62,7 +62,7 @@ The `space_sharing_settings` block supports the following argument:
 The `code_editor_app_settings` block supports the following argument:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `custom_file_system` Block
 
@@ -75,23 +75,23 @@ The `custom_file_system` block supports the following argument:
 The `jupyter_lab_app_settings` block supports the following arguments:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application. See [`code_repository` Block](#code_repository-block) below.
-* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterLab application. See [`code_repository` Block](#code_repository-block) below.
+* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `jupyter_server_app_settings` Block
 
 The `jupyter_server_app_settings` block supports the following arguments:
 
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 ### `kernel_gateway_app_settings` Block
 
 The `kernel_gateway_app_settings` block supports the following arguments:
 
-* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
-* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. See [`custom_image` Block](#custom_image-block) below.
+* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `custom_image` - (Optional) A list of custom SageMaker AI images that are configured to run as a KernelGateway app. See [`custom_image` Block](#custom_image-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 ### `space_storage_settings` Block
@@ -112,8 +112,8 @@ The `default_resource_spec` block supports the following arguments:
 
 * `instance_type` - (Optional) The instance type.
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
-* `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
-* `sagemaker_image_version_alias` - (Optional) The SageMaker Image Version Alias.
+* `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.
+* `sagemaker_image_version_alias` - (Optional) The SageMaker AI Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 ### `efs_file_system` Block
@@ -146,7 +146,7 @@ The `app_lifecycle_management` block supports the following argument:
 
 The `idle_settings` block supports the following argument:
 
-* `idle_timeout_in_minutes` - (Optional) The time that SageMaker waits after the application becomes idle before shutting it down. Valid values are between `60` and `525600`.
+* `idle_timeout_in_minutes` - (Optional) The time that SageMaker AI waits after the application becomes idle before shutting it down. Valid values are between `60` and `525600`.
 
 ## Attribute Reference
 
@@ -160,7 +160,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Spaces using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Spaces using the `id`. For example:
 
 ```terraform
 import {
@@ -169,7 +169,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Spaces using the `id`. For example:
+Using `terraform import`, import SageMaker AI Spaces using the `id`. For example:
 
 ```console
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name

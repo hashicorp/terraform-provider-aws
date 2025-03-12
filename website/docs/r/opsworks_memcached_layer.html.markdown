@@ -10,6 +10,8 @@ description: |-
 
 Provides an OpsWorks memcached layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```terraform

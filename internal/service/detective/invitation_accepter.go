@@ -91,9 +91,10 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Invitation Accepter: %s", d.Id())
-	_, err := conn.DisassociateMembership(ctx, &detective.DisassociateMembershipInput{
+	input := detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateMembership(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -250,11 +250,12 @@ func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Deleting Codecatalyst DevEnvironment %s", d.Id())
 
-	_, err := conn.DeleteDevEnvironment(ctx, &codecatalyst.DeleteDevEnvironmentInput{
+	input := codecatalyst.DeleteDevEnvironmentInput{
 		Id:          aws.String(d.Id()),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 		ProjectName: aws.String(d.Get("project_name").(string)),
-	})
+	}
+	_, err := conn.DeleteDevEnvironment(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

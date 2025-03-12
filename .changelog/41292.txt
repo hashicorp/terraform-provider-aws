@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway_route_table_association: Fix deleting and recreating resource when dependencies changes don't require the resource be recreated.
+```

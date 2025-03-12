@@ -106,9 +106,10 @@ func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	_, err := conn.StopConfigurationRecorder(ctx, &configservice.StopConfigurationRecorderInput{
+	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopConfigurationRecorder(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return diags

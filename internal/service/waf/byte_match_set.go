@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -35,6 +36,10 @@ func resourceByteMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"byte_match_tuples": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -121,6 +126,7 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading WAF ByteMatchSet (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, byteMatchSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("byte_match_tuples", flattenByteMatchTuples(byteMatchSet.ByteMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting byte_match_tuples: %s", err)
 	}
@@ -243,7 +249,7 @@ func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpd
 		tuple := ot.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newT, tuple); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 
@@ -272,4 +278,9 @@ func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpd
 		})
 	}
 	return updates
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func byteMatchSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "bytematchset/"+id)
 }

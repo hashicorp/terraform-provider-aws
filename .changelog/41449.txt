@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudwatch_contributor_managed_insight_rule
+```
+
+```release-note:bug
+resource/aws_cloudwatch_contributor_insight_rule: Fix enable/disable rule state
+```

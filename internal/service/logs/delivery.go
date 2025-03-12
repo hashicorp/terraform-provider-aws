@@ -6,12 +6,14 @@ package logs
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -43,10 +45,6 @@ func newDeliveryResource(context.Context) (resource.ResourceWithConfigure, error
 type deliveryResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*deliveryResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_delivery"
 }
 
 func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -93,11 +91,40 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, listplanmodifier.UseStateForUnknown()),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
 			names.AttrTags:              tftags.TagsAttribute(),
 			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},
 	}
+}
+
+var s3DeliveryConfigurationListOptions = []fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{
+	fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality),
+}
+
+func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	oldValPtr, di := oldValue.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	newValPtr, di := newValue.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if oldValPtr != nil && newValPtr != nil {
+		if strings.HasSuffix(oldValPtr.SuffixPath.ValueString(), newValPtr.SuffixPath.ValueString()) &&
+			oldValPtr.EnableHiveCompatiblePath.Equal(newValPtr.EnableHiveCompatiblePath) {
+			return true, diags
+		}
+	}
+
+	return false, diags
 }
 
 func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -153,6 +180,21 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 			}
 			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
 				delivery.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
+			}
+		}
+	}
+
+	// set s3_delivery_configuration.suffix_path to what was in configuration
+	if delivery.S3DeliveryConfiguration != nil && aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath) != "" {
+		if !data.S3DeliveryConfiguration.IsNull() {
+			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if s3DeliveryConfiguration != nil && !s3DeliveryConfiguration.SuffixPath.IsNull() {
+				delivery.S3DeliveryConfiguration.SuffixPath = s3DeliveryConfiguration.SuffixPath.ValueStringPointer()
 			}
 		}
 	}
@@ -279,7 +321,25 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 }
 
 func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
+	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
+		var plan, state deliveryResourceModel
+
+		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// state can remain null after create/refresh.
+		if !plan.FieldDelimiter.Equal(state.FieldDelimiter) {
+			if state.FieldDelimiter.IsNull() && plan.FieldDelimiter.IsUnknown() {
+				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("field_delimiter"), types.StringNull())...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+			}
+		}
+	}
 }
 
 func findDeliveryByID(ctx context.Context, conn *cloudwatchlogs.Client, id string) (*awstypes.Delivery, error) {

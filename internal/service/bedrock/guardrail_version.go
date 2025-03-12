@@ -46,10 +46,6 @@ type guardrailVersionResource struct {
 	framework.WithTimeouts
 }
 
-func (*guardrailVersionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_guardrail_version"
-}
-
 func (r *guardrailVersionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -165,10 +161,11 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 		return
 	}
 
-	_, err := conn.DeleteGuardrail(ctx, &bedrock.DeleteGuardrailInput{
+	input := bedrock.DeleteGuardrailInput{
 		GuardrailIdentifier: data.GuardrailARN.ValueStringPointer(),
 		GuardrailVersion:    data.Version.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteGuardrail(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

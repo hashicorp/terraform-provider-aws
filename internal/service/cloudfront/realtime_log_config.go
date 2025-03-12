@@ -192,9 +192,10 @@ func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config: %s", d.Id())
-	_, err := conn.DeleteRealtimeLogConfig(ctx, &cloudfront.DeleteRealtimeLogConfigInput{
+	input := cloudfront.DeleteRealtimeLogConfigInput{
 		ARN: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRealtimeLogConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return diags

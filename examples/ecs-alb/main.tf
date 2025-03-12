@@ -289,9 +289,11 @@ resource "aws_alb_listener" "front_end" {
 ## CloudWatch Logs
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name = "tf-ecs-group/ecs-agent"
+  name              = "tf-ecs-group/ecs-agent"
+  retention_in_days = 1
 }
 
 resource "aws_cloudwatch_log_group" "app" {
-  name = "tf-ecs-group/app-ghost"
+  name              = "tf-ecs-group/app-ghost"
+  retention_in_days = 1
 }

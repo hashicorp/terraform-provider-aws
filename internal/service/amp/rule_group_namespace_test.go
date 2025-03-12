@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,6 +20,8 @@ import (
 
 func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	var rgn types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,7 +36,7 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 			{
 				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &rgn),
 					resource.TestCheckResourceAttr(resourceName, "data", defaultRuleGroupNamespace()),
 				),
 			},
@@ -45,14 +48,14 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 			{
 				Config: testAccRuleGroupNamespaceConfig_basic(anotherRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &rgn),
 					resource.TestCheckResourceAttr(resourceName, "data", anotherRuleGroupNamespace()),
 				),
 			},
 			{
 				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &rgn),
 					resource.TestCheckResourceAttr(resourceName, "data", defaultRuleGroupNamespace()),
 				),
 			},
@@ -62,7 +65,10 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_prometheus_rule_group_namespace.test"
+	var rgn types.RuleGroupsNamespaceDescription
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -75,7 +81,7 @@ func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 			{
 				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
+					testAccCheckRuleGroupNamespaceExists(ctx, resourceName, &rgn),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceRuleGroupNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,7 +90,7 @@ func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleGroupNamespaceExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckRuleGroupNamespaceExists(ctx context.Context, n string, v *types.RuleGroupsNamespaceDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,9 +99,15 @@ func testAccCheckRuleGroupNamespaceExists(ctx context.Context, n string) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-		_, err := tfamp.FindRuleGroupNamespaceByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfamp.FindRuleGroupNamespaceByARN(ctx, conn, rs.Primary.ID)
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
 	}
 }
 

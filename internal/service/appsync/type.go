@@ -154,10 +154,11 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[INFO] Deleting Appsync Type: %s", d.Id())
-	_, err = conn.DeleteType(ctx, &appsync.DeleteTypeInput{
+	input := appsync.DeleteTypeInput{
 		ApiId:    aws.String(apiID),
 		TypeName: aws.String(name),
-	})
+	}
+	_, err = conn.DeleteType(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

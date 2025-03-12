@@ -454,7 +454,7 @@ func testAccCheckSpaceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Space %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Space %s still exists", rs.Primary.ID)
 		}
 
 		return nil

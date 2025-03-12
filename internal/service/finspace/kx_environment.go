@@ -198,7 +198,6 @@ func ResourceKxEnvironment() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

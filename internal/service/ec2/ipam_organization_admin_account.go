@@ -117,9 +117,10 @@ func resourceIPAMOrganizationAdminAccountDelete(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Organization Admin Account: %s", d.Id())
-	output, err := conn.DisableIpamOrganizationAdminAccount(ctx, &ec2.DisableIpamOrganizationAdminAccountInput{
+	input := ec2.DisableIpamOrganizationAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.DisableIpamOrganizationAdminAccount(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeIPAMOrganizationAccountNotRegistered) {
 		return diags

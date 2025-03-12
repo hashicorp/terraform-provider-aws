@@ -107,10 +107,11 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appconfig.Client, appId string, envId string) (*appconfig.GetEnvironmentOutput, error) {
-	res, err := conn.GetEnvironment(ctx, &appconfig.GetEnvironmentInput{
+	input := appconfig.GetEnvironmentInput{
 		ApplicationId: aws.String(appId),
 		EnvironmentId: aws.String(envId),
-	})
+	}
+	res, err := conn.GetEnvironment(ctx, &input)
 
 	if err != nil {
 		return nil, err

@@ -316,7 +316,6 @@ func resourceLustreFileSystem() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			resourceLustreFileSystemStorageCapacityCustomizeDiff,
 			resourceLustreFileSystemMetadataConfigCustomizeDiff,
 		),

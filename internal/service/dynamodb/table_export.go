@@ -71,6 +71,44 @@ func resourceTableExport() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
+			"export_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ExportType](),
+			},
+			"incremental_export_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"export_from_time": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+						},
+						"export_to_time": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+						},
+						"export_view_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ExportViewType](),
+						},
+					},
+				},
+			},
 			"item_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -145,6 +183,14 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.ExportTime = aws.Time(v)
 	}
 
+	if v, ok := d.GetOk("export_type"); ok {
+		input.ExportType = awstypes.ExportType(v.(string))
+	}
+
+	if v, ok := d.GetOk("incremental_export_specification"); ok {
+		input.IncrementalExportSpecification = expandIncrementalExportSpecification(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("s3_bucket_owner"); ok {
 		input.S3BucketOwner = aws.String(v.(string))
 	}
@@ -202,6 +248,8 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	if desc.ExportTime != nil {
 		d.Set("export_time", aws.ToTime(desc.ExportTime).Format(time.RFC3339))
 	}
+	d.Set("export_type", desc.ExportType)
+	d.Set("incremental_export_specification", flattenIncrementalExportSpecification(desc.IncrementalExportSpecification))
 	d.Set("item_count", desc.ItemCount)
 	d.Set("manifest_files_s3_key", desc.ExportManifest)
 	d.Set(names.AttrS3Bucket, desc.S3Bucket)
@@ -215,6 +263,54 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("table_arn", desc.TableArn)
 
 	return diags
+}
+
+func expandIncrementalExportSpecification(d interface{}) *awstypes.IncrementalExportSpecification {
+	if d.([]interface{}) == nil || len(d.([]interface{})) == 0 {
+		return nil
+	}
+
+	dMap := d.([]interface{})[0].(map[string]interface{})
+
+	spec := &awstypes.IncrementalExportSpecification{}
+
+	if s, ok := dMap["export_from_time"].(string); ok && s != "" {
+		v, _ := time.Parse(time.RFC3339, s)
+		spec.ExportFromTime = aws.Time(v)
+	}
+
+	if s, ok := dMap["export_to_time"].(string); ok && s != "" {
+		v, _ := time.Parse(time.RFC3339, s)
+		spec.ExportToTime = aws.Time(v)
+	}
+
+	if v, ok := dMap["export_view_type"].(string); ok && v != "" {
+		spec.ExportViewType = awstypes.ExportViewType(v)
+	}
+
+	return spec
+}
+
+func flattenIncrementalExportSpecification(apiObject *awstypes.IncrementalExportSpecification) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.ExportFromTime; v != nil {
+		m["export_from_time"] = aws.ToTime(v).Format(time.RFC3339)
+	}
+
+	if v := apiObject.ExportToTime; v != nil {
+		m["export_to_time"] = aws.ToTime(v).Format(time.RFC3339)
+	}
+
+	if v := string(apiObject.ExportViewType); v != "" {
+		m["export_view_type"] = v
+	}
+
+	return []interface{}{m}
 }
 
 func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*awstypes.ExportDescription, error) {

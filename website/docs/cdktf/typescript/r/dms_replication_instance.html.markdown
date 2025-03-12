@@ -109,7 +109,7 @@ class MyConvertedCode extends TerraformStack {
       multiAz: false,
       preferredMaintenanceWindow: "sun:10:30-sun:14:30",
       publiclyAccessible: true,
-      replicationInstanceClass: "dms.t2.micro",
+      replicationInstanceClass: "dms.t3.micro",
       replicationInstanceId: "test-dms-replication-instance-tf",
       replicationSubnetGroupId: testDmsReplicationSubnetGroupTf.id,
       tags: {
@@ -204,4 +204,4 @@ Using `terraform import`, import replication instances using the `replicationIns
 % terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2a8ab503ceaef9d74fa0c9b95408ac59f3a841f451a3553fdde42db11c32ef45 -->
+<!-- cache-key: cdktf-0.20.8 input-733beca3582374a877dcda9dd5cfbdc51b9d58e00a60e7a741cbb54ccf4a4ee1 -->

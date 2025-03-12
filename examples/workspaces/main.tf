@@ -121,5 +121,7 @@ resource "aws_directory_service_directory" "example" {
 }
 
 resource "aws_kms_key" "example" {
-  description = "WorkSpaces example key"
+  description             = "WorkSpaces example key"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }

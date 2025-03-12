@@ -43,10 +43,6 @@ type resourceDataShareAuthorization struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceDataShareAuthorization) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_authorization"
-}
-
 func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

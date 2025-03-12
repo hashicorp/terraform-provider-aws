@@ -176,9 +176,10 @@ func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting VPC IPv6 CIDR Block Association: %s", d.Id())
-	_, err := conn.DisassociateVpcCidrBlock(ctx, &ec2.DisassociateVpcCidrBlockInput{
+	input := ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateVpcCidrBlock(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return diags

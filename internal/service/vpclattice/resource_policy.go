@@ -129,9 +129,10 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice ResourcePolicy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicy(ctx, &vpclattice.DeleteResourcePolicyInput{
+	input := vpclattice.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

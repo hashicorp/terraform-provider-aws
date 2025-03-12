@@ -206,9 +206,10 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		_, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+		input := cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
-		})
+		}
+		_, err := conn.GetIdentityPoolRoles(ctx, &input)
 
 		return err
 	}
@@ -223,9 +224,10 @@ func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+			input := cognitoidentity.GetIdentityPoolRolesInput{
 				IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
-			})
+			}
+			_, err := conn.GetIdentityPoolRoles(ctx, &input)
 
 			if err != nil {
 				if errs.IsA[*awstypes.ResourceNotFoundException](err) {

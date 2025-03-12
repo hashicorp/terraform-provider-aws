@@ -83,7 +83,7 @@ func TestCalculate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, diags := fwflex.Calculate(context.Background(), test.plan, test.state)
+			results, diags := fwflex.Diff(context.Background(), test.plan, test.state)
 
 			if diff := cmp.Diff(diags.HasError(), test.expectErr); diff != "" {
 				t.Fatalf("unexpected diff (+wanted, -got): %s", diff)
@@ -129,7 +129,7 @@ func TestWithException(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, _ := fwflex.Calculate(context.Background(), test.plan, test.state, test.withException...)
+			results, _ := fwflex.Diff(context.Background(), test.plan, test.state, test.withException...)
 
 			if diff := cmp.Diff(results.IgnoredFieldNames(), test.expectedIgnoredFieldNames); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

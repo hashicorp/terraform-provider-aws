@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks custom layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -157,4 +159,4 @@ Using `terraform import`, import OpsWorks Custom Layers using the `id`. For exam
 % terraform import aws_opsworks_custom_layer.bar 00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8a4b8054a10e74606cd1ea0e8f3f2e390b16a4d6d2acbbb8ade4b0281ed80aa3 -->
+<!-- cache-key: cdktf-0.20.8 input-5d7b0c54840cc9e4ba56e847cdf25570b1be10a6171c496e2ed68852507fd1de -->

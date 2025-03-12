@@ -164,11 +164,12 @@ func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
-	_, err = conn.DeleteRepositoryPermissionsPolicy(ctx, &codeartifact.DeleteRepositoryPermissionsPolicyInput{
+	input := codeartifact.DeleteRepositoryPermissionsPolicyInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(owner),
 		Repository:  aws.String(repositoryName),
-	})
+	}
+	_, err = conn.DeleteRepositoryPermissionsPolicy(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -65,8 +65,6 @@ func resourceTaskDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaVersion: 1,
 		MigrateState:  resourceTaskDefinitionMigrateState,
 

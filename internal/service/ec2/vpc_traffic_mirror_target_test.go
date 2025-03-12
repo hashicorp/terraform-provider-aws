@@ -202,7 +202,8 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorTargets(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
+	input := ec2.DescribeTrafficMirrorTargetsInput{}
+	_, err := conn.DescribeTrafficMirrorTargets(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror target acceptance test: ", err)

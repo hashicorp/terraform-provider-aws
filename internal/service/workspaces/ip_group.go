@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,8 +65,6 @@ func resourceIPGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -143,8 +140,8 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	directories, err := findDirectories(ctx, conn, input)
+	describeInput := &workspaces.DescribeWorkspaceDirectoriesInput{}
+	directories, err := findDirectories(ctx, conn, describeInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directories: %s", err)
@@ -169,9 +166,10 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting WorkSpaces IP Group (%s)", d.Id())
-	_, err = conn.DeleteIpGroup(ctx, &workspaces.DeleteIpGroupInput{
+	deleteInput := workspaces.DeleteIpGroupInput{
 		GroupId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteIpGroup(ctx, &deleteInput)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -32,10 +32,6 @@ type dataSourceTemplates struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceTemplates) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_servicequotas_templates"
-}
-
 func (d *dataSourceTemplates) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

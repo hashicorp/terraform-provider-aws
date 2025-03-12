@@ -52,10 +52,6 @@ type resourceProfile struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_profile"
-}
-
 func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -270,10 +266,6 @@ func statusProfile(ctx context.Context, conn *route53profiles.Client, id string)
 
 		return out, string(out.Status), nil
 	}
-}
-
-func (r *resourceProfile) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findProfileByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.Profile, error) {

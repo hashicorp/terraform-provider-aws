@@ -55,10 +55,6 @@ type domainResource struct {
 	framework.WithTimeouts
 }
 
-func (*domainResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53domains_domain"
-}
-
 func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -84,7 +80,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, nil, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -122,7 +118,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
+			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, nil, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -556,7 +552,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		renewForYears := fwflex.Int32ValueFromFramework(ctx, new.DurationInYears) - fwflex.Int32ValueFromFramework(ctx, old.DurationInYears)
+		renewForYears := fwflex.Int32ValueFromFrameworkInt64(ctx, new.DurationInYears) - fwflex.Int32ValueFromFrameworkInt64(ctx, old.DurationInYears)
 
 		if err := renewDomain(ctx, conn, domainName, currentExpirationDate, renewForYears, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
@@ -632,8 +628,6 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		// duration_in_years can only be increased.
 		var oldDurationInYears, newDurationInYears types.Int64

@@ -80,7 +80,7 @@ class MyConvertedCode(TerraformStack):
             multi_az=False,
             preferred_maintenance_window="sun:10:30-sun:14:30",
             publicly_accessible=True,
-            replication_instance_class="dms.t2.micro",
+            replication_instance_class="dms.t3.micro",
             replication_instance_id="test-dms-replication-instance-tf",
             replication_subnet_group_id=test_dms_replication_subnet_group_tf.id,
             tags={
@@ -165,4 +165,4 @@ Using `terraform import`, import replication instances using the `replication_in
 % terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2a8ab503ceaef9d74fa0c9b95408ac59f3a841f451a3553fdde42db11c32ef45 -->
+<!-- cache-key: cdktf-0.20.8 input-733beca3582374a877dcda9dd5cfbdc51b9d58e00a60e7a741cbb54ccf4a4ee1 -->

@@ -162,9 +162,10 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Snapshot: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
+	input := docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &input)
 
 	if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
 		return diags

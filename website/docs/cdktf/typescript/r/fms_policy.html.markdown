@@ -77,14 +77,14 @@ This resource supports the following arguments:
 * `deleteAllPolicyResources` - (Optional) If true, the request will also perform a clean-up process. Defaults to `true`. More information can be found here [AWS Firewall Manager delete policy](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_DeletePolicy.html)
 * `deleteUnusedFmManagedResources` - (Optional) If true, Firewall Manager will automatically remove protections from resources that leave the policy scope. Defaults to `false`. More information can be found here [AWS Firewall Manager policy contents](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html)
 * `description` - (Optional) The description of the AWS Network Firewall firewall policy.
-* `excludeMap` - (Optional) A map of lists of accounts and OU's to exclude from the policy.
+* `excludeMap` - (Optional) A map of lists of accounts and OU's to exclude from the policy. See the [`excludeMap`](#exclude_map-configuration-block) block.
 * `excludeResourceTags` - (Required, Forces new resource) A boolean value, if true the tags that are specified in the `resourceTags` are not protected by this policy. If set to false and resource_tags are populated, resources that contain tags will be protected by this policy.
-* `includeMap` - (Optional) A map of lists of accounts and OU's to include in the policy.
+* `includeMap` - (Optional) A map of lists of accounts and OU's to include in the policy. See the [`includeMap`](#include_map-configuration-block) block.
 * `remediationEnabled` - (Required) A boolean value, indicates if the policy should automatically applied to resources that already exist in the account.
 * `resourceTags` - (Optional) A map of resource tags, that if present will filter protections on resources based on the exclude_resource_tags.
 * `resourceType` - (Optional) A resource type to protect. Conflicts with `resourceTypeList`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
 * `resourceTypeList` - (Optional) A list of resource types to protect. Conflicts with `resourceType`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values. Lists with only one element are not supported, instead use `resourceType`.
-* `securityServicePolicyData` - (Required) The objects to include in Security Service Policy Data. Documented below.
+* `securityServicePolicyData` - (Required) The objects to include in Security Service Policy Data. See the [`securityServicePolicyData`](#security_service_policy_data-configuration-block) block.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## `excludeMap` Configuration Block
@@ -104,13 +104,55 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 ## `securityServicePolicyData` Configuration Block
 
 * `managedServiceData` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
-* `policyOption` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. Documented below.
+* `policyOption` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. See the [`policyOption`](#policy_option-configuration-block) block.
 * `type` - (Required, Forces new resource) The service that the policy is using to protect the resources. For the current list of supported types, please refer to the [AWS Firewall Manager SecurityServicePolicyData API Type Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html#fms-Type-SecurityServicePolicyData-Type).
 
 ## `policyOption` Configuration Block
 
-* `networkFirewallPolicy` - (Optional) Defines the deployment model to use for the firewall policy. Documented below.
-* `thirdparty_firewall_policy` - (Optional) Defines the policy options for a third-party firewall policy. Documented below.
+* `networkAclCommonPolicy` - (Optional) Defines NACL rules across accounts in their AWS Organization. See the [`networkAclCommonPolicy`](#network_acl_common_policy-configuration-block) block.
+* `networkFirewallPolicy` - (Optional) Defines the deployment model to use for the firewall policy.  See the [`networkFirewallPolicy`](#network_firewall_policy-configuration-block) block.
+* `thirdparty_firewall_policy` - (Optional) Defines the policy options for a third-party firewall policy. See the [`thirdparty_firewall_policy`](#thirdparty_firewall_policy-configuration-block) block.
+
+## `networkAclCommonPolicy` Configuration Block
+
+* `networkAclEntrySet` - (Optional) Defines NACL entries for Network ACL policy. See the [`networkAclEntrySet`](#network_acl_entry_set-configuration-block) block.
+
+## `networkAclEntrySet` Configuration Block
+
+* `firstEntry` - (Optional) The rules that you want to run first in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 1 and 5000. See the [`firstEntry`](#first_entry-configuration-block) block.
+* `lastEntry` - (Optional) The rules that you want to run last in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 32000 and 32766. See the [`lastEntry`](#last_entry-configuration-block) block.
+* `forceRemediateForFirstEntries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
+* `forceRemediateForLastEntries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
+
+## `firstEntry` Configuration Block
+
+* `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
+* `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
+* `ruleAction` - (Required) - A string value that indicates whether to allow or deny the traffic that matches the rule. Valid values: `allow`, `deny`.
+* `cidrBlock` - (Optional) A string value containing the IPv4 network range to allow or deny, in CIDR notation.
+* `icmpTypeCode` - (Optional) A configuration block for ICMP protocol: The ICMP type and code. See the [`icmpTypeCode`](#icmp_type_code-configuration-block) block.
+* `ipv6CidrBlock` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
+* `portRange` - (Optional) A configuration block for PortRange. See the [`portRange`](#port_range-configuration-block) block.
+
+## `lastEntry` Configuration Block
+
+* `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
+* `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
+* `ruleAction` - (Required) - A string value that indicates whether to allow or deny the traffic that matches the rule. Valid values: `allow`, `deny`.
+* `cidrBlock` - (Optional) A string value containing the IPv4 network range to allow or deny, in CIDR notation.
+* `icmpTypeCode` - (Optional) A configuration block for ICMP protocol: The ICMP type and code. See the [`icmpTypeCode`](#icmp_type_code-configuration-block) block.
+* `ipv6CidrBlock` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
+* `portRange` - (Optional) A configuration block for PortRange. See the [`portRange`](#port_range-configuration-block) block.
+
+## `icmpTypeCode` Configuration Block
+
+* `code` - (Optional) - An integer value containing ICMP code.
+* `type` - (Optional) - An integer value containing ICMP type.
+
+## `portRange` Configuration Block
+
+* `from` - (Optional) - The beginning port number of the range.
+* `to` - (Optional) - The ending port number of the range.
 
 ## `networkFirewallPolicy` Configuration Block
 
@@ -160,4 +202,4 @@ Using `terraform import`, import Firewall Manager policies using the policy ID. 
 % terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-188a225228c2e0cf89a53a0432a7c8e01ea688cc159ac167004cefa5a3f5dcd5 -->
+<!-- cache-key: cdktf-0.20.8 input-7f072fc7867b57bc60d804c703653667e4d994b9f99b5593f83b578c07a2323a -->

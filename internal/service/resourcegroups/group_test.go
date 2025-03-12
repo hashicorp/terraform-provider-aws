@@ -55,8 +55,9 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -175,7 +176,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.name", "allowed-host-families"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.values.0", "mac1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -196,7 +197,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -234,7 +235,7 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
@@ -270,7 +271,7 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType),

@@ -158,7 +158,7 @@ func testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx context.Conte
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Notebook Instance Lifecycle Configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Notebook Instance Lifecycle Configuration %s still exists", rs.Primary.ID)
 		}
 		return nil
 	}

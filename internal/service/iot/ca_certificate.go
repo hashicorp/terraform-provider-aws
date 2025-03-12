@@ -136,7 +136,6 @@ func resourceCACertificate() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }

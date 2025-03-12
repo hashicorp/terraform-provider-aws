@@ -50,10 +50,6 @@ type iamPolicyAssignmentResource struct {
 	framework.WithImportByID
 }
 
-func (r *iamPolicyAssignmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_iam_policy_assignment"
-}
-
 func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

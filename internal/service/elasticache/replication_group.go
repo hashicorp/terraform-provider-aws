@@ -420,7 +420,6 @@ func resourceReplicationGroup() *schema.Resource {
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			replicationGroupValidateAutomaticFailoverNumCacheClusters,
-			verify.SetTagsDiff,
 		),
 	}
 }

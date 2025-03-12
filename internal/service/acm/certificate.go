@@ -324,7 +324,6 @@ func resourceCertificate() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }

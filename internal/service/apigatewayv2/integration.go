@@ -436,10 +436,11 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration: %s", d.Id())
-	_, err := conn.DeleteIntegration(ctx, &apigatewayv2.DeleteIntegrationInput{
+	input := apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

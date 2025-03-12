@@ -91,8 +91,6 @@ func resourceScript() *schema.Resource {
 				ExactlyOneOf: []string{"zip_file", "storage_location"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

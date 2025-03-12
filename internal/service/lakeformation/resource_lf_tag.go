@@ -61,10 +61,6 @@ type resourceResourceLFTag struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lakeformation_resource_lf_tag"
-}
-
 func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

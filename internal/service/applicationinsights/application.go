@@ -80,8 +80,6 @@ func resourceApplication() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -200,9 +198,10 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ApplicationInsights Application: %s", d.Id())
-	_, err := conn.DeleteApplication(ctx, &applicationinsights.DeleteApplicationInput{
+	input := applicationinsights.DeleteApplicationInput{
 		ResourceGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

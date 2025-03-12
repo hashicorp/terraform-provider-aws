@@ -363,10 +363,11 @@ func testAccCheckConfigurationProfileExists(ctx context.Context, resourceName st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetConfigurationProfile(ctx, &appconfig.GetConfigurationProfileInput{
+		input := appconfig.GetConfigurationProfileInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
-		})
+		}
+		output, err := conn.GetConfigurationProfile(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error reading AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)

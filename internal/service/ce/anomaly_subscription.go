@@ -103,8 +103,6 @@ func resourceAnomalySubscription() *schema.Resource {
 				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -212,9 +210,10 @@ func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost Explorer Anomaly Subscription: %s", d.Id())
-	_, err := conn.DeleteAnomalySubscription(ctx, &costexplorer.DeleteAnomalySubscriptionInput{
+	input := costexplorer.DeleteAnomalySubscriptionInput{
 		SubscriptionArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAnomalySubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.UnknownSubscriptionException](err) {
 		return diags

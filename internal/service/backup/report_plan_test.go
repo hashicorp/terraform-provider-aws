@@ -235,7 +235,8 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListReportPlans(ctx, &backup.ListReportPlansInput{})
+	input := backup.ListReportPlansInput{}
+	_, err := conn.ListReportPlans(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

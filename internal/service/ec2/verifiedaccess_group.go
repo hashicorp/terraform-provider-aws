@@ -96,8 +96,6 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -242,10 +240,11 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessGroup(ctx, &ec2.DeleteVerifiedAccessGroupInput{
+	input := ec2.DeleteVerifiedAccessGroupInput{
 		ClientToken:           aws.String(id.UniqueId()),
 		VerifiedAccessGroupId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessGroup(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
 		return diags

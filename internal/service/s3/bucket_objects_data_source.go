@@ -27,7 +27,7 @@ func dataSourceBucketObjects() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
-				Deprecated: "Use the aws_s3_objects data source instead",
+				Deprecated: "bucket is deprecated. Use the aws_s3_objects data source instead.",
 				Type:       schema.TypeString,
 				Required:   true,
 			},

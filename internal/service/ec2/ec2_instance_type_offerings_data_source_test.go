@@ -62,11 +62,11 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 func testAccPreCheckInstanceTypeOfferings(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypeOfferingsInput{
+	input := ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int32(5),
 	}
 
-	_, err := conn.DescribeInstanceTypeOfferings(ctx, input)
+	_, err := conn.DescribeInstanceTypeOfferings(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -159,7 +159,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    rName,
 						names.AttrPrefix: "",
-						// "verified":       acctest.CtTrue, // Even though we're waiting for verification, this isn't getting verified
+						"verified":       acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    fmt.Sprintf("%s-2", rName),
@@ -297,6 +297,59 @@ func testAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.custom_certificate_arn", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
+			},
+		},
+	})
+}
+
+func testAccDomainAssociation_CreateWithSubdomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := "AMPLIFY_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var domain types.DomainAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_domain_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainAssociationConfig_WithSubdomain(rName, domainName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.custom_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
+						"branch_name":    rName,
+						names.AttrPrefix: "",
+						"verified":       acctest.CtTrue, // Even though we're waiting for verification, this isn't getting verified
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
+						"branch_name":    rName,
+						names.AttrPrefix: "www",
+						// "verified":       acctest.CtTrue, // Even though we're waiting for verification, this isn't getting verified
+					}),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", acctest.CtTrue),
 				),
 			},
 			{
@@ -511,6 +564,36 @@ resource "aws_acm_certificate_validation" "test" {
   certificate_arn = aws_acm_certificate.test.arn
 }
   `, rName, domainName, enableAutoSubDomain, waitForVerification))
+}
+
+func testAccDomainAssociationConfig_WithSubdomain(rName, domainName string, waitForVerification bool) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_domain_association" "test" {
+  app_id      = aws_amplify_app.test.id
+  domain_name = %[2]q
+
+  sub_domain {
+    branch_name = aws_amplify_branch.test.branch_name
+    prefix      = ""
+  }
+
+  sub_domain {
+    branch_name = aws_amplify_branch.test.branch_name
+    prefix      = "www"
+  }
+
+  wait_for_verification = %[3]t
+}
+
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+}
+`, rName, domainName, waitForVerification)
 }
 
 // In practice, we don't seem to need to wait for the Domain Association to be `AVAILABLE` for the purposes of deploying infrastructure.

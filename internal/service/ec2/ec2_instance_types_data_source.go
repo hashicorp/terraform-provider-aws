@@ -39,13 +39,13 @@ func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypesInput{}
+	input := ec2.DescribeInstanceTypesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	output, err := findInstanceTypes(ctx, conn, input)
+	output, err := findInstanceTypes(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Types: %s", err)

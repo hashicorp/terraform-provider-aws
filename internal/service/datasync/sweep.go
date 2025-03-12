@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
@@ -131,11 +130,12 @@ type sweepableLocation struct {
 	conn *datasync.Client
 }
 
-func (sweepable *sweepableLocation) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (sweepable *sweepableLocation) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	log.Printf("[DEBUG] Deleting DataSync Location: %s", sweepable.arn)
-	_, err := sweepable.conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(sweepable.arn),
-	})
+	}
+	_, err := sweepable.conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil
@@ -155,10 +155,10 @@ func sweepTasks(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
-	input := &datasync.ListTasksInput{}
+	input := datasync.ListTasksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := datasync.NewListTasksPaginator(conn, input)
+	pages := datasync.NewListTasksPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

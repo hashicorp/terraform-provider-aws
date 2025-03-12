@@ -52,10 +52,6 @@ type resourceDataCellsFilter struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceDataCellsFilter) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lakeformation_data_cells_filter"
-}
-
 func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

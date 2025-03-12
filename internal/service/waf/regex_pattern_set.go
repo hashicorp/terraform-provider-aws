@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -93,13 +93,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading WAF Regex Pattern Set (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "regexpatternset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, regexPatternSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, regexPatternSet.Name)
 	d.Set("regex_pattern_strings", regexPatternSet.RegexPatternStrings)
 
@@ -201,7 +195,7 @@ func diffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) [
 
 	for _, op := range oldPatterns {
 		if idx := tfslices.IndexOf(newPatterns, op.(string)); idx > -1 {
-			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
+			newPatterns = slices.Delete(newPatterns, idx, idx+1)
 			continue
 		}
 
@@ -218,4 +212,9 @@ func diffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) [
 		})
 	}
 	return updates
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func regexPatternSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "regexpatternset/"+id)
 }
