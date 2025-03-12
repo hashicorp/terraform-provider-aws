@@ -132,8 +132,6 @@ func ResourceFilter() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -204,9 +202,9 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
 	}.String()
 	d.Set(names.AttrARN, arn)

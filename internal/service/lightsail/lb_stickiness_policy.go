@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_stickiness_policy")
+// @SDKResource("aws_lightsail_lb_stickiness_policy", name="Load Balancer Stickiness Policy")
 func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerStickinessPolicyCreate,

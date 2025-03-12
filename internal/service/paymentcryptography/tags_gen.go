@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *paymentcryptography.Client, identifier string, optFns ...func(*paymentcryptography.Options)) (tftags.KeyValueTags, error) {
-	input := &paymentcryptography.ListTagsForResourceInput{
+	input := paymentcryptography.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *paymentcryptography.Client, identifie
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.PaymentCryptography)
 	if len(removedTags) > 0 {
-		input := &paymentcryptography.UntagResourceInput{
+		input := paymentcryptography.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *paymentcryptography.Client, identifie
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.PaymentCryptography)
 	if len(updatedTags) > 0 {
-		input := &paymentcryptography.TagResourceInput{
+		input := paymentcryptography.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

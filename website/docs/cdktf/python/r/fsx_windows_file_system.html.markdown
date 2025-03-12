@@ -35,9 +35,9 @@ class MyConvertedCode(TerraformStack):
         FsxWindowsFileSystem(self, "example",
             active_directory_id=Token.as_string(aws_directory_service_directory_example.id),
             kms_key_id=Token.as_string(aws_kms_key_example.arn),
-            storage_capacity=300,
+            storage_capacity=32,
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
-            throughput_capacity=1024
+            throughput_capacity=32
         )
 ```
 
@@ -65,9 +65,9 @@ class MyConvertedCode(TerraformStack):
                 password="avoid-plaintext-passwords",
                 username="Admin"
             ),
-            storage_capacity=300,
+            storage_capacity=32,
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
-            throughput_capacity=1024
+            throughput_capacity=32
         )
 ```
 
@@ -76,7 +76,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set `deployment_type` to `MULTI_AZ_1`.
-* `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
+* `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/performance.html).
 
 The following arguments are optional:
 
@@ -198,4 +198,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7fa8e6f410a078e6243e08b1d44003de54acd11d819ea1c8c9817cd9106d7c9c -->
+<!-- cache-key: cdktf-0.20.8 input-7512c63eecc7f2680d6ccea199dd6ef48933a2367fbdf05c9a796ce6d12b0c43 -->

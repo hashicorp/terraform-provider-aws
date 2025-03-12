@@ -51,7 +51,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 						names.AttrPriority: "50",
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lex_bot")
+// @SDKResource("aws_lex_bot", name="Bot")
 func resourceBot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotCreate,
@@ -300,9 +300,9 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "lex",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())

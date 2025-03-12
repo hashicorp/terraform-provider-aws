@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,8 +72,6 @@ func resourceSubnetGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -156,9 +153,10 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Subnet Group: %s", d.Id())
-	_, err := conn.DeleteDBSubnetGroup(ctx, &docdb.DeleteDBSubnetGroupInput{
+	input := docdb.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBSubnetGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
 		return diags

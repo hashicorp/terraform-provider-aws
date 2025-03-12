@@ -93,8 +93,6 @@ func resourceBuild() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

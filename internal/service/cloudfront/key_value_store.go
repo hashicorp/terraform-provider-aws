@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Key Value Store")
+// @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -44,10 +44,6 @@ type keyValueStoreResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *keyValueStoreResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_key_value_store"
 }
 
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

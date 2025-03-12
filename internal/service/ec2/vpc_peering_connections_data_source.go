@@ -66,7 +66,7 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 		vpcPeeringConnectionIDs = append(vpcPeeringConnectionIDs, aws.ToString(v.VpcPeeringConnectionId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, vpcPeeringConnectionIDs)
 
 	return diags

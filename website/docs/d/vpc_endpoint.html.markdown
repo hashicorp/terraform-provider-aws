@@ -33,7 +33,7 @@ The given filters must match exactly one VPC endpoint whose data will be exporte
 
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
-* `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the specific VPC Endpoint to retrieve.
@@ -63,6 +63,7 @@ In addition to all arguments above except `filter`, the following attributes are
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
+* `service_region` - The AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 

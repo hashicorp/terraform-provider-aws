@@ -73,7 +73,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 		connectionIDs = append(connectionIDs, aws.ToString(v.ConnectionId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, connectionIDs)
 
 	return diags

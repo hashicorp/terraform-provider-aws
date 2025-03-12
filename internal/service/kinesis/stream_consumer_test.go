@@ -35,7 +35,7 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccStreamConsumerExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),

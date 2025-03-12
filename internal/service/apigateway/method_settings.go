@@ -246,13 +246,13 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	id := apiID + "-" + stageName + "-" + methodPath
-	input := &apigateway.UpdateStageInput{
+	input := apigateway.UpdateStageInput{
 		PatchOperations: ops,
 		RestApiId:       aws.String(apiID),
 		StageName:       aws.String(stageName),
 	}
 
-	_, err := conn.UpdateStage(ctx, input)
+	_, err := conn.UpdateStage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage (%s): %s", id, err)
@@ -269,7 +269,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.UpdateStageInput{
+	input := apigateway.UpdateStageInput{
 		PatchOperations: []types.PatchOperation{
 			{
 				Op:   types.OpRemove,
@@ -280,7 +280,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 
-	_, err := conn.UpdateStage(ctx, input)
+	_, err := conn.UpdateStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags

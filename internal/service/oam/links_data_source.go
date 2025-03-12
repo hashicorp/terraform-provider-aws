@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_links")
+// @SDKDataSource("aws_oam_links", name="Links")
 func DataSourceLinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinksRead,
@@ -54,7 +54,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 
 	return nil

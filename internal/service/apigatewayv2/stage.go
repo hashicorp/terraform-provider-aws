@@ -184,8 +184,6 @@ func resourceStage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -397,10 +395,11 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigatewayv2.DeleteStageInput{
+	input := apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -465,6 +464,33 @@ func findStage(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findStages(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetStagesInput) ([]awstypes.Stage, error) {
+	var output []awstypes.Stage
+
+	err := getStagesPages(ctx, conn, input, func(page *apigatewayv2.GetStagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil

@@ -252,7 +252,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
-							Deprecated:   "Use filter instead",
+							Deprecated:   "prefix is deprecated. Use filter instead.",
 						},
 						names.AttrPriority: {
 							Type:     schema.TypeInt,
@@ -317,6 +317,9 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
@@ -358,7 +361,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 	d.SetId(bucket)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findReplicationConfiguration(ctx, conn, d.Id())
+		return findReplicationConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -372,7 +375,12 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	rc, err := findReplicationConfiguration(ctx, conn, d.Id())
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	rc, err := findReplicationConfiguration(ctx, conn, bucket)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Replication Configuration (%s) not found, removing from state", d.Id())
@@ -384,7 +392,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Replication Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrRole, rc.Role)
 	if err := d.Set(names.AttrRule, flattenReplicationRules(ctx, rc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
@@ -397,8 +405,13 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketReplicationInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
 			Role:  aws.String(d.Get(names.AttrRole).(string)),
 			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
@@ -422,9 +435,14 @@ func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	log.Printf("[DEBUG] Deleting S3 Bucket Replication Configuration: %s", d.Id())
 	_, err := conn.DeleteBucketReplication(ctx, &s3.DeleteBucketReplicationInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeReplicationConfigurationNotFound) {
@@ -436,7 +454,7 @@ func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findReplicationConfiguration(ctx, conn, d.Id())
+		return findReplicationConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -828,6 +846,24 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []interface{})
 	return apiObject
 }
 
+func expandTag(tfMap map[string]interface{}) *types.Tag {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	apiObject := &types.Tag{}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenReplicationRules(ctx context.Context, apiObjects []types.ReplicationRule) []interface{} {
 	if len(apiObjects) == 0 {
 		return []interface{}{}
@@ -1085,6 +1121,24 @@ func flattenSSEKMSEncryptedObjects(apiObject *types.SseKmsEncryptedObjects) []in
 
 	tfMap := map[string]interface{}{
 		names.AttrStatus: apiObject.Status,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTag(apiObject *types.Tag) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

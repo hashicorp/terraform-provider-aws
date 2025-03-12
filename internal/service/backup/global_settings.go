@@ -53,7 +53,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)

@@ -67,7 +67,7 @@ func testAccTeamsChannelConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTeamsChannelConfigurationExists(ctx, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceTeamsChannelConfiguration, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(testResourceTeamsChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/.*/%s`, rName))),
+					acctest.MatchResourceAttrGlobalARN(ctx, testResourceTeamsChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/.*/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceTeamsChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(testResourceTeamsChannelConfiguration, "channel_id", channelID),
 					resource.TestCheckResourceAttrSet(testResourceTeamsChannelConfiguration, "channel_name"),

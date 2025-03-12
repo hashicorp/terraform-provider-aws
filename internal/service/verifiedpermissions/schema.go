@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Schema")
+// @FrameworkResource("aws_verifiedpermissions_schema", name="Schema")
 func newResourceSchema(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSchema{}
 
@@ -45,10 +45,6 @@ type resourceSchema struct {
 	framework.WithImportByID
 }
 
-func (r *resourceSchema) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_schema"
-}
-
 func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -62,7 +58,7 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"definition": schema.SingleNestedBlock{
+			"definition": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},

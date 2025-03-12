@@ -26,7 +26,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 
 The following arguments are required:
 
-* `deployment_type` - (Required) The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
+* `deployment_type` - (Required) Filesystem deployment type. See the [AWS API documentation](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileSystemOpenZFSConfiguration.html#FSx-Type-CreateFileSystemOpenZFSConfiguration-DeploymentType) for a list of valid values.
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from.
 * `throughput_capacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deployment_type`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.

@@ -35,7 +35,7 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 				Config: testAccCustomLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", acctest.CtTrue),
@@ -108,7 +108,7 @@ func TestAccOpsWorksCustomLayer_update(t *testing.T) {
 			{
 				Config: testAccCustomLayerConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", acctest.CtTrue),

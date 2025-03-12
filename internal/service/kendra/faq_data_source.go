@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_faq")
+// @SDKDataSource("aws_kendra_faq", name="FAQ")
 func DataSourceFaq() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFaqRead,
@@ -127,8 +127,8 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/faq/%s", indexId, id),
 	}.String()
 

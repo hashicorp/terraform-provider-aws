@@ -48,7 +48,7 @@ func TestAccM2Application_basic_Content(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
@@ -95,7 +95,7 @@ func TestAccM2Application_basic_S3Location(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.content"),
@@ -187,7 +187,7 @@ func TestAccM2Application_full(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),

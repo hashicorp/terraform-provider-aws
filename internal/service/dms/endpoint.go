@@ -185,6 +185,11 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"sasl_mechanism": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.KafkaSaslMechanism](),
+						},
 						"sasl_password": {
 							Type:      schema.TypeString,
 							Optional:  true,
@@ -772,7 +777,6 @@ func resourceEndpoint() *schema.Resource {
 			validateKMSKeyEngineCustomizeDiff,
 			validateS3SSEKMSKeyCustomizeDiff,
 			validateRedshiftSSEKMSKeyCustomizeDiff,
-			verify.SetTagsDiff,
 		),
 	}
 }
@@ -1424,9 +1428,10 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &dms.DeleteEndpointInput{
+	input := dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteEndpoint(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -1753,10 +1758,11 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 	}
 
 	for _, task := range tasks {
-		_, err := conn.TestConnection(ctx, &dms.TestConnectionInput{
+		testConnectionInput := dms.TestConnectionInput{
 			EndpointArn:            aws.String(arn),
 			ReplicationInstanceArn: task.ReplicationInstanceArn,
-		})
+		}
+		_, err := conn.TestConnection(ctx, &testConnectionInput)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidResourceStateFault](err, "already being tested") {
 			continue
@@ -1768,14 +1774,15 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 
 		waiter := dms.NewTestConnectionSucceedsWaiter(conn)
 
-		err = waiter.Wait(ctx, &dms.DescribeConnectionsInput{
+		describeConnectionsInput := dms.DescribeConnectionsInput{
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("endpoint-arn"),
 					Values: []string{arn},
 				},
 			},
-		}, maxConnTestWaitTime)
+		}
+		err = waiter.Wait(ctx, &describeConnectionsInput, maxConnTestWaitTime)
 
 		if err != nil {
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
@@ -1865,6 +1872,10 @@ func expandKafkaSettings(tfMap map[string]interface{}) *awstypes.KafkaSettings {
 		apiObject.PartitionIncludeSchemaTable = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["sasl_mechanism"].(string); ok && v != "" {
+		apiObject.SaslMechanism = awstypes.KafkaSaslMechanism(v)
+	}
+
 	if v, ok := tfMap["sasl_password"].(string); ok && v != "" {
 		apiObject.SaslPassword = aws.String(v)
 	}
@@ -1931,7 +1942,7 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 		tfMap["include_transaction_details"] = aws.ToBool(v)
 	}
 
-	tfMap["message_format"] = string(apiObject.MessageFormat)
+	tfMap["message_format"] = apiObject.MessageFormat
 
 	if v := apiObject.MessageMaxBytes; v != nil {
 		tfMap["message_max_bytes"] = aws.ToInt32(v)
@@ -1945,6 +1956,8 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 		tfMap["partition_include_schema_table"] = aws.ToBool(v)
 	}
 
+	tfMap["sasl_mechanism"] = apiObject.SaslMechanism
+
 	if v := apiObject.SaslPassword; v != nil {
 		tfMap["sasl_password"] = aws.ToString(v)
 	}
@@ -1953,7 +1966,7 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 		tfMap["sasl_username"] = aws.ToString(v)
 	}
 
-	tfMap["security_protocol"] = string(apiObject.SecurityProtocol)
+	tfMap["security_protocol"] = apiObject.SecurityProtocol
 
 	if v := apiObject.SslCaCertificateArn; v != nil {
 		tfMap["ssl_ca_certificate_arn"] = aws.ToString(v)

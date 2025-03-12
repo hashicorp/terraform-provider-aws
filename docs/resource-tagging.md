@@ -163,31 +163,9 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     }
     ```
 
-Add a plan modifier (Terraform Plugin Framework) or a `CustomizeDiff` function (Terraform Plugin SDK V2) to ensure tagging diffs are handled appropriately.
-These functions handle the combination of tags set on the resource and default tags, and must be set for tagging to function properly.
-
-=== "Terraform Plugin Framework (Preferred)"
-    ```go
-    func (r *resourceExample) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-        r.SetTagsAll(ctx, req, resp)
-    }
-    ```
-
-=== "Terraform Plugin SDK V2"
-    ```go
-    func ResourceExample() *schema.Resource {
-      return &schema.Resource{
-        /* ... other configuration ... */
-        CustomizeDiff: verify.SetTagsDiff,
-      }
-    }
-    ```
-
-If the resource already implements `ModifyPlan`, simply include the `SetTagsAll` function at the end of the method body.
-
 ### Transparent Tagging
 
-Most services can use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
+All service that support tagging use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -226,7 +204,7 @@ use the `getTagsIn` function to get any configured tags.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
-    input := &service.CreateExampleInput{
+    input := service.CreateExampleInput{
       /* ... other configuration ... */
       Tags: getTagsIn(ctx),
     }
@@ -234,7 +212,7 @@ use the `getTagsIn` function to get any configured tags.
 
 === "Terraform Plugin SDK V2"
     ```go
-    input := &service.CreateExampleInput{
+    input := service.CreateExampleInput{
       /* ... other configuration ... */
       Tags: getTagsIn(ctx),
     }
@@ -293,7 +271,7 @@ In the resource `Update` operation, only non-`tags` updates need to be done as t
 
 === "Terraform Plugin SDK V2"
     ```go
-    if d.HasChangesExcept("tags", "tags_all") {
+    if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
       ...
     }
     ```
@@ -332,7 +310,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &eks.CreateClusterInput{
+    input := eks.CreateClusterInput{
       /* ... other configuration ... */
       Tags: Tags(tags.IgnoreAWS()),
     }
@@ -346,7 +324,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &eks.CreateClusterInput{
+    input := eks.CreateClusterInput{
       /* ...other configuration... */
     }
 
@@ -383,7 +361,7 @@ This example shows using `TagSpecifications`:
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &ec2.CreateFleetInput{
+    input := ec2.CreateFleetInput{
         /* ... other configuration ... */
         TagSpecifications: tagSpecificationsFromKeyValue(tags, ec2.ResourceTypeFleet),
     }
@@ -460,7 +438,7 @@ If the resource `Update` function applies specific updates to attributes regardl
     ```go
     if d.HasChangesExcept("tags", "tags_all") {
       /* ... other logic ...*/
-      request := &iam.CreatePolicyVersionInput{
+      request := iam.CreatePolicyVersionInput{
         PolicyArn:      aws.String(d.Id()),
         PolicyDocument: aws.String(d.Get("policy").(string)),
         SetAsDefault:   aws.Bool(true),
@@ -494,6 +472,8 @@ If a resource or data source type supports tags but does not use transparent tag
 
 Additional `@Testing(...)` parameters can be used to control the generated tests.
 
+##### Required Argument parameters
+
 Most testing configurations take a single parameter, often a name or a domain name.
 The most common case is parameter `rName` with a value generated by `sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)`, so this is the default.
 If no `rName` is required, add the annotation `@Testing(generator=false)`.
@@ -517,6 +497,8 @@ and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 No additional parameters can be defined currently.
 If additional parameters are required, and cannot be derived from `rName`, the resource type must use manually created acceptance tests as described below.
 
+##### Exists and Destroy parameters
+
 Most `Exists` functions used in acceptance tests take a pointer to the returned API object.
 To specify the type of this parameter, use the annotion `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
@@ -530,6 +512,11 @@ For example, the S3 Object uses
 Some services or resource types are using a new variant of the standard `Exists` and `DestroyCheck` functions that use `acctest.ProviderMeta` internally, and thus take a `testing.T` as a parameter.
 In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(destroyTakesT=true)`, respectively.
 
+Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
+Use the annotation `@Testing(checkDestroyNoop=true)`.
+
+##### Import parameters
+
 The generated acceptance tests use `ImportState` steps.
 In most cases, these will work as-is.
 To ignore the values of certain parameters when importing, set the annotation `@Testing(importIgnore="...")` to a list of the parameter names separated by semi-colons (`;`).
@@ -539,9 +526,13 @@ If the identifier can be retrieved from a specific resource attribute, use the a
 If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
 If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
 
-If the tests need to be serialized, use the annotion `@Testing(serialize=true)`.
+##### Serialization parameters
+
+If the tests need to be serialized, use the annotation `@Testing(serialize=true)`.
 If a delay is needed between serialized tests, also use the annotation `@Testing(serializeDelay=<duration>)` with a duration in the format used by [`time.ParseDuration()`](https://pkg.go.dev/time#ParseDuration).
 For example, 3 minutes and 30 seconds is `3m30s`.
+
+##### Empty and Null Tag parameters
 
 Some services do not support tags with an empty string value.
 In that case, use the annotation `@Testing(skipEmptyTags=true)`.
@@ -549,8 +540,7 @@ In that case, use the annotation `@Testing(skipEmptyTags=true)`.
 Some services do not support tags with an null string value.
 In that case, use the annotation `@Testing(skipNullTags=true)`.
 
-Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
-Use the annotation `@Testing(checkDestroyNoop=true)`.
+##### Tag Update parameters
 
 For some resource types, tags cannot be modified without recreating the resource.
 Use the annotation `@Testing(tagsUpdateForceNew=true)`.
@@ -558,9 +548,13 @@ Use the annotation `@Testing(tagsUpdateForceNew=true)`.
 Resource types which pass the result of `getTagsIn` directly onto their Update Input may have an error where ignored tags are not correctly excluded from the update.
 Use the annotation `@Testing(tagsUpdateGetTagsIn=true)`.
 
+##### Resource Identifier parameters
+
 Some tests read the tag values directly from the AWS API.
 If the resource type does not specify `identifierAttribute` in its `@Tags` annotation, specify a `@Testing(tagsIdentifierAttribute=<attribute name>)` annotation to identify which attribute value should be used by the `listTags` function.
 If a resource type is also needed for the `listTags` function, also specify the `tagsResourceType` annotation.
+
+##### Tag Removal parameters
 
 At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
 This is likely an error on the AWS side.

@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -124,13 +124,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading WAF Size Constraint Set (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "sizeconstraintset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, sizeConstraintSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, sizeConstraintSet.Name)
 	if err := d.Set("size_constraints", flattenSizeConstraints(sizeConstraintSet.SizeConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting size_constraints: %s", err)
@@ -235,7 +229,7 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 		constraint := os.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newS, constraint); contains {
-			newS = append(newS[:idx], newS[idx+1:]...)
+			newS = slices.Delete(newS, idx, idx+1)
 			continue
 		}
 
@@ -279,4 +273,9 @@ func flattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
 		out[i] = m
 	}
 	return out
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func sizeConstraintSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "sizeconstraintset/"+id)
 }

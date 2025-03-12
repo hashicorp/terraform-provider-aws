@@ -36,7 +36,7 @@ func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -328,10 +328,10 @@ func testAccCheckAppImageConfigDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI App Image Config (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SageMaker App Image Config %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI App Image Config %q still exists", rs.Primary.ID)
 		}
 
 		return nil

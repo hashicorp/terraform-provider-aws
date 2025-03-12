@@ -60,8 +60,10 @@ This resource supports the following arguments:
 
 The `certificate_settings` configuration block supports the following arguments:
 
-* `type` - (Required) The certificate type. Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
+* `type` - (Required) The certificate type.
+  Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
 * `custom_certificate_arn` - (Optional) The Amazon resource name (ARN) for the custom certificate.
+  Required when `type` is `CUSTOM`.
 
 The `sub_domain` configuration block supports the following arguments:
 

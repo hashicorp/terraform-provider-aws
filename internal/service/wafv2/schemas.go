@@ -379,7 +379,8 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 			"cookies":             cookiesSchema(),
 			"header_order":        headerOrderSchema(),
 			"headers":             headersSchema(),
-			"ja3_fingerprint":     ja3fingerprintSchema(),
+			"ja3_fingerprint":     jaFingerprintSchema(),
+			"ja4_fingerprint":     jaFingerprintSchema(),
 			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
@@ -498,6 +499,23 @@ var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 				"header_name": {
 					Type:     schema.TypeString,
 					Required: true,
+				},
+			},
+		},
+	}
+})
+
+var rateLimitJAFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 				},
 			},
 		},
@@ -860,7 +878,7 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
-func ja3fingerprintSchema() *schema.Schema {
+func jaFingerprintSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1078,7 +1096,9 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 									},
 								},
 							},
-							"ip": emptySchema(),
+							"ip":              emptySchema(),
+							"ja3_fingerprint": rateLimitJAFingerprintConfigSchema(),
+							"ja4_fingerprint": rateLimitJAFingerprintConfigSchema(),
 							"label_namespace": {
 								Type:     schema.TypeList,
 								Optional: true,

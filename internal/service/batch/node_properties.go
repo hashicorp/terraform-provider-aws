@@ -15,18 +15,29 @@ import (
 type nodeProperties struct {
 	MainNode            *int64
 	NodeRangeProperties []*nodeRangeProperty
-	NumNodes            *int64
+
+	NumNodes *int64
 }
 
 type nodeRangeProperty struct {
-	Container   *containerProperties
-	TargetNodes *string
+	Container     *containerProperties
+	EcsProperties *ecsProperties
+	EKSProperties *eksProperties
+	TargetNodes   *string
 }
 
 func (np *nodeProperties) reduce() {
 	// Deal with Environment objects which may be re-ordered in the API.
 	for _, node := range np.NodeRangeProperties {
-		node.Container.reduce()
+		if node.Container != nil {
+			node.Container.reduce()
+		}
+		if node.EcsProperties != nil {
+			node.EcsProperties.reduce()
+		}
+		if node.EKSProperties != nil {
+			node.EKSProperties.reduce()
+		}
 	}
 }
 

@@ -1,6 +1,6 @@
 plugin "aws" {
   enabled = true
-  version = "0.33.0"
+  version = "0.37.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
@@ -23,11 +23,5 @@ rule "terraform_required_version" {
 # https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/rules/README.md
 
 rule "aws_acm_certificate_lifecycle" {
-  enabled = false
-}
-
-# The provider supports a number of undocumented connection types
-# https://github.com/hashicorp/terraform-provider-aws/pull/37731
-rule "aws_glue_connection_invalid_connection_type" {
   enabled = false
 }

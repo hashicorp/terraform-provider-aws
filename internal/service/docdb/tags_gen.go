@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *docdb.Client, identifier string, optFns ...func(*docdb.Options)) (tftags.KeyValueTags, error) {
-	input := &docdb.ListTagsForResourceInput{
+	input := docdb.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *docdb.Client, identifier string, oldT
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DocDB)
 	if len(removedTags) > 0 {
-		input := &docdb.RemoveTagsFromResourceInput{
+		input := docdb.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromResource(ctx, input, optFns...)
+		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *docdb.Client, identifier string, oldT
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DocDB)
 	if len(updatedTags) > 0 {
-		input := &docdb.AddTagsToResourceInput{
+		input := docdb.AddTagsToResourceInput{
 			ResourceName: aws.String(identifier),
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResource(ctx, input, optFns...)
+		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

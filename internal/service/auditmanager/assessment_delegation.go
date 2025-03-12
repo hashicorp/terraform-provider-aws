@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_assessment_delegation", name="Assessment Delegation")
 func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentDelegation{}, nil
 }
@@ -38,10 +38,6 @@ const (
 
 type resourceAssessmentDelegation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAssessmentDelegation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment_delegation"
 }
 
 func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

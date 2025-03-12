@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_access_point_policy")
+// @SDKResource("aws_s3control_access_point_policy", name="Access Point Policy")
 func resourceAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointPolicyCreate,

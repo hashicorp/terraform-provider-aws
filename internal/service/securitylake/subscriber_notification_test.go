@@ -48,7 +48,7 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", resourceName, "subscriber_endpoint"),
 					func(s *terraform.State) error {
-						return acctest.CheckResourceAttrRegionalARN(resourceName, "subscriber_endpoint", "sqs", fmt.Sprintf("AmazonSecurityLake-%s-Main-Queue", aws.ToString(subscriber.SubscriberId)))(s)
+						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "subscriber_endpoint", "sqs", fmt.Sprintf("AmazonSecurityLake-%s-Main-Queue", aws.ToString(subscriber.SubscriberId)))(s)
 					},
 				),
 			},

@@ -371,14 +371,14 @@ The number filter configuration block supports the following arguments:
 
 The string filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Filter values are case sensitive.
 
 ### Workflow Status Filter Argument reference
 
 The workflow status filter configuration block supports the following arguments:
 
-* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
+* `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`, `CONTAINS`, and `NOT_CONTAINS`.
 * `value` - (Required) The string filter value. Valid values include: `NEW`, `NOTIFIED`, `SUPPRESSED`, and `RESOLVED`.
 
 ## Attribute Reference
@@ -420,4 +420,4 @@ Using `terraform import`, import Security Hub insights using the ARN. For exampl
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d3d847819c495e43242ec5ec238846c5d4424861a5d61bc30612afcfd23a2887 -->
+<!-- cache-key: cdktf-0.20.8 input-3396819782d5b2f4ff9f550b5257b26e8ed453c9d639ebd13d6480a1a582b6a8 -->

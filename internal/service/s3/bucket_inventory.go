@@ -210,6 +210,9 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketInventoryConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
@@ -250,6 +253,10 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	ic, err := findInventoryConfiguration(ctx, conn, bucket, name)
@@ -294,6 +301,10 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketInventoryConfigurationInput{

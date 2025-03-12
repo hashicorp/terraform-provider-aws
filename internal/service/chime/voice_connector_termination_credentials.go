@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_chime_voice_connector_termination_credentials")
+// @SDKResource("aws_chime_voice_connector_termination_credentials", name="Voice Connector Termination Credentials")
 func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorTerminationCredentialsCreate,

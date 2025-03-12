@@ -40,7 +40,7 @@ func TestAccNeptuneGlobalCluster_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -74,7 +74,7 @@ func TestAccNeptuneGlobalCluster_completeBasic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_completeBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),

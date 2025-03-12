@@ -948,6 +948,11 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 											},
 										},
 									},
@@ -1338,8 +1343,6 @@ func resourceFlow() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1482,9 +1485,10 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
-	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
+	input := appflow.DeleteFlowInput{
 		FlowName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteFlow(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -2368,6 +2372,10 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.Sales
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
+	}
+
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
 	}
 
 	return a
@@ -3538,6 +3546,7 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 
 	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
+	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 
 	if v := salesforceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)

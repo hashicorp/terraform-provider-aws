@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -659,6 +660,22 @@ func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
+func statusNetworkInterfacePermission(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findNetworkInterfacePermissionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.PermissionState.State), nil
+	}
+}
+
 func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
@@ -671,7 +688,7 @@ func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.S
 			return nil, "", err
 		}
 
-		return output, string(output.State), nil
+		return output, strings.ToLower(string(output.State)), nil
 	}
 }
 
@@ -806,7 +823,7 @@ func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Clien
 			return nil, "", err
 		}
 
-		return output, string(output.VpcEndpointState), nil
+		return output, strings.ToLower(string(output.VpcEndpointState)), nil
 	}
 }
 
@@ -1570,5 +1587,37 @@ func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id str
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCBlockPublicAccessOptions(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
 	}
 }

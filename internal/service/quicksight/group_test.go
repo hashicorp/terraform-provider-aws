@@ -37,7 +37,7 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("group/default/%s", rName1)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("group/default/%s", rName1)),
 				),
 			},
 			{
@@ -45,7 +45,7 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName2),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("group/default/%s", rName2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("group/default/%s", rName2)),
 				),
 			},
 			{

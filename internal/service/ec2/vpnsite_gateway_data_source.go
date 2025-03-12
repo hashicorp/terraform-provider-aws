@@ -73,7 +73,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeVpnGatewaysInput{}
+	input := ec2.DescribeVpnGatewaysInput{}
 
 	if id, ok := d.GetOk(names.AttrID); ok {
 		input.VpnGatewayIds = []string{id.(string)}
@@ -111,7 +111,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Filters = nil
 	}
 
-	vgw, err := findVPNGateway(ctx, conn, input)
+	vgw, err := findVPNGateway(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))
@@ -123,8 +123,8 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

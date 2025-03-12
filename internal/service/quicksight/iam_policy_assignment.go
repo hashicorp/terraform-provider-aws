@@ -50,10 +50,6 @@ type iamPolicyAssignmentResource struct {
 	framework.WithImportByID
 }
 
-func (r *iamPolicyAssignmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_iam_policy_assignment"
-}
-
 func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -125,7 +121,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, namespace, assignmentName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace), flex.StringValueFromFramework(ctx, plan.AssignmentName)
 	in := quicksight.CreateIAMPolicyAssignmentInput{

@@ -53,7 +53,7 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),

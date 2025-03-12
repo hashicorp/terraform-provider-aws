@@ -27,7 +27,7 @@ import (
 // This value is defined by AWS API
 const lfTagsValuesMaxBatchSize = 50
 
-// @SDKResource("aws_lakeformation_lf_tag")
+// @SDKResource("aws_lakeformation_lf_tag", name="LF Tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLFTagCreate,
@@ -78,7 +78,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*conns.AWSClient).AccountID
+		catalogID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	id := lfTagCreateResourceID(catalogID, tagKey)
 

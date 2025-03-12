@@ -4,6 +4,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -52,8 +53,8 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 						"cidr_blocks.#":    "1",
 						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
-					testAccCheckDefaultSecurityGroupARN(resourceName, &group),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					testAccCheckDefaultSecurityGroupARN(ctx, resourceName, &group),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -103,9 +104,9 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultSecurityGroupARN(resourceName string, group *awstypes.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupARN(ctx context.Context, resourceName string, group *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("security-group/%s", aws.ToString(group.GroupId)))(s)
+		return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", fmt.Sprintf("security-group/%s", aws.ToString(group.GroupId)))(s)
 	}
 }
 

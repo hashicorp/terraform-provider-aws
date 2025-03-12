@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_object_lambda_access_point_policy")
+// @SDKResource("aws_s3control_object_lambda_access_point_policy", name="Object Lambda Access Point Policy")
 func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectLambdaAccessPointPolicyCreate,
@@ -75,7 +75,7 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}

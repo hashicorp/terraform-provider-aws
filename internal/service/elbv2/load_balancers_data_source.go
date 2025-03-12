@@ -80,7 +80,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 		loadBalancerARNs = append(loadBalancerARNs, aws.ToString(lb.LoadBalancerArn))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, loadBalancerARNs)
 
 	return diags

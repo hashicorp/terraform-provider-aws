@@ -80,7 +80,7 @@ func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta
 		naclIDs = append(naclIDs, aws.ToString(v.NetworkAclId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, naclIDs)
 
 	return diags

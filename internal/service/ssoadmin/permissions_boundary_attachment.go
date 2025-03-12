@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_permissions_boundary_attachment")
+// @SDKResource("aws_ssoadmin_permissions_boundary_attachment", name="Permissions Boundary Attachment")
 func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,

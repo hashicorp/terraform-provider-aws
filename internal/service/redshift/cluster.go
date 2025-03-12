@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,7 +68,7 @@ func resourceCluster() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AquaConfigurationStatus](),
-				Deprecated:       "This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
+				Deprecated:       "aqua_configuration_status is deprecated. This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 					return true
 				},
@@ -224,7 +225,7 @@ func resourceCluster() *schema.Resource {
 			},
 			"logging": {
 				Type: schema.TypeList,
-				Deprecated: "Use the aws_redshift_logging resource instead. " +
+				Deprecated: "logging is deprecated. Use the aws_redshift_logging resource instead. " +
 					"This argument will be removed in a future major version.",
 				MaxItems:         1,
 				Optional:         true,
@@ -267,7 +268,7 @@ func resourceCluster() *schema.Resource {
 			"manage_master_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"master_password"},
+				ConflictsWith: []string{"master_password", "master_password_wo"},
 			},
 			"manual_snapshot_retention_period": {
 				Type:         schema.TypeInt,
@@ -286,7 +287,27 @@ func resourceCluster() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
 					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
 				),
-				ConflictsWith: []string{"manage_master_password"},
+				ConflictsWith: []string{"manage_master_password", "master_password_wo"},
+			},
+			"master_password_wo": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				WriteOnly: true,
+				Sensitive: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(8, 64),
+					validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
+					validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
+					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
+					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+				),
+				ConflictsWith: []string{"manage_master_password", "master_password"},
+				RequiredWith:  []string{"master_password_wo_version"},
+			},
+			"master_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"master_password_wo"},
 			},
 			"master_password_secret_arn": {
 				Type:     schema.TypeString,
@@ -304,9 +325,8 @@ func resourceCluster() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain only alphanumeric characters"),
-					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter"),
-				),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.@+-]*$`),
+						"must start with a letter and only contain alphanumeric characters, underscores, plus signs, dots, @ symbols, or hyphens")),
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -369,7 +389,7 @@ func resourceCluster() *schema.Resource {
 			},
 			"snapshot_copy": {
 				Type: schema.TypeList,
-				Deprecated: "Use the aws_redshift_snapshot_copy resource instead. " +
+				Deprecated: "snapshot_copy is deprecated. Use the aws_redshift_snapshot_copy resource instead. " +
 					"This argument will be removed in a future major version.",
 				MaxItems: 1,
 				Optional: true,
@@ -409,7 +429,6 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				azRelocationEnabled, multiAZ := diff.Get("availability_zone_relocation_enabled").(bool), diff.Get("multi_az").(bool)
 
@@ -455,6 +474,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                             getTagsIn(ctx),
 	}
 
+	// get write-only value from configuration
+	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	if v, ok := d.GetOk("aqua_configuration_status"); ok {
 		inputR.AquaConfigurationStatus = awstypes.AquaConfigurationStatus(v.(string))
 		inputC.AquaConfigurationStatus = awstypes.AquaConfigurationStatus(v.(string))
@@ -491,7 +517,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		inputC.Encrypted = aws.Bool(v.(bool))
+		inputC.Encrypted = aws.Bool(v.(bool)) // encryption is true by default
 		inputR.Encrypted = aws.Bool(v.(bool))
 	}
 
@@ -527,6 +553,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("master_password"); ok {
 		inputC.MasterUserPassword = aws.String(v.(string))
+	}
+
+	if masterPasswordWO != "" {
+		inputC.MasterUserPassword = aws.String(masterPasswordWO)
 	}
 
 	if v, ok := d.GetOk("master_password_secret_kms_key_id"); ok {
@@ -579,7 +609,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
 	} else {
-		if _, ok := d.GetOk("master_password"); !ok {
+		if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
 			if _, ok := d.GetOk("manage_master_password"); !ok {
 				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: one of "manage_master_password" or "master_password" is required`, d.Get(names.AttrClusterIdentifier).(string))
 			}
@@ -660,8 +690,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -806,6 +836,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("master_password") {
 			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+		}
+
+		if d.HasChange("master_password_wo_version") {
+			masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
+			}
 		}
 
 		if d.HasChange("master_password_secret_kms_key_id") {

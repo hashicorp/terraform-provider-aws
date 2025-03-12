@@ -36,7 +36,7 @@ func testAccType_basic(t *testing.T) {
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName, &typ),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, "SDL"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Mutation"),

@@ -135,6 +135,7 @@ class MyConvertedCode(TerraformStack):
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
+|Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
 |Chatbot|`chatbot`|`AWS_ENDPOINT_URL_CHATBOT`|`chatbot`|
@@ -227,6 +228,7 @@ class MyConvertedCode(TerraformStack):
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
+|Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
 |IoT Analytics|`iotanalytics`|`AWS_ENDPOINT_URL_IOTANALYTICS`|`iotanalytics`|
 |IoT Events|`iotevents`|`AWS_ENDPOINT_URL_IOT_EVENTS`|`iot_events`|
@@ -258,8 +260,10 @@ class MyConvertedCode(TerraformStack):
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
+|Elemental MediaPackage VOD|`mediapackagevod`|`AWS_ENDPOINT_URL_MEDIAPACKAGE_VOD`|`mediapackage_vod`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
-|MemoryDB for Redis|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
@@ -307,7 +311,8 @@ class MyConvertedCode(TerraformStack):
 |S3 (Simple Storage)|`s3`(or `s3api`)|`AWS_ENDPOINT_URL_S3`|`s3`|
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
@@ -337,7 +342,9 @@ class MyConvertedCode(TerraformStack):
 |STS (Security Token)|`sts`|`AWS_ENDPOINT_URL_STS`|`sts`|
 |SWF (Simple Workflow)|`swf`|`AWS_ENDPOINT_URL_SWF`|`swf`|
 |CloudWatch Synthetics|`synthetics`|`AWS_ENDPOINT_URL_SYNTHETICS`|`synthetics`|
+|Tax Settings|`taxsettings`|`AWS_ENDPOINT_URL_TAXSETTINGS`|`taxsettings`|
 |Timestream for InfluxDB|`timestreaminfluxdb`|`AWS_ENDPOINT_URL_TIMESTREAM_INFLUXDB`|`timestream_influxdb`|
+|Timestream Query|`timestreamquery`|`AWS_ENDPOINT_URL_TIMESTREAM_QUERY`|`timestream_query`|
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|
 |Transfer Family|`transfer`|`AWS_ENDPOINT_URL_TRANSFER`|`transfer`|
@@ -450,4 +457,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0a8223c41ffa69ec9860297a292de0f947723f1e74ea61de738b44154e87b43 -->
+<!-- cache-key: cdktf-0.20.8 input-11399ce897c01f5968f8952f815f4ac55d3fb7cbb6ba03da989e19ca3c04e49f -->

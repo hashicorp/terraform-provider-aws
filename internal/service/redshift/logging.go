@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Logging")
+// @FrameworkResource("aws_redshift_logging", name="Logging")
 func newResourceLogging(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLogging{}, nil
 }
@@ -40,10 +40,6 @@ const (
 
 type resourceLogging struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceLogging) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_logging"
 }
 
 func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

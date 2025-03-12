@@ -34,12 +34,12 @@ type lifecycleScope string
 
 const (
 	lifecycleScopeCreateOnly lifecycleScope = "CREATE_ONLY"
-	lifecycleScopeCrud       lifecycleScope = "CRUD"
+	lifecycleScopeCRUD       lifecycleScope = "CRUD"
 )
 
 func (lifecycleScope) Values() []lifecycleScope {
 	return []lifecycleScope{
 		lifecycleScopeCreateOnly,
-		lifecycleScopeCrud,
+		lifecycleScopeCRUD,
 	}
 }

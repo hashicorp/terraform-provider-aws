@@ -47,7 +47,7 @@ func TestAccLambdaRuntimeManagementConfig_basic(t *testing.T) {
 					testAccCheckRuntimeManagementConfigExists(ctx, resourceName, &cfg),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "update_runtime_on", string(types.UpdateRuntimeOnFunctionUpdate)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 			// the value and restrict this test to us-west-2 in the standard commercial
 			// partition.
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
@@ -125,7 +125,7 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "update_runtime_on", string(types.UpdateRuntimeOnManual)),
 					resource.TestMatchResourceAttr(resourceName, "runtime_version_arn", regexache.MustCompile(runtimeVersion)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
 				),
 			},
 		},

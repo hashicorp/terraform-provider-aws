@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -29,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -573,10 +571,7 @@ func resourceJobDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			jobDefinitionCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: jobDefinitionCustomizeDiff,
 	}
 }
 
@@ -790,7 +785,9 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			for _, node := range props.NodeRangeProperties {
-				diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+				if node.Container != nil {
+					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+				}
 			}
 			input.NodeProperties = props
 		}
@@ -995,9 +992,10 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting previous Batch Job Definition: %s", currentARN)
-			_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+			input := batch.DeregisterJobDefinitionInput{
 				JobDefinition: aws.String(currentARN),
-			})
+			}
+			_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
@@ -1028,9 +1026,10 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 		arn := aws.ToString(jds[i].JobDefinitionArn)
 
 		log.Printf("[DEBUG] Deregistering Batch Job Definition: %s", arn)
-		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+		input := batch.DeregisterJobDefinitionInput{
 			JobDefinition: aws.String(arn),
-		})
+		}
+		_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deregistering Batch Job Definition (%s): %s", arn, err)

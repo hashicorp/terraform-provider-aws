@@ -44,7 +44,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "20"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
 				),
 			},
 			{
@@ -172,11 +172,12 @@ func testAccCheckListenerRuleExists(ctx context.Context, name string, rule *vpcl
 		listenerIdentifier := rs.Primary.Attributes["listener_identifier"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
+		input := vpclattice.GetRuleInput{
 			RuleIdentifier:     aws.String(rs.Primary.Attributes[names.AttrARN]),
 			ListenerIdentifier: aws.String(listenerIdentifier),
 			ServiceIdentifier:  aws.String(serviceIdentifier),
-		})
+		}
+		resp, err := conn.GetRule(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListenerRule, rs.Primary.ID, err)
@@ -200,11 +201,12 @@ func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 			listenerIdentifier := rs.Primary.Attributes["listener_identifier"]
 			serviceIdentifier := rs.Primary.Attributes["service_identifier"]
 
-			_, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
+			input := vpclattice.GetRuleInput{
 				RuleIdentifier:     aws.String(rs.Primary.Attributes[names.AttrARN]),
 				ListenerIdentifier: aws.String(listenerIdentifier),
 				ServiceIdentifier:  aws.String(serviceIdentifier),
-			})
+			}
+			_, err := conn.GetRule(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {

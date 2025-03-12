@@ -432,6 +432,7 @@ func TestAccELBV2ListenerRuleDataSource_actionForwardWeightedStickiness(t *testi
 
 	var listenerRule awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = rName[:min(len(rName), 30)]
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
@@ -1106,7 +1107,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, rName[:30]))
+`, rName))
 }
 
 func testAccListenerRuleDataSourceConfig_actionRedirect(rName string) string {

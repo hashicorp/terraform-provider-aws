@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -31,7 +30,7 @@ import (
 )
 
 // @SDKResource("aws_macie2_classification_job", name="Classification Job")
-// @Tags
+// @Tags(identifierAttribute="job_arn")
 func resourceClassificationJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationJobCreate,
@@ -44,6 +43,10 @@ func resourceClassificationJob() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"custom_data_identifier_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -51,39 +54,37 @@ func resourceClassificationJob() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"schedule_frequency": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"daily_schedule": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
-						},
-						"weekly_schedule": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
-						},
-						"monthly_schedule": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
-						},
-					},
-				},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
-			"sampling_percentage": {
-				Type:     schema.TypeInt,
+			"initial_run": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+			},
+			"job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"job_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"job_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
+			},
+			"job_type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
 			},
 			names.AttrName: {
 				Type:          schema.TypeString,
@@ -101,24 +102,6 @@ func resourceClassificationJob() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 500-id.UniqueIDSuffixLength),
 			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"initial_run": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"job_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
-			},
 			"s3_job_definition": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -130,15 +113,18 @@ func resourceClassificationJob() *schema.Resource {
 							ConflictsWith: []string{"s3_job_definition.0.bucket_criteria"},
 							Type:          schema.TypeList,
 							Optional:      true,
+							ForceNew:      true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"buckets": {
 										Type:     schema.TypeList,
 										Required: true,
+										ForceNew: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
@@ -149,6 +135,7 @@ func resourceClassificationJob() *schema.Resource {
 							Type:          schema.TypeList,
 							Optional:      true,
 							Computed:      true,
+							ForceNew:      true,
 							MaxItems:      1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -156,6 +143,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -163,12 +151,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_criterion": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -176,18 +166,21 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																	},
 																},
@@ -196,6 +189,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -203,22 +197,26 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -236,6 +234,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -243,12 +242,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_criterion": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -256,18 +257,21 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																	},
 																},
@@ -276,6 +280,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -283,22 +288,26 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -319,6 +328,7 @@ func resourceClassificationJob() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -326,6 +336,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -333,12 +344,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_scope_term": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -346,18 +359,21 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.ScopeFilterKey](),
 																		},
 																	},
@@ -367,6 +383,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -374,23 +391,27 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -399,12 +420,14 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
+																			ForceNew:     true,
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
 																		names.AttrTarget: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
@@ -420,6 +443,7 @@ func resourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -427,12 +451,14 @@ func resourceClassificationJob() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"simple_scope_term": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -440,17 +466,20 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																	},
 																},
@@ -459,6 +488,7 @@ func resourceClassificationJob() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
+																ForceNew: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -466,21 +496,25 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
+																			ForceNew: true,
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			ForceNew: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
+																						ForceNew: true,
 																					},
 																				},
 																			},
@@ -489,12 +523,14 @@ func resourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
+																			ForceNew:     true,
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
 																		names.AttrTarget: {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			Computed:         true,
+																			ForceNew:         true,
 																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
@@ -512,36 +548,55 @@ func resourceClassificationJob() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			"sampling_percentage": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"schedule_frequency": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"daily_schedule": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
+						},
+						"weekly_schedule": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
+						},
+						"monthly_schedule": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
+						},
+					},
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"job_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"user_paused_details": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"job_imminent_expiration_health_event_arn": {
+						"job_expires_at": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"job_expires_at": {
+						"job_imminent_expiration_health_event_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -553,7 +608,13 @@ func resourceClassificationJob() *schema.Resource {
 				},
 			},
 		},
+
 		CustomizeDiff: resourceClassificationJobCustomizeDiff,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(4 * time.Minute),
+			Update: schema.DefaultTimeout(4 * time.Minute),
+		},
 	}
 }
 
@@ -585,13 +646,13 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 
 func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.CreateClassificationJobInput{
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))),
 		JobType:         awstypes.JobType(d.Get("job_type").(string)),
+		Name:            aws.String(name),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -599,125 +660,105 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
 		input.CustomDataIdentifierIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("schedule_frequency"); ok {
-		input.ScheduleFrequency = expandScheduleFrequency(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("sampling_percentage"); ok {
-		input.SamplingPercentage = aws.Int32(int32(v.(int)))
-	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("initial_run"); ok {
 		input.InitialRun = aws.Bool(v.(bool))
 	}
 
-	var err error
-	var output *macie2.CreateClassificationJobOutput
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		output, err = conn.CreateClassificationJob(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateClassificationJob(ctx, input)
+	if v, ok := d.GetOk("sampling_percentage"); ok {
+		input.SamplingPercentage = aws.Int32(int32(v.(int)))
 	}
+
+	if v, ok := d.GetOk("schedule_frequency"); ok {
+		input.ScheduleFrequency = expandScheduleFrequency(v.([]interface{}))
+	}
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateClassificationJob(ctx, &input)
+	}, errCodeClientError)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Macie ClassificationJob: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie Classification Job (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.JobId))
+	d.SetId(aws.ToString(outputRaw.(*macie2.CreateClassificationJobOutput).JobId))
 
 	return append(diags, resourceClassificationJobRead(ctx, d, meta)...)
 }
 
 func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.DescribeClassificationJobInput{
-		JobId: aws.String(d.Id()),
-	}
+	output, err := findClassificationJobByID(ctx, conn, d.Id())
 
-	resp, err := conn.DescribeClassificationJob(ctx, input)
-
-	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job")) {
-		log.Printf("[WARN] Macie ClassificationJob (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Macie Classification Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Macie ClassificationJob (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Macie Classification Job (%s): %s", d.Id(), err)
 	}
 
-	if err = d.Set("custom_data_identifier_ids", flex.FlattenStringValueList(resp.CustomDataIdentifierIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "custom_data_identifier_ids", d.Id(), err)
+	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
+	if err = d.Set("custom_data_identifier_ids", output.CustomDataIdentifierIds); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting custom_data_identifier_ids: %s", err)
 	}
-	if err = d.Set("schedule_frequency", flattenScheduleFrequency(resp.ScheduleFrequency)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "schedule_frequency", d.Id(), err)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("initial_run", output.InitialRun)
+	d.Set("job_arn", output.JobArn)
+	d.Set("job_id", output.JobId)
+	jobStatus := output.JobStatus
+	if jobStatus == awstypes.JobStatusComplete || jobStatus == awstypes.JobStatusIdle || jobStatus == awstypes.JobStatusPaused {
+		jobStatus = awstypes.JobStatusRunning
 	}
-	d.Set("sampling_percentage", resp.SamplingPercentage)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(resp.Name)))
-	d.Set(names.AttrDescription, resp.Description)
-	d.Set("initial_run", resp.InitialRun)
-	d.Set("job_type", resp.JobType)
-	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "s3_job_definition", d.Id(), err)
+	d.Set("job_status", jobStatus)
+	d.Set("job_type", output.JobType)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	if err = d.Set("s3_job_definition", flattenS3JobDefinition(output.S3JobDefinition)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3_job_definition: %s", err)
+	}
+	d.Set("sampling_percentage", output.SamplingPercentage)
+	if err = d.Set("schedule_frequency", flattenScheduleFrequency(output.ScheduleFrequency)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting schedule_frequency: %s", err)
+	}
+	if err = d.Set("user_paused_details", flattenUserPausedDetails(output.UserPausedDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting user_paused_details: %s", err)
 	}
 
-	setTagsOut(ctx, resp.Tags)
-
-	d.Set("job_id", resp.JobId)
-	d.Set("job_arn", resp.JobArn)
-	status := resp.JobStatus
-	if status == awstypes.JobStatusComplete || status == awstypes.JobStatusIdle || status == awstypes.JobStatusPaused {
-		status = awstypes.JobStatusRunning
-	}
-	d.Set("job_status", string(status))
-	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.UpdateClassificationJobInput{
-		JobId: aws.String(d.Id()),
-	}
-
 	if d.HasChange("job_status") {
-		status := d.Get("job_status").(string)
+		jobStatus := awstypes.JobStatus(d.Get("job_status").(string))
 
-		if status == string(awstypes.JobStatusCancelled) {
-			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", awstypes.JobStatusCancelled))
+		if jobStatus == awstypes.JobStatusCancelled {
+			return sdkdiag.AppendErrorf(diags, "updating Macie Classification Job (%s): %s", d.Id(), fmt.Errorf("%s status cannot be set", awstypes.JobStatusCancelled))
 		}
 
-		input.JobStatus = awstypes.JobStatus(status)
-	}
+		input := macie2.UpdateClassificationJobInput{
+			JobId:     aws.String(d.Id()),
+			JobStatus: jobStatus,
+		}
 
-	_, err := conn.UpdateClassificationJob(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), err)
+		_, err := conn.UpdateClassificationJob(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Macie Classification Job (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceClassificationJobRead(ctx, d, meta)...)
@@ -725,25 +766,67 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.UpdateClassificationJobInput{
+	input := macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),
 		JobStatus: awstypes.JobStatusCancelled,
 	}
 
-	_, err := conn.UpdateClassificationJob(ctx, input)
+	_, err := conn.UpdateClassificationJob(ctx, &input)
+
+	if isClassificationJobNotFoundError(err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job") {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting Macie ClassificationJob (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie Classification Job (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findClassificationJobByID(ctx context.Context, conn *macie2.Client, id string) (*macie2.DescribeClassificationJobOutput, error) {
+	input := macie2.DescribeClassificationJobInput{
+		JobId: aws.String(id),
+	}
+
+	return findClassificationJob(ctx, conn, &input)
+}
+
+func findClassificationJob(ctx context.Context, conn *macie2.Client, input *macie2.DescribeClassificationJobInput) (*macie2.DescribeClassificationJobOutput, error) {
+	output, err := conn.DescribeClassificationJob(ctx, input)
+
+	if isClassificationJobNotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func isClassificationJobNotFoundError(err error) bool {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job") {
+		return true
+	}
+
+	return false
 }
 
 func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *awstypes.S3JobDefinition {

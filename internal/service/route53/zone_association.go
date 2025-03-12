@@ -66,7 +66,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	vpcRegion := meta.(*conns.AWSClient).Region
+	vpcRegion := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk("vpc_region"); ok {
 		vpcRegion = v.(string)
 	}
@@ -116,7 +116,7 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		vpcRegion = d.Get("vpc_region").(string)
 	}
 	if vpcRegion == "" {
-		vpcRegion = meta.(*conns.AWSClient).Region
+		vpcRegion = meta.(*conns.AWSClient).Region(ctx)
 	}
 
 	hostedZoneSummary, err := findZoneAssociationByThreePartKey(ctx, conn, zoneID, vpcID, vpcRegion)
@@ -153,7 +153,7 @@ func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 		vpcRegion = d.Get("vpc_region").(string)
 	}
 	if vpcRegion == "" {
-		vpcRegion = meta.(*conns.AWSClient).Region
+		vpcRegion = meta.(*conns.AWSClient).Region(ctx)
 	}
 
 	log.Printf("[INFO] Deleting Route53 Zone Association: %s", d.Id())

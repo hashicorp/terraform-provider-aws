@@ -90,6 +90,10 @@ func dataSourceReceivedLicense() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"overage": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,

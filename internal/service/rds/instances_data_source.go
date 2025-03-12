@@ -72,7 +72,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		instanceIdentifiers = append(instanceIdentifiers, aws.ToString(instance.DBInstanceIdentifier))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("instance_arns", instanceARNS)
 	d.Set("instance_identifiers", instanceIdentifiers)
 

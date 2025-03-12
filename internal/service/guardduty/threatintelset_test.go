@@ -44,7 +44,7 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),

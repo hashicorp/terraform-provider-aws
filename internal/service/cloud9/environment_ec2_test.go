@@ -36,7 +36,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloud9", regexache.MustCompile(`environment:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloud9", regexache.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "CONNECT_SSH"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

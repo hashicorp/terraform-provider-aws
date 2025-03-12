@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,8 +36,6 @@ func resourceTransitGatewayPolicyTable() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -106,8 +103,8 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("transit-gateway-policy-table/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -132,9 +129,10 @@ func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayPolicyTable(ctx, &ec2.DeleteTransitGatewayPolicyTableInput{
+	input := ec2.DeleteTransitGatewayPolicyTableInput{
 		TransitGatewayPolicyTableId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayPolicyTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
 		return diags

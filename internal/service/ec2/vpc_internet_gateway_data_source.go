@@ -102,7 +102,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()

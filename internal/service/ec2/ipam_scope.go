@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,8 +75,6 @@ func resourceIPAMScope() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -172,9 +169,10 @@ func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
-	_, err := conn.DeleteIpamScope(ctx, &ec2.DeleteIpamScopeInput{
+	input := ec2.DeleteIpamScopeInput{
 		IpamScopeId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIpamScope(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMScopeIdNotFound) {
 		return diags

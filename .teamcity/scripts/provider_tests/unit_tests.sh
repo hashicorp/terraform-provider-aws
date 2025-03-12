@@ -23,6 +23,7 @@ go test \
     ./internal/maps/... \
     ./internal/namevaluesfilters/... \
     ./internal/provider/... \
+    ./internal/reflect/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
     ./internal/semver/... \
@@ -33,4 +34,5 @@ go test \
     ./internal/types/... \
     ./internal/vault/... \
     ./internal/verify/... \
+    ./internal/yaml/... \
     -json

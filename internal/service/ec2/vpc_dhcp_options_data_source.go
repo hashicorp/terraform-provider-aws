@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_dhcp_options")
+// @SDKDataSource("aws_vpc_dhcp_options", name="DHCP Options")
 func dataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCDHCPOptionsRead,
@@ -107,7 +107,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
 	}.String()

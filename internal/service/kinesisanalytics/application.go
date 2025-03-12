@@ -40,7 +40,6 @@ func resourceApplication() *schema.Resource {
 		DeleteWithoutTimeout: resourceApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("inputs", func(_ context.Context, old, new, meta interface{}) bool {
 				// An existing input configuration cannot be deleted.
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0

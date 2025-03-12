@@ -13,6 +13,10 @@
 {{- end }}
 {{ end }}
 
+{{ define "Test" -}}
+resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+{{- end }}
+
 {{ define "TestCaseSetup" -}}
 {{ template "TestCaseSetupNoProviders" . -}}
 {{ if not .AlternateRegionProvider }}
@@ -52,10 +56,10 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ if gt (len .ImportStateID) 0 -}}
 	ImportStateId: {{ .ImportStateID }},
 {{ end -}}
-{{ if .HasImportStateIDAttribute -}}
-	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
-{{ else if gt (len .ImportStateIDFunc) 0 -}}
+{{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ else if .HasImportStateIDAttribute -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ end -}}
 	ImportStateVerify: true,
 {{ if .HasImportStateIDAttribute -}}
@@ -150,6 +154,9 @@ import (
 {{ if .Serialize }}
 func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Helper()
+	{{ if .SerializeParallelTests -}}
+	t.Parallel()
+	{{- end }}
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             {{ template "testname" . }}_tags,
@@ -181,7 +188,7 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -404,7 +411,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -491,7 +498,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -566,7 +573,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -660,7 +667,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -768,7 +775,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -929,7 +936,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1030,7 +1037,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1258,7 +1265,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1449,7 +1456,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1650,7 +1657,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1750,7 +1757,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1852,7 +1859,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1931,7 +1938,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2002,7 +2009,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2090,7 +2097,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 {{ end }}
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2177,7 +2184,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2237,7 +2244,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2344,7 +2351,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2441,7 +2448,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			// 1: Create
@@ -2613,7 +2620,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			// 1: Create

@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="AWS Log Source")
+// @FrameworkResource("aws_securitylake_aws_log_source", name="AWS Log Source")
 func newAWSLogSourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &awsLogSourceResource{}
 
@@ -41,10 +41,6 @@ type awsLogSourceResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (r *awsLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_aws_log_source"
 }
 
 func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

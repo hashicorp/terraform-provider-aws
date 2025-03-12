@@ -260,7 +260,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk(AttrRegions); !ok || v.(*schema.Set).Len() == 0 {
-		input.Regions = []string{meta.(*conns.AWSClient).Region}
+		input.Regions = []string{meta.(*conns.AWSClient).Region(ctx)}
 	}
 
 	if v, ok := d.GetOk(AttrAccounts); ok && v.(*schema.Set).Len() > 0 {
@@ -276,7 +276,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 			deployedByOU = "OU"
 		}
 	} else {
-		input.Accounts = []string{meta.(*conns.AWSClient).AccountID}
+		input.Accounts = []string{meta.(*conns.AWSClient).AccountID(ctx)}
 	}
 
 	callAs := d.Get("call_as").(string)
@@ -315,43 +315,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 
 			return operation, nil
 		},
-		func(err error) (bool, error) {
-			if err == nil {
-				return false, nil
-			}
-
-			message := err.Error()
-
-			// IAM eventual consistency
-			if strings.Contains(message, "AccountGate check failed") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
-			if strings.Contains(message, "is not authorized") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// XXX role has insufficient YYY permissions
-			if strings.Contains(message, "role has insufficient") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// Account XXX should have YYY role with trust relationship to Role ZZZ
-			if strings.Contains(message, "role with trust relationship") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			if strings.Contains(message, "The security token included in the request is invalid") {
-				return true, err
-			}
-
-			return false, err
-		},
+		isRetryableIAMPropagationErr,
 	)
 
 	if err != nil {
@@ -507,7 +471,7 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// can only give either accounts or deployment_targets
-		input.Accounts = []string{meta.(*conns.AWSClient).AccountID}
+		input.Accounts = []string{meta.(*conns.AWSClient).AccountID(ctx)}
 		if v, ok := d.GetOk(AttrAccounts); ok && v.(*schema.Set).Len() > 0 {
 			input.Accounts = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
@@ -689,7 +653,7 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta interface{}, stack
 	}
 
 	if len(output.Accounts) == 0 && len(accounts) == 0 {
-		output.Accounts = []string{meta.(*conns.AWSClient).AccountID}
+		output.Accounts = []string{meta.(*conns.AWSClient).AccountID(ctx)}
 	}
 
 	if len(output.Regions) == 0 && len(regions) > 0 {
@@ -697,7 +661,7 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta interface{}, stack
 	}
 
 	if len(output.Regions) == 0 && len(regions) == 0 {
-		output.Regions = []string{meta.(*conns.AWSClient).Region}
+		output.Regions = []string{meta.(*conns.AWSClient).Region(ctx)}
 	}
 
 	if deployedByOU {

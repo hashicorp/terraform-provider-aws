@@ -34,7 +34,7 @@ func TestAccIoTBillingGroup_basic(t *testing.T) {
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -178,7 +178,7 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK(t *testing.T) {
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

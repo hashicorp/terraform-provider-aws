@@ -460,7 +460,6 @@ func resourceFunction() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
 			updateComputedAttributesOnPublish,
-			verify.SetTagsDiff,
 		),
 	}
 }
@@ -597,11 +596,11 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "awiting for Lambda Function (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) create: %s", d.Id(), err)
 	}
 
 	if _, err := waitFunctionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "awiting for Lambda Function (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
@@ -744,7 +743,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region; partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1388,7 +1387,7 @@ func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN strin
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   "apigateway",
-		Region:    c.Region,
+		Region:    c.Region(ctx),
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
 	}.String()
@@ -1399,26 +1398,26 @@ func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN strin
 // See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
 func signerServiceIsAvailable(region string) bool {
 	availableRegions := map[string]struct{}{
-		names.USEast1RegionID:      {},
-		names.USEast2RegionID:      {},
-		names.USWest1RegionID:      {},
-		names.USWest2RegionID:      {},
-		names.AFSouth1RegionID:     {},
-		names.APEast1RegionID:      {},
-		names.APSouth1RegionID:     {},
-		names.APNortheast2RegionID: {},
-		names.APSoutheast1RegionID: {},
-		names.APSoutheast2RegionID: {},
-		names.APNortheast1RegionID: {},
-		names.CACentral1RegionID:   {},
-		names.EUCentral1RegionID:   {},
-		names.EUWest1RegionID:      {},
-		names.EUWest2RegionID:      {},
-		names.EUSouth1RegionID:     {},
-		names.EUWest3RegionID:      {},
-		names.EUNorth1RegionID:     {},
-		names.MESouth1RegionID:     {},
-		names.SAEast1RegionID:      {},
+		endpoints.UsEast1RegionID:      {},
+		endpoints.UsEast2RegionID:      {},
+		endpoints.UsWest1RegionID:      {},
+		endpoints.UsWest2RegionID:      {},
+		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApEast1RegionID:      {},
+		endpoints.ApSouth1RegionID:     {},
+		endpoints.ApNortheast2RegionID: {},
+		endpoints.ApSoutheast1RegionID: {},
+		endpoints.ApSoutheast2RegionID: {},
+		endpoints.ApNortheast1RegionID: {},
+		endpoints.CaCentral1RegionID:   {},
+		endpoints.EuCentral1RegionID:   {},
+		endpoints.EuWest1RegionID:      {},
+		endpoints.EuWest2RegionID:      {},
+		endpoints.EuSouth1RegionID:     {},
+		endpoints.EuWest3RegionID:      {},
+		endpoints.EuNorth1RegionID:     {},
+		endpoints.MeSouth1RegionID:     {},
+		endpoints.SaEast1RegionID:      {},
 	}
 	_, ok := availableRegions[region]
 
