@@ -8,47 +8,32 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// This is a copy of `stringvalidator.ExactlyOneOf` and `schemavalidator.ExactlyOneOfValidator`
-// that returns a warning instead of an error.
-// It could likely be moved to an internal validators package if useful elsewhere.
-
-func warnExactlyOneOf(expressions ...path.Expression) validator.String {
-	return ExactlyOneOfValidator{
+// objectWarnExactlyOneOfChildren acts similarly to `objectvalidator.ExactlyOneOf` except that it returns a Warning and
+// that it doesn't include the Object in the count of matched attributes.
+func objectWarnExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
+	return ExactlyOneOfChildrenValidator{
 		PathExpressions: expressions,
 	}
 }
 
-type ExactlyOneOfValidator struct {
+type ExactlyOneOfChildrenValidator struct {
 	PathExpressions path.Expressions
 }
 
-type ExactlyOneOfValidatorRequest struct {
-	Config         tfsdk.Config
-	ConfigValue    attr.Value
-	Path           path.Path
-	PathExpression path.Expression
-}
-
-type ExactlyOneOfValidatorResponse struct {
-	Diagnostics diag.Diagnostics
-}
-
-func (av ExactlyOneOfValidator) Description(ctx context.Context) string {
+func (av ExactlyOneOfChildrenValidator) Description(ctx context.Context) string {
 	return av.MarkdownDescription(ctx)
 }
 
-func (av ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
+func (av ExactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
 	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.PathExpressions)
 }
 
-func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+func (av ExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	validateReq := ExactlyOneOfValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
@@ -62,21 +47,13 @@ func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validato
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfValidatorRequest, res *ExactlyOneOfValidatorResponse) {
+func (av ExactlyOneOfChildrenValidator) Validate(ctx context.Context, req ExactlyOneOfValidatorRequest, res *ExactlyOneOfValidatorResponse) {
 	count := 0
 	expressions := req.PathExpression.MergeExpressions(av.PathExpressions...)
 
 	// If current attribute is unknown, delay validation
 	if req.ConfigValue.IsUnknown() {
 		return
-	}
-
-	// Now that we know the current attribute is known, check whether it is
-	// null to determine if it should contribute to the count. Later logic
-	// will remove a duplicate matching path, should it be included in the
-	// given expressions.
-	if !req.ConfigValue.IsNull() {
-		count++
 	}
 
 	for _, expression := range expressions {
@@ -92,6 +69,7 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfVa
 		for _, mp := range matchedPaths {
 			// If the user specifies the same attribute this validator is applied to,
 			// also as part of the input, skip it
+			// TODO: Technically,this would be a misconfguration, so we should probably return an internal error
 			if mp.Equal(req.Path) {
 				continue
 			}

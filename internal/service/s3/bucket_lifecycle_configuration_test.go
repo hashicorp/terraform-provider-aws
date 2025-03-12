@@ -2159,18 +2159,6 @@ func checkExpiration_Days(days int32) knownvalue.Check {
 	})
 }
 
-func checkExpiration_DaysAfterMigration(days int32) knownvalue.Check {
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			map[string]knownvalue.Check{
-				"date": knownvalue.Null(),
-				"days": knownvalue.Int32Exact(days),
-				// "expired_object_delete_marker": knownvalue.Bool(false),
-			},
-		),
-	})
-}
-
 func checkExpiration_DeleteMarker(marker bool) knownvalue.Check {
 	checks := expirationDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{

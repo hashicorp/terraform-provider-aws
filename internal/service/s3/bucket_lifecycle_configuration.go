@@ -21,11 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -161,14 +161,18 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									},
 									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
-										Computed: true,
-										Validators: []validator.Bool{
-											warnIfSetWith(
-												path.MatchRelative().AtParent().AtName("date"),
-												path.MatchRelative().AtParent().AtName("days"),
-											),
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
 										},
 									},
+								},
+								Validators: []validator.Object{
+									objectWarnExactlyOneOfChildren(
+										path.MatchRelative().AtName("date"),
+										path.MatchRelative().AtName("days"),
+										path.MatchRelative().AtName("expired_object_delete_marker"),
+									),
 								},
 							},
 						},
@@ -1071,79 +1075,4 @@ func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx 
 		return
 	}
 	resp.PlanValue = v
-}
-
-var (
-	_ validator.Bool = warnIfSetWithValidator{}
-)
-
-func warnIfSetWith(expressions ...path.Expression) validator.Bool {
-	return warnIfSetWithValidator{
-		PathExpressions: expressions,
-	}
-}
-
-type warnIfSetWithValidator struct {
-	PathExpressions path.Expressions
-}
-
-func (v warnIfSetWithValidator) Description(ctx context.Context) string {
-	return v.MarkdownDescription(ctx)
-}
-
-func (v warnIfSetWithValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Ensure that if an attribute is set, a warning is emitted if any of these are also set: %q", v.PathExpressions)
-}
-
-// Validation logic is adapted from the standard ConflictsWith validator
-// available for all types
-func (v warnIfSetWithValidator) ValidateBool(ctx context.Context, req validator.BoolRequest, resp *validator.BoolResponse) {
-	// If attribute configuration is null, it cannot conflict with others
-	// If attribute configuration is unknown, delay the validation until it is known.
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	expressions := req.PathExpression.MergeExpressions(v.PathExpressions...)
-
-	for _, expression := range expressions {
-		matchedPaths, diags := req.Config.PathMatches(ctx, expression)
-
-		resp.Diagnostics.Append(diags...)
-
-		// Collect all errors
-		if diags.HasError() {
-			continue
-		}
-
-		for _, mp := range matchedPaths {
-			// If the user specifies the same attribute this validator is applied to,
-			// also as part of the input, skip it
-			if mp.Equal(req.Path) {
-				continue
-			}
-
-			var mpVal attr.Value
-			diags := req.Config.GetAttribute(ctx, mp, &mpVal)
-			resp.Diagnostics.Append(diags...)
-
-			// Collect all errors
-			if diags.HasError() {
-				continue
-			}
-
-			// Delay validation until all involved attribute have a known value
-			if mpVal.IsUnknown() {
-				return
-			}
-
-			if !mpVal.IsNull() {
-				resp.Diagnostics.Append(diag.NewAttributeWarningDiagnostic(
-					req.Path,
-					"Invalid Attribute Combination",
-					fmt.Sprintf("Attribute %q should not be specified when %q is also specified", req.Path, mp),
-				))
-			}
-		}
-	}
 }
