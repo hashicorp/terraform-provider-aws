@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_ecrpublic_image
 
-Terraform data source for managing an AWS ECR Public Image.
+The ECR public Image data source allows the details of an image with a particular tag or digest to be retrieved.
 
 ## Example Usage
 
