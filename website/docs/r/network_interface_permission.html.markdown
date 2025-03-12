@@ -13,19 +13,19 @@ Grant cross-account access to an Elastic network interface (ENI).
 ## Example Usage
 
 ```terraform
-resource "aws_network_interface" "test" {
-  subnet_id       = aws_subnet.public_a.id
+resource "aws_network_interface" "example" {
+  subnet_id       = aws_subnet.example.id
   private_ips     = ["10.0.0.50"]
-  security_groups = [aws_security_group.web.id]
+  security_groups = [aws_security_group.example.id]
 
   attachment {
-    instance     = aws_instance.test.id
+    instance     = aws_instance.example.id
     device_index = 1
   }
 }
 
-resource "aws_network_interface_permission" "test" {
-  network_interface_id = aws_network_interface.test.id
+resource "aws_network_interface_permission" "example" {
+  network_interface_id = aws_network_interface.example.id
   aws_account_id       = "123456789012"
   permission           = "INSTANCE-ATTACH"
 }
