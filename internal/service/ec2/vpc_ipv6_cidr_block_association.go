@@ -31,7 +31,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPCIPv6CIDRBlockAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				switch parts := strings.Split(d.Id(), ","); len(parts) {
 				case 1:
 					break
@@ -50,7 +50,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 			// ipv6_cidr_block can be set by a value returned from IPAM or explicitly in config.
 			if diff.Id() != "" && diff.HasChange("ipv6_cidr_block") {
 				// If netmask is set then ipv6_cidr_block is derived from IPAM, ignore changes.
@@ -118,7 +118,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -162,7 +162,7 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceVPCIPv6CIDRBlockAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -191,7 +191,7 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

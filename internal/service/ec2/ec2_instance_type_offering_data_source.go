@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"slices"
 )
 
 // @SDKDataSource("aws_ec2_instance_type_offering", name="Instance Type Offering")
@@ -46,7 +47,7 @@ func dataSourceInstanceTypeOffering() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -81,13 +82,10 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
 	if v, ok := d.GetOk("preferred_instance_types"); ok {
-		for _, v := range v.([]interface{}) {
+		for _, v := range v.([]any) {
 			if v, ok := v.(string); ok {
-				for _, foundInstanceType := range foundInstanceTypes {
-					if foundInstanceType == v {
-						resultInstanceType = v
-						break
-					}
+				if slices.Contains(foundInstanceTypes, v) {
+					resultInstanceType = v
 				}
 
 				if resultInstanceType != "" {

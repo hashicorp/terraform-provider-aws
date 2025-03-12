@@ -41,5 +41,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: make TEST=./internal/service/ec2 modern-check
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/wafv2 modern-check
