@@ -262,9 +262,9 @@ resource "aws_vpc_ipv6_cidr_block_association" "tertiary_cidr" {
 func testAccVPCIPv6CIDRBlockAssociationConfig_ipam(rName string, netmaskLength int) string {
 	return acctest.ConfigCompose(testAccVPCConfig_baseIPAMIPv6(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block                       = "10.1.0.0/16"
-  ipv6_ipam_pool_id                = aws_vpc_ipam_pool.test.id
-  ipv6_netmask_length              = 56
+  cidr_block          = "10.1.0.0/16"
+  ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv6_netmask_length = 56
 
   tags = {
     Name = %[1]q
@@ -284,9 +284,9 @@ resource "aws_vpc_ipv6_cidr_block_association" "secondary_cidr" {
 func testAccVPCIPv6CIDRBlockAssociationConfig_ipamExplicit(rName string) string {
 	return acctest.ConfigCompose(testAccVPCConfig_baseIPAMIPv6(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block                       = "10.1.0.0/16"
-  ipv6_ipam_pool_id                = aws_vpc_ipam_pool.test.id
-  ipv6_netmask_length              = 56
+  cidr_block          = "10.1.0.0/16"
+  ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv6_netmask_length = 56
 
   tags = {
     Name = %[1]q
