@@ -51,7 +51,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_network_interface_permission.test
+  to = aws_network_interface_permission.example
   id = "eni-perm-056ad97ce2ac377ed"
 }
 ```
