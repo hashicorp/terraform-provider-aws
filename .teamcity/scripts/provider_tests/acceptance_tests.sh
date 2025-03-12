@@ -51,6 +51,7 @@ TF_ACC=1 go test \
     ./internal/maps/... \
     ./internal/namevaluesfilters/... \
     ./internal/provider/... \
+    ./internal/reflect/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
     ./internal/semver/... \

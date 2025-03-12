@@ -180,11 +180,17 @@ func TestObjectValueOfEqual(t *testing.T) {
 func TestNullOutObjectPtrFields(t *testing.T) {
 	t.Parallel()
 
+	type b struct {
+		F5 types.String `tfsdk:"f5"`
+		F6 types.Int32  `tfsdk:"f6"`
+	}
+
 	type A struct {
 		F1 types.Bool                        `tfsdk:"f1"`
 		F2 types.String                      `tfsdk:"f2"`
 		F3 fwtypes.ListValueOf[types.String] `tfsdk:"f3"`
 		F4 fwtypes.SetValueOf[types.Int64]   `tfsdk:"f4"`
+		b
 	}
 
 	ctx := context.Background()
@@ -193,6 +199,9 @@ func TestNullOutObjectPtrFields(t *testing.T) {
 	a.F2 = types.StringValue("test")
 	a.F3 = fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("test")})
 	a.F4 = fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{types.Int64Value(-1)})
+	a.F5 = types.StringValue("test")
+	a.F6 = types.Int32Value(42)
+
 	diags := fwtypes.NullOutObjectPtrFields(ctx, a)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %v", diags)
@@ -208,5 +217,11 @@ func TestNullOutObjectPtrFields(t *testing.T) {
 	}
 	if !a.F4.IsNull() {
 		t.Errorf("expected F4 to be null")
+	}
+	if !a.F5.IsNull() {
+		t.Errorf("expected F5 to be null")
+	}
+	if !a.F6.IsNull() {
+		t.Errorf("expected F6 to be null")
 	}
 }

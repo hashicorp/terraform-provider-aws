@@ -1,8 +1,18 @@
 ## 5.91.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_network_interface_permission: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#40797](https://github.com/hashicorp/terraform-provider-aws/issues/40797))
+
+FEATURES:
+
+* **New Resource:** `aws_network_interface_permission` ([#40797](https://github.com/hashicorp/terraform-provider-aws/issues/40797))
+
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `secondary_sources.auth` configuration block ([#40191](https://github.com/hashicorp/terraform-provider-aws/issues/40191))
+* resource/aws_vpc_ipv4_cidr_block_association: Support optional import of the `ipv4_ipam_pool_id` and `ipv4_netmask_length` attributes ([#41779](https://github.com/hashicorp/terraform-provider-aws/issues/41779))
+* resource/aws_vpc_ipv6_cidr_block_association: Support optional import of the `ipv6_ipam_pool_id` and `ipv6_netmask_length` attributes ([#41779](https://github.com/hashicorp/terraform-provider-aws/issues/41779))
 
 BUG FIXES:
 
