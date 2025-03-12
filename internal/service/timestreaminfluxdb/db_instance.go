@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -22,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -217,15 +218,15 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					also use the InfluxDB CLI to create an operator token. These attributes will be 
 					stored in a Secret created in AWS SecretManager in your account.`,
 			},
-			names.AttrPort: schema.Int64Attribute{
+			names.AttrPort: schema.Int32Attribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
 				},
-				Validators: []validator.Int64{
-					int64validator.Between(1024, 65535),
-					int64validator.NoneOf(2375, 2376, 7788, 7789, 7790, 7791, 7792, 7793, 7794, 7795, 7796, 7797, 7798, 7799, 8090, 51678, 51679, 51680),
+				Validators: []validator.Int32{
+					int32validator.Between(1024, 65535),
+					int32validator.NoneOf(2375, 2376, 7788, 7789, 7790, 7791, 7792, 7793, 7794, 7795, 7796, 7797, 7798, 7799, 8090, 51678, 51679, 51680),
 				},
 				Description: `The port number on which InfluxDB accepts connections.`,
 			},
@@ -508,112 +509,6 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
 
-	//if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
-	//	!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) ||
-	//	!plan.DBInstanceType.Equal(state.DBInstanceType) ||
-	//	!plan.DeploymentType.Equal(state.DeploymentType) ||
-	//	!plan.Port.Equal(state.Port) ||
-	//	!plan.AllocatedStorage.Equal(state.AllocatedStorage) ||
-	//	!plan.DBStorageType.Equal(state.DBStorageType) {
-	//	in := timestreaminfluxdb.UpdateDbInstanceInput{
-	//		Identifier: plan.ID.ValueStringPointer(),
-	//	}
-	//
-	//	// If any argument is updated with the same value, a ValidationException will occur. Arguments should only
-	//	// be updated if they have changed. For this reason, flex.Expand cannot be used for all arguments.
-	//	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
-	//		in.DbParameterGroupIdentifier = plan.DBParameterGroupIdentifier.ValueStringPointer()
-	//	}
-	//
-	//	if !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
-	//		fwflex.Expand(ctx, plan.LogDeliveryConfiguration, &in.LogDeliveryConfiguration)
-	//	}
-	//
-	//	if !plan.DBInstanceType.Equal(state.DBInstanceType) {
-	//		in.DbInstanceType = awstypes.DbInstanceType(plan.DBInstanceType.ValueString())
-	//	}
-	//
-	//	if !plan.DeploymentType.Equal(state.DeploymentType) {
-	//		in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
-	//	}
-	//
-	//	if !plan.DBStorageType.Equal(state.DBStorageType) {
-	//		in.DbStorageType = awstypes.DbStorageType(plan.DBStorageType.ValueString())
-	//	}
-	//
-	//	if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
-	//		if plan.AllocatedStorage.ValueInt64() > math.MaxInt32 {
-	//			err := errors.New("allocated_storage was greater than the maximum allowed value for int32")
-	//			resp.Diagnostics.AddError(
-	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-	//				err.Error(),
-	//			)
-	//			return
-	//		} else if plan.AllocatedStorage.ValueInt64() < math.MinInt32 {
-	//			err := errors.New("allocated_storage was less than the minimum allowed value for int32")
-	//			resp.Diagnostics.AddError(
-	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-	//				err.Error(),
-	//			)
-	//			return
-	//		}
-	//		in.AllocatedStorage = aws.Int32(int32(plan.AllocatedStorage.ValueInt64()))
-	//	}
-	//
-	//	if !plan.Port.Equal(state.Port) {
-	//		if plan.Port.ValueInt64() > math.MaxInt32 {
-	//			err := errors.New("port was greater than the maximum allowed value for int32")
-	//			resp.Diagnostics.AddError(
-	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-	//				err.Error(),
-	//			)
-	//			return
-	//		} else if plan.Port.ValueInt64() < math.MinInt32 {
-	//			err := errors.New("port was less than the minimum allowed value for int32")
-	//			resp.Diagnostics.AddError(
-	//				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-	//				err.Error(),
-	//			)
-	//			return
-	//		}
-	//		in.Port = aws.Int32(int32(plan.Port.ValueInt64()))
-	//	}
-	//
-	//	_, err := conn.UpdateDbInstance(ctx, &in)
-	//	if err != nil {
-	//		resp.Diagnostics.AddError(
-	//			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-	//			err.Error(),
-	//		)
-	//		return
-	//	}
-	//
-	//	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	//	output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	//	if err != nil {
-	//		resp.Diagnostics.AddError(
-	//			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
-	//			err.Error(),
-	//		)
-	//		return
-	//	}
-	//
-	//	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
-	//
-	//	if resp.Diagnostics.HasError() {
-	//		return
-	//	}
-	//
-	//	// flatten using legacy since this computed output may be null
-	//	plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
-	//}
-
-	// Updating tags can leave SecondaryAvailabilityZone unknown, as tags cannot be included in UpdateDbInstanceInput above.
-	// To get around this, if SecondaryAvailabilityZone is unknown after an update, set it to its previous value.
-	//if plan.SecondaryAvailabilityZone.IsUnknown() {
-	//	plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
-	//}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -654,47 +549,30 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceDBInstance) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var port, allocatedStorage types.Int64
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrPort), &port)...)
+	var allocatedStorage types.Int64
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !port.IsNull() || !port.IsUnknown() {
-		if port.ValueInt64() > math.MaxInt32 {
-			resp.Diagnostics.AddError(
-				"Invalid port number",
-				"port was greater than the maximum allowed value for int32",
-			)
-			return
-		}
-
-		if port.ValueInt64() < math.MinInt32 {
-			resp.Diagnostics.AddError(
-				"Invalid port number",
-				"port was less than the minimum allowed value for int32",
-			)
-			return
-		}
+	if allocatedStorage.IsNull() || allocatedStorage.IsUnknown() {
+		return
 	}
 
-	if !allocatedStorage.IsNull() || !allocatedStorage.IsUnknown() {
-		if allocatedStorage.ValueInt64() > math.MaxInt32 {
-			resp.Diagnostics.AddError(
-				"Invalid value for allocated_storage",
-				"allocated_storage was greater than the maximum allowed value for int32",
-			)
-			return
-		}
+	if allocatedStorage.ValueInt64() > math.MaxInt32 {
+		resp.Diagnostics.AddError(
+			"Invalid value for allocated_storage",
+			"allocated_storage was greater than the maximum allowed value for int32",
+		)
+		return
+	}
 
-		if allocatedStorage.ValueInt64() < math.MinInt32 {
-			resp.Diagnostics.AddError(
-				"Invalid value for allocated_storage",
-				"allocated_storage was less than the minimum allowed value for int32",
-			)
-			return
-		}
+	if allocatedStorage.ValueInt64() < math.MinInt32 {
+		resp.Diagnostics.AddError(
+			"Invalid value for allocated_storage",
+			"allocated_storage was less than the minimum allowed value for int32",
+		)
+		return
 	}
 }
 
@@ -786,7 +664,7 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	if out == nil || out.Id == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
-	
+
 	return out, nil
 }
 
@@ -807,7 +685,7 @@ type resourceDBInstanceData struct {
 	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                      `tfsdk:"network_type"`
 	Organization                  types.String                                                  `tfsdk:"organization"`
 	Password                      types.String                                                  `tfsdk:"password"`
-	Port                          types.Int64                                                   `tfsdk:"port"`
+	Port                          types.Int32                                                   `tfsdk:"port"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
 	Tags                          tftags.Map                                                    `tfsdk:"tags"`
