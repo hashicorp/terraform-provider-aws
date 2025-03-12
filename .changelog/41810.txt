@@ -1,0 +1,5 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set: fix the expanding process of `region_order` in `operation_preferences` block
+resource/aws_cloudformation_stack_instances: fix the expanding process of `region_order` in `operation_preferences` block
+resource/aws_cloudformation_stack_set_instances: fix the expanding process of `region_order` in `operation_preferences` block
+```
