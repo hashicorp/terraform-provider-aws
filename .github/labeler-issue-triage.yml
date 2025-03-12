@@ -233,6 +233,8 @@ service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directory_service_'
+service/dsql:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dsql_'
 service/dynamodb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dynamodb_'
 service/dynamodbstreams:
