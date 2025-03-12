@@ -6,20 +6,21 @@ package wafv2
 import (
 	"context"
 	"fmt"
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -123,7 +124,7 @@ func resourceIPSet() *schema.Resource {
 					ForceNew:      true,
 					ConflictsWith: []string{"name"},
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 128),
+						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
@@ -191,8 +192,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	ipSet := output.IPSet
 	d.Set("addresses", ipSet.Addresses)
-	arn := aws.ToString(ipSet.ARN)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, ipSet.ARN)
 	d.Set(names.AttrDescription, ipSet.Description)
 	d.Set("ip_address_version", ipSet.IPAddressVersion)
 	d.Set("lock_token", output.LockToken)
