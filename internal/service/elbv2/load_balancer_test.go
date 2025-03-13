@@ -2383,31 +2383,31 @@ func testAccLoadBalancerConfig_basic(rName string) string {
 
 func testAccLoadBalancerConfig_baseIPAMPools() string {
 	return `
-	data "aws_region" "current" {}
+data "aws_region" "current" {}
 
-	resource "aws_vpc_ipam" "test" {
-	operating_regions {
-		region_name = data.aws_region.current.name
-	}
-	tier = "free"
-	}
-
-	resource "aws_vpc_ipam_pool" "test_pool" {
-	address_family   = "ipv4"
-	ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-	locale           = data.aws_region.current.name
-	public_ip_source = "amazon"
-	description      = "Test Amazon CIDR Pool"
-	aws_service      = "ec2"
-	}
-
-	resource "aws_vpc_ipam_pool_cidr" "test_cidr" {
-	ipam_pool_id   = aws_vpc_ipam_pool.test_pool.id
-	netmask_lengt = 30
-	}
-`
-
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  tier = "free"
 }
+
+resource "aws_vpc_ipam_pool" "test_pool" {
+  address_family   = "ipv4"
+  ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
+  locale           = data.aws_region.current.name
+  public_ip_source = "amazon"
+  description      = "Test Amazon CIDR Pool"
+  aws_service      = "ec2"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test_cidr" {
+  ipam_pool_id  = aws_vpc_ipam_pool.test_pool.id
+  netmask_lengt = 30
+}
+`
+}
+
 func testAccLoadBalancerConfig_subnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, nSubnets), fmt.Sprintf(`
 resource "aws_lb" "test" {
@@ -2542,7 +2542,7 @@ resource "aws_lb" "test" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
-  
+
   depends_on = [aws_vpc_ipam_pool_cidr.test_cidr, aws_internet_gateway.test]
 }
 `, rName))
@@ -2585,7 +2585,7 @@ resource "aws_lb" "test" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
-  
+
   depends_on = [aws_vpc_ipam_pool_cidr.test_cidr2, aws_internet_gateway.test]
 }
 `, rName))
@@ -2639,7 +2639,7 @@ resource "aws_lb" "test" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
-  
+
   depends_on = [aws_vpc_ipam_pool_cidr.test_cidr, aws_internet_gateway.test]
 }
 `, rName))

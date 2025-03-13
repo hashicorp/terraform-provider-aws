@@ -1460,7 +1460,6 @@ func expandIPAMPools(tfList []interface{}) *awstypes.IpamPools {
 		if v, ok := tfMap["ipv4_ipam_pool_id"].(string); ok && v != "" {
 			apiObject.Ipv4IpamPoolId = aws.String(v)
 		}
-
 	}
 
 	return &apiObject
