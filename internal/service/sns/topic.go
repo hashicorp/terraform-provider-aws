@@ -57,7 +57,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONWithEmptyDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -81,7 +81,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -170,7 +170,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -257,7 +257,7 @@ func resourceTopic() *schema.Resource {
 	}
 }
 
-func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -299,7 +299,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Retry for eventual consistency; if ABAC is in use, this takes some time
 	// usually about 10s, presumably for tags really to be there, and we get a
 	// permissions error.
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.AuthorizationErrorException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.AuthorizationErrorException](ctx, propagationTimeout, func() (any, error) {
 		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
 	}, "no identity-based policy allows")
 
@@ -312,7 +312,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceTopicRead(ctx, d, meta)...)
 		}
 
@@ -360,7 +360,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	return diags
 }
 
-func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -379,7 +379,7 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceTopicRead(ctx, d, meta)...)
 }
 
-func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -399,7 +399,7 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
 	archivePolicy := diff.Get("archive_policy").(string)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
@@ -459,7 +459,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (any, error) {
 		return conn.SetTopicAttributes(ctx, input)
 	})
 
