@@ -304,6 +304,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 * `entity_name` - (Required) Entity specified in the custom connector as a source in the flow.
 * `custom_properties` - (Optional) Custom properties that are specific to the connector when it's used as a source in the flow. Maximum of 50 items.
+* `data_transfer_api` - (Optional) Specifies which API is used by Amazon AppFlow to transfer data.
 
 ##### S3 Source Properties
 
