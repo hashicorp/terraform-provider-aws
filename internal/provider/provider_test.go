@@ -20,7 +20,7 @@ import (
 
 // go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider
 func BenchmarkSDKProviderInitialization(b *testing.B) {
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		_, err := New(context.Background())
 		if err != nil {
 			b.Fatal(err)

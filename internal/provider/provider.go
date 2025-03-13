@@ -884,7 +884,7 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	if v := os.Getenv(tftags.IgnoreTagsKeysEnvVar); v != "" {
-		for _, k := range strings.Split(v, ",") {
+		for k := range strings.SplitSeq(v, ",") {
 			if trimmed := strings.TrimSpace(k); trimmed != "" {
 				keys = append(keys, trimmed)
 			}
@@ -892,7 +892,7 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	if v := os.Getenv(tftags.IgnoreTagsKeyPrefixesEnvVar); v != "" {
-		for _, kp := range strings.Split(v, ",") {
+		for kp := range strings.SplitSeq(v, ",") {
 			if trimmed := strings.TrimSpace(kp); trimmed != "" {
 				keyPrefixes = append(keyPrefixes, trimmed)
 			}
