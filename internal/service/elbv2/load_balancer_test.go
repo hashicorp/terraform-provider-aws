@@ -2382,7 +2382,7 @@ func testAccLoadBalancerConfig_basic(rName string) string {
 }
 
 func testAccLoadBalancerConfig_baseIPAMPools() string {
-	return fmt.Sprintf(`
+	return `
 	data "aws_region" "current" {}
 
 	resource "aws_vpc_ipam" "test" {
@@ -2403,10 +2403,10 @@ func testAccLoadBalancerConfig_baseIPAMPools() string {
 
 	resource "aws_vpc_ipam_pool_cidr" "test_cidr" {
 	ipam_pool_id   = aws_vpc_ipam_pool.test_pool.id
-	netmask_length = 30
+	netmask_lengt = 30
 	}
+`
 
-`)
 }
 func testAccLoadBalancerConfig_subnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, nSubnets), fmt.Sprintf(`

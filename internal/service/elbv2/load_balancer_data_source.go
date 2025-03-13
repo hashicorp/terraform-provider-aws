@@ -288,7 +288,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
-	d.Set("ipam_pools", flattenIpamPools(lb.IpamPools))
+	d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools))
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set("internal", string(lb.Scheme) == "internal")
 	d.Set("load_balancer_type", lb.Type)

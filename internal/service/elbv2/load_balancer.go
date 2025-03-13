@@ -396,7 +396,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("ipam_pools"); ok {
-		input.IpamPools = expandIpamPools(v.([]interface{}))
+		input.IpamPools = expandIPAMPools(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
@@ -529,7 +529,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
-	d.Set("ipam_pools", flattenIpamPools(lb.IpamPools))
+	d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools))
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 	d.Set(names.AttrName, lb.LoadBalancerName)
@@ -659,11 +659,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("ipam_pools") {
-
 		input := &elasticloadbalancingv2.ModifyIpPoolsInput{
 			LoadBalancerArn: aws.String(d.Id()),
 		}
-		ipamPools := expandIpamPools(d.Get("ipam_pools").([]interface{}))
+		ipamPools := expandIPAMPools(d.Get("ipam_pools").([]interface{}))
 		if ipamPools == nil {
 			input.RemoveIpamPools = []awstypes.RemoveIpamPoolEnum{awstypes.RemoveIpamPoolEnumIpv4}
 		} else {
@@ -676,7 +675,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		//maybe by design or a bug, so we are not going to use this code
 
 		// oldiPamPoolsChange, _ := d.GetChange("`ipam_pools`")
-		// oldiPamPools := expandIpamPools(oldiPamPoolsChange.([]interface{}))
+		// oldiPamPools := expandIPAMPools(oldiPamPoolsChange.([]interface{}))
 
 		// ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 		// if err := waitForALBNetworkInterfacesToDetach(ctx, ec2conn, d.Id(), *oldiPamPools.Ipv4IpamPoolId); err != nil {
@@ -700,7 +699,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 
 	ipv4IpamPoolId := ""
 	if v, ok := d.GetOk("ipam_pools"); ok {
-		ipamPools := *expandIpamPools(v.([]interface{}))
+		ipamPools := expandIPAMPools(v.([]interface{}))
 		ipv4IpamPoolId = aws.ToString(ipamPools.Ipv4IpamPoolId)
 	}
 
@@ -1050,9 +1049,7 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 					return 0, err
 				}
 			}
-
 		}
-
 		return len(networkInterfaces), nil
 	})
 
@@ -1446,8 +1443,7 @@ func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
 	return apiObjects
 }
 
-func expandIpamPools(tfList []interface{}) *awstypes.IpamPools {
-
+func expandIPAMPools(tfList []interface{}) *awstypes.IpamPools {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1470,7 +1466,7 @@ func expandIpamPools(tfList []interface{}) *awstypes.IpamPools {
 	return &apiObject
 }
 
-func flattenIpamPools(ipamPools *awstypes.IpamPools) []interface{} {
+func flattenIPAMPools(ipamPools *awstypes.IpamPools) []interface{} {
 	if ipamPools == nil {
 		return nil
 	}
