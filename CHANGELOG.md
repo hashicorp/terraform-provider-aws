@@ -12,13 +12,19 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `secondary_sources.auth` configuration block ([#40191](https://github.com/hashicorp/terraform-provider-aws/issues/40191))
+* resource/aws_kinesis_firehose_delivery_stream: Add `msk_source_configuration.read_from_timestamp` argument ([#41794](https://github.com/hashicorp/terraform-provider-aws/issues/41794))
 * resource/aws_route53_hosted_zone_dnssec: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
 * resource/aws_route53_key_signing_key: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
 * resource/aws_route53_record: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
 * resource/aws_route53_zone: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
 * resource/aws_route53_zone_association: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
+* resource/aws_timestreaminfluxdb_db_instance: Add `network_type` and `port` attributes. The following can now be updated in place: `allocated_storage`, `db_instance_type`, `db_storage_type` and `deployment_type` ([#40661](https://github.com/hashicorp/terraform-provider-aws/issues/40661))
 * resource/aws_vpc_ipv4_cidr_block_association: Support optional import of the `ipv4_ipam_pool_id` and `ipv4_netmask_length` attributes ([#41779](https://github.com/hashicorp/terraform-provider-aws/issues/41779))
 * resource/aws_vpc_ipv6_cidr_block_association: Support optional import of the `ipv6_ipam_pool_id` and `ipv6_netmask_length` attributes ([#41779](https://github.com/hashicorp/terraform-provider-aws/issues/41779))
+* resource/aws_wafv2_ip_set: Add `name_prefix` argument and plan-time validation of `name` ([#40889](https://github.com/hashicorp/terraform-provider-aws/issues/40889))
+* resource/aws_wafv2_regex_pattern_set: Add `name_prefix` argument and plan-time validation of `name` ([#40889](https://github.com/hashicorp/terraform-provider-aws/issues/40889))
+* resource/aws_wafv2_web_acl: Add `name_prefix` argument ([#40889](https://github.com/hashicorp/terraform-provider-aws/issues/40889))
+* resource/aws_wafv2_web_acl: Add `rule.challenge_config` argument ([#40123](https://github.com/hashicorp/terraform-provider-aws/issues/40123))
 
 BUG FIXES:
 
