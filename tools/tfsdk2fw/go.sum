@@ -211,6 +211,8 @@ github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.15.1 h1:9UzWNUFphpsb2OfRs7D
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.15.1/go.mod h1:1eCPm+lTHEN641XC1gE+YAGIVg3ME+MebW9Dc+qeiOA=
 github.com/aws/aws-sdk-go-v2/service/drs v1.31.1 h1:DwJNF5bnIU7gMgkGxmg4kRX69Gf+mdBGM9CZAW1rcyw=
 github.com/aws/aws-sdk-go-v2/service/drs v1.31.1/go.mod h1:nQRaL4v9kL/iWu6Qh0f5OsT3KsUQM/xESdp9c5aReM4=
+github.com/aws/aws-sdk-go-v2/service/dsql v1.1.1 h1:h2YbGqsnzL36l2B/Bd/dvrHfrKo/b7HVpZykL3yIQn8=
+github.com/aws/aws-sdk-go-v2/service/dsql v1.1.1/go.mod h1:StDU/D7R42LhrKp24PGzvxyKjjDm0lwo9JMwuy2qbo4=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.41.1 h1:DEys4E5Q2p735j56lteNVyByIBDAlMrO5VIEd9RC0/4=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.41.1/go.mod h1:yYaWRnVSPyAmexW5t7G3TcuYoalYfT+xQwzWsvtUQ7M=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.209.0 h1:WpLv8X3/Ct0ZRvx8QL91V9ndnIOi1WDfz0+F4ZEKwns=
@@ -839,8 +841,8 @@ golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8T
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAsM=
 google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJffLiz/Ds=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb h1:TLPQVbx1GJ8VKZxz52VAxl1EBgKXXbTiU9Fc5fZeLn4=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb/go.mod h1:LuRYeWDFV6WOn90g357N17oMCaxpgCnbi/44qJvDn2I=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250311190419-81fb87f6b8bf h1:dHDlF3CWxQkefK9IJx+O8ldY0gLygvrlYRBNbPqDWuY=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250311190419-81fb87f6b8bf/go.mod h1:LuRYeWDFV6WOn90g357N17oMCaxpgCnbi/44qJvDn2I=
 google.golang.org/grpc v1.71.0 h1:kF77BGdPTQ4/JZWMlb9VpJ5pa25aqvVqogsxNHHdeBg=
 google.golang.org/grpc v1.71.0/go.mod h1:H0GRtasmQOh9LkFoCPDu3ZrwUtD1YGE+b2vYBYd/8Ec=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=

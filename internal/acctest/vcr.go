@@ -134,7 +134,7 @@ func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input
 // This is necessary as ConfigureContextFunc is called multiple times for a given test, each time creating a new HTTP client.
 // VCR requires a single HTTP client to handle all interactions.
 func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		var diags diag.Diagnostics
 
 		providerMetas.Lock()
@@ -196,7 +196,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(r.Body); err != nil {
-				tflog.Debug(ctx, "Failed to read request body from cassette", map[string]interface{}{
+				tflog.Debug(ctx, "Failed to read request body from cassette", map[string]any{
 					"error": err,
 				})
 				return false
@@ -213,17 +213,17 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			switch contentType := r.Header.Get("Content-Type"); contentType {
 			case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
 				// JSON might be the same, but reordered. Try parsing and comparing.
-				var requestJson, cassetteJson interface{}
+				var requestJson, cassetteJson any
 
 				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request JSON", map[string]interface{}{
+					tflog.Debug(ctx, "Failed to unmarshal request JSON", map[string]any{
 						"error": err,
 					})
 					return false
 				}
 
 				if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette JSON", map[string]interface{}{
+					tflog.Debug(ctx, "Failed to unmarshal cassette JSON", map[string]any{
 						"error": err,
 					})
 					return false
@@ -233,17 +233,17 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 
 			case "application/xml":
 				// XML might be the same, but reordered. Try parsing and comparing.
-				var requestXml, cassetteXml interface{}
+				var requestXml, cassetteXml any
 
 				if err := xml.Unmarshal([]byte(body), &requestXml); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]interface{}{
+					tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]any{
 						"error": err,
 					})
 					return false
 				}
 
 				if err := xml.Unmarshal([]byte(i.Body), &cassetteXml); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]interface{}{
+					tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]any{
 						"error": err,
 					})
 					return false

@@ -196,7 +196,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -237,7 +237,7 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -285,7 +285,7 @@ func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value,
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -363,7 +363,7 @@ func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value,
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -411,7 +411,7 @@ func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, s
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -481,7 +481,7 @@ func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, i
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -523,7 +523,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -561,7 +561,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   vTo,
 	})
@@ -603,7 +603,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -839,7 +839,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -1082,7 +1082,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -1319,7 +1319,7 @@ func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom 
 		logAttrKeySourceSize: vFrom.Len(),
 	})
 	elements := make([]attr.Value, vFrom.Len())
-	for i := 0; i < vFrom.Len(); i++ {
+	for i := range vFrom.Len() {
 		value, d := attrValueFromReflectValue(vFrom.Index(i))
 		diags.Append(d...)
 		if diags.HasError() {
@@ -1384,7 +1384,7 @@ func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom 
 		logAttrKeySourceSize: vFrom.Len(),
 	})
 	elements := make([]attr.Value, vFrom.Len())
-	for i := 0; i < vFrom.Len(); i++ {
+	for i := range vFrom.Len() {
 		value, d := attrValueFromReflectValue(vFrom.Index(i))
 		diags.Append(d...)
 		if diags.HasError() {
@@ -1459,7 +1459,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	}
 
 	t := reflect.ValueOf(to)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		sourcePath := sourcePath.AtListIndex(i)
 		targetPath := targetPath.AtListIndex(i)
 		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
