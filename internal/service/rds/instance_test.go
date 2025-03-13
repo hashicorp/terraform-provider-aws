@@ -23,8 +23,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,6 +68,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", "standard"),
 					resource.TestCheckResourceAttr(resourceName, "db_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
@@ -5084,6 +5088,58 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_databaseInsightsMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_databaseInsightsMode(rName, "advanced", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+			{
+				Config: testAccInstanceConfig_databaseInsightsMode(rName, "standard", false, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(false)),
+				},
 			},
 		},
 	})
@@ -12406,6 +12462,39 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot                   = true
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+}
+
+func testAccInstanceConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriod string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                        = data.aws_rds_engine_version.default.engine
+  engine_version                = data.aws_rds_engine_version.default.version
+  license_model                 = "general-public-license"
+  storage_type                  = "standard"
+  supports_performance_insights = true
+  preferred_instance_classes    = [%[2]s]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage                     = 5
+  backup_retention_period               = 0
+  engine                                = data.aws_rds_engine_version.default.engine
+  engine_version                        = data.aws_rds_engine_version.default.version
+  identifier                            = %[3]q
+  instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                               = "mydb"
+  password                              = "mustbeeightcharaters"
+  database_insights_mode                = %[4]q
+  performance_insights_enabled          = %[5]t
+  performance_insights_retention_period = %[6]s
+  skip_final_snapshot                   = true
+  username                              = "foo"
+}
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod)
 }
 
 func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool) string {
