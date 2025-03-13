@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
@@ -59,6 +60,11 @@ func resourceZoneAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
@@ -91,7 +97,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(id)
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			// AccessDenied errors likely due to cross-account issue.
 			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
@@ -175,7 +181,7 @@ func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// AccessDenied errors likely due to cross-account issue.
 			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)

@@ -52,7 +52,7 @@ func dataSourceIPAMPoolCIDRs() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -81,16 +81,16 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func flattenIPAMPoolCIDRs(c []awstypes.IpamPoolCidr) []interface{} {
-	cidrs := []interface{}{}
+func flattenIPAMPoolCIDRs(c []awstypes.IpamPoolCidr) []any {
+	cidrs := []any{}
 	for _, cidr := range c {
 		cidrs = append(cidrs, flattenIPAMPoolCIDR(cidr))
 	}
 	return cidrs
 }
 
-func flattenIPAMPoolCIDR(c awstypes.IpamPoolCidr) map[string]interface{} {
-	cidr := make(map[string]interface{})
+func flattenIPAMPoolCIDR(c awstypes.IpamPoolCidr) map[string]any {
+	cidr := make(map[string]any)
 	cidr["cidr"] = aws.ToString(c.Cidr)
 	cidr[names.AttrState] = c.State
 	return cidr

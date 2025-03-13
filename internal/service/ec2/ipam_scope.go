@@ -78,7 +78,7 @@ func resourceIPAMScope() *schema.Resource {
 	}
 }
 
-func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -107,7 +107,7 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceIPAMScopeRead(ctx, d, meta)...)
 }
 
-func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -137,7 +137,7 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -164,7 +164,7 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceIPAMScopeRead(ctx, d, meta)...)
 }
 
-func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

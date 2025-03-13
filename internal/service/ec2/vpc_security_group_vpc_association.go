@@ -242,7 +242,7 @@ func waitSecurityGroupVPCAssociationDeleted(ctx context.Context, conn *ec2.Clien
 }
 
 func statusSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, groupId string, vpcId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, groupId, vpcId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
