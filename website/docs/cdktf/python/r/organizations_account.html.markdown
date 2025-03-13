@@ -62,6 +62,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - The status of the account in the organization.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS member account using the `account_id`. For example:
@@ -85,6 +92,12 @@ Using `terraform import`, import the AWS member account using the `account_id`. 
 
 ```console
 % terraform import aws_organizations_account.my_account 111111111111
+```
+
+To import accounts that have set iam_user_access_to_billing, use the following:
+
+```console
+% terraform import aws_organizations_account.my_account 111111111111_ALLOW
 ```
 
 Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
@@ -112,4 +125,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a8e610cf1ae7ca0e910e17be09234e364906df616915d2a7f13f50fbf54f672 -->
+<!-- cache-key: cdktf-0.20.8 input-35394f7e9624d7ccf742ca922ca2cdb97283fba02833f568bddd3cb45957b8f4 -->

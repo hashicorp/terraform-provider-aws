@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,7 +43,7 @@ func resourceServiceLinkedRole() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,15 +68,15 @@ func resourceServiceLinkedRole() *schema.Resource {
 					return false
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +87,6 @@ func resourceServiceLinkedRole() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -105,12 +103,13 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		input.CustomSuffix = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateServiceLinkedRole(ctx, input)
-
+	output, err := tfresource.RetryGWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (*iam.CreateServiceLinkedRoleOutput, error) {
+		return conn.CreateServiceLinkedRole(ctx, input)
+	}, "AccessDenied")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 	}
@@ -127,7 +126,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
-		partition := meta.(*conns.AWSClient).Partition
+		partition := meta.(*conns.AWSClient).Partition(ctx)
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}
@@ -166,13 +165,13 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 
 	role := outputRaw.(*awstypes.Role)
 
-	d.Set("arn", role.Arn)
+	d.Set(names.AttrARN, role.Arn)
 	d.Set("aws_service_name", serviceName)
 	d.Set("create_date", aws.ToTime(role.CreateDate).Format(time.RFC3339))
 	d.Set("custom_suffix", customSuffix)
-	d.Set("description", role.Description)
-	d.Set("name", role.RoleName)
-	d.Set("path", role.Path)
+	d.Set(names.AttrDescription, role.Description)
+	d.Set(names.AttrName, role.RoleName)
+	d.Set(names.AttrPath, role.Path)
 	d.Set("unique_id", role.RoleId)
 
 	setTagsOut(ctx, role.Tags)
@@ -184,14 +183,14 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept(names.AttrTagsAll, names.AttrTags) {
 		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &iam.UpdateRoleInput{
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			RoleName:    aws.String(roleName),
 		}
 

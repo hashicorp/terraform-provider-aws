@@ -4,32 +4,47 @@
 package cloudformation
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"strings"
 )
 
 const (
 	errCodeValidationError = "ValidationError"
 )
 
-func stackSetOperationError(apiObjects []*cloudformation.StackSetOperationResultSummary) error {
-	var errs []error
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		errs = append(errs, fmt.Errorf("Account (%s), Region (%s), %s: %s",
-			aws.StringValue(apiObject.Account),
-			aws.StringValue(apiObject.Region),
-			aws.StringValue(apiObject.Status),
-			aws.StringValue(apiObject.StatusReason),
-		))
+func isRetryableIAMPropagationErr(err error) (bool, error) {
+	if err == nil {
+		return false, nil
 	}
 
-	return errors.Join(errs...)
+	message := err.Error()
+
+	// IAM eventual consistency
+	if strings.Contains(message, "AccountGate check failed") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
+	if strings.Contains(message, "is not authorized") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	// XXX role has insufficient YYY permissions
+	if strings.Contains(message, "role has insufficient") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	// Account XXX should have YYY role with trust relationship to Role ZZZ
+	if strings.Contains(message, "role with trust relationship") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	if strings.Contains(message, "The security token included in the request is invalid") {
+		return true, err
+	}
+
+	return false, err
 }

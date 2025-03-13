@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Logging")
+// @FrameworkResource("aws_redshift_logging", name="Logging")
 func newResourceLogging(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLogging{}, nil
 }
@@ -42,23 +42,19 @@ type resourceLogging struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceLogging) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_logging"
-}
-
 func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"bucket_name": schema.StringAttribute{
+			names.AttrBucketName: schema.StringAttribute{
 				Optional: true,
 			},
-			"cluster_identifier": schema.StringAttribute{
+			names.AttrClusterIdentifier: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"log_destination_type": schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.LogDestinationType](),
@@ -73,7 +69,7 @@ func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest
 					),
 				},
 			},
-			"s3_key_prefix": schema.StringAttribute{
+			names.AttrS3KeyPrefix: schema.StringAttribute{
 				Optional: true,
 			},
 		},
@@ -210,7 +206,7 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	in := &redshift.DisableLoggingInput{
-		ClusterIdentifier: aws.String(state.ID.ValueString()),
+		ClusterIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	// Retry InvalidClusterState faults, which can occur when logging is being enabled.
@@ -233,8 +229,8 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceLogging) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
 }
 
 func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*redshift.DescribeLoggingStatusOutput, error) {

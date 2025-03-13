@@ -300,6 +300,9 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cpu` - (Optional) Number of cpu units used by the task. If the `requiresCompatibilities` is `FARGATE` this field is required.
+* `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
+
+    **Note:** Fault injection only works with tasks using the `awsvpc` or `host` network modes. Fault injection isn't available on Windows.
 * `executionRoleArn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `inferenceAccelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipcMode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
@@ -314,7 +317,7 @@ The following arguments are optional:
 * `skipDestroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taskRoleArn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
-* `trackLatest` - (Optional) Whether should track latest task definition or the one created with the resource. Default is `false`.
+* `trackLatest` - (Optional) Whether should track latest `ACTIVE` task definition on AWS or the one created with the resource stored in state. Default is `false`. Useful in the event the task definition is modified outside of this resource.
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
 ### volume
@@ -323,6 +326,7 @@ The following arguments are optional:
 * `efsVolumeConfiguration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
 * `fsxWindowsFileServerVolumeConfiguration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
 * `hostPath` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `configureAtLaunch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 
@@ -430,4 +434,4 @@ Using `terraform import`, import ECS Task Definitions using their ARNs. For exam
 % terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f93bc3e065742c353f4207a2027fa3e40044e53bcb4f3ea8e603e0c8ea6098e6 -->
+<!-- cache-key: cdktf-0.20.8 input-206a873aeabb1f91d578bc364e5bd2da24feaf63deaf59c5db7ff2ac6bb31148 -->

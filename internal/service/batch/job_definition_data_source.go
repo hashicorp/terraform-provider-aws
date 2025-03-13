@@ -29,17 +29,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Job Definition")
+// @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }
 
 type jobDefinitionDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *jobDefinitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_batch_job_definition"
 }
 
 func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -56,11 +54,11 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 				Computed: true,
 			},
 			"eks_properties": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionEKSPropertiesModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[eksPropertiesModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"pod_properties": fwtypes.NewListNestedObjectTypeOf[jobDefinitionEKSPodPropertiesModel](ctx),
+						"pod_properties": fwtypes.NewListNestedObjectTypeOf[eksPodPropertiesModel](ctx),
 					},
 				},
 			},
@@ -69,23 +67,23 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 				Optional: true,
 			},
 			"node_properties": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionNodePropertiesModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[nodePropertiesModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"main_node":             types.Int64Type,
-						"node_range_properties": fwtypes.NewListNestedObjectTypeOf[jobDefinitionNodeRangePropertyModel](ctx),
+						"node_range_properties": fwtypes.NewListNestedObjectTypeOf[nodeRangePropertyModel](ctx),
 						"num_nodes":             types.Int64Type,
 					},
 				},
 			},
 			"retry_strategy": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionRetryStrategyModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[retryStrategyModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"attempts":         types.Int64Type,
-						"evaluate_on_exit": fwtypes.NewListNestedObjectTypeOf[jobDefinitionEvaluateOnExitModel](ctx),
+						"evaluate_on_exit": fwtypes.NewListNestedObjectTypeOf[evaluateOnExitModel](ctx),
 					},
 				},
 			},
@@ -95,15 +93,15 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 			"scheduling_priority": schema.Int64Attribute{
 				Computed: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(jobDefinitionStatus_Values()...),
 				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"timeout": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionJobTimeoutModel](ctx),
+			names.AttrTimeout: schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobTimeoutModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
@@ -111,7 +109,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 					},
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -135,7 +133,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			JobDefinitions: []string{arn},
 		}
 
-		output, err := findJobDefinitionV2(ctx, conn, input)
+		output, err := findJobDefinition(ctx, conn, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s)", arn), err.Error())
@@ -155,7 +153,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			Status:            aws.String(status),
 		}
 
-		output, err := findJobDefinitionsV2(ctx, conn, input)
+		output, err := findJobDefinitions(ctx, conn, input)
 
 		if len(output) == 0 {
 			err = tfresource.NewEmptyResultError(input)
@@ -197,7 +195,8 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	arnPrefix := strings.TrimSuffix(aws.ToString(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.ToInt32(jd.Revision)))
 	data.ARNPrefix = types.StringValue(arnPrefix)
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, jd.Tags)
+
+	setTagsOut(ctx, jd.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -211,86 +210,66 @@ func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 	}
 }
 
-func findJobDefinitionV2(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) (*awstypes.JobDefinition, error) {
-	output, err := findJobDefinitionsV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findJobDefinitionsV2(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) ([]awstypes.JobDefinition, error) {
-	var output []awstypes.JobDefinition
-
-	pages := batch.NewDescribeJobDefinitionsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.JobDefinitions...)
-	}
-
-	return output, nil
-}
-
 type jobDefinitionDataSourceModel struct {
-	ARNPrefix                  types.String                                                      `tfsdk:"arn_prefix"`
-	ContainerOrchestrationType types.String                                                      `tfsdk:"container_orchestration_type"`
-	EKSProperties              fwtypes.ListNestedObjectValueOf[jobDefinitionEKSPropertiesModel]  `tfsdk:"eks_properties"`
-	ID                         types.String                                                      `tfsdk:"id"`
-	JobDefinitionARN           fwtypes.ARN                                                       `tfsdk:"arn"`
-	JobDefinitionName          types.String                                                      `tfsdk:"name"`
-	NodeProperties             fwtypes.ListNestedObjectValueOf[jobDefinitionNodePropertiesModel] `tfsdk:"node_properties"`
-	RetryStrategy              fwtypes.ListNestedObjectValueOf[jobDefinitionRetryStrategyModel]  `tfsdk:"retry_strategy"`
-	Revision                   types.Int64                                                       `tfsdk:"revision"`
-	SchedulingPriority         types.Int64                                                       `tfsdk:"scheduling_priority"`
-	Status                     types.String                                                      `tfsdk:"status"`
-	Tags                       types.Map                                                         `tfsdk:"tags"`
-	Timeout                    fwtypes.ListNestedObjectValueOf[jobDefinitionJobTimeoutModel]     `tfsdk:"timeout"`
-	Type                       types.String                                                      `tfsdk:"type"`
+	ARNPrefix                  types.String                                         `tfsdk:"arn_prefix"`
+	ContainerOrchestrationType types.String                                         `tfsdk:"container_orchestration_type"`
+	EKSProperties              fwtypes.ListNestedObjectValueOf[eksPropertiesModel]  `tfsdk:"eks_properties"`
+	ID                         types.String                                         `tfsdk:"id"`
+	JobDefinitionARN           fwtypes.ARN                                          `tfsdk:"arn"`
+	JobDefinitionName          types.String                                         `tfsdk:"name"`
+	NodeProperties             fwtypes.ListNestedObjectValueOf[nodePropertiesModel] `tfsdk:"node_properties"`
+	RetryStrategy              fwtypes.ListNestedObjectValueOf[retryStrategyModel]  `tfsdk:"retry_strategy"`
+	Revision                   types.Int64                                          `tfsdk:"revision"`
+	SchedulingPriority         types.Int64                                          `tfsdk:"scheduling_priority"`
+	Status                     types.String                                         `tfsdk:"status"`
+	Tags                       tftags.Map                                           `tfsdk:"tags"`
+	Timeout                    fwtypes.ListNestedObjectValueOf[jobTimeoutModel]     `tfsdk:"timeout"`
+	Type                       types.String                                         `tfsdk:"type"`
 }
 
-type jobDefinitionEKSPropertiesModel struct {
-	PodProperties fwtypes.ListNestedObjectValueOf[jobDefinitionEKSPodPropertiesModel] `tfsdk:"pod_properties"`
+type eksPropertiesModel struct {
+	PodProperties fwtypes.ListNestedObjectValueOf[eksPodPropertiesModel] `tfsdk:"pod_properties"`
 }
 
-type jobDefinitionEKSPodPropertiesModel struct {
-	Containers         fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerModel] `tfsdk:"containers"`
-	DNSPolicy          types.String                                                    `tfsdk:"dns_policy"`
-	HostNetwork        types.Bool                                                      `tfsdk:"host_network"`
-	Metadata           fwtypes.ListNestedObjectValueOf[jobDefinitionEKSMetadataModel]  `tfsdk:"metadata"`
-	ServiceAccountName types.Bool                                                      `tfsdk:"service_account_name"`
-	Volumes            fwtypes.ListNestedObjectValueOf[jobDefinitionEKSVolumeModel]    `tfsdk:"volumes"`
+type eksPodPropertiesModel struct {
+	Containers            fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"containers"`
+	DNSPolicy             types.String                                         `tfsdk:"dns_policy"`
+	HostNetwork           types.Bool                                           `tfsdk:"host_network"`
+	ImagePullSecrets      fwtypes.ListNestedObjectValueOf[eksImagePullSecrets] `tfsdk:"image_pull_secrets"`
+	InitContainers        fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"init_containers"`
+	Metadata              fwtypes.ListNestedObjectValueOf[eksMetadataModel]    `tfsdk:"metadata"`
+	ServiceAccountName    types.String                                         `tfsdk:"service_account_name"`
+	ShareProcessNamespace types.Bool                                           `tfsdk:"share_process_namespace"`
+	Volumes               fwtypes.ListNestedObjectValueOf[eksVolumeModel]      `tfsdk:"volumes"`
 }
 
-type jobDefinitionEKSContainerModel struct {
-	Args            fwtypes.ListValueOf[types.String]                                                   `tfsdk:"args"`
-	Command         fwtypes.ListValueOf[types.String]                                                   `tfsdk:"command"`
-	Env             fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerEnvironmentVariableModel]  `tfsdk:"env"`
-	Image           types.String                                                                        `tfsdk:"image"`
-	ImagePullPolicy types.String                                                                        `tfsdk:"image_pull_policy"`
-	Name            types.String                                                                        `tfsdk:"name"`
-	Resources       fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerResourceRequirementsModel] `tfsdk:"resources"`
-	SecurityContext fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerSecurityContextModel]      `tfsdk:"security_context"`
-	VolumeMounts    fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerVolumeMountModel]          `tfsdk:"volume_mounts"`
+type eksImagePullSecrets struct {
+	Name types.String `tfsdk:"name"`
 }
 
-type jobDefinitionEKSContainerEnvironmentVariableModel struct {
+type eksContainerModel struct {
+	Args            fwtypes.ListValueOf[types.String]                                      `tfsdk:"args"`
+	Command         fwtypes.ListValueOf[types.String]                                      `tfsdk:"command"`
+	Env             fwtypes.ListNestedObjectValueOf[eksContainerEnvironmentVariableModel]  `tfsdk:"env"`
+	Image           types.String                                                           `tfsdk:"image"`
+	ImagePullPolicy types.String                                                           `tfsdk:"image_pull_policy"`
+	Name            types.String                                                           `tfsdk:"name"`
+	Resources       fwtypes.ListNestedObjectValueOf[eksContainerResourceRequirementsModel] `tfsdk:"resources"`
+	SecurityContext fwtypes.ListNestedObjectValueOf[eksContainerSecurityContextModel]      `tfsdk:"security_context"`
+	VolumeMounts    fwtypes.ListNestedObjectValueOf[eksContainerVolumeMountModel]          `tfsdk:"volume_mounts"`
+}
+
+type eksContainerEnvironmentVariableModel struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }
 
-type jobDefinitionEKSContainerResourceRequirementsModel struct {
+type eksContainerResourceRequirementsModel struct {
 	Limits   fwtypes.MapValueOf[types.String] `tfsdk:"limits"`
 	Requests fwtypes.MapValueOf[types.String] `tfsdk:"requests"`
 }
 
-type jobDefinitionEKSContainerSecurityContextModel struct {
+type eksContainerSecurityContextModel struct {
 	Privileged             types.Bool  `tfsdk:"privileged"`
 	ReadOnlyRootFilesystem types.Bool  `tfsdk:"read_only_root_file_system"`
 	RunAsGroup             types.Int64 `tfsdk:"run_as_group"`
@@ -298,177 +277,177 @@ type jobDefinitionEKSContainerSecurityContextModel struct {
 	RunAsUser              types.Int64 `tfsdk:"run_as_user"`
 }
 
-type jobDefinitionEKSContainerVolumeMountModel struct {
+type eksContainerVolumeMountModel struct {
 	MountPath types.String `tfsdk:"mount_path"`
 	Name      types.String `tfsdk:"name"`
 	ReadOnly  types.Bool   `tfsdk:"read_only"`
 }
 
-type jobDefinitionEKSMetadataModel struct {
+type eksMetadataModel struct {
 	Labels fwtypes.MapValueOf[types.String] `tfsdk:"labels"`
 }
 
-type jobDefinitionEKSVolumeModel struct {
-	EmptyDir fwtypes.ListNestedObjectValueOf[jobDefinitionEKSEmptyDirModel] `tfsdk:"empty_dir"`
-	HostPath fwtypes.ListNestedObjectValueOf[jobDefinitionEKSHostPathModel] `tfsdk:"host_path"`
-	Name     types.String                                                   `tfsdk:"name"`
-	Secret   fwtypes.ListNestedObjectValueOf[jobDefinitionEKSSecretModel]   `tfsdk:"secret"`
+type eksVolumeModel struct {
+	EmptyDir fwtypes.ListNestedObjectValueOf[eksEmptyDirModel] `tfsdk:"empty_dir"`
+	HostPath fwtypes.ListNestedObjectValueOf[eksHostPathModel] `tfsdk:"host_path"`
+	Name     types.String                                      `tfsdk:"name"`
+	Secret   fwtypes.ListNestedObjectValueOf[eksSecretModel]   `tfsdk:"secret"`
 }
 
-type jobDefinitionEKSEmptyDirModel struct {
+type eksEmptyDirModel struct {
 	Medium    types.String `tfsdk:"medium"`
 	SizeLimit types.String `tfsdk:"size_limit"`
 }
 
-type jobDefinitionEKSHostPathModel struct {
+type eksHostPathModel struct {
 	Path types.String `tfsdk:"path"`
 }
 
-type jobDefinitionEKSSecretModel struct {
+type eksSecretModel struct {
 	Optional   types.Bool   `tfsdk:"optional"`
 	SecretName types.String `tfsdk:"secret_name"`
 }
 
-type jobDefinitionNodePropertiesModel struct {
-	MainNode            types.Int64                                                          `tfsdk:"main_node"`
-	NodeRangeProperties fwtypes.ListNestedObjectValueOf[jobDefinitionNodeRangePropertyModel] `tfsdk:"node_range_properties"`
-	NumNodes            types.Int64                                                          `tfsdk:"num_nodes"`
+type nodePropertiesModel struct {
+	MainNode            types.Int64                                             `tfsdk:"main_node"`
+	NodeRangeProperties fwtypes.ListNestedObjectValueOf[nodeRangePropertyModel] `tfsdk:"node_range_properties"`
+	NumNodes            types.Int64                                             `tfsdk:"num_nodes"`
 }
 
-type jobDefinitionNodeRangePropertyModel struct {
-	Container   fwtypes.ListNestedObjectValueOf[jobDefinitionContainerPropertiesModel] `tfsdk:"container"`
-	TargetNodes types.String                                                           `tfsdk:"target_nodes"`
+type nodeRangePropertyModel struct {
+	Container   fwtypes.ListNestedObjectValueOf[containerPropertiesModel] `tfsdk:"container"`
+	TargetNodes types.String                                              `tfsdk:"target_nodes"`
 }
 
-type jobDefinitionContainerPropertiesModel struct {
-	Command                      fwtypes.ListValueOf[types.String]                                               `tfsdk:"command"`
-	Environment                  fwtypes.ListNestedObjectValueOf[jobDefinitionKeyValuePairModel]                 `tfsdk:"environment"`
-	EphemeralStorage             fwtypes.ListNestedObjectValueOf[jobDefinitionEphemeralStorageModel]             `tfsdk:"ephemeral_storage"`
-	ExecutionRoleARN             types.String                                                                    `tfsdk:"execution_role_arn"`
-	FargatePlatformConfiguration fwtypes.ListNestedObjectValueOf[jobDefinitionFargatePlatformConfigurationModel] `tfsdk:"fargate_platform_configuration"`
-	Image                        types.String                                                                    `tfsdk:"image"`
-	InstanceType                 types.String                                                                    `tfsdk:"instance_type"`
-	JobRoleARN                   types.String                                                                    `tfsdk:"job_role_arn"`
-	LinuxParameters              fwtypes.ListNestedObjectValueOf[jobDefinitionLinuxParametersModel]              `tfsdk:"linux_parameters"`
-	LogConfiguration             fwtypes.ListNestedObjectValueOf[jobDefinitionLogConfigurationModel]             `tfsdk:"log_configuration"`
-	MountPoints                  fwtypes.ListNestedObjectValueOf[jobDefinitionMountPointModel]                   `tfsdk:"mount_points"`
-	NetworkConfiguration         fwtypes.ListNestedObjectValueOf[jobDefinitionNetworkConfigurationModel]         `tfsdk:"network_configuration"`
-	Privileged                   types.Bool                                                                      `tfsdk:"privileged"`
-	ReadonlyRootFilesystem       types.Bool                                                                      `tfsdk:"readonly_root_filesystem"`
-	ResourceRequirements         fwtypes.ListNestedObjectValueOf[jobDefinitionResourceRequirementModel]          `tfsdk:"resource_requirements"`
-	RuntimePlatform              fwtypes.ListNestedObjectValueOf[jobDefinitionRuntimePlatformModel]              `tfsdk:"runtime_platform"`
-	Secrets                      fwtypes.ListNestedObjectValueOf[jobDefinitionSecretModel]                       `tfsdk:"secrets"`
-	Ulimits                      fwtypes.ListNestedObjectValueOf[jobDefinitionUlimitModel]                       `tfsdk:"ulimits"`
-	User                         types.String                                                                    `tfsdk:"user"`
-	Volumes                      fwtypes.ListNestedObjectValueOf[jobDefinitionVolumeModel]                       `tfsdk:"volumes"`
+type containerPropertiesModel struct {
+	Command                      fwtypes.ListValueOf[types.String]                                  `tfsdk:"command"`
+	Environment                  fwtypes.ListNestedObjectValueOf[keyValuePairModel]                 `tfsdk:"environment"`
+	EphemeralStorage             fwtypes.ListNestedObjectValueOf[ephemeralStorageModel]             `tfsdk:"ephemeral_storage"`
+	ExecutionRoleARN             types.String                                                       `tfsdk:"execution_role_arn"`
+	FargatePlatformConfiguration fwtypes.ListNestedObjectValueOf[fargatePlatformConfigurationModel] `tfsdk:"fargate_platform_configuration"`
+	Image                        types.String                                                       `tfsdk:"image"`
+	InstanceType                 types.String                                                       `tfsdk:"instance_type"`
+	JobRoleARN                   types.String                                                       `tfsdk:"job_role_arn"`
+	LinuxParameters              fwtypes.ListNestedObjectValueOf[linuxParametersModel]              `tfsdk:"linux_parameters"`
+	LogConfiguration             fwtypes.ListNestedObjectValueOf[logConfigurationModel]             `tfsdk:"log_configuration"`
+	MountPoints                  fwtypes.ListNestedObjectValueOf[mountPointModel]                   `tfsdk:"mount_points"`
+	NetworkConfiguration         fwtypes.ListNestedObjectValueOf[networkConfigurationModel]         `tfsdk:"network_configuration"`
+	Privileged                   types.Bool                                                         `tfsdk:"privileged"`
+	ReadonlyRootFilesystem       types.Bool                                                         `tfsdk:"readonly_root_filesystem"`
+	ResourceRequirements         fwtypes.ListNestedObjectValueOf[resourceRequirementModel]          `tfsdk:"resource_requirements"`
+	RuntimePlatform              fwtypes.ListNestedObjectValueOf[runtimePlatformModel]              `tfsdk:"runtime_platform"`
+	Secrets                      fwtypes.ListNestedObjectValueOf[secretModel]                       `tfsdk:"secrets"`
+	Ulimits                      fwtypes.ListNestedObjectValueOf[ulimitModel]                       `tfsdk:"ulimits"`
+	User                         types.String                                                       `tfsdk:"user"`
+	Volumes                      fwtypes.ListNestedObjectValueOf[volumeModel]                       `tfsdk:"volumes"`
 }
 
-type jobDefinitionKeyValuePairModel struct {
+type keyValuePairModel struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }
 
-type jobDefinitionEphemeralStorageModel struct {
+type ephemeralStorageModel struct {
 	SizeInGiB types.Int64 `tfsdk:"size_in_gib"`
 }
 
-type jobDefinitionFargatePlatformConfigurationModel struct {
+type fargatePlatformConfigurationModel struct {
 	PlatformVersion types.String `tfsdk:"platform_version"`
 }
 
-type jobDefinitionLinuxParametersModel struct {
-	Devices            fwtypes.ListNestedObjectValueOf[jobDefinitionDeviceModel] `tfsdk:"devices"`
-	InitProcessEnabled types.Bool                                                `tfsdk:"init_process_enabled"`
-	MaxSwap            types.Int64                                               `tfsdk:"max_swap"`
-	SharedMemorySize   types.Int64                                               `tfsdk:"shared_memory_size"`
-	Swappiness         types.Int64                                               `tfsdk:"swappiness"`
-	Tmpfs              fwtypes.ListNestedObjectValueOf[jobDefinitionTmpfsModel]  `tfsdk:"tmpfs"`
+type linuxParametersModel struct {
+	Devices            fwtypes.ListNestedObjectValueOf[deviceModel] `tfsdk:"devices"`
+	InitProcessEnabled types.Bool                                   `tfsdk:"init_process_enabled"`
+	MaxSwap            types.Int64                                  `tfsdk:"max_swap"`
+	SharedMemorySize   types.Int64                                  `tfsdk:"shared_memory_size"`
+	Swappiness         types.Int64                                  `tfsdk:"swappiness"`
+	Tmpfs              fwtypes.ListNestedObjectValueOf[tmpfsModel]  `tfsdk:"tmpfs"`
 }
 
-type jobDefinitionDeviceModel struct {
+type deviceModel struct {
 	ContainerPath types.String                      `tfsdk:"container_path"`
 	HostPath      types.String                      `tfsdk:"host_path"`
 	Permissions   fwtypes.ListValueOf[types.String] `tfsdk:"permissions"`
 }
 
-type jobDefinitionTmpfsModel struct {
+type tmpfsModel struct {
 	ContainerPath types.String                      `tfsdk:"container_path"`
 	MountOptions  fwtypes.ListValueOf[types.String] `tfsdk:"mount_options"`
 	Size          types.Int64                       `tfsdk:"size"`
 }
 
-type jobDefinitionLogConfigurationModel struct {
-	LogDriver     types.String                                              `tfsdk:"log_driver"`
-	Options       fwtypes.MapValueOf[types.String]                          `tfsdk:"options"`
-	SecretOptions fwtypes.ListNestedObjectValueOf[jobDefinitionSecretModel] `tfsdk:"secret_options"`
+type logConfigurationModel struct {
+	LogDriver     types.String                                 `tfsdk:"log_driver"`
+	Options       fwtypes.MapValueOf[types.String]             `tfsdk:"options"`
+	SecretOptions fwtypes.ListNestedObjectValueOf[secretModel] `tfsdk:"secret_options"`
 }
 
-type jobDefinitionSecretModel struct {
+type secretModel struct {
 	Name      types.String `tfsdk:"name"`
 	ValueFrom types.String `tfsdk:"value_from"`
 }
 
-type jobDefinitionMountPointModel struct {
+type mountPointModel struct {
 	ContainerPath types.String `tfsdk:"container_path"`
 	ReadOnly      types.Bool   `tfsdk:"read_only"`
 	SourceVolume  types.String `tfsdk:"source_volume"`
 }
 
-type jobDefinitionNetworkConfigurationModel struct {
+type networkConfigurationModel struct {
 	AssignPublicIP types.Bool `tfsdk:"assign_public_ip"`
 }
 
-type jobDefinitionResourceRequirementModel struct {
+type resourceRequirementModel struct {
 	Type  types.String `tfsdk:"type"`
 	Value types.String `tfsdk:"value"`
 }
 
-type jobDefinitionRuntimePlatformModel struct {
+type runtimePlatformModel struct {
 	CPUArchitecture       types.String `tfsdk:"cpu_architecture"`
 	OperatingSystemFamily types.String `tfsdk:"operating_system_family"`
 }
 
-type jobDefinitionUlimitModel struct {
+type ulimitModel struct {
 	HardLimit types.Int64  `tfsdk:"hard_limit"`
 	Name      types.String `tfsdk:"name"`
 	SoftLimit types.Int64  `tfsdk:"soft_limit"`
 }
 
-type jobDefinitionVolumeModel struct {
-	EFSVolumeConfiguration fwtypes.ListNestedObjectValueOf[jobDefinitionEFSVolumeConfigurationModel] `tfsdk:"efs_volume_configuration"`
-	Host                   fwtypes.ListNestedObjectValueOf[jobDefinitionHostModel]                   `tfsdk:"host"`
-	Name                   types.String                                                              `tfsdk:"name"`
+type volumeModel struct {
+	EFSVolumeConfiguration fwtypes.ListNestedObjectValueOf[efsVolumeConfigurationModel] `tfsdk:"efs_volume_configuration"`
+	Host                   fwtypes.ListNestedObjectValueOf[hostModel]                   `tfsdk:"host"`
+	Name                   types.String                                                 `tfsdk:"name"`
 }
 
-type jobDefinitionEFSVolumeConfigurationModel struct {
-	AuthorizationConfig   fwtypes.ListNestedObjectValueOf[jobDefinitionEFSAuthorizationConfigModel] `tfsdk:"authorization_config"`
-	FileSystemID          types.String                                                              `tfsdk:"file_system_id"`
-	RootDirectory         types.String                                                              `tfsdk:"root_directory"`
-	TransitEncryption     types.String                                                              `tfsdk:"transit_encryption"`
-	TransitEncryptionPort types.Int64                                                               `tfsdk:"transit_encryption_port"`
+type efsVolumeConfigurationModel struct {
+	AuthorizationConfig   fwtypes.ListNestedObjectValueOf[efsAuthorizationConfigModel] `tfsdk:"authorization_config"`
+	FileSystemID          types.String                                                 `tfsdk:"file_system_id"`
+	RootDirectory         types.String                                                 `tfsdk:"root_directory"`
+	TransitEncryption     types.String                                                 `tfsdk:"transit_encryption"`
+	TransitEncryptionPort types.Int64                                                  `tfsdk:"transit_encryption_port"`
 }
 
-type jobDefinitionEFSAuthorizationConfigModel struct {
+type efsAuthorizationConfigModel struct {
 	AccessPointID types.String `tfsdk:"access_point_id"`
 	IAM           types.String `tfsdk:"iam"`
 }
 
-type jobDefinitionHostModel struct {
+type hostModel struct {
 	SourcePath types.String `tfsdk:"source_path"`
 }
 
-type jobDefinitionRetryStrategyModel struct {
-	Attempts       types.Int64                                                       `tfsdk:"attempts"`
-	EvaluateOnExit fwtypes.ListNestedObjectValueOf[jobDefinitionEvaluateOnExitModel] `tfsdk:"evaluate_on_exit"`
+type retryStrategyModel struct {
+	Attempts       types.Int64                                          `tfsdk:"attempts"`
+	EvaluateOnExit fwtypes.ListNestedObjectValueOf[evaluateOnExitModel] `tfsdk:"evaluate_on_exit"`
 }
 
-type jobDefinitionEvaluateOnExitModel struct {
+type evaluateOnExitModel struct {
 	Action         types.String `tfsdk:"action"`
 	OnExitCode     types.String `tfsdk:"on_exit_code"`
 	OnReason       types.String `tfsdk:"on_reason"`
 	OnStatusReason types.String `tfsdk:"on_status_reason"`
 }
 
-type jobDefinitionJobTimeoutModel struct {
+type jobTimeoutModel struct {
 	AttemptDurationSeconds types.Int64 `tfsdk:"attempt_duration_seconds"`
 }

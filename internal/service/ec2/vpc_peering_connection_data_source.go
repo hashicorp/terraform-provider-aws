@@ -7,18 +7,19 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_peering_connection")
-func DataSourceVPCPeeringConnection() *schema.Resource {
+// @SDKDataSource("aws_vpc_peering_connection", name="VPC Peering Connection")
+func dataSourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCPeeringConnectionRead,
 
@@ -32,7 +33,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,15 +43,15 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -67,7 +68,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -82,7 +83,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -116,7 +117,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -126,13 +127,13 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -141,94 +142,94 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 	}
 }
 
-func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	if v, ok := d.GetOk("id"); ok {
-		input.VpcPeeringConnectionIds = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.VpcPeeringConnectionIds = []string{v.(string)}
 	}
 
 	input.Filters = newAttributeFilterList(
 		map[string]string{
-			"status-code":                   d.Get("status").(string),
-			"requester-vpc-info.vpc-id":     d.Get("vpc_id").(string),
-			"requester-vpc-info.owner-id":   d.Get("owner_id").(string),
-			"requester-vpc-info.cidr-block": d.Get("cidr_block").(string),
+			"status-code":                   d.Get(names.AttrStatus).(string),
+			"requester-vpc-info.vpc-id":     d.Get(names.AttrVPCID).(string),
+			"requester-vpc-info.owner-id":   d.Get(names.AttrOwnerID).(string),
+			"requester-vpc-info.cidr-block": d.Get(names.AttrCIDRBlock).(string),
 			"accepter-vpc-info.vpc-id":      d.Get("peer_vpc_id").(string),
 			"accepter-vpc-info.owner-id":    d.Get("peer_owner_id").(string),
 			"accepter-vpc-info.cidr-block":  d.Get("peer_cidr_block").(string),
 		},
 	)
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	vpcPeeringConnection, err := FindVPCPeeringConnection(ctx, conn, input)
+	vpcPeeringConnection, err := findVPCPeeringConnection(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC Peering Connection", err))
 	}
 
-	d.SetId(aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId))
-	d.Set("status", vpcPeeringConnection.Status.Code)
-	d.Set("vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)
-	d.Set("owner_id", vpcPeeringConnection.RequesterVpcInfo.OwnerId)
-	d.Set("cidr_block", vpcPeeringConnection.RequesterVpcInfo.CidrBlock)
+	d.SetId(aws.ToString(vpcPeeringConnection.VpcPeeringConnectionId))
+	d.Set(names.AttrStatus, vpcPeeringConnection.Status.Code)
+	d.Set(names.AttrVPCID, vpcPeeringConnection.RequesterVpcInfo.VpcId)
+	d.Set(names.AttrOwnerID, vpcPeeringConnection.RequesterVpcInfo.OwnerId)
+	d.Set(names.AttrCIDRBlock, vpcPeeringConnection.RequesterVpcInfo.CidrBlock)
 
-	cidrBlockSet := []interface{}{}
+	cidrBlockSet := []any{}
 	for _, v := range vpcPeeringConnection.RequesterVpcInfo.CidrBlockSet {
-		cidrBlockSet = append(cidrBlockSet, map[string]interface{}{
-			"cidr_block": aws.StringValue(v.CidrBlock),
+		cidrBlockSet = append(cidrBlockSet, map[string]any{
+			names.AttrCIDRBlock: aws.ToString(v.CidrBlock),
 		})
 	}
 	if err := d.Set("cidr_block_set", cidrBlockSet); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cidr_block_set: %s", err)
 	}
 
-	ipv6CidrBlockSet := []interface{}{}
+	ipv6CidrBlockSet := []any{}
 	for _, v := range vpcPeeringConnection.RequesterVpcInfo.Ipv6CidrBlockSet {
-		ipv6CidrBlockSet = append(ipv6CidrBlockSet, map[string]interface{}{
-			"ipv6_cidr_block": aws.StringValue(v.Ipv6CidrBlock),
+		ipv6CidrBlockSet = append(ipv6CidrBlockSet, map[string]any{
+			"ipv6_cidr_block": aws.ToString(v.Ipv6CidrBlock),
 		})
 	}
 	if err := d.Set("ipv6_cidr_block_set", ipv6CidrBlockSet); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6_cidr_block_set: %s", err)
 	}
 
-	d.Set("region", vpcPeeringConnection.RequesterVpcInfo.Region)
+	d.Set(names.AttrRegion, vpcPeeringConnection.RequesterVpcInfo.Region)
 	d.Set("peer_vpc_id", vpcPeeringConnection.AccepterVpcInfo.VpcId)
 	d.Set("peer_owner_id", vpcPeeringConnection.AccepterVpcInfo.OwnerId)
 	d.Set("peer_cidr_block", vpcPeeringConnection.AccepterVpcInfo.CidrBlock)
 
-	peerCidrBlockSet := []interface{}{}
+	peerCidrBlockSet := []any{}
 	for _, v := range vpcPeeringConnection.AccepterVpcInfo.CidrBlockSet {
-		peerCidrBlockSet = append(peerCidrBlockSet, map[string]interface{}{
-			"cidr_block": aws.StringValue(v.CidrBlock),
+		peerCidrBlockSet = append(peerCidrBlockSet, map[string]any{
+			names.AttrCIDRBlock: aws.ToString(v.CidrBlock),
 		})
 	}
 	if err := d.Set("peer_cidr_block_set", peerCidrBlockSet); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting peer_cidr_block_set: %s", err)
 	}
 
-	peerIpv6CidrBlockSet := []interface{}{}
+	peerIpv6CidrBlockSet := []any{}
 	for _, v := range vpcPeeringConnection.AccepterVpcInfo.Ipv6CidrBlockSet {
-		peerIpv6CidrBlockSet = append(peerIpv6CidrBlockSet, map[string]interface{}{
-			"ipv6_cidr_block": aws.StringValue(v.Ipv6CidrBlock),
+		peerIpv6CidrBlockSet = append(peerIpv6CidrBlockSet, map[string]any{
+			"ipv6_cidr_block": aws.ToString(v.Ipv6CidrBlock),
 		})
 	}
 	if err := d.Set("peer_ipv6_cidr_block_set", peerIpv6CidrBlockSet); err != nil {
@@ -237,7 +238,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("peer_region", vpcPeeringConnection.AccepterVpcInfo.Region)
 
-	if err := d.Set("tags", KeyValueTags(ctx, vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

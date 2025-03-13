@@ -41,7 +41,7 @@ func resourceAnomalyMonitor() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func resourceAnomalyMonitor() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.MonitorType](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -77,8 +77,6 @@ func resourceAnomalyMonitor() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -86,7 +84,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &costexplorer.CreateAnomalyMonitorInput{
 		AnomalyMonitor: &awstypes.AnomalyMonitor{
 			MonitorName: aws.String(name),
@@ -160,9 +158,9 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("monitor_specification", specificationToSet)
 	}
 
-	d.Set("arn", monitor.MonitorArn)
+	d.Set(names.AttrARN, monitor.MonitorArn)
 	d.Set("monitor_dimension", monitor.MonitorDimension)
-	d.Set("name", monitor.MonitorName)
+	d.Set(names.AttrName, monitor.MonitorName)
 	d.Set("monitor_type", monitor.MonitorType)
 
 	return diags
@@ -172,13 +170,13 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &costexplorer.UpdateAnomalyMonitorInput{
 			MonitorArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.MonitorName = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.MonitorName = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		_, err := conn.UpdateAnomalyMonitor(ctx, input)
@@ -197,9 +195,10 @@ func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost Explorer Anomaly Monitor: %s", d.Id())
-	_, err := conn.DeleteAnomalyMonitor(ctx, &costexplorer.DeleteAnomalyMonitorInput{
+	input := costexplorer.DeleteAnomalyMonitorInput{
 		MonitorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAnomalyMonitor(ctx, &input)
 
 	if err != nil && errs.IsA[*awstypes.UnknownMonitorException](err) {
 		return diags

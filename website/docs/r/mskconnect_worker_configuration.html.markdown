@@ -28,12 +28,13 @@ EOT
 
 The following arguments are required:
 
-* `name` - (Required) The name of the worker configuration.
-* `properties_file_content` - (Required) Contents of connect-distributed.properties file. The value can be either base64 encoded or in raw format.
+* `name` - (Required, Forces new resource) The name of the worker configuration.
+* `properties_file_content` - (Required, Forces new resource) Contents of connect-distributed.properties file. The value can be either base64 encoded or in raw format.
 
 The following arguments are optional:
 
-* `description` - (Optional) A summary description of the worker configuration.
+* `description` - (Optional, Forces new resource) A summary description of the worker configuration.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -41,6 +42,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - the Amazon Resource Name (ARN) of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `10m`)
 
 ## Import
 

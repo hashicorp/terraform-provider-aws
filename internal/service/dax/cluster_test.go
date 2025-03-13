@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,20 +40,20 @@ func TestAccDAXCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexache.MustCompile("cache/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dax", regexache.MustCompile("cache/.+")),
 					resource.TestCheckResourceAttr(
 						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
-						resourceName, "cluster_name", regexache.MustCompile(`^tf-\w+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
+						resourceName, names.AttrClusterName, regexache.MustCompile(`^tf-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t3.small"),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "description", "test cluster"),
+						resourceName, names.AttrDescription, "test cluster"),
 					resource.TestMatchResourceAttr(
-						resourceName, "parameter_group_name", regexache.MustCompile(`^default.dax`)),
+						resourceName, names.AttrParameterGroupName, regexache.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
 						resourceName, "maintenance_window", regexache.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
 					resource.TestCheckResourceAttr(
@@ -65,11 +65,11 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						resourceName, "cluster_address"),
 					resource.TestMatchResourceAttr(
-						resourceName, "port", regexache.MustCompile(`^\d+$`)),
+						resourceName, names.AttrPort, regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(
 						resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "server_side_encryption.0.enabled", "false"),
+						resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -178,7 +178,7 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -302,9 +302,10 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_dax_cluster" {
 				continue
 			}
-			res, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+			input := dax.DescribeClustersInput{
 				ClusterNames: []string{rs.Primary.ID},
-			})
+			}
+			res, err := conn.DescribeClusters(ctx, &input)
 			if err != nil {
 				// Verify the error is what we want
 				if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
@@ -332,9 +333,10 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
-		resp, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+		input := dax.DescribeClustersInput{
 			ClusterNames: []string{rs.Primary.ID},
-		})
+		}
+		resp, err := conn.DescribeClusters(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("DAX error: %v", err)
 		}
@@ -355,6 +357,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	input := &dax.DescribeClustersInput{}
 
 	_, err := conn.DescribeClusters(ctx, input)
+
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

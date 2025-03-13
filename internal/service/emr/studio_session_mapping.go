@@ -7,15 +7,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,10 +52,10 @@ func resourceStudioSessionMapping() *schema.Resource {
 				ExactlyOneOf: []string{"identity_id", "identity_name"},
 			},
 			"identity_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(emr.IdentityType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IdentityType](),
 			},
 			"session_policy_arn": {
 				Type:         schema.TypeString,
@@ -70,13 +73,13 @@ func resourceStudioSessionMapping() *schema.Resource {
 
 func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	var idOrName string
 	studioId := d.Get("studio_id").(string)
 	identityType := d.Get("identity_type").(string)
 	input := &emr.CreateStudioSessionMappingInput{
-		IdentityType:     aws.String(identityType),
+		IdentityType:     awstypes.IdentityType(identityType),
 		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
 		StudioId:         aws.String(studioId),
 	}
@@ -91,48 +94,20 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 		idOrName = v.(string)
 	}
 
-	_, err := conn.CreateStudioSessionMappingWithContext(ctx, input)
+	_, err := conn.CreateStudioSessionMapping(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Studio Session Mapping: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", studioId, identityType, idOrName))
-
-	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
-}
-
-func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
-
-	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EMR Studio Session Mapping (%s): %s", d.Id(), err)
-	}
-
-	input := &emr.UpdateStudioSessionMappingInput{
-		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
-		IdentityType:     aws.String(identityType),
-		StudioId:         aws.String(studioId),
-	}
-
-	if isIdentityId(identityIdOrName) {
-		input.IdentityId = aws.String(identityIdOrName)
-	} else {
-		input.IdentityName = aws.String(identityIdOrName)
-	}
-
-	_, err = conn.UpdateStudioSessionMappingWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EMR Studio Session Mapping (%s): %s", d.Id(), err)
-	}
+	d.SetId(studioSessionMappingCreateResourceID(studioId, identityType, idOrName))
 
 	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
 
 func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	mapping, err := findStudioSessionMappingByIDOrName(ctx, conn, d.Id())
 
@@ -146,69 +121,127 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}
 
-	d.Set("identity_type", mapping.IdentityType)
 	d.Set("identity_id", mapping.IdentityId)
 	d.Set("identity_name", mapping.IdentityName)
-	d.Set("studio_id", mapping.StudioId)
+	d.Set("identity_type", mapping.IdentityType)
 	d.Set("session_policy_arn", mapping.SessionPolicyArn)
+	d.Set("studio_id", mapping.StudioId)
 
 	return diags
+}
+
+func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
+
+	studioID, identityType, identityIDOrName, err := studioSessionMappingParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := &emr.UpdateStudioSessionMappingInput{
+		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
+		IdentityType:     awstypes.IdentityType(identityType),
+		StudioId:         aws.String(studioID),
+	}
+
+	if isIdentityID(identityIDOrName) {
+		input.IdentityId = aws.String(identityIDOrName)
+	} else {
+		input.IdentityName = aws.String(identityIDOrName)
+	}
+
+	_, err = conn.UpdateStudioSessionMapping(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating EMR Studio Session Mapping (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
 
 func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(d.Id())
+	studioID, identityType, identityIDOrName, err := studioSessionMappingParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio Session Mapping (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &emr.DeleteStudioSessionMappingInput{
-		IdentityType: aws.String(identityType),
-		StudioId:     aws.String(studioId),
+		IdentityType: awstypes.IdentityType(identityType),
+		StudioId:     aws.String(studioID),
 	}
 
-	if isIdentityId(identityIdOrName) {
-		input.IdentityId = aws.String(identityIdOrName)
+	if isIdentityID(identityIDOrName) {
+		input.IdentityId = aws.String(identityIDOrName)
 	} else {
-		input.IdentityName = aws.String(identityIdOrName)
+		input.IdentityName = aws.String(identityIDOrName)
 	}
 
 	log.Printf("[INFO] Deleting EMR Studio Session Mapping: %s", d.Id())
-	_, err = conn.DeleteStudioSessionMappingWithContext(ctx, input)
+	_, err = conn.DeleteStudioSessionMapping(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio session mapping does not exist.") {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist.") {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
-	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(id)
+const identityIDPattern = `([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}`
+
+var identityIDPatternRegexp = regexache.MustCompile(identityIDPattern)
+
+func isIdentityID(identityIdOrName string) bool {
+	return identityIDPatternRegexp.MatchString(identityIdOrName)
+}
+
+const studioSessionMappingResourceIDSeparator = ":"
+
+func studioSessionMappingCreateResourceID(studioID, identityType, identityIDOrName string) string {
+	parts := []string{studioID, identityType, identityIDOrName}
+	id := strings.Join(parts, studioSessionMappingResourceIDSeparator)
+
+	return id
+}
+
+func studioSessionMappingParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, studioSessionMappingResourceIDSeparator)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected studio-id%[2]sidentity-type%[2]sidentity-id-or-name", id, studioSessionMappingResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], parts[2], nil
+}
+
+func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.Client, id string) (*awstypes.SessionMappingDetail, error) {
+	studioID, identityType, identityIDOrName, err := studioSessionMappingParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	input := &emr.GetStudioSessionMappingInput{
-		StudioId:     aws.String(studioId),
-		IdentityType: aws.String(identityType),
+		StudioId:     aws.String(studioID),
+		IdentityType: awstypes.IdentityType(identityType),
 	}
 
-	if isIdentityId(identityIdOrName) {
-		input.IdentityId = aws.String(identityIdOrName)
+	if isIdentityID(identityIDOrName) {
+		input.IdentityId = aws.String(identityIDOrName)
 	} else {
-		input.IdentityName = aws.String(identityIdOrName)
+		input.IdentityName = aws.String(identityIDOrName)
 	}
 
-	output, err := conn.GetStudioSessionMappingWithContext(ctx, input)
+	output, err := conn.GetStudioSessionMapping(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist") ||
-		tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio session mapping does not exist") ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

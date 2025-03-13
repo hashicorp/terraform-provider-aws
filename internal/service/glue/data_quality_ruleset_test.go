@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,14 +36,14 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_on"),
 					resource.TestCheckResourceAttr(resourceName, "ruleset", ruleset),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, originalDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -152,8 +152,8 @@ func TestAccGlueDataQualityRuleset_targetTableRequired(t *testing.T) {
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.0.catalog_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
 				),
 			},
 			{
@@ -186,9 +186,9 @@ func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", "catalog_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", names.AttrCatalogID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
 				),
 			},
 			{
@@ -214,12 +214,12 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, "key1", "value1"),
+				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, acctest.CtKey1, acctest.CtValue1),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -228,22 +228,22 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccDataQualityRulesetConfig_tags2(rName, ruleset, "key1", "value1updated", "key2", "value2"),
+				Config:  testAccDataQualityRulesetConfig_tags2(rName, ruleset, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, "key2", "value2"),
+				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, acctest.CtKey2, acctest.CtValue2),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -287,7 +287,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		resp, err := tfglue.FindDataQualityRulesetByName(ctx, conn, rs.Primary.ID)
 
@@ -299,9 +299,9 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No Glue Data Quality Ruleset Found")
 		}
 
-		if aws.StringValue(resp.Name) != rs.Primary.ID {
+		if aws.ToString(resp.Name) != rs.Primary.ID {
 			return fmt.Errorf("Glue Data Quality Ruleset Mismatch - existing: %q, state: %q",
-				aws.StringValue(resp.Name), rs.Primary.ID)
+				aws.ToString(resp.Name), rs.Primary.ID)
 		}
 
 		return nil
@@ -310,7 +310,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 
 func testAccCheckDataQualityRulesetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_data_quality_ruleset" {

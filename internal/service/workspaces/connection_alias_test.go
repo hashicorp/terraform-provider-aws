@@ -5,7 +5,6 @@ package workspaces_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,8 +42,8 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
 					resource.TestCheckResourceAttr(resourceName, "connection_string", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
 			{
@@ -104,11 +102,11 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionAliasConfig_tags1(rName, "key1", "value1"),
+				Config: testAccConnectionAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -117,20 +115,20 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionAliasConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConnectionAliasConfig_tags1(rName, "key2", "value2"),
+				Config: testAccConnectionAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -156,32 +154,29 @@ func testAccCheckConnectionAliasDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingDestroyed, tfworkspaces.ResNameConnectionAlias, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("WorkSpaces Connection Alias %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConnectionAliasExists(ctx context.Context, name string, connectionalias *awstypes.ConnectionAlias) resource.TestCheckFunc {
+func testAccCheckConnectionAliasExists(ctx context.Context, n string, v *awstypes.ConnectionAlias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNameConnectionAlias, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNameConnectionAlias, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
-		out, err := tfworkspaces.FindConnectionAliasByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfworkspaces.FindConnectionAliasByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNameConnectionAlias, rs.Primary.ID, err)
+			return err
 		}
 
-		*connectionalias = *out
+		*v = *output
 
 		return nil
 	}

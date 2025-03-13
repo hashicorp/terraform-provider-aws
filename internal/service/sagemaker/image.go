@@ -9,22 +9,25 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_image", name="Image")
 // @Tags(identifierAttribute="arn")
-func ResourceImage() *schema.Resource {
+func resourceImage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageCreate,
 		ReadWithoutTimeout:   resourceImageRead,
@@ -35,7 +38,7 @@ func ResourceImage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,18 +52,18 @@ func ResourceImage() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 512),
@@ -68,41 +71,39 @@ func ResourceImage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageInput{
 		ImageName: aws.String(name),
-		RoleArn:   aws.String(d.Get("role_arn").(string)),
+		RoleArn:   aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	// for some reason even if the operation is retried the same error response is given even though the role is valid. a short sleep before creation solves it.
 	time.Sleep(1 * time.Minute)
-	_, err := conn.CreateImageWithContext(ctx, input)
+	_, err := conn.CreateImage(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Image %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitImageCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to be created: %s", d.Id(), err)
+	if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
@@ -110,54 +111,55 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	image, err := FindImageByName(ctx, conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Image (%s); removing from state", d.Id())
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image (%s): %s", d.Id(), err)
+	image, err := findImageByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		d.SetId("")
+		log.Printf("[WARN] Unable to find SageMaker AI Image (%s); removing from state", d.Id())
+		return diags
 	}
 
-	arn := aws.StringValue(image.ImageArn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image (%s): %s", d.Id(), err)
+	}
+
 	d.Set("image_name", image.ImageName)
-	d.Set("arn", arn)
-	d.Set("role_arn", image.RoleArn)
-	d.Set("display_name", image.DisplayName)
-	d.Set("description", image.Description)
+	d.Set(names.AttrARN, image.ImageArn)
+	d.Set(names.AttrRoleARN, image.RoleArn)
+	d.Set(names.AttrDisplayName, image.DisplayName)
+	d.Set(names.AttrDescription, image.Description)
 
 	return diags
 }
 
 func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 	needsUpdate := false
 
 	input := &sagemaker.UpdateImageInput{
 		ImageName: aws.String(d.Id()),
 	}
 
-	var deleteProperties []*string
+	var deleteProperties []string
 
-	if d.HasChange("description") {
-		if v, ok := d.GetOk("description"); ok {
+	if d.HasChange(names.AttrDescription) {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		} else {
-			deleteProperties = append(deleteProperties, aws.String("Description"))
+			deleteProperties = append(deleteProperties, "Description")
 			input.DeleteProperties = deleteProperties
 		}
 		needsUpdate = true
 	}
 
-	if d.HasChange("display_name") {
-		if v, ok := d.GetOk("display_name"); ok {
+	if d.HasChange(names.AttrDisplayName) {
+		if v, ok := d.GetOk(names.AttrDisplayName); ok {
 			input.DisplayName = aws.String(v.(string))
 		} else {
-			deleteProperties = append(deleteProperties, aws.String("DisplayName"))
+			deleteProperties = append(deleteProperties, "DisplayName")
 			input.DeleteProperties = deleteProperties
 		}
 		needsUpdate = true
@@ -165,13 +167,13 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if needsUpdate {
 		log.Printf("[DEBUG] sagemaker Image update config: %#v", *input)
-		_, err := conn.UpdateImageWithContext(ctx, input)
+		_, err := conn.UpdateImage(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Image: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image: %s", err)
 		}
 
-		if _, err := WaitImageCreated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to update: %s", d.Id(), err)
+		if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -180,25 +182,47 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteImageInput{
 		ImageName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteImageWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
+	if _, err := conn.DeleteImage(ctx, input); err != nil {
+		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Image (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to delete: %s", d.Id(), err)
+	if err := waitImageDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findImageByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+	input := &sagemaker.DescribeImageInput{
+		ImageName: aws.String(name),
+	}
+
+	output, err := conn.DescribeImage(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

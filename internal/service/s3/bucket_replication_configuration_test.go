@@ -44,53 +44,53 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "foobar",
-						"prefix":                      "foo",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "foobar",
+						names.AttrPrefix:              "foo",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassGlacier)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "foobar",
-						"prefix":                      "foo",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "foobar",
+						names.AttrPrefix:              "foo",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassGlacier),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":            "foobar",
-						"prefix":        "foo",
-						"status":        string(types.ReplicationRuleStatusEnabled),
-						"destination.#": "1",
+						names.AttrID:     "foobar",
+						names.AttrPrefix: "foo",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
 						"destination.0.encryption_configuration.#":                       "1",
 						"destination.0.storage_class":                                    string(types.StorageClassStandard),
 						"source_selection_criteria.#":                                    "1",
 						"source_selection_criteria.0.sse_kms_encrypted_objects.#":        "1",
 						"source_selection_criteria.0.sse_kms_encrypted_objects.0.status": string(types.SseKmsEncryptedObjectsStatusEnabled),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.encryption_configuration.0.replica_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.encryption_configuration.0.replica_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -143,29 +143,29 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule1",
-						"priority":                    "1",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "rule1",
+						names.AttrPriority:            "1",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule2",
-						"priority":                    "2",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "rule2",
+						names.AttrPriority:            "2",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule3",
-						"priority":                    "3",
-						"status":                      string(types.ReplicationRuleStatusDisabled),
+						names.AttrID:                  "rule3",
+						names.AttrPriority:            "3",
+						names.AttrStatus:              string(types.ReplicationRuleStatusDisabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
 						"destination.#":               "1",
@@ -203,20 +203,20 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule1",
-						"priority":                    "1",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "rule1",
+						names.AttrPriority:            "1",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule2",
-						"priority":                    "2",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "rule2",
+						names.AttrPriority:            "2",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.tag.#":              "1",
 						"filter.0.tag.0.key":          "Key2",
@@ -225,9 +225,9 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 						"destination.0.storage_class": string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule3",
-						"priority":                    "3",
-						"status":                      string(types.ReplicationRuleStatusDisabled),
+						names.AttrID:                  "rule3",
+						names.AttrPriority:            "3",
+						names.AttrStatus:              string(types.ReplicationRuleStatusDisabled),
 						"filter.#":                    "1",
 						"filter.0.and.#":              "1",
 						"filter.0.and.0.prefix":       "prefix3",
@@ -270,20 +270,20 @@ func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsTwoDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule1",
-						"priority":                    "1",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "rule1",
+						names.AttrPriority:            "1",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "rule2",
-						"priority":                    "2",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "rule2",
+						names.AttrPriority:            "2",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
 						"destination.#":               "1",
@@ -325,19 +325,19 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":            "foobar",
-						"prefix":        "foo",
-						"status":        string(types.ReplicationRuleStatusEnabled),
-						"destination.#": "1",
+						names.AttrID:     "foobar",
+						names.AttrPrefix: "foo",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
 						"destination.0.access_control_translation.#":       "1",
 						"destination.0.access_control_translation.0.owner": string(types.OwnerOverrideDestination),
 						"destination.0.storage_class":                      string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -349,13 +349,13 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":            "foobar",
-						"prefix":        "foo",
-						"status":        string(types.ReplicationRuleStatusEnabled),
-						"destination.#": "1",
+						names.AttrID:     "foobar",
+						names.AttrPrefix: "foo",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
 						"destination.0.access_control_translation.#":                     "1",
 						"destination.0.access_control_translation.0.owner":               string(types.OwnerOverrideDestination),
 						"destination.0.encryption_configuration.#":                       "1",
@@ -364,9 +364,9 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 						"source_selection_criteria.0.sse_kms_encrypted_objects.0.status": string(types.SseKmsEncryptedObjectsStatusEnabled),
 						"destination.0.storage_class":                                    string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.encryption_configuration.0.replica_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.encryption_configuration.0.replica_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -403,17 +403,17 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 				Config: testAccBucketReplicationConfigurationConfig_rulesDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                          "foobar",
-						"prefix":                      "foo",
-						"status":                      string(types.ReplicationRuleStatusEnabled),
+						names.AttrID:                  "foobar",
+						names.AttrPrefix:              "foo",
+						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -425,19 +425,19 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":            "foobar",
-						"prefix":        "foo",
-						"status":        string(types.ReplicationRuleStatusEnabled),
-						"destination.#": "1",
+						names.AttrID:     "foobar",
+						names.AttrPrefix: "foo",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
 						"destination.0.access_control_translation.#":       "1",
 						"destination.0.access_control_translation.0.owner": string(types.OwnerOverrideDestination),
 						"destination.0.storage_class":                      string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.account", callerIdentityDataSourceName, names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -472,17 +472,17 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 				Config: testAccBucketReplicationConfigurationConfig_rtc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
-						"filter.#":                           "1",
-						"filter.0.prefix":                    "foo",
-						"status":                             string(types.ReplicationRuleStatusEnabled),
-						"delete_marker_replication.#":        "1",
-						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusEnabled),
-						"destination.#":                      "1",
-						"destination.0.replication_time.#":   "1",
+						names.AttrID:                                        "foobar",
+						"filter.#":                                          "1",
+						"filter.0.prefix":                                   "foo",
+						names.AttrStatus:                                    string(types.ReplicationRuleStatusEnabled),
+						"delete_marker_replication.#":                       "1",
+						"delete_marker_replication.0.status":                string(types.DeleteMarkerReplicationStatusEnabled),
+						"destination.#":                                     "1",
+						"destination.0.replication_time.#":                  "1",
 						"destination.0.replication_time.0.status":           string(types.ReplicationTimeStatusEnabled),
 						"destination.0.replication_time.0.time.#":           "1",
 						"destination.0.replication_time.0.time.0.minutes":   "15",
@@ -491,7 +491,7 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 						"destination.0.metrics.0.event_threshold.#":         "1",
 						"destination.0.metrics.0.event_threshold.0.minutes": "15",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -526,10 +526,10 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 				Config: testAccBucketReplicationConfigurationConfig_replicaMods(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"filter.#":                           "1",
 						"filter.0.prefix":                    "foo",
 						"delete_marker_replication.#":        "1",
@@ -537,10 +537,10 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 						"source_selection_criteria.#":        "1",
 						"source_selection_criteria.0.replica_modifications.#":        "1",
 						"source_selection_criteria.0.replica_modifications.0.status": string(types.ReplicaModificationsStatusEnabled),
-						"status":        string(types.ReplicationRuleStatusEnabled),
-						"destination.#": "1",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -575,13 +575,13 @@ func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_prefixNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "foo"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.status", string(types.ReplicationRuleStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "rule.0.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rule.0.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -617,15 +617,15 @@ func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_noStorageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":            "foobar",
-						"prefix":        "foo",
-						"status":        string(types.ReplicationRuleStatusEnabled),
-						"destination.#": "1",
+						names.AttrID:     "foobar",
+						names.AttrPrefix: "foo",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -660,19 +660,19 @@ func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_v2NoTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"filter.#":                           "1",
 						"filter.0.prefix":                    "foo",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusEnabled),
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 						"destination.0.storage_class":        string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -702,19 +702,19 @@ func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "testid",
+						names.AttrID:                         "testid",
 						"filter.#":                           "1",
 						"filter.0.prefix":                    "testprefix",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusEnabled),
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 						"destination.0.storage_class":        string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -787,21 +787,21 @@ func TestAccS3BucketReplicationConfiguration_existingObjectReplication(t *testin
 				Config: testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                   "testid",
+						names.AttrID:                           "testid",
 						"filter.#":                             "1",
 						"filter.0.prefix":                      "testprefix",
 						"delete_marker_replication.#":          "1",
 						"delete_marker_replication.0.status":   string(types.DeleteMarkerReplicationStatusEnabled),
 						"existing_object_replication.#":        "1",
 						"existing_object_replication.0.status": string(types.ExistingObjectReplicationStatusEnabled),
-						"status":                               string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                       string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                        "1",
 						"destination.0.storage_class":          string(types.StorageClassStandard),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -834,17 +834,17 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyConfigurationBlock(t *t
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
 						"filter.#":                           "1",
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -877,18 +877,18 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
 						"filter.#":                           "1",
 						"filter.0.prefix":                    "",
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -924,20 +924,20 @@ func TestAccS3BucketReplicationConfiguration_filter_tagFilter(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterTag(rName, "testkey", "testvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
 						"filter.#":                           "1",
 						"filter.0.tag.#":                     "1",
 						"filter.0.tag.0.key":                 "testkey",
 						"filter.0.tag.0.value":               "testvalue",
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -969,10 +969,10 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorPrefixAndTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
 						"filter.#":                           "1",
@@ -981,10 +981,10 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 						"filter.0.and.0.tags.%":              "2",
 						"filter.0.and.0.tags.testkey1":       "testvalue1",
 						"filter.0.and.0.tags.testkey2":       "testvalue2",
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -996,10 +996,10 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                                 "foobar",
+						names.AttrID:                         "foobar",
 						"delete_marker_replication.#":        "1",
 						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
 						"filter.#":                           "1",
@@ -1007,10 +1007,10 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 						"filter.0.and.0.tags.%":              "2",
 						"filter.0.and.0.tags.testkey1":       "testvalue1",
 						"filter.0.and.0.tags.testkey2":       "testvalue2",
-						"status":                             string(types.ReplicationRuleStatusEnabled),
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
 						"destination.#":                      "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1045,14 +1045,14 @@ func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.status", string(types.ReplicationRuleStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.delete_marker_replication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "rule.0.destination.0.bucket", dstBucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rule.0.destination.0.bucket", dstBucketResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1113,7 +1113,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
+					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(ctx, region, &providers)),
 					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "replication_configuration.0.rules.*", map[string]string{
 						"filter.#":        "1",
@@ -1126,7 +1126,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_migrateNoChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "foo"),
@@ -1156,7 +1156,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
+					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(ctx, region, &providers)),
 					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "replication_configuration.0.rules.*", map[string]string{
 						"filter.#":        "1",
@@ -1169,7 +1169,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_migrateChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", "bar"),
 				),
@@ -1205,11 +1205,15 @@ func TestAccS3BucketReplicationConfiguration_directoryBucket(t *testing.T) {
 // version, but for use with "same region" tests requiring only one provider.
 func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_replication_configuration" {
 				continue
+			}
+
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)
@@ -1231,11 +1235,15 @@ func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) reso
 
 func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_replication_configuration" {
 				continue
+			}
+
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)
@@ -1263,6 +1271,9 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)
 
@@ -1273,6 +1284,9 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 func testAccBucketReplicationConfigurationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1284,7 +1298,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1924,6 +1938,10 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 
 func testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1934,7 +1952,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.amazonaws.com"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1998,6 +2016,9 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 func testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2009,7 +2030,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2296,6 +2317,9 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 func testAccBucketReplicationConfigurationConfig_migrationBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "role" {
   name = %[1]q
@@ -2307,7 +2331,7 @@ resource "aws_iam_role" "role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2417,7 +2441,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }
 
 func testAccBucketReplicationConfigurationConfig_directoryBucket(rName, storageClass string) string {
-	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
   location {

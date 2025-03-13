@@ -27,11 +27,11 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	input := &amplify.ListAppsInput{}
 	conn := client.AmplifyClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := amplify.NewListAppsPaginator(conn, input)
+	input := amplify.ListAppsInput{}
+	pages := amplify.NewListAppsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

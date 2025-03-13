@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -26,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Policy")
+// @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -38,10 +39,6 @@ type resourcePolicyResource struct {
 	framework.WithImportByID
 }
 
-func (*resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_dynamodb_resource_policy"
-}
-
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -51,11 +48,11 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -190,9 +187,10 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(ctx, &dynamodb.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(data.ID.ValueString()),
-	})
+	input := dynamodb.DeleteResourcePolicyInput{
+		ResourceArn: data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -239,12 +237,12 @@ type resourcePolicyResourceModel struct {
 }
 
 func (data *resourcePolicyResourceModel) InitFromID() error {
-	v, err := fwdiag.AsError(fwtypes.ARNValue(data.ID.ValueString()))
+	_, err := arn.Parse(data.ID.ValueString())
 	if err != nil {
 		return err
 	}
 
-	data.ResourceARN = v
+	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
 
 	return nil
 }

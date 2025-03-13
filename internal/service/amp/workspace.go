@@ -28,6 +28,8 @@ import (
 
 // @SDKResource("aws_prometheus_workspace", name="Workspace")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.WorkspaceDescription")
+// @Testing(generator=false)
 func resourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceCreate,
@@ -41,28 +43,27 @@ func resourceWorkspace() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			// Once set, alias cannot be unset.
-			customdiff.ForceNewIfChange("alias", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrAlias, func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -90,19 +91,19 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.CreateWorkspaceInput{
+	input := amp.CreateWorkspaceInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		input.Alias = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateWorkspace(ctx, input)
+	output, err := conn.CreateWorkspace(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Prometheus Workspace: %s", err)
@@ -114,14 +115,14 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-		input := &amp.CreateLoggingConfigurationInput{
+		input := amp.CreateLoggingConfigurationInput{
 			LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
 			WorkspaceId: aws.String(d.Id()),
 		}
 
-		_, err := conn.CreateLoggingConfiguration(ctx, input)
+		_, err := conn.CreateLoggingConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
@@ -151,20 +152,20 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alias", ws.Alias)
+	d.Set(names.AttrAlias, ws.Alias)
 	arn := aws.ToString(ws.Arn)
-	d.Set("arn", arn)
-	d.Set("kms_key_arn", ws.KmsKeyArn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrKMSKeyARN, ws.KmsKeyArn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
 
 	loggingConfiguration, err := findLoggingConfigurationByWorkspaceID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		d.Set("logging_configuration", nil)
+		d.Set(names.AttrLoggingConfiguration, nil)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 	} else {
-		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	}
@@ -176,13 +177,13 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	if d.HasChange("alias") {
-		input := &amp.UpdateWorkspaceAliasInput{
-			Alias:       aws.String(d.Get("alias").(string)),
+	if d.HasChange(names.AttrAlias) {
+		input := amp.UpdateWorkspaceAliasInput{
+			Alias:       aws.String(d.Get(names.AttrAlias).(string)),
 			WorkspaceId: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateWorkspaceAlias(ctx, input)
+		_, err := conn.UpdateWorkspaceAlias(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Prometheus Workspace alias (%s): %s", d.Id(), err)
@@ -193,17 +194,17 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("logging_configuration") {
-		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if d.HasChange(names.AttrLoggingConfiguration) {
+		if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			if o, _ := d.GetChange("logging_configuration"); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
-				input := &amp.CreateLoggingConfigurationInput{
+			if o, _ := d.GetChange(names.AttrLoggingConfiguration); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
+				input := amp.CreateLoggingConfigurationInput{
 					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
 					WorkspaceId: aws.String(d.Id()),
 				}
 
-				if _, err := conn.CreateLoggingConfiguration(ctx, input); err != nil {
+				if _, err := conn.CreateLoggingConfiguration(ctx, &input); err != nil {
 					return sdkdiag.AppendErrorf(diags, "creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 				}
 
@@ -211,12 +212,12 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 					return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
 				}
 			} else {
-				input := &amp.UpdateLoggingConfigurationInput{
+				input := amp.UpdateLoggingConfigurationInput{
 					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
 					WorkspaceId: aws.String(d.Id()),
 				}
 
-				if _, err := conn.UpdateLoggingConfiguration(ctx, input); err != nil {
+				if _, err := conn.UpdateLoggingConfiguration(ctx, &input); err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 				}
 
@@ -225,11 +226,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				}
 			}
 		} else {
-			input := &amp.DeleteLoggingConfigurationInput{
+			input := amp.DeleteLoggingConfigurationInput{
 				WorkspaceId: aws.String(d.Id()),
 			}
 
-			_, err := conn.DeleteLoggingConfiguration(ctx, input)
+			_, err := conn.DeleteLoggingConfiguration(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
@@ -249,9 +250,10 @@ func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[INFO] Deleting Prometheus Workspace: %s", d.Id())
-	_, err := conn.DeleteWorkspace(ctx, &amp.DeleteWorkspaceInput{
+	input := amp.DeleteWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteWorkspace(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -283,11 +285,11 @@ func flattenLoggingConfigurationMetadata(apiObject *types.LoggingConfigurationMe
 }
 
 func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types.WorkspaceDescription, error) {
-	input := &amp.DescribeWorkspaceInput{
+	input := amp.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWorkspace(ctx, input)
+	output, err := conn.DescribeWorkspace(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -384,11 +386,11 @@ func waitWorkspaceDeleted(ctx context.Context, conn *amp.Client, id string) (*ty
 }
 
 func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client, id string) (*types.LoggingConfigurationMetadata, error) {
-	input := &amp.DescribeLoggingConfigurationInput{
+	input := amp.DescribeLoggingConfigurationInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeLoggingConfiguration(ctx, input)
+	output, err := conn.DescribeLoggingConfiguration(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

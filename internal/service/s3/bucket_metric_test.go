@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -38,9 +39,9 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 				Config: testAccBucketMetricConfig_noFilter(rName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", metricName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, metricName),
 				),
 			},
 			{
@@ -56,9 +57,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 // Disallow Empty filter block
 func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.MetricsConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_metric.test"
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -68,10 +67,7 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetricConfig_emptyFilter(rName, metricName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-				),
+				Config:      testAccBucketMetricConfig_emptyFilter(rName, metricName),
 				ExpectError: regexache.MustCompile(`(?is)one of.*must be specified`),
 			},
 		},
@@ -85,7 +81,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 
@@ -129,7 +125,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -185,7 +181,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -237,7 +233,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -285,7 +281,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	tag1 := fmt.Sprintf("tag1-%d", rInt)
@@ -337,7 +333,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	tag1 := fmt.Sprintf("tag-%d", rInt)
@@ -634,9 +630,9 @@ func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_metric" {
 				continue
 			}
@@ -644,6 +640,10 @@ func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc
 			bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
@@ -676,6 +676,9 @@ func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, v *typ
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
 
@@ -901,7 +904,7 @@ resource "aws_s3_bucket_metric" "test" {
 }
 
 func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

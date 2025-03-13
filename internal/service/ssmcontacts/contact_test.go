@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContact_basic(t *testing.T) {
+func testAccContact_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -45,9 +45,9 @@ func testContact_basic(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "PERSONAL"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`contact/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PERSONAL"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/.+$`)),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func testContact_basic(t *testing.T) {
 	})
 }
 
-func testContact_updateAlias(t *testing.T) {
+func testAccContact_updateAlias(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -90,7 +90,7 @@ func testContact_updateAlias(t *testing.T) {
 				Config: testAccContactConfig_alias(oldAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", oldAlias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, oldAlias),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testContact_updateAlias(t *testing.T) {
 				Config: testAccContactConfig_alias(newAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", newAlias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, newAlias),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func testContact_updateAlias(t *testing.T) {
 	})
 }
 
-func testContact_updateType(t *testing.T) {
+func testAccContact_updateType(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -139,7 +139,7 @@ func testContact_updateType(t *testing.T) {
 				Config: testAccContactConfig_type(name, personalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", personalType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, personalType),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func testContact_updateType(t *testing.T) {
 				Config: testAccContactConfig_type(name, escalationType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", escalationType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, escalationType),
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func testContact_updateType(t *testing.T) {
 	})
 }
 
-func testContact_disappears(t *testing.T) {
+func testAccContact_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -193,7 +193,7 @@ func testContact_disappears(t *testing.T) {
 	})
 }
 
-func testContact_updateDisplayName(t *testing.T) {
+func testAccContact_updateDisplayName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -217,7 +217,7 @@ func testContact_updateDisplayName(t *testing.T) {
 				Config: testAccContactConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, oldDisplayName),
 				),
 			},
 			{
@@ -229,114 +229,7 @@ func testContact_updateDisplayName(t *testing.T) {
 				Config: testAccContactConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testContact_updateTags(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssmcontacts_contact.contact_one"
-
-	rKey1 := sdkacctest.RandString(26)
-	rVal1 := sdkacctest.RandString(26)
-	rVal1Updated := sdkacctest.RandString(26)
-	rKey2 := sdkacctest.RandString(26)
-	rVal2 := sdkacctest.RandString(26)
-	rVal2Updated := sdkacctest.RandString(26)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccContactConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccContactConfig_twoTags(rName, rKey1, rVal1, rKey2, rVal2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccContactConfig_twoTags(rName, rKey1, rVal1Updated, rKey2, rVal2Updated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2Updated),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1Updated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccContactConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, newDisplayName),
 				),
 			},
 			{
@@ -489,39 +382,4 @@ resource "aws_ssmcontacts_contact" "contact_one" {
   depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, displayName))
-}
-
-func testAccContactConfig_oneTag(alias, tagKey, tagVal string) string {
-	return acctest.ConfigCompose(
-		testAccContactConfig_base(),
-		fmt.Sprintf(`
-resource "aws_ssmcontacts_contact" "contact_one" {
-  alias = %[1]q
-  type  = "PERSONAL"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}
-`, alias, tagKey, tagVal))
-}
-
-func testAccContactConfig_twoTags(alias, tagKey1, tagVal1, tagKey2, tagVal2 string) string {
-	return acctest.ConfigCompose(
-		testAccContactConfig_base(),
-		fmt.Sprintf(`
-resource "aws_ssmcontacts_contact" "contact_one" {
-  alias = %[1]q
-  type  = "PERSONAL"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}
-`, alias, tagKey1, tagVal1, tagKey2, tagVal2))
 }

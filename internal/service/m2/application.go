@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -36,8 +37,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_m2_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetApplicationOutput")
 func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationResource{}
 
@@ -54,19 +56,15 @@ type applicationResource struct {
 	framework.WithTimeouts
 }
 
-func (*applicationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_m2_application"
-}
-
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": framework.IDAttribute(),
-			names.AttrARN:    framework.ARNAttributeComputedOnly(),
+			names.AttrApplicationID: framework.IDAttribute(),
+			names.AttrARN:           framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -80,13 +78,13 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
@@ -95,7 +93,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -114,12 +112,12 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"content": schema.StringAttribute{
+						names.AttrContent: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 65000),
 								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("content"),
+									path.MatchRelative().AtParent().AtName(names.AttrContent),
 									path.MatchRelative().AtParent().AtName("s3_location"),
 								),
 							},
@@ -130,7 +128,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -149,21 +147,10 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().M2Client(ctx)
 
 	name := data.Name.ValueString()
-	input := &m2.CreateApplicationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := m2.CreateApplicationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// AutoFlEx doesn't yet handle union types.
-	if !data.Definition.IsNull() {
-		definitionData, diags := data.Definition.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.Definition = expandDefinition(definitionData)
 	}
 
 	// Additional fields.
@@ -171,7 +158,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateApplication(ctx, input)
+		return conn.CreateApplication(ctx, &input)
 	}, "does not have proper Trust Policy for M2 service")
 
 	if err != nil {
@@ -199,7 +186,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	data.CurrentVersion = fwflex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
+	data.CurrentVersion = fwflex.Int32ToFrameworkInt64(ctx, app.LatestVersion.ApplicationVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -250,7 +237,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Additional fields.
-	data.CurrentVersion = fwflex.Int32ToFramework(ctx, outputGAV.ApplicationVersion)
+	data.CurrentVersion = fwflex.Int32ToFrameworkInt64(ctx, outputGAV.ApplicationVersion)
 	data.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &definitionModel{
 		Content:    fwflex.StringToFramework(ctx, outputGAV.DefinitionContent),
 		S3Location: types.StringNull(),
@@ -275,19 +262,14 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	if !new.Definition.Equal(old.Definition) || !new.Description.Equal(old.Description) {
 		input := &m2.UpdateApplicationInput{
 			ApplicationId:             fwflex.StringFromFramework(ctx, new.ID),
-			CurrentApplicationVersion: fwflex.Int32FromFramework(ctx, old.CurrentVersion),
+			CurrentApplicationVersion: fwflex.Int32FromFrameworkInt64(ctx, old.CurrentVersion),
 		}
 
 		if !new.Definition.Equal(old.Definition) {
-			// AutoFlEx doesn't yet handle union types.
-			if !new.Definition.IsNull() {
-				definitionData, diags := new.Definition.ToPtr(ctx)
-				response.Diagnostics.Append(diags...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				input.Definition = expandDefinition(definitionData)
+			d := fwflex.Expand(ctx, new.Definition, &input.Definition)
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
+				return
 			}
 		}
 
@@ -328,7 +310,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteApplication(ctx, &m2.DeleteApplicationInput{
-		ApplicationId: aws.String(data.ID.ValueString()),
+		ApplicationId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -346,10 +328,6 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) { //nolint:unparam
@@ -396,11 +374,11 @@ func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, f
 }
 
 func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
-	input := &m2.GetApplicationInput{
+	input := m2.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplication(ctx, input)
+	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -421,12 +399,12 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id string, version int32) (*m2.GetApplicationVersionOutput, error) {
-	input := &m2.GetApplicationVersionInput{
+	input := m2.GetApplicationVersionInput{
 		ApplicationId:      aws.String(id),
 		ApplicationVersion: aws.Int32(version),
 	}
 
-	output, err := conn.GetApplicationVersion(ctx, input)
+	output, err := conn.GetApplicationVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -605,8 +583,8 @@ type applicationResourceModel struct {
 	KmsKeyID       types.String                                     `tfsdk:"kms_key_id"`
 	Name           types.String                                     `tfsdk:"name"`
 	RoleARN        fwtypes.ARN                                      `tfsdk:"role_arn"`
-	Tags           types.Map                                        `tfsdk:"tags"`
-	TagsAll        types.Map                                        `tfsdk:"tags_all"`
+	Tags           tftags.Map                                       `tfsdk:"tags"`
+	TagsAll        tftags.Map                                       `tfsdk:"tags_all"`
 	Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
@@ -625,18 +603,22 @@ type definitionModel struct {
 	S3Location types.String `tfsdk:"s3_location"`
 }
 
-func expandDefinition(definitionData *definitionModel) awstypes.Definition {
-	if !definitionData.Content.IsNull() {
-		return &awstypes.DefinitionMemberContent{
-			Value: definitionData.Content.ValueString(),
+var (
+	_ fwflex.Expander = definitionModel{}
+)
+
+func (m definitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Content.IsNull():
+		result = &awstypes.DefinitionMemberContent{
+			Value: m.Content.ValueString(),
+		}
+
+	case !m.S3Location.IsNull():
+		result = &awstypes.DefinitionMemberS3Location{
+			Value: m.S3Location.ValueString(),
 		}
 	}
 
-	if !definitionData.S3Location.IsNull() {
-		return &awstypes.DefinitionMemberS3Location{
-			Value: definitionData.S3Location.ValueString(),
-		}
-	}
-
-	return nil
+	return result, diags
 }

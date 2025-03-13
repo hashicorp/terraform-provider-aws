@@ -38,7 +38,7 @@ func TestAccAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/200/"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
@@ -98,7 +98,7 @@ func TestAccAPIGatewayV2IntegrationResponse_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
@@ -110,7 +110,7 @@ func TestAccAPIGatewayV2IntegrationResponse_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/404/"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "#set($number=42)"),
@@ -189,17 +189,17 @@ func testAccIntegrationResponseImportStateIdFunc(resourceName string) resource.I
 }
 
 func testAccIntegrationResponseConfig_basic(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = aws_apigatewayv2_api.test.id
   integration_id           = aws_apigatewayv2_integration.test.id
   integration_response_key = "/200/"
 }
-`
+`)
 }
 
 func testAccIntegrationResponseConfig_allAttributes(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = aws_apigatewayv2_api.test.id
   integration_id           = aws_apigatewayv2_integration.test.id
@@ -212,11 +212,11 @@ resource "aws_apigatewayv2_integration_response" "test" {
     "application/json" = ""
   }
 }
-`
+`)
 }
 
 func testAccIntegrationResponseConfig_allAttributesUpdated(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = aws_apigatewayv2_api.test.id
   integration_id           = aws_apigatewayv2_integration.test.id
@@ -230,5 +230,5 @@ resource "aws_apigatewayv2_integration_response" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`
+`)
 }

@@ -8,23 +8,23 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_hsm_client_certificate", name="HSM Client Certificate")
 // @Tags(identifierAttribute="arn")
-func ResourceHSMClientCertificate() *schema.Resource {
+func resourceHSMClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMClientCertificateCreate,
 		ReadWithoutTimeout:   resourceHSMClientCertificateRead,
@@ -36,7 +36,7 @@ func ResourceHSMClientCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,14 +52,12 @@ func ResourceHSMClientCertificate() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	certIdentifier := d.Get("hsm_client_certificate_identifier").(string)
 
@@ -68,21 +66,22 @@ func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceD
 		Tags:                           getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateHsmClientCertificateWithContext(ctx, &input)
+	out, err := conn.CreateHsmClientCertificate(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift HSM Client Certificate (%s): %s", certIdentifier, err)
 	}
 
-	d.SetId(aws.StringValue(out.HsmClientCertificate.HsmClientCertificateIdentifier))
+	d.SetId(aws.ToString(out.HsmClientCertificate.HsmClientCertificateIdentifier))
 
 	return append(diags, resourceHSMClientCertificateRead(ctx, d, meta)...)
 }
 
 func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	out, err := FindHSMClientCertificateByID(ctx, conn, d.Id())
+	out, err := findHSMClientCertificateByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift HSM Client Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -94,14 +93,14 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.Redshift,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("hsmclientcertificate:%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	d.Set("hsm_client_certificate_identifier", out.HsmClientCertificateIdentifier)
 	d.Set("hsm_client_certificate_public_key", out.HsmClientCertificatePublicKey)
@@ -121,20 +120,20 @@ func resourceHSMClientCertificateUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceHSMClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	deleteInput := redshift.DeleteHsmClientCertificateInput{
 		HsmClientCertificateIdentifier: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift HSM Client Certificate: %s", d.Id())
-	_, err := conn.DeleteHsmClientCertificateWithContext(ctx, &deleteInput)
+	_, err := conn.DeleteHsmClientCertificate(ctx, &deleteInput)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmClientCertificateNotFoundFault) {
+		if errs.IsA[*awstypes.HsmClientCertificateNotFoundFault](err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "updating Redshift HSM Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift HSM Client Certificate (%s) tags: %s", d.Get(names.AttrARN).(string), err)
 	}
 
 	return diags

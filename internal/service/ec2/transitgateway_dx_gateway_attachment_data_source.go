@@ -5,20 +5,26 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_dx_gateway_attachment")
-func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_dx_gateway_attachment", name="Transit Gateway Direct Connect Gateway Attachment")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayDxGatewayAttachmentRead,
 
@@ -27,13 +33,17 @@ func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dx_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter": customFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrTags:   tftags.TagsSchemaComputed(),
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -41,24 +51,23 @@ func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"resource-type": ec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway,
+			"resource-type": string(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
 		}),
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]any))),
 		)...)
 	}
 
@@ -69,25 +78,32 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 		})...)
 	}
 
-	if v, ok := d.GetOk("transit_gateway_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
 	}
 
-	transitGatewayAttachment, err := FindTransitGatewayAttachment(ctx, conn, input)
+	transitGatewayAttachment, err := findTransitGatewayAttachment(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
 	}
 
-	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
+	d.SetId(aws.ToString(transitGatewayAttachment.TransitGatewayAttachmentId))
+	resourceOwnerID := aws.ToString(transitGatewayAttachment.ResourceOwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: resourceOwnerID,
+		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
+	}.String()
+	d.Set(names.AttrARN, arn)
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

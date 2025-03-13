@@ -45,6 +45,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"available_package_version",
 					"package_source", // This isn't returned by the API
 				},
 			},
@@ -82,7 +83,7 @@ func testAccCheckPackageExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 		_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 
@@ -97,7 +98,7 @@ func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 			_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 

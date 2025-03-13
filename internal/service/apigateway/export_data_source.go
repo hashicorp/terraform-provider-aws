@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_api_gateway_export", name="Export")
@@ -31,7 +32,7 @@ func dataSourceExport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +45,7 @@ func dataSourceExport() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"oas30", "swagger"}, false),
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -67,7 +68,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-	input := &apigateway.GetExportInput{
+	input := apigateway.GetExportInput{
 		RestApiId:  aws.String(apiID),
 		StageName:  aws.String(stageName),
 		ExportType: aws.String(d.Get("export_type").(string)),
@@ -77,13 +78,13 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Accepts = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	id := apiID + ":" + stageName
 
-	export, err := conn.GetExport(ctx, input)
+	export, err := conn.GetExport(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Export (%s): %s", id, err)
@@ -92,7 +93,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(id)
 	d.Set("body", string(export.Body))
 	d.Set("content_disposition", export.ContentDisposition)
-	d.Set("content_type", export.ContentType)
+	d.Set(names.AttrContentType, export.ContentType)
 
 	return diags
 }

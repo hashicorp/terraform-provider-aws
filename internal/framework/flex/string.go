@@ -9,27 +9,41 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // StringFromFramework converts a Framework String value to a string pointer.
 // A null String is converted to a nil string pointer.
 func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *string {
-	var output *string
-
-	must(Expand(ctx, v, &output))
-
-	return output
+	if v.IsUnknown() {
+		return nil
+	}
+	val := fwdiag.Must(v.ToStringValue(ctx))
+	return val.ValueStringPointer()
 }
 
-// StringFromFramework converts a single Framework String value to a string pointer slice.
+// StringValueFromFramework converts a Framework String value to a string.
+// A null String is converted to an empty string.
+func StringValueFromFramework(ctx context.Context, v basetypes.StringValuable) string {
+	val := fwdiag.Must(v.ToStringValue(ctx))
+	return val.ValueString()
+}
+
+// StringSliceValueFromFramework converts a single Framework String value to a string slice.
 // A null String is converted to a nil slice.
-func StringSliceFromFramework(ctx context.Context, v basetypes.StringValuable) []*string {
+func StringSliceValueFromFramework(ctx context.Context, v basetypes.StringValuable) []string {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
 	}
 
-	return []*string{StringFromFramework(ctx, v)}
+	return []string{StringValueFromFramework(ctx, v)}
+}
+
+// StringToFramework converts a string pointer to a Framework String value.
+// A nil string pointer is converted to a null String.
+func StringToFramework(ctx context.Context, v *string) types.String {
+	return types.StringPointerValue(v)
 }
 
 // StringValueToFramework converts a string value to a Framework String value.
@@ -38,24 +52,13 @@ func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 	if v == "" {
 		return types.StringNull()
 	}
-
-	var output types.String
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	return types.StringValue(string(v))
 }
 
 // StringValueToFrameworkLegacy converts a string value to a Framework String value.
 // An empty string is left as an empty String.
 func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.String {
 	return types.StringValue(string(v))
-}
-
-// StringToFramework converts a string pointer to a Framework String value.
-// A nil string pointer is converted to a null String.
-func StringToFramework(ctx context.Context, v *string) types.String {
-	return StringToFrameworkValuable[types.String](ctx, v)
 }
 
 // StringToFrameworkLegacy converts a string pointer to a Framework String value.
@@ -74,10 +77,11 @@ func StringToFrameworkARN(ctx context.Context, v *string) fwtypes.ARN {
 // A nil string pointer is converted to a null StringValuable.
 func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, v *string) T {
 	var output T
+	typ := output.Type(ctx)
+	styp := typ.(basetypes.StringTypable)
 
-	must(Flatten(ctx, v, &output))
-
-	return output
+	sv := fwdiag.Must(styp.ValueFromString(ctx, types.StringPointerValue(v)))
+	return sv.(T)
 }
 
 func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_agent: Add `agent_collaboration` attribute to configure agent collaboration role
+```

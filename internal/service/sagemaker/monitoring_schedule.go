@@ -8,25 +8,26 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_monitoring_schedule")
+// @SDKResource("aws_sagemaker_monitoring_schedule", name="Monitoring Schedule")
 // @Tags(identifierAttribute="arn")
-func ResourceMonitoringSchedule() *schema.Resource {
+func resourceMonitoringSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMonitoringScheduleCreate,
 		ReadWithoutTimeout:   resourceMonitoringScheduleRead,
@@ -38,11 +39,11 @@ func ResourceMonitoringSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -61,9 +62,9 @@ func ResourceMonitoringSchedule() *schema.Resource {
 							ValidateFunc: validName,
 						},
 						"monitoring_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.MonitoringType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MonitoringType](),
 						},
 						"schedule_config": {
 							Type:     schema.TypeList,
@@ -72,7 +73,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"schedule_expression": {
+									names.AttrScheduleExpression: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -89,16 +90,15 @@ func ResourceMonitoringSchedule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -110,14 +110,14 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:                     getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateMonitoringScheduleWithContext(ctx, createOpts)
+	_, err := conn.CreateMonitoringSchedule(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Monitoring Schedule (%s): %s", name, err)
 	}
 
 	d.SetId(name)
-	if _, err := WaitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
+	if err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMonitoringScheduleRead(ctx, d, meta)...)
@@ -125,25 +125,25 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	monitoringSchedule, err := FindMonitoringScheduleByName(ctx, conn, d.Id())
+	monitoringSchedule, err := findMonitoringScheduleByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		log.Printf("[WARN] SageMaker Monitoring Schedule (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SageMaker AI Monitoring Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", monitoringSchedule.MonitoringScheduleArn)
-	d.Set("name", monitoringSchedule.MonitoringScheduleName)
+	d.Set(names.AttrARN, monitoringSchedule.MonitoringScheduleArn)
+	d.Set(names.AttrName, monitoringSchedule.MonitoringScheduleName)
 
 	if err := d.Set("monitoring_schedule_config", flattenMonitoringScheduleConfig(monitoringSchedule.MonitoringScheduleConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -151,7 +151,7 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChanges("monitoring_schedule_config") {
 		modifyOpts := &sagemaker.UpdateMonitoringScheduleInput{
@@ -163,11 +163,11 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		log.Printf("[INFO] Modifying monitoring_schedule_config attribute for %s: %#v", d.Id(), modifyOpts)
-		if _, err := conn.UpdateMonitoringScheduleWithContext(ctx, modifyOpts); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		if _, err := conn.UpdateMonitoringSchedule(ctx, modifyOpts); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 		}
-		if _, err := WaitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
+		if err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
 		}
 	}
 
@@ -176,39 +176,37 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deleteOpts := &sagemaker.DeleteMonitoringScheduleInput{
 		MonitoringScheduleName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker Monitoring Schedule : %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Monitoring Schedule : %s", d.Id())
 
-	_, err := conn.DeleteMonitoringScheduleWithContext(ctx, deleteOpts)
+	_, err := conn.DeleteMonitoringSchedule(ctx, deleteOpts)
 
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitMonitoringScheduleNotFound(ctx, conn, d.Id()); err != nil {
-		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Monitoring Schedule (%s) to stop: %s", d.Id(), err)
-		}
+	if _, err := waitMonitoringScheduleNotFound(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Monitoring Schedule (%s) to delete: %s", d.Id(), err)
 	}
 	return diags
 }
 
-func FindMonitoringScheduleByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
+func findMonitoringScheduleByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
 	input := &sagemaker.DescribeMonitoringScheduleInput{
 		MonitoringScheduleName: aws.String(name),
 	}
 
-	output, err := conn.DescribeMonitoringScheduleWithContext(ctx, input)
+	output, err := conn.DescribeMonitoringSchedule(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -226,21 +224,21 @@ func FindMonitoringScheduleByName(ctx context.Context, conn *sagemaker.SageMaker
 	return output, nil
 }
 
-func expandMonitoringScheduleConfig(configured []interface{}) *sagemaker.MonitoringScheduleConfig {
+func expandMonitoringScheduleConfig(configured []interface{}) *awstypes.MonitoringScheduleConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.MonitoringScheduleConfig{}
+	c := &awstypes.MonitoringScheduleConfig{}
 
 	if v, ok := m["monitoring_job_definition_name"].(string); ok && v != "" {
 		c.MonitoringJobDefinitionName = aws.String(v)
 	}
 
 	if v, ok := m["monitoring_type"].(string); ok && v != "" {
-		c.MonitoringType = aws.String(v)
+		c.MonitoringType = awstypes.MonitoringType(v)
 	}
 
 	if v, ok := m["schedule_config"].([]interface{}); ok && len(v) > 0 {
@@ -250,23 +248,23 @@ func expandMonitoringScheduleConfig(configured []interface{}) *sagemaker.Monitor
 	return c
 }
 
-func expandScheduleConfig(configured []interface{}) *sagemaker.ScheduleConfig {
+func expandScheduleConfig(configured []interface{}) *awstypes.ScheduleConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.ScheduleConfig{}
+	c := &awstypes.ScheduleConfig{}
 
-	if v, ok := m["schedule_expression"].(string); ok && v != "" {
+	if v, ok := m[names.AttrScheduleExpression].(string); ok && v != "" {
 		c.ScheduleExpression = aws.String(v)
 	}
 
 	return c
 }
 
-func flattenMonitoringScheduleConfig(config *sagemaker.MonitoringScheduleConfig) []map[string]interface{} {
+func flattenMonitoringScheduleConfig(config *awstypes.MonitoringScheduleConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -274,12 +272,10 @@ func flattenMonitoringScheduleConfig(config *sagemaker.MonitoringScheduleConfig)
 	m := map[string]interface{}{}
 
 	if config.MonitoringJobDefinitionName != nil {
-		m["monitoring_job_definition_name"] = aws.StringValue(config.MonitoringJobDefinitionName)
+		m["monitoring_job_definition_name"] = aws.ToString(config.MonitoringJobDefinitionName)
 	}
 
-	if config.MonitoringType != nil {
-		m["monitoring_type"] = aws.StringValue(config.MonitoringType)
-	}
+	m["monitoring_type"] = config.MonitoringType
 
 	if config.ScheduleConfig != nil {
 		m["schedule_config"] = flattenScheduleConfig(config.ScheduleConfig)
@@ -288,7 +284,7 @@ func flattenMonitoringScheduleConfig(config *sagemaker.MonitoringScheduleConfig)
 	return []map[string]interface{}{m}
 }
 
-func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interface{} {
+func flattenScheduleConfig(config *awstypes.ScheduleConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -296,7 +292,7 @@ func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interf
 	m := map[string]interface{}{}
 
 	if config.ScheduleExpression != nil {
-		m["schedule_expression"] = aws.StringValue(config.ScheduleExpression)
+		m[names.AttrScheduleExpression] = aws.ToString(config.ScheduleExpression)
 	}
 
 	return []map[string]interface{}{m}

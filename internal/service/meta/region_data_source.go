@@ -6,49 +6,46 @@ package meta
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
-func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceRegion{}
+// @FrameworkDataSource("aws_region", name="Region")
+func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &regionDataSource{}
 
 	return d, nil
 }
 
-type dataSourceRegion struct {
+type regionDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourceRegion) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_region"
-}
-
-// Schema returns the schema for this data source.
-func (d *dataSourceRegion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *regionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -56,13 +53,9 @@ func (d *dataSourceRegion) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceRegionData
-
+func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data regionDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -70,10 +63,11 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	var region *endpoints.Region
 
 	if !data.Endpoint.IsNull() {
-		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.ValueString())
+		endpoint := data.Endpoint.ValueString()
+		matchingRegion, err := findRegionByEC2Endpoint(ctx, endpoint)
 
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("finding Region by endpoint (%s)", endpoint), err.Error())
 
 			return
 		}
@@ -82,10 +76,11 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	}
 
 	if !data.Name.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Name.ValueString())
+		name := data.Name.ValueString()
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by name", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
 			return
 		}
@@ -99,12 +94,13 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	// Default to provider current region if no other filters matched
+	// Default to provider current Region if no other filters matched.
 	if region == nil {
-		matchingRegion, err := FindRegionByName(d.Meta().Region)
+		name := d.Meta().Region(ctx)
+		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
-			response.Diagnostics.AddError("finding Region by name", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
 			return
 		}
@@ -112,7 +108,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	regionEndpointEC2, err := region.ResolveEndpoint(ec2.EndpointsID)
+	regionEndpointEC2, err := ec2Endpoint(ctx, region)
 
 	if err != nil {
 		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
@@ -120,40 +116,40 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	data.Description = types.StringValue(region.Description())
-	data.Endpoint = types.StringValue(strings.TrimPrefix(regionEndpointEC2.URL, "https://"))
-	data.ID = types.StringValue(region.ID())
-	data.Name = types.StringValue(region.ID())
+	data.Description = fwflex.StringValueToFrameworkLegacy(ctx, region.Description())
+	data.Endpoint = fwflex.StringValueToFrameworkLegacy(ctx, regionEndpointEC2.Host)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceRegionData struct {
+type regionDataSourceModel struct {
 	Description types.String `tfsdk:"description"`
 	Endpoint    types.String `tfsdk:"endpoint"`
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 }
 
-func FindRegionByEndpoint(endpoint string) (*endpoints.Region, error) {
+func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
-			regionEndpointEC2, err := region.ResolveEndpoint(ec2.EndpointsID)
+			regionEndpointEC2, err := ec2Endpoint(ctx, &region)
 
 			if err != nil {
 				return nil, err
 			}
 
-			if strings.TrimPrefix(regionEndpointEC2.URL, "https://") == endpoint {
+			if regionEndpointEC2.Host == endpoint {
 				return &region, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("region not found for endpoint %q", endpoint)
+	return nil, &retry.NotFoundError{}
 }
 
-func FindRegionByName(name string) (*endpoints.Region, error) {
+func findRegionByName(_ context.Context, name string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
 			if region.ID() == name {
@@ -162,5 +158,16 @@ func FindRegionByName(name string) (*endpoints.Region, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("region not found for name %q", name)
+	return nil, &retry.NotFoundError{}
+}
+
+func ec2Endpoint(ctx context.Context, region *endpoints.Region) (*url.URL, error) {
+	endpoint, err := ec2.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, ec2.EndpointParameters{
+		Region: aws.String(region.ID()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &endpoint.URI, nil
 }

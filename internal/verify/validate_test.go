@@ -97,7 +97,7 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		val         interface{}
+		val         any
 		expectedErr *regexp.Regexp
 	}{
 		{
@@ -413,7 +413,6 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.Value, func(t *testing.T) {
 			t.Parallel()
 
@@ -710,7 +709,7 @@ func TestFloatGreaterThan(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		Value                  interface{}
+		Value                  any
 		ValidateFunc           schema.SchemaValidateFunc
 		ExpectValidationErrors bool
 	}{
@@ -783,12 +782,12 @@ func TestMapKeyNoMatch(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		value   interface{}
+		value   any
 		wantErr bool
 	}{
 		{
 			name: "two invalid keys",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"Ka": "V1",
 				"K2": "V2",
 				"Kb": "V3",
@@ -799,7 +798,7 @@ func TestMapKeyNoMatch(t *testing.T) {
 		},
 		{
 			name: "ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"Ka": "V1",
 				"Kb": "V2",
 			},
@@ -807,7 +806,6 @@ func TestMapKeyNoMatch(t *testing.T) {
 	}
 	f := MapKeyNoMatch(regexache.MustCompile(`^.*\d$`), "must not end with a digit")
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -824,12 +822,12 @@ func TestMapSizeAtMost(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		value   interface{}
+		value   any
 		wantErr bool
 	}{
 		{
 			name: "too long",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 				"K3": "V3",
@@ -840,7 +838,7 @@ func TestMapSizeAtMost(t *testing.T) {
 		},
 		{
 			name: "ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 			},
@@ -848,7 +846,6 @@ func TestMapSizeAtMost(t *testing.T) {
 	}
 	f := MapSizeAtMost(4)
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -865,12 +862,12 @@ func TestMapSizeBetween(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		value   interface{}
+		value   any
 		wantErr bool
 	}{
 		{
 			name: "too long",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 				"K3": "V3",
@@ -881,14 +878,14 @@ func TestMapSizeBetween(t *testing.T) {
 		},
 		{
 			name: "too short",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 			},
 			wantErr: true,
 		},
 		{
 			name: "ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 			},
@@ -896,7 +893,6 @@ func TestMapSizeBetween(t *testing.T) {
 	}
 	f := MapSizeBetween(2, 4)
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -913,19 +909,19 @@ func TestMapKeysAre(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		value   interface{}
+		value   any
 		wantErr bool
 	}{
 		{
 			name: "ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 			},
 		},
 		{
 			name: "not ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K3": "V3",
 			},
 			wantErr: true,
@@ -933,7 +929,6 @@ func TestMapKeysAre(t *testing.T) {
 	}
 	f := MapKeysAre(validation.ToDiagFunc(validation.StringInSlice([]string{"K1", "K2"}, false)))
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

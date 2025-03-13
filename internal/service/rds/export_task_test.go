@@ -7,11 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	rdsv1 "github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -30,10 +30,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 	resourceName := "aws_rds_export_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
@@ -43,11 +40,11 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -67,10 +64,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 	s3Prefix := "test_prefix/test-export"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
@@ -80,13 +74,13 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "export_only.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "export_only.0", "database"),
+					resource.TestCheckResourceAttr(resourceName, "export_only.0", names.AttrDatabase),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 				),
 			},
@@ -160,12 +154,7 @@ func isInDestroyedStatus(s string) bool {
 		tfrds.StatusFailed,
 		tfrds.StatusCanceled,
 	}
-	for _, status := range deletedStatuses {
-		if s == status {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(deletedStatuses, s)
 }
 
 func testAccExportTaskConfigBase(rName string) string {

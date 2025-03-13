@@ -89,7 +89,7 @@ func resourceCompositeAlarm() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 10240),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,8 +114,6 @@ func resourceCompositeAlarm() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -129,7 +127,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.PutCompositeAlarm(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		_, err = conn.PutCompositeAlarm(ctx, input)
@@ -152,7 +150,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
 		}
 
@@ -192,7 +190,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
 	d.Set("alarm_rule", alarm.AlarmRule)
-	d.Set("arn", alarm.AlarmArn)
+	d.Set(names.AttrARN, alarm.AlarmArn)
 	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
 	d.Set("ok_actions", alarm.OKActions)
 
@@ -203,7 +201,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := expandPutCompositeAlarmInput(ctx, d)
 
 		_, err := conn.PutCompositeAlarm(ctx, input)
@@ -221,9 +219,10 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
-	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
+	input := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteAlarms(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

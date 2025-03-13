@@ -4,4 +4,9 @@
 package simpledb
 
 // Exports for use in tests only.
-var ResourceDomain = newResourceDomain
+var (
+	ResourceDomain = newDomainResource
+
+	FindDomainByName = findDomainByName
+	SimpleDBConn     = simpleDBConn // nosemgrep:ci.simpledb-in-var-name
+)

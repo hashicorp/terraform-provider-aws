@@ -15,7 +15,7 @@ import (
 func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceResourceName := "data.aws_elastic_beanstalk_application.test"
+	dataSourceName := "data.aws_elastic_beanstalk_application.test"
 	resourceName := "aws_elastic_beanstalk_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,13 +26,13 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccApplicationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceResourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "appversion_lifecycle.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.delete_source_from_s3", dataSourceResourceName, "appversion_lifecycle.0.delete_source_from_s3"),
-					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.max_age_in_days", dataSourceResourceName, "appversion_lifecycle.0.max_age_in_days"),
-					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", dataSourceResourceName, "appversion_lifecycle.0.service_role"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceResourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "appversion_lifecycle.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.delete_source_from_s3", dataSourceName, "appversion_lifecycle.0.delete_source_from_s3"),
+					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.max_age_in_days", dataSourceName, "appversion_lifecycle.0.max_age_in_days"),
+					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", dataSourceName, "appversion_lifecycle.0.service_role"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 				),
 			},
 		},

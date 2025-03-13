@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_traffic_source_attachment", name="Traffic Source Attachment")
@@ -49,13 +50,13 @@ func resourceTrafficSourceAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -133,10 +134,11 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
 
 	log.Printf("[INFO] Deleting Auto Scaling Traffic Source Attachment: %s", d.Id())
-	_, err = conn.DetachTrafficSources(ctx, &autoscaling.DetachTrafficSourcesInput{
+	input := autoscaling.DetachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
-	})
+	}
+	_, err = conn.DetachTrafficSources(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags

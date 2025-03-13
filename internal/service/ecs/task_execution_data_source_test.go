@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,7 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,8 +35,8 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTaskExecutionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "client_token", "some_token"),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
@@ -63,16 +62,16 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskExecutionDataSourceConfig_overrides(rName, "key1", "value1"),
+				Config: testAccTaskExecutionDataSourceConfig_overrides(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", "1"),
@@ -80,8 +79,8 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "overrides.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.key", "key1"),
-					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.value", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.value", acctest.CtValue1),
 				),
 			},
 		},
@@ -102,22 +101,22 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskExecutionDataSourceConfig_tags(rName, "key1", "value1"),
+				Config: testAccTaskExecutionDataSourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "task_arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

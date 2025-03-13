@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_integration", name="Integration")
@@ -43,7 +44,7 @@ func resourceIntegration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -64,7 +65,7 @@ func resourceIntegration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -147,7 +148,7 @@ func resourceIntegration() *schema.Resource {
 							// Length between [1-512].
 							Elem: &schema.Schema{Type: schema.TypeString},
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -190,7 +191,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 
-	if v, ok := d.GetOk("connection_id"); ok {
+	if v, ok := d.GetOk(names.AttrConnectionID); ok {
 		input.ConnectionId = aws.String(v.(string))
 	}
 
@@ -206,7 +207,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CredentialsArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -281,11 +282,11 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Integration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("connection_id", output.ConnectionId)
+	d.Set(names.AttrConnectionID, output.ConnectionId)
 	d.Set("connection_type", output.ConnectionType)
 	d.Set("content_handling_strategy", output.ContentHandlingStrategy)
 	d.Set("credentials_arn", output.CredentialsArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("integration_method", output.IntegrationMethod)
 	d.Set("integration_response_selection_expression", output.IntegrationResponseSelectionExpression)
 	d.Set("integration_subtype", output.IntegrationSubtype)
@@ -318,8 +319,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 
-	if d.HasChange("connection_id") {
-		input.ConnectionId = aws.String(d.Get("connection_id").(string))
+	if d.HasChange(names.AttrConnectionID) {
+		input.ConnectionId = aws.String(d.Get(names.AttrConnectionID).(string))
 	}
 
 	if d.HasChange("connection_type") {
@@ -334,8 +335,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.CredentialsArn = aws.String(d.Get("credentials_arn").(string))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("integration_method") {
@@ -400,7 +401,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				continue
 			}
 
-			if v, ok := tfMap["status_code"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrStatusCode].(string); ok && v != "" {
 				if input.ResponseParameters == nil {
 					input.ResponseParameters = map[string]map[string]string{}
 				}
@@ -435,10 +436,11 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration: %s", d.Id())
-	_, err := conn.DeleteIntegration(ctx, &apigatewayv2.DeleteIntegrationInput{
+	input := apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -508,6 +510,33 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 	return output, nil
 }
 
+func findIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetIntegrationsInput) ([]awstypes.Integration, error) {
+	var output []awstypes.Integration
+
+	err := getIntegrationsPages(ctx, conn, input, func(page *apigatewayv2.GetIntegrationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
 	config := &awstypes.TlsConfigInput{}
 
@@ -547,7 +576,7 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 			continue
 		}
 
-		if vStatusCode, ok := tfMap["status_code"].(string); ok && vStatusCode != "" {
+		if vStatusCode, ok := tfMap[names.AttrStatusCode].(string); ok && vStatusCode != "" {
 			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
 				responseParameters[vStatusCode] = flex.ExpandStringValueMap(v)
 			}
@@ -571,7 +600,7 @@ func flattenIntegrationResponseParameters(responseParameters map[string]map[stri
 
 		tfMap := map[string]interface{}{}
 
-		tfMap["status_code"] = statusCode
+		tfMap[names.AttrStatusCode] = statusCode
 		tfMap["mappings"] = mappings
 
 		tfList = append(tfList, tfMap)

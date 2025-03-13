@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_eip", name="EIP)
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPRead,
@@ -30,7 +32,11 @@ func dataSourceEIP() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"association_id": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,21 +52,25 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			"ipam_pool_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,13 +108,13 @@ func dataSourceEIP() *schema.Resource {
 	}
 }
 
-func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAddressesInput{}
+	input := ec2.DescribeAddressesInput{}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.AllocationIds = []string{v.(string)}
 	}
 
@@ -112,12 +122,12 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.PublicIps = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -125,14 +135,16 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Filters = nil
 	}
 
-	eip, err := findEIP(ctx, conn, input)
+	eip, err := findEIP(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}
 
 	if eip.Domain == types.DomainTypeVpc {
-		d.SetId(aws.ToString(eip.AllocationId))
+		allocationID := aws.ToString(eip.AllocationId)
+		d.SetId(allocationID)
+		d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
 
 		addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
 
@@ -146,15 +158,19 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else {
 		d.SetId(aws.ToString(eip.PublicIp))
+		d.Set(names.AttrARN, nil)
 		d.Set("ptr_record", nil)
 	}
-	d.Set("association_id", eip.AssociationId)
+	d.Set(names.AttrAssociationID, eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
-	d.Set("domain", eip.Domain)
-	d.Set("instance_id", eip.InstanceId)
-	d.Set("network_interface_id", eip.NetworkInterfaceId)
+	d.Set(names.AttrDomain, eip.Domain)
+	d.Set(names.AttrInstanceID, eip.InstanceId)
+	if v := aws.ToString(eip.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
+		d.Set("ipam_pool_id", v)
+	}
+	d.Set(names.AttrNetworkInterfaceID, eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("private_ip", eip.PrivateIpAddress)
@@ -166,7 +182,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
 	}
 
-	setTagsOutV2(ctx, eip.Tags)
+	setTagsOut(ctx, eip.Tags)
 
 	return diags
 }

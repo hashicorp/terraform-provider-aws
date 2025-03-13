@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_db_proxy_target", name="DB Proxy Target")
@@ -61,11 +62,11 @@ func resourceProxyTarget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -73,7 +74,7 @@ func resourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +88,7 @@ func resourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func resourceProxyTarget() *schema.Resource {
 	}
 }
 
-func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -118,7 +119,7 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		timeout = 5 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBInstanceStateFault](ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.RegisterDBProxyTargets(ctx, input)
 		},
 		"CREATING")
@@ -133,7 +134,7 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceProxyTargetRead(ctx, d, meta)...)
 }
 
-func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -161,18 +162,18 @@ func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("db_cluster_identifier", dbProxyTarget.RdsResourceId)
 	}
 	d.Set("db_proxy_name", dbProxyName)
-	d.Set("endpoint", dbProxyTarget.Endpoint)
-	d.Set("port", dbProxyTarget.Port)
+	d.Set(names.AttrEndpoint, dbProxyTarget.Endpoint)
+	d.Set(names.AttrPort, dbProxyTarget.Port)
 	d.Set("rds_resource_id", dbProxyTarget.RdsResourceId)
-	d.Set("target_arn", dbProxyTarget.TargetArn)
+	d.Set(names.AttrTargetARN, dbProxyTarget.TargetArn)
 	d.Set("target_group_name", targetGroupName)
 	d.Set("tracked_cluster_id", dbProxyTarget.TrackedClusterId)
-	d.Set("type", dbProxyTarget.Type)
+	d.Set(names.AttrType, dbProxyTarget.Type)
 
 	return diags
 }
 
-func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 

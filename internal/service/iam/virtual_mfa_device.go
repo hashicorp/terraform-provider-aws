@@ -24,13 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
 // @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
 func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
@@ -43,7 +42,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +54,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "/",
@@ -68,7 +67,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,8 +81,6 @@ func resourceVirtualMFADevice() *schema.Resource {
 				),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -93,7 +90,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get("virtual_mfa_device_name").(string)
 	input := &iam.CreateVirtualMFADeviceInput{
-		Path:                 aws.String(d.Get("path").(string)),
+		Path:                 aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                 getTagsIn(ctx),
 		VirtualMFADeviceName: aws.String(name),
 	}
@@ -101,7 +98,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateVirtualMFADevice(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -152,14 +149,14 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vMFA.SerialNumber)
+	d.Set(names.AttrARN, vMFA.SerialNumber)
 
 	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("path", path)
+	d.Set(names.AttrPath, path)
 	d.Set("virtual_mfa_device_name", name)
 
 	if v := vMFA.EnableDate; v != nil {
@@ -167,7 +164,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if u := vMFA.User; u != nil {
-		d.Set("user_name", u.UserName)
+		d.Set(names.AttrUserName, u.UserName)
 	}
 
 	// The call above returns empty tags.
@@ -193,7 +190,7 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if v := d.Get("user_name"); v != "" {
+	if v := d.Get(names.AttrUserName); v != "" {
 		_, err := conn.DeactivateMFADevice(ctx, &iam.DeactivateMFADeviceInput{
 			UserName:     aws.String(v.(string)),
 			SerialNumber: aws.String(d.Id()),

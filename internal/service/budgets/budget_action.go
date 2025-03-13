@@ -24,11 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_budgets_budget_action")
+// @SDKResource("aws_budgets_budget_action", name="Budget Action")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -47,7 +51,7 @@ func ResourceBudgetAction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -88,7 +92,7 @@ func ResourceBudgetAction() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.ApprovalModel](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -175,7 +179,7 @@ func ResourceBudgetAction() *schema.Resource {
 										MaxItems: 100,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -185,7 +189,7 @@ func ResourceBudgetAction() *schema.Resource {
 					},
 				},
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -195,7 +199,7 @@ func ResourceBudgetAction() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -205,7 +209,7 @@ func ResourceBudgetAction() *schema.Resource {
 				MaxItems: 11,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -220,6 +224,8 @@ func ResourceBudgetAction() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -228,9 +234,9 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
@@ -239,9 +245,10 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		ApprovalModel:    awstypes.ApprovalModel(d.Get("approval_model").(string)),
 		BudgetName:       aws.String(d.Get("budget_name").(string)),
 		Definition:       expandBudgetActionActionDefinition(d.Get("definition").([]interface{})),
-		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
+		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		NotificationType: awstypes.NotificationType(d.Get("notification_type").(string)),
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
+		ResourceTags:     getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
@@ -285,7 +292,7 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Budget Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("action_id", actionID)
 	if err := d.Set("action_threshold", flattenBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action_threshold: %s", err)
@@ -293,19 +300,19 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("action_type", output.ActionType)
 	d.Set("approval_model", output.ApprovalModel)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_name", budgetName)
 	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
 	}
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("notification_type", output.NotificationType)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subscriber: %s", err)
 	}
@@ -323,40 +330,42 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &budgets.UpdateBudgetActionInput{
-		AccountId:  aws.String(accountID),
-		ActionId:   aws.String(actionID),
-		BudgetName: aws.String(budgetName),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &budgets.UpdateBudgetActionInput{
+			AccountId:  aws.String(accountID),
+			ActionId:   aws.String(actionID),
+			BudgetName: aws.String(budgetName),
+		}
 
-	if d.HasChange("action_threshold") {
-		input.ActionThreshold = expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
-	}
+		if d.HasChange("action_threshold") {
+			input.ActionThreshold = expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
+		}
 
-	if d.HasChange("approval_model") {
-		input.ApprovalModel = awstypes.ApprovalModel(d.Get("approval_model").(string))
-	}
+		if d.HasChange("approval_model") {
+			input.ApprovalModel = awstypes.ApprovalModel(d.Get("approval_model").(string))
+		}
 
-	if d.HasChange("definition") {
-		input.Definition = expandBudgetActionActionDefinition(d.Get("definition").([]interface{}))
-	}
+		if d.HasChange("definition") {
+			input.Definition = expandBudgetActionActionDefinition(d.Get("definition").([]interface{}))
+		}
 
-	if d.HasChange("execution_role_arn") {
-		input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
-	}
+		if d.HasChange(names.AttrExecutionRoleARN) {
+			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
+		}
 
-	if d.HasChange("notification_type") {
-		input.NotificationType = awstypes.NotificationType(d.Get("notification_type").(string))
-	}
+		if d.HasChange("notification_type") {
+			input.NotificationType = awstypes.NotificationType(d.Get("notification_type").(string))
+		}
 
-	if d.HasChange("subscriber") {
-		input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
-	}
+		if d.HasChange("subscriber") {
+			input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
+		}
 
-	_, err = conn.UpdateBudgetAction(ctx, input)
+		_, err = conn.UpdateBudgetAction(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBudgetActionRead(ctx, d, meta)...)
@@ -473,7 +482,7 @@ func expandBudgetActionSubscriber(l *schema.Set) []awstypes.Subscriber {
 		config := awstypes.Subscriber{}
 		raw := m.(map[string]interface{})
 
-		if v, ok := raw["address"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrAddress].(string); ok && v != "" {
 			config.Address = aws.String(v)
 		}
 
@@ -544,7 +553,7 @@ func expandBudgetActionActionSSMActionDefinition(l []interface{}) *awstypes.SsmA
 		config.ActionSubType = awstypes.ActionSubType(v)
 	}
 
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		config.Region = aws.String(v)
 	}
 
@@ -588,7 +597,7 @@ func flattenBudgetActionSubscriber(configured []awstypes.Subscriber) []map[strin
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["address"] = aws.ToString(raw.Address)
+		item[names.AttrAddress] = aws.ToString(raw.Address)
 		item["subscription_type"] = string(raw.SubscriptionType)
 
 		dataResources = append(dataResources, item)
@@ -619,15 +628,15 @@ func flattenBudgetActionIAMActionDefinition(lt *awstypes.IamActionDefinition) []
 		"policy_arn": aws.ToString(lt.PolicyArn),
 	}
 
-	if lt.Users != nil && len(lt.Users) > 0 {
+	if len(lt.Users) > 0 {
 		attrs["users"] = flex.FlattenStringValueSet(lt.Users)
 	}
 
-	if lt.Roles != nil && len(lt.Roles) > 0 {
+	if len(lt.Roles) > 0 {
 		attrs["roles"] = flex.FlattenStringValueSet(lt.Roles)
 	}
 
-	if lt.Groups != nil && len(lt.Groups) > 0 {
+	if len(lt.Groups) > 0 {
 		attrs["groups"] = flex.FlattenStringValueSet(lt.Groups)
 	}
 
@@ -643,7 +652,7 @@ func flattenBudgetActionScpActionDefinition(lt *awstypes.ScpActionDefinition) []
 		"policy_id": aws.ToString(lt.PolicyId),
 	}
 
-	if lt.TargetIds != nil && len(lt.TargetIds) > 0 {
+	if len(lt.TargetIds) > 0 {
 		attrs["target_ids"] = flex.FlattenStringValueSet(lt.TargetIds)
 	}
 
@@ -658,7 +667,7 @@ func flattenBudgetActionSSMActionDefinition(lt *awstypes.SsmActionDefinition) []
 	attrs := map[string]interface{}{
 		"action_sub_type": string(lt.ActionSubType),
 		"instance_ids":    flex.FlattenStringValueSet(lt.InstanceIds),
-		"region":          aws.ToString(lt.Region),
+		names.AttrRegion:  aws.ToString(lt.Region),
 	}
 
 	return []map[string]interface{}{attrs}

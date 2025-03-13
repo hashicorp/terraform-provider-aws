@@ -6,6 +6,7 @@ package pricing
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -15,9 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_pricing_product")
+// @SDKDataSource("aws_pricing_product", name="Product")
 func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
@@ -29,11 +31,11 @@ func dataSourceProduct() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -65,9 +67,9 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, v := range filters.([]interface{}) {
 		m := v.(map[string]interface{})
 		input.Filters = append(input.Filters, types.Filter{
-			Field: aws.String(m["field"].(string)),
+			Field: aws.String(m[names.AttrField].(string)),
 			Type:  types.FilterTypeTermMatch,
-			Value: aws.String(m["value"].(string)),
+			Value: aws.String(m[names.AttrValue].(string)),
 		})
 	}
 
@@ -83,7 +85,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "Pricing product query not precise enough. Returned %d elements", numberOfElements)
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(fmt.Sprintf("%#v", input))))
 	d.Set("result", output.PriceList[0])
 
 	return diags

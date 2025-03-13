@@ -15,7 +15,10 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
@@ -69,7 +72,6 @@ func TestQueueNameFromURL(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -106,26 +108,29 @@ func TestAccSQSQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "redrive_allow_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "url", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrURL, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -175,9 +180,9 @@ func TestAccSQSQueue_Name_generated(t *testing.T) {
 				Config: testAccQueueConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 				),
 			},
 			{
@@ -204,9 +209,9 @@ func TestAccSQSQueue_NameGenerated_fifoQueue(t *testing.T) {
 				Config: testAccQueueConfig_nameGeneratedFIFO,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsqs.FIFOQueueNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrName, tfsqs.FIFOQueueNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 				),
 			},
 			{
@@ -233,9 +238,9 @@ func TestAccSQSQueue_namePrefix(t *testing.T) {
 				Config: testAccQueueConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 				),
 			},
 			{
@@ -262,61 +267,15 @@ func TestAccSQSQueue_NamePrefix_fifoQueue(t *testing.T) {
 				Config: testAccQueueConfig_namePrefixFIFO("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", "tf-acc-test-prefix-", tfsqs.FIFOQueueNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-", tfsqs.FIFOQueueNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSQSQueue_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var queueAttributes map[types.QueueAttributeName]string
-	resourceName := "aws_sqs_queue.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccQueueConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccQueueConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -338,22 +297,21 @@ func TestAccSQSQueue_update(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
@@ -361,22 +319,21 @@ func TestAccSQSQueue_update(t *testing.T) {
 				Config: testAccQueueConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
@@ -422,7 +379,7 @@ func TestAccSQSQueue_Policy_basic(t *testing.T) {
 				Config: testAccQueueConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					testAccCheckQueuePolicyAttribute(&queueAttributes, rName, expectedPolicy),
+					testAccCheckQueuePolicyAttribute(ctx, &queueAttributes, rName, expectedPolicy),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
@@ -476,7 +433,7 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 				Config: testAccQueueConfig_policyEquivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					testAccCheckQueuePolicyAttribute(&queueAttributes, rName, expectedPolicy),
+					testAccCheckQueuePolicyAttribute(ctx, &queueAttributes, rName, expectedPolicy),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
@@ -599,7 +556,7 @@ func TestAccSQSQueue_fifoQueue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
 				),
 			},
@@ -646,8 +603,8 @@ func TestAccSQSQueue_FIFOQueue_contentBasedDeduplication(t *testing.T) {
 				Config: testAccQueueConfig_fifoContentBasedDeduplication(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 				),
 			},
 			{
@@ -676,7 +633,7 @@ func TestAccSQSQueue_FIFOQueue_highThroughputMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
 				),
 			},
@@ -690,7 +647,7 @@ func TestAccSQSQueue_FIFOQueue_highThroughputMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "messageGroup"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perMessageGroupId"),
 				),
 			},
@@ -734,7 +691,7 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "300"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -748,16 +705,16 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "true"),
+				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -780,7 +737,7 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 				Config: testAccQueueConfig_managedEncryption(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -789,17 +746,17 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "false"),
+				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "true"),
+				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -863,9 +820,55 @@ func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	})
 }
 
-func testAccCheckQueuePolicyAttribute(queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
+// https://github.com/hashicorp/terraform-provider-aws/issues/40728.
+func TestAccSQSQueue_ManagedEncryption_kmsDataKeyReusePeriodSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_managedEncryptionKMSDataKeyReusePeriodSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSQSQueue_timeouts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_timeouts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(), rName)
+		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
 
 		var actualPolicyText string
 		for key, value := range *queueAttributes {
@@ -973,31 +976,6 @@ resource "aws_sqs_queue" "test" {
   fifo_queue  = true
 }
 `, prefix)
-}
-
-func testAccQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccQueueConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccQueueConfig_updated(rName string) string {
@@ -1290,6 +1268,59 @@ func testAccQueueConfig_defaultKMSDataKeyReusePeriodSeconds(rName string) string
 resource "aws_sqs_queue" "test" {
   name                              = %[1]q
   kms_data_key_reuse_period_seconds = 300
+}
+`, rName)
+}
+
+func testAccQueueConfig_managedEncryptionKMSDataKeyReusePeriodSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  kms_data_key_reuse_period_seconds = "60"
+  max_message_size                  = "261244"
+  message_retention_seconds         = "60"
+  name                              = %[1]q
+  sqs_managed_sse_enabled           = true
+  visibility_timeout_seconds        = "60"
+  receive_wait_time_seconds         = "10"
+}
+`, rName)
+}
+
+// 29497
+func testAccQueueConfig_timeouts(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  timeouts {
+    create = "10m"
+  }
+}
+
+resource "aws_sqs_queue_policy" "test" {
+  queue_url = aws_sqs_queue.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "SQS-Queue-Access-Policy"
+      Effect = "Allow"
+      Principal = {
+        Service = "s3.amazonaws.com"
+      }
+      Action   = "SQS:SendMessage"
+      Resource = aws_sqs_queue.test.arn
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = aws_s3_bucket.test.arn
+        }
+      }
+    }]
+  })
 }
 `, rName)
 }

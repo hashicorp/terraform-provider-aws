@@ -7,17 +7,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnets")
-func DataSourceSubnets() *schema.Resource {
+// @SDKDataSource("aws_subnets", name="Subnets")
+func dataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetsRead,
 
@@ -26,30 +27,30 @@ func DataSourceSubnets() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
 			newCustomFilterList(filters.(*schema.Set))...)
 	}
@@ -58,7 +59,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.Filters = nil
 	}
 
-	output, err := FindSubnets(ctx, conn, input)
+	output, err := findSubnets(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnets: %s", err)
@@ -67,11 +68,11 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	var subnetIDs []string
 
 	for _, v := range output {
-		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
+		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", subnetIDs)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrIDs, subnetIDs)
 
 	return diags
 }

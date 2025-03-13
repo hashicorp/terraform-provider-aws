@@ -70,7 +70,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "accepting Security Hub Invitation (%s): %s", invitationID, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }
@@ -84,11 +84,11 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Master Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Security Hub Master Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Master Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set("invitation_id", master.InvitationId)

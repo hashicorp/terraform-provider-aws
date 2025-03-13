@@ -34,7 +34,7 @@ resource "aws_elastictranscoder_pipeline" "bar" {
 
 See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `aws_kms_key_arn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `content_config` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)

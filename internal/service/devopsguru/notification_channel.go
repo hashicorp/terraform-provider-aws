@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Notification Channel")
+// @FrameworkResource("aws_devopsguru_notification_channel", name="Notification Channel")
 func newResourceNotificationChannel(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceNotificationChannel{}, nil
 }
@@ -44,14 +44,10 @@ type resourceNotificationChannel struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceNotificationChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_notification_channel"
-}
-
 func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"filters": schema.ListNestedBlock{
@@ -98,7 +94,7 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.ARNType,
 							PlanModifiers: []planmodifier.String{
@@ -192,7 +188,7 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 	}
 
 	in := &devopsguru.RemoveNotificationChannelInput{
-		Id: aws.String(state.ID.ValueString()),
+		Id: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.RemoveNotificationChannel(ctx, in)
@@ -209,7 +205,7 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceNotificationChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findNotificationChannelByID(ctx context.Context, conn *devopsguru.Client, id string) (*awstypes.NotificationChannel, error) {

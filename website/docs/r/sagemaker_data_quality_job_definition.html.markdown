@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_data_quality_job_definition"
 description: |-
-  Provides a SageMaker Data Quality Job Definition resource.
+  Provides a SageMaker AI Data Quality Job Definition resource.
 ---
 
 # Resource: aws_sagemaker_data_quality_job_definition
 
-Provides a SageMaker data quality job definition resource.
+Provides a SageMaker AI data quality job definition resource.
 
 ## Example Usage
 
@@ -55,7 +55,7 @@ This resource supports the following arguments:
 * `job_resources` - (Required) Identifies the resources to deploy for a monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the data quality job definition. If omitted, Terraform will assign a random, unique name.
 * `network_config` - (Optional) Specifies networking configuration for the monitoring job. Fields are documented below.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
 * `stopping_condition` - (Optional) A time limit for how long the monitoring job is allowed to run before stopping. Fields are documented below.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -114,7 +114,7 @@ This resource supports the following arguments:
 
 ### data_quality_job_output_config
 
-* `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+* `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker AI uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 * `monitoring_outputs` - (Required) Monitoring outputs for monitoring jobs. This is where the output of the periodic monitoring jobs is uploaded. Fields are documented below.
 
 #### monitoring_outputs
@@ -123,9 +123,9 @@ This resource supports the following arguments:
 
 ##### s3_output
 
-* `local_path` - (Optional) The local path to the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job. LocalPath is an absolute path for the output data. Defaults to `/opt/ml/processing/output`.
+* `local_path` - (Optional) The local path to the Amazon S3 storage location where Amazon SageMaker AI saves the results of a monitoring job. LocalPath is an absolute path for the output data. Defaults to `/opt/ml/processing/output`.
 * `s3_upload_mode` - (Optional) Whether to upload the results of the monitoring job continuously or after the job completes. Valid values are `Continuous` or `EndOfJob`
-* `s3_uri` - (Required) A URI that identifies the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job.
+* `s3_uri` - (Required) A URI that identifies the Amazon S3 storage location where Amazon SageMaker AI saves the results of a monitoring job.
 
 ### job_resources
 
@@ -135,7 +135,7 @@ This resource supports the following arguments:
 
 * `instance_count` - (Required) The number of ML compute instances to use in the model monitoring job. For distributed processing jobs, specify a value greater than 1.
 * `instance_type` - (Required) The ML compute instance type for the processing job.
-* `volume_kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
+* `volume_kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
 * `volume_size_in_gb` - (Required) The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.
 
 ### network_config

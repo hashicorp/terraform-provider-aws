@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Policy Store")
+// @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
 func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourcePolicyStore{}, nil
 }
@@ -31,25 +31,21 @@ type dataSourcePolicyStore struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourcePolicyStore) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_verifiedpermissions_policy_store"
-}
-
 func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"created_date": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"last_updated_date": schema.StringAttribute{
+			names.AttrLastUpdatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},

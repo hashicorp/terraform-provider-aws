@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_db_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
@@ -47,7 +48,7 @@ func resourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +56,7 @@ func resourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -65,21 +66,21 @@ func resourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validEventSubscriptionName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validEventSubscriptionName,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
 			"sns_topic": {
 				Type:         schema.TypeString,
@@ -91,7 +92,7 @@ func resourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"source_type": {
+			names.AttrSourceType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.SourceType](),
@@ -99,21 +100,19 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
 		SubscriptionName: aws.String(name),
-		Tags:             getTagsInV2(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
@@ -124,7 +123,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("source_type"); ok {
+	if v, ok := d.GetOk(names.AttrSourceType); ok {
 		input.SourceType = aws.String(v.(string))
 	}
 
@@ -143,7 +142,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -159,37 +158,37 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", sub.EventSubscriptionArn)
+	d.Set(names.AttrARN, sub.EventSubscriptionArn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-	d.Set("enabled", sub.Enabled)
+	d.Set(names.AttrEnabled, sub.Enabled)
 	d.Set("event_categories", sub.EventCategoriesList)
-	d.Set("name", sub.CustSubscriptionId)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
+	d.Set(names.AttrName, sub.CustSubscriptionId)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
 	d.Set("source_ids", sub.SourceIdsList)
-	d.Set("source_type", sub.SourceType)
+	d.Set(names.AttrSourceType, sub.SourceType)
 
 	return diags
 }
 
-func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
 		input := &rds.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringValueSet(d.Get("event_categories").(*schema.Set))
-			input.SourceType = aws.String(d.Get("source_type").(string))
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
-		if d.HasChange("source_type") {
-			input.SourceType = aws.String(d.Get("source_type").(string))
+		if d.HasChange(names.AttrSourceType) {
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
 		if d.HasChange("sns_topic") {
@@ -242,7 +241,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -325,7 +324,7 @@ func findEventSubscriptions(ctx context.Context, conn *rds.Client, input *rds.De
 }
 
 func statusEventSubscription(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEventSubscriptionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

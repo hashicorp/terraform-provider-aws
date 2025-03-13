@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,19 +39,17 @@ func resourceIdentityProviderConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -65,7 +62,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -120,7 +117,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +132,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
 	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
 	input := &eks.AssociateIdentityProviderConfigInput{
@@ -182,12 +179,12 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", oidc.IdentityProviderConfigArn)
-	d.Set("cluster_name", oidc.ClusterName)
+	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
+	d.Set(names.AttrClusterName, oidc.ClusterName)
 	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}
-	d.Set("status", oidc.Status)
+	d.Set(names.AttrStatus, oidc.Status)
 
 	setTagsOut(ctx, oidc.Tags)
 
@@ -323,7 +320,7 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 
 	apiObject := &types.OidcIdentityProviderConfigRequest{}
 
-	if v, ok := tfMap["client_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
 
@@ -368,7 +365,7 @@ func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClientId; v != nil {
-		tfMap["client_id"] = aws.ToString(v)
+		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupsClaim; v != nil {

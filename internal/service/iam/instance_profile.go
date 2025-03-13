@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,7 +34,7 @@ const (
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="id", resourceType="InstanceProfile")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.InstanceProfile")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
@@ -46,7 +47,7 @@ func resourceInstanceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,29 +55,29 @@ func resourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
 				ForceNew: true,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -87,8 +88,6 @@ func resourceInstanceProfile() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -96,17 +95,17 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
-		Path:                aws.String(d.Get("path").(string)),
+		Path:                aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateInstanceProfile(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -127,7 +126,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		err := instanceProfileAddRole(ctx, conn, d.Id(), v.(string))
 
 		if err != nil {
@@ -147,6 +146,10 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting IAM Instance Profile (%s) tags: %s", d.Id(), err)
 		}
+	}
+
+	if err := waitInstanceProfileReady(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", name, err)
 	}
 
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
@@ -185,17 +188,17 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	d.Set("arn", instanceProfile.Arn)
+	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
-	d.Set("name", instanceProfile.InstanceProfileName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
-	d.Set("path", instanceProfile.Path)
+	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
+	d.Set(names.AttrPath, instanceProfile.Path)
 
-	if d.Get("role") != "" {
-		d.Set("role", nil)
+	if d.Get(names.AttrRole) != "" {
+		d.Set(names.AttrRole, nil)
 	}
 	if len(instanceProfile.Roles) > 0 {
-		d.Set("role", instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
+		d.Set(names.AttrRole, instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
@@ -209,8 +212,8 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChange("role") {
-		o, n := d.GetChange("role")
+	if d.HasChange(names.AttrRole) {
+		o, n := d.GetChange(names.AttrRole)
 
 		if o := o.(string); o != "" {
 			err := instanceProfileRemoveRole(ctx, conn, d.Id(), o)
@@ -229,6 +232,10 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if err := waitInstanceProfileReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
@@ -236,7 +243,7 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		err := instanceProfileRemoveRole(ctx, conn, d.Id(), v.(string))
 
 		if err != nil {
@@ -332,6 +339,47 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	return output.InstanceProfile, nil
+}
+
+const (
+	InstanceProfileFound      = "Found"
+	InstanceProfileInvalidARN = "InvalidARN"
+)
+
+func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findInstanceProfileByName(ctx, conn, name)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		_, err = arn.Parse(aws.ToString(output.Arn))
+		if err != nil {
+			return nil, InstanceProfileInvalidARN, nil // lint:ignore nilerr // this is usually a temporary state
+		}
+
+		return output, InstanceProfileFound, nil
+	}
+}
+
+func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"", InstanceProfileInvalidARN},
+		Target:                    enum.Slice(InstanceProfileFound),
+		Refresh:                   statusInstanceProfile(ctx, conn, id),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {

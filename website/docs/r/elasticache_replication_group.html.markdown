@@ -31,7 +31,7 @@ for more information.
 
 ## Example Usage
 
-### Redis Cluster Mode Disabled
+### Redis OSS/Valkey Cluster Mode Disabled
 
 To create a single shard primary with single read replica:
 
@@ -77,7 +77,7 @@ resource "aws_elasticache_cluster" "replica" {
 }
 ```
 
-### Redis Cluster Mode Enabled
+### Redis OSS/Valkey Cluster Mode Enabled
 
 To create two shards with a primary and a single read replica each:
 
@@ -130,7 +130,7 @@ for full details on using Replication Groups.
 
 ### Creating a secondary replication group for a global replication group
 
-A Global Replication Group can have one one two secondary Replication Groups in different regions. These are added to an existing Global Replication Group.
+A Global Replication Group can have up to two secondary Replication Groups in different regions. These are added to an existing Global Replication Group.
 
 ```terraform
 resource "aws_elasticache_replication_group" "secondary" {
@@ -195,14 +195,19 @@ The following arguments are optional:
 
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
+  When `engine` is `redis`, default is `false`.
+  When `engine` is `valkey`, default is `true`.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
-  Only supported for engine type `"redis"` and if the engine version is 6 or higher.
+  Only supported for engine types `"redis"` and `"valkey"` and if the engine version is 6 or higher.
   Defaults to `true`.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `num_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
+* `cluster_mode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
-* `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. The only valid value is `redis`.
+* `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
+  Valid values are `redis` or `valkey`.
+  Default is `redis`.
 * `engine_version` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
   If the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
   If the version is 6, the major and minor version can be set, e.g., `6.2`,
@@ -213,21 +218,33 @@ The following arguments are optional:
 * `global_replication_group_id` - (Optional) The ID of the global replication group to which this replication group should belong. If this parameter is specified, the replication group is added to the specified global replication group as a secondary replication group; otherwise, the replication group is not part of any global replication group. If `global_replication_group_id` is set, the `num_node_groups` parameter cannot be set.
 * `ip_discovery` - (Optional) The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`.
 * `kms_key_id` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
-* `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
+* `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis OSS/Valkey [SLOWLOG](https://redis.io/commands/slowlog) or Redis OSS/Valkey [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
-* `multi_az_enabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group. If `true`, `automatic_failover_enabled` must also be enabled. Defaults to `false`.
+* `multi_az_enabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group.
+  If `true`, `automatic_failover_enabled` must also be enabled.
+  Defaults to `false`.
 * `network_type` - (Optional) The IP versions for cache cluster connections. Valid values are `ipv4`, `ipv6` or `dual_stack`.
-* `node_type` - (Optional) Instance class to be used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). Required unless `global_replication_group_id` is set. Cannot be set if `global_replication_group_id` is set.
+* `node_type` - (Optional) Instance class to be used.
+  See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
+  Required unless `global_replication_group_id` is set.
+  Cannot be set if `global_replication_group_id` is set.
 * `notification_topic_arn` – (Optional) ARN of an SNS topic to send ElastiCache notifications to. Example: `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
-* `num_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. Conflicts with `num_node_groups`. Defaults to `1`.
+* `num_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have.
+  If `automatic_failover_enabled` or `multi_az_enabled` are `true`, must be at least 2.
+  Updates will occur before other modifications.
+  Conflicts with `num_node_groups` and `replicas_per_node_group`.
+  Defaults to `1`.
 * `num_node_groups` - (Optional) Number of node groups (shards) for this Redis replication group.
   Changing this number will trigger a resizing operation before other settings modifications.
+  Conflicts with `num_cache_clusters`.
 * `parameter_group_name` - (Optional) Name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used. To enable "cluster mode", i.e., data sharding, use a parameter group that has the parameter `cluster-enabled` set to true.
 * `port` – (Optional) Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 * `preferred_cache_cluster_azs` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
 * `replicas_per_node_group` - (Optional) Number of replica nodes in each node group.
   Changing this number will trigger a resizing operation before other settings modifications.
   Valid values are 0 to 5.
+  Conflicts with `num_cache_clusters`.
+  Can only be set if `num_node_groups` is set.
 * `security_group_ids` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `security_group_names` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `snapshot_arns` – (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
@@ -247,7 +264,7 @@ The following arguments are optional:
 
 ### Log Delivery Configuration
 
-The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
+The `log_delivery_configuration` block allows the streaming of Redis OSS/Valkey [SLOWLOG](https://redis.io/commands/slowlog) or Redis OSS/Valkey [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
 
 * `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
 * `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
@@ -273,7 +290,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `delete` - (Default `40m`)
+* `delete` - (Default `45m`)
 * `update` - (Default `40m`)
 
 ## Import

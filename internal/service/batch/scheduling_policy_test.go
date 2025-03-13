@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedulingPolicy1 batch.SchedulingPolicyDetail
+	var schedulingPolicy1 awstypes.SchedulingPolicyDetail
 	resourceName := "aws_batch_scheduling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,13 +35,13 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &schedulingPolicy1),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "scheduling-policy/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_decay_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -54,13 +54,13 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 				Config: testAccSchedulingPolicyConfig_basic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &schedulingPolicy1),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "scheduling-policy/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_decay_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 
 func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedulingPolicy1 batch.SchedulingPolicyDetail
+	var schedulingPolicy1 awstypes.SchedulingPolicyDetail
 	resourceName := "aws_batch_scheduling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -91,18 +91,14 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, v *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
+func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, v *awstypes.SchedulingPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Batch Scheduling Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 		output, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -122,7 +118,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 			if rs.Type != "aws_batch_scheduling_policy" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 			_, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -136,6 +132,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 
 			return fmt.Errorf("Batch Scheduling Policy %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -187,69 +184,4 @@ resource "aws_batch_scheduling_policy" "test" {
   }
 }
 `, rName)
-}
-
-func testAccSchedulingPolicyConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_scheduling_policy" "test" {
-  name = %[1]q
-
-  fair_share_policy {
-    compute_reservation = 0
-    share_decay_seconds = 0
-  }
-}
-`, rName)
-}
-
-func testAccSchedulingPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_scheduling_policy" "test" {
-  name = %[1]q
-
-  fair_share_policy {
-    compute_reservation = 0
-    share_decay_seconds = 0
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccSchedulingPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_scheduling_policy" "test" {
-  name = %[1]q
-
-  fair_share_policy {
-    compute_reservation = 0
-    share_decay_seconds = 0
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccSchedulingPolicyConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_scheduling_policy" "test" {
-  name = %[1]q
-
-  fair_share_policy {
-    compute_reservation = 0
-    share_decay_seconds = 0
-  }
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }

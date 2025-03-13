@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -25,9 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lakeformation_permissions")
+// @SDKResource("aws_lakeformation_permissions", name="Permissions")
 func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsCreate,
@@ -35,7 +37,7 @@ func ResourcePermissions() *schema.Resource {
 		DeleteWithoutTimeout: resourcePermissionsDelete,
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
@@ -49,7 +51,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -64,11 +66,11 @@ func ResourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -76,7 +78,7 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -92,7 +94,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -101,13 +103,13 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
@@ -117,7 +119,7 @@ func ResourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -126,7 +128,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -135,14 +137,14 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -159,7 +161,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -168,19 +170,19 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
 							Computed: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -202,7 +204,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -211,25 +213,25 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										ForceNew: true,
@@ -242,7 +244,7 @@ func ResourcePermissions() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
@@ -251,8 +253,8 @@ func ResourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"permissions": {
-				Type:     schema.TypeList,
+			names.AttrPermissions: {
+				Type:     schema.TypeSet,
 				ForceNew: true,
 				MinItems: 1,
 				Required: true,
@@ -262,7 +264,7 @@ func ResourcePermissions() *schema.Resource {
 				},
 			},
 			"permissions_with_grant_option": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				ForceNew: true,
 				Optional: true,
@@ -271,7 +273,7 @@ func ResourcePermissions() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 				},
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -286,7 +288,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -295,19 +297,19 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 							ForceNew: true,
@@ -339,7 +341,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -348,7 +350,7 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
@@ -368,7 +370,7 @@ func ResourcePermissions() *schema.Resource {
 								"table_with_columns.0.wildcard",
 							},
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -382,7 +384,7 @@ func ResourcePermissions() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -420,14 +422,14 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
-		Permissions: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
+		Permissions: flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -436,7 +438,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
-		input.PermissionsWithGrantOption = flex.ExpandStringyValueList[awstypes.Permission](v.([]interface{}))
+		input.PermissionsWithGrantOption = flex.ExpandStringyValueSet[awstypes.Permission](v.(*schema.Set))
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
@@ -447,7 +449,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -505,7 +507,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions: empty response")
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
@@ -516,12 +518,12 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -537,7 +539,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -619,7 +621,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
 		d.Set("catalog_resource", false)
 		d.Set("data_location", nil)
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
 		d.Set("lf_tag", nil)
 		d.Set("lf_tag_policy", nil)
 		d.Set("table_with_columns", nil)
@@ -631,8 +633,8 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
 	}
 
-	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenResourcePermissions(cleanPermissions))
+	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
+	d.Set(names.AttrPermissions, flattenResourcePermissions(cleanPermissions))
 	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
@@ -650,11 +652,11 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set(names.AttrDatabase, []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
 	}
 
 	if cleanPermissions[0].Resource.DataCellsFilter != nil {
@@ -739,15 +741,15 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
-		Permissions:                flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
-		PermissionsWithGrantOption: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions_with_grant_option").([]interface{})),
+		Permissions:                flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
+		PermissionsWithGrantOption: flex.ExpandStringyValueSet[awstypes.Permission](d.Get("permissions_with_grant_option").(*schema.Set)),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -755,11 +757,15 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
+	if v, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -816,6 +822,10 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Cell Filter not found") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to revoke LakeFormation Permissions (input: %v): %s", input, err)
 	}
@@ -866,11 +876,11 @@ func ExpandDataCellsFilter(in []interface{}) *awstypes.DataCellsFilterResource {
 	m := in[0].(map[string]interface{})
 	var out awstypes.DataCellsFilterResource
 
-	if v, ok := m["database_name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrDatabaseName].(string); ok && v != "" {
 		out.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := m["name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrName].(string); ok && v != "" {
 		out.Name = aws.String(v)
 	}
 
@@ -878,7 +888,7 @@ func ExpandDataCellsFilter(in []interface{}) *awstypes.DataCellsFilterResource {
 		out.TableCatalogId = aws.String(v)
 	}
 
-	if v, ok := m["table_name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrTableName].(string); ok && v != "" {
 		out.TableName = aws.String(v)
 	}
 
@@ -891,10 +901,10 @@ func flattenDataCellsFilter(in *awstypes.DataCellsFilterResource) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"database_name":    aws.ToString(in.DatabaseName),
-		"name":             aws.ToString(in.Name),
-		"table_catalog_id": aws.ToString(in.TableCatalogId),
-		"table_name":       aws.ToString(in.TableName),
+		names.AttrDatabaseName: aws.ToString(in.DatabaseName),
+		names.AttrName:         aws.ToString(in.Name),
+		"table_catalog_id":     aws.ToString(in.TableCatalogId),
+		names.AttrTableName:    aws.ToString(in.TableName),
 	}
 
 	return []interface{}{m}
@@ -907,11 +917,11 @@ func ExpandDataLocationResource(tfMap map[string]interface{}) *awstypes.DataLoca
 
 	apiObject := &awstypes.DataLocationResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.ResourceArn = aws.String(v)
 	}
 
@@ -926,11 +936,11 @@ func flattenDataLocationResource(apiObject *awstypes.DataLocationResource) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.ResourceArn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -943,11 +953,11 @@ func ExpandDatabaseResource(tfMap map[string]interface{}) *awstypes.DatabaseReso
 
 	apiObject := &awstypes.DatabaseResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -962,11 +972,11 @@ func flattenDatabaseResource(apiObject *awstypes.DatabaseResource) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -979,15 +989,15 @@ func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *awstypes.LFTagPoli
 
 	apiObject := &awstypes.LFTagPolicyResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["expression"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrExpression].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Expression = ExpandLFTagExpression(v.List())
 	}
 
-	if v, ok := tfMap["resource_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
 		apiObject.ResourceType = awstypes.ResourceType(v)
 	}
 
@@ -1000,8 +1010,8 @@ func ExpandLFTagExpression(expression []interface{}) []awstypes.LFTag {
 		elementMap := element.(map[string]interface{})
 
 		tag := awstypes.LFTag{
-			TagKey:    aws.String(elementMap["key"].(string)),
-			TagValues: flex.ExpandStringValueSet(elementMap["values"].(*schema.Set)),
+			TagKey:    aws.String(elementMap[names.AttrKey].(string)),
+			TagValues: flex.ExpandStringValueSet(elementMap[names.AttrValues].(*schema.Set)),
 		}
 
 		tagSlice = append(tagSlice, tag)
@@ -1018,15 +1028,15 @@ func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = flattenLFTagExpression(v)
+		tfMap[names.AttrExpression] = flattenLFTagExpression(v)
 	}
 
 	if v := apiObject.ResourceType; v != "" {
-		tfMap["resource_type"] = string(v)
+		tfMap[names.AttrResourceType] = string(v)
 	}
 
 	return tfMap
@@ -1039,11 +1049,11 @@ func flattenLFTagExpression(ts []awstypes.LFTag) []map[string]interface{} {
 			tag := make(map[string]interface{})
 
 			if v := aws.ToString(t.TagKey); v != "" {
-				tag["key"] = v
+				tag[names.AttrKey] = v
 			}
 
 			if v := flex.FlattenStringValueList(t.TagValues); v != nil {
-				tag["values"] = v
+				tag[names.AttrValues] = v
 			}
 
 			tagSlice[i] = tag
@@ -1060,15 +1070,15 @@ func ExpandLFTagKeyResource(tfMap map[string]interface{}) *awstypes.LFTagKeyReso
 
 	apiObject := &awstypes.LFTagKeyResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v != nil {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v != nil {
 		apiObject.TagValues = flex.ExpandStringValueSet(v)
 	}
 
@@ -1083,15 +1093,15 @@ func flattenLFTagKeyResource(apiObject *awstypes.LFTagKeyResource) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagKey; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagValues; v != nil {
-		tfMap["values"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrValues] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap
@@ -1104,15 +1114,15 @@ func ExpandTableResource(tfMap map[string]interface{}) *awstypes.TableResource {
 
 	apiObject := &awstypes.TableResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1130,15 +1140,15 @@ func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *awstyp
 
 	apiObject := &awstypes.TableResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1153,16 +1163,16 @@ func flattenTableResource(apiObject *awstypes.TableResource) map[string]interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
 		if aws.ToString(v) != TableNameAllTables || apiObject.TableWildcard == nil {
-			tfMap["name"] = aws.ToString(v)
+			tfMap[names.AttrName] = aws.ToString(v)
 		}
 	}
 
@@ -1180,7 +1190,7 @@ func expandTableColumnsResource(tfMap map[string]interface{}) *awstypes.TableWit
 
 	apiObject := &awstypes.TableWithColumnsResource{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
@@ -1190,7 +1200,7 @@ func expandTableColumnsResource(tfMap map[string]interface{}) *awstypes.TableWit
 		}
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -1202,7 +1212,7 @@ func expandTableColumnsResource(tfMap map[string]interface{}) *awstypes.TableWit
 		}
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1221,13 +1231,13 @@ func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) m
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	tfMap["column_names"] = flex.FlattenStringValueSet(apiObject.ColumnNames)
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ColumnWildcard; v != nil {
@@ -1236,7 +1246,7 @@ func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) m
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1253,17 +1263,17 @@ func flattenTableColumnsResourceAsTable(apiObject *awstypes.TableWithColumnsReso
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil && aws.ToString(v) == TableNameAllTables && apiObject.ColumnWildcard != nil {
 		tfMap["wildcard"] = true
 	} else if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1282,7 +1292,7 @@ func flattenResourcePermissions(apiObjects []awstypes.PrincipalResourcePermissio
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }
@@ -1300,7 +1310,7 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }

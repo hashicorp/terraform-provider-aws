@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_dynamodb_table: Add missing `on_demand_throughput` and `global_secondary_index.*.on_demand_throughput` attributes to resolve read error
+```

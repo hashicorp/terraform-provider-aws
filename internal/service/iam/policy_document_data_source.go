@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
@@ -40,7 +41,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 									Type: schema.TypeString,
 								},
 							},
-							"type": {
+							names.AttrType: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -59,7 +60,11 @@ func dataSourcePolicyDocument() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				"json": {
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"minified_json": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -68,7 +73,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "override_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"override_policy_documents": {
 					Type:     schema.TypeList,
@@ -87,7 +93,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "source_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"source_policy_documents": {
 					Type:     schema.TypeList,
@@ -102,8 +109,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": setOfStringSchema(),
-							"condition": {
+							names.AttrActions: setOfStringSchema(),
+							names.AttrCondition: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Resource{
@@ -112,7 +119,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 											Type:     schema.TypeString,
 											Required: true,
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Required: true,
 											Elem: &schema.Schema{
@@ -132,19 +139,21 @@ func dataSourcePolicyDocument() *schema.Resource {
 								Default:      "Allow",
 								ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
 							},
-							"not_actions":    setOfStringSchema(),
-							"not_principals": principalsSchema(),
-							"not_resources":  setOfStringSchema(),
-							"principals":     principalsSchema(),
-							"resources":      setOfStringSchema(),
+							"not_actions":       setOfStringSchema(),
+							"not_principals":    principalsSchema(),
+							"not_resources":     setOfStringSchema(),
+							"principals":        principalsSchema(),
+							names.AttrResources: setOfStringSchema(),
 							"sid": {
+								// Because policy documents are widely used outside IAM, we don't enforce
+								// IAM validation rules requiring alphanumeric and no spaces.
 								Type:     schema.TypeString,
 								Optional: true,
 							},
 						},
 					},
 				},
-				"version": {
+				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  "2012-10-17",
@@ -198,7 +207,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 
 	// process the current document
 	doc := &IAMPolicyDoc{
-		Version: d.Get("version").(string),
+		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	if policyID, hasPolicyID := d.GetOk("policy_id"); hasPolicyID {
@@ -226,14 +235,14 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
+			if actions := cfgStmt[names.AttrActions].(*schema.Set).List(); len(actions) > 0 {
 				stmt.Actions = policyDecodeConfigStringList(actions)
 			}
 			if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {
 				stmt.NotActions = policyDecodeConfigStringList(actions)
 			}
 
-			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
+			if resources := cfgStmt[names.AttrResources].(*schema.Set).List(); len(resources) > 0 {
 				var err error
 				stmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
 					policyDecodeConfigStringList(resources), doc.Version,
@@ -268,7 +277,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
+			if conditions := cfgStmt[names.AttrCondition].(*schema.Set).List(); len(conditions) > 0 {
 				var err error
 				stmt.Conditions, err = dataSourcePolicyDocumentMakeConditions(conditions, doc.Version)
 				if err != nil {
@@ -307,7 +316,17 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
+
+	jsonMinDoc, err := json.Marshal(mergedDoc)
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: formatting JSON: %s", err)
+	}
+	jsonMinString := string(jsonMinDoc)
+
+	d.Set("minified_json", jsonMinString)
+
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags
@@ -344,7 +363,7 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.ToStringSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]interface{}))),
 			version,
 		)
 		if err != nil {
@@ -364,7 +383,7 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 		var err error
 		item := itemI.(map[string]interface{})
 		out[i] = IAMPolicyStatementPrincipal{
-			Type: item["type"].(string),
+			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
 			policyDecodeConfigStringList(

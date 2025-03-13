@@ -24,7 +24,6 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +87,14 @@ func resourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
+			},
+			names.AttrMode: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ClusterMode](),
 			},
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -99,7 +105,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -107,13 +113,11 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -123,8 +127,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
-		SubnetIds: flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds: flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TagList:   getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrMode); ok && v != "" {
+		input.Mode = types.ClusterMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -173,10 +181,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_id", cluster.ClusterId)
 	d.Set("cluster_state", cluster.State)
 	d.Set("hsm_type", cluster.HsmType)
+	d.Set(names.AttrMode, cluster.Mode)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
-	d.Set("subnet_ids", tfmaps.Values(cluster.SubnetMapping))
-	d.Set("vpc_id", cluster.VpcId)
+	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
+	d.Set(names.AttrVPCID, cluster.VpcId)
 
 	setTagsOut(ctx, cluster.TagList)
 
@@ -196,9 +205,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 Cluster: %s", d.Id())
-	_, err := conn.DeleteCluster(ctx, &cloudhsmv2.DeleteClusterInput{
+	input := cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCluster(ctx, &input)
 
 	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags

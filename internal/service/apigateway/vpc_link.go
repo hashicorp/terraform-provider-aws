@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -24,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,15 +40,15 @@ func resourceVPCLink() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,8 +62,6 @@ func resourceVPCLink() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -73,18 +69,18 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
-	input := &apigateway.CreateVpcLinkInput{
+	name := d.Get(names.AttrName).(string)
+	input := apigateway.CreateVpcLinkInput{
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 		TargetArns: flex.ExpandStringValueList(d.Get("target_arns").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpcLink(ctx, input)
+	output, err := conn.CreateVpcLink(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway VPC Link (%s): %s", name, err)
@@ -115,9 +111,9 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("description", vpcLink.Description)
-	d.Set("name", vpcLink.Name)
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrDescription, vpcLink.Description)
+	d.Set(names.AttrName, vpcLink.Name)
 	d.Set("target_arns", vpcLink.TargetArns)
 
 	setTagsOut(ctx, vpcLink.Tags)
@@ -129,31 +125,31 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		operations := make([]types.PatchOperation, 0)
 
-		if d.HasChange("description") {
+		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.Op("replace"),
 				Path:  aws.String("/description"),
-				Value: aws.String(d.Get("description").(string)),
+				Value: aws.String(d.Get(names.AttrDescription).(string)),
 			})
 		}
 
-		if d.HasChange("name") {
+		if d.HasChange(names.AttrName) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.Op("replace"),
 				Path:  aws.String("/name"),
-				Value: aws.String(d.Get("name").(string)),
+				Value: aws.String(d.Get(names.AttrName).(string)),
 			})
 		}
 
-		input := &apigateway.UpdateVpcLinkInput{
+		input := apigateway.UpdateVpcLinkInput{
 			PatchOperations: operations,
 			VpcLinkId:       aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateVpcLink(ctx, input)
+		_, err := conn.UpdateVpcLink(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway VPC Link (%s): %s", d.Id(), err)
@@ -172,9 +168,10 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway VPC Link: %s", d.Id())
-	_, err := conn.DeleteVpcLink(ctx, &apigateway.DeleteVpcLinkInput{
+	input := apigateway.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcLink(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -192,11 +189,11 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func findVPCLinkByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetVpcLinkOutput, error) {
-	input := &apigateway.GetVpcLinkInput{
+	input := apigateway.GetVpcLinkInput{
 		VpcLinkId: aws.String(id),
 	}
 
-	output, err := conn.GetVpcLink(ctx, input)
+	output, err := conn.GetVpcLink(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -278,11 +275,6 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.Client, id string)
 	return nil, err
 }
 
-func vpcLinkARN(c *conns.AWSClient, vpcLinkID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/vpclinks/%s", vpcLinkID),
-	}.String()
+func vpcLinkARN(ctx context.Context, c *conns.AWSClient, vpcLinkID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/vpclinks/%s", vpcLinkID))
 }

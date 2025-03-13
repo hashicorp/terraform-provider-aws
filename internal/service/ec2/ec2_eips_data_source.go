@@ -33,7 +33,7 @@ func dataSourceEIPs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"public_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -44,28 +44,28 @@ func dataSourceEIPs() *schema.Resource {
 	}
 }
 
-func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAddressesInput{}
+	input := ec2.DescribeAddressesInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
-			newCustomFilterListV2(filters.(*schema.Set))...)
+			newCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := findEIPs(ctx, conn, input)
+	output, err := findEIPs(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)
@@ -82,7 +82,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("allocation_ids", allocationIDs)
 	d.Set("public_ips", publicIPs)
 

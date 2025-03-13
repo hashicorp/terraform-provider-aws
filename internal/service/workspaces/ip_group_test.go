@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccIPGroup_basic(t *testing.T) {
@@ -24,7 +26,7 @@ func testAccIPGroup_basic(t *testing.T) {
 	var v types.WorkspacesIpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ipGroupNewName := sdkacctest.RandomWithPrefix("tf-acc-test-upd")
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(sdkacctest.RandString(20)))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -37,10 +39,10 @@ func testAccIPGroup_basic(t *testing.T) {
 				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", ipGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -52,8 +54,8 @@ func testAccIPGroup_basic(t *testing.T) {
 				Config: testAccIPGroupConfig_b(ipGroupNewName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", ipGroupNewName),
-					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
@@ -79,11 +81,11 @@ func testAccIPGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIPGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccIPGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -92,20 +94,20 @@ func testAccIPGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccIPGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccIPGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccIPGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -116,7 +118,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspacesIpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(sdkacctest.RandString(20)))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -163,9 +165,9 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
 					testAccCheckDirectoryExists(ctx, directoryResourceName1, &d1),
-					resource.TestCheckTypeSetElemAttrPair(directoryResourceName1, "ip_group_ids.*", "aws_workspaces_ip_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(directoryResourceName1, "ip_group_ids.*", "aws_workspaces_ip_group.test", names.AttrID),
 					testAccCheckDirectoryExists(ctx, directoryResourceName2, &d2),
-					resource.TestCheckTypeSetElemAttrPair(directoryResourceName2, "ip_group_ids.*", "aws_workspaces_ip_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(directoryResourceName2, "ip_group_ids.*", "aws_workspaces_ip_group.test", names.AttrID),
 				),
 			},
 		},
@@ -180,22 +182,18 @@ func testAccCheckIPGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
-			resp, err := conn.DescribeIpGroups(ctx, &workspaces.DescribeIpGroupsInput{
-				GroupIds: []string{rs.Primary.ID},
-			})
+
+			_, err := tfworkspaces.FindIPGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				return fmt.Errorf("error Describing WorkSpaces IP Group: %w", err)
+				return err
 			}
 
-			// Return nil if the IP Group is already destroyed (does not exist)
-			if len(resp.Result) == 0 {
-				return nil
-			}
-
-			if *resp.Result[0].GroupId == rs.Primary.ID {
-				return fmt.Errorf("WorkSpaces IP Group %s still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("WorkSpaces IP Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -209,24 +207,17 @@ func testAccCheckIPGroupExists(ctx context.Context, n string, v *types.Workspace
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Workpsaces IP Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
-		resp, err := conn.DescribeIpGroups(ctx, &workspaces.DescribeIpGroupsInput{
-			GroupIds: []string{rs.Primary.ID},
-		})
+
+		output, err := tfworkspaces.FindIPGroupByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if *resp.Result[0].GroupId == rs.Primary.ID {
-			*v = resp.Result[0]
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WorkSpaces IP Group (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 

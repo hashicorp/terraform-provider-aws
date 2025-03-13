@@ -5,11 +5,12 @@ package rds
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,16 +22,17 @@ import (
 
 // @SDKDataSource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags
-func DataSourceClusterSnapshot() *schema.Resource {
+// @Testing(tagsTest=false)
+func dataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -47,15 +49,15 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,12 +75,12 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -94,16 +96,16 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,9 +113,9 @@ func DataSourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -132,9 +134,9 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	f := tfslices.PredicateTrue[*rds.DBClusterSnapshot]()
+	f := tfslices.PredicateTrue[*types.DBClusterSnapshot]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		f = func(v *rds.DBClusterSnapshot) bool {
+		f = func(v *types.DBClusterSnapshot) bool {
 			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
 		}
 	}
@@ -149,60 +151,38 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var snapshot *rds.DBClusterSnapshot
-	if len(snapshots) > 1 {
-		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentClusterSnapshot(snapshots)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
-		}
-	} else {
-		snapshot = snapshots[0]
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 	}
 
-	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
+	snapshot := slices.MaxFunc(snapshots, func(a, b types.DBClusterSnapshot) int {
+		if a.SnapshotCreateTime == nil || b.SnapshotCreateTime == nil {
+			return 0
+		}
+		return a.SnapshotCreateTime.Compare(aws.ToTime(b.SnapshotCreateTime))
+	})
+
+	d.SetId(aws.ToString(snapshot.DBClusterSnapshotIdentifier))
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
+	d.Set(names.AttrAvailabilityZones, snapshot.AvailabilityZones)
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set(names.AttrEngine, snapshot.Engine)
+	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
-	d.Set("port", snapshot.Port)
+	d.Set(names.AttrPort, snapshot.Port)
 	if snapshot.SnapshotCreateTime != nil {
 		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
 	}
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
-	d.Set("status", snapshot.Status)
-	d.Set("storage_encrypted", snapshot.StorageEncrypted)
-	d.Set("vpc_id", snapshot.VpcId)
+	d.Set(names.AttrStatus, snapshot.Status)
+	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
+	d.Set(names.AttrVPCID, snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
-}
-
-type rdsClusterSnapshotSort []*rds.DBClusterSnapshot
-
-func (a rdsClusterSnapshotSort) Len() int      { return len(a) }
-func (a rdsClusterSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a rdsClusterSnapshotSort) Less(i, j int) bool {
-	// Snapshot creation can be in progress
-	if a[i].SnapshotCreateTime == nil {
-		return true
-	}
-	if a[j].SnapshotCreateTime == nil {
-		return false
-	}
-
-	return (*a[i].SnapshotCreateTime).Before(*a[j].SnapshotCreateTime)
-}
-
-func mostRecentClusterSnapshot(snapshots []*rds.DBClusterSnapshot) *rds.DBClusterSnapshot {
-	sortedSnapshots := snapshots
-	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
-	return sortedSnapshots[len(sortedSnapshots)-1]
 }

@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Assignment Configuration")
+// @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
 func newResourceApplicationAssignmentConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAssignmentConfiguration{}, nil
 }
@@ -35,10 +35,6 @@ const (
 
 type resourceApplicationAssignmentConfiguration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplicationAssignmentConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_assignment_configuration"
 }
 
 func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -53,7 +49,7 @@ func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context,
 			"assignment_required": schema.BoolAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
@@ -69,8 +65,8 @@ func (r *resourceApplicationAssignmentConfiguration) Create(ctx context.Context,
 	plan.ID = types.StringValue(plan.ApplicationARN.ValueString())
 
 	in := &ssoadmin.PutApplicationAssignmentConfigurationInput{
-		ApplicationArn:     aws.String(plan.ApplicationARN.ValueString()),
-		AssignmentRequired: aws.Bool(plan.AssignmentRequired.ValueBool()),
+		ApplicationArn:     plan.ApplicationARN.ValueStringPointer(),
+		AssignmentRequired: plan.AssignmentRequired.ValueBoolPointer(),
 	}
 
 	_, err := conn.PutApplicationAssignmentConfiguration(ctx, in)
@@ -124,8 +120,8 @@ func (r *resourceApplicationAssignmentConfiguration) Update(ctx context.Context,
 
 	if !plan.AssignmentRequired.Equal(state.AssignmentRequired) {
 		in := &ssoadmin.PutApplicationAssignmentConfigurationInput{
-			ApplicationArn:     aws.String(plan.ApplicationARN.ValueString()),
-			AssignmentRequired: aws.Bool(plan.AssignmentRequired.ValueBool()),
+			ApplicationArn:     plan.ApplicationARN.ValueStringPointer(),
+			AssignmentRequired: plan.AssignmentRequired.ValueBoolPointer(),
 		}
 
 		_, err := conn.PutApplicationAssignmentConfiguration(ctx, in)
@@ -153,7 +149,7 @@ func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context,
 	}
 
 	in := &ssoadmin.PutApplicationAssignmentConfigurationInput{
-		ApplicationArn:     aws.String(state.ApplicationARN.ValueString()),
+		ApplicationArn:     state.ApplicationARN.ValueStringPointer(),
 		AssignmentRequired: aws.Bool(true),
 	}
 
@@ -172,7 +168,7 @@ func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context,
 
 func (r *resourceApplicationAssignmentConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Set both id and application_arn on import to avoid immediate diff and planned replacement
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("application_arn"), req.ID)...)
 }
 

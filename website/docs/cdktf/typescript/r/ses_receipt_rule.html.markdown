@@ -95,6 +95,7 @@ Lambda actions support the following:
 S3 actions support the following:
 
 * `bucketName` - (Required) The name of the S3 bucket
+* `iamRoleArn` - (Optional) The ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic
 * `kmsKeyArn` - (Optional) The ARN of the KMS key
 * `objectKeyPrefix` - (Optional) The key prefix of the S3 bucket
 * `topicArn` - (Optional) The ARN of an SNS topic to notify
@@ -157,4 +158,4 @@ Using `terraform import`, import SES receipt rules using the ruleset name and ru
 % terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ab45199c3afbc7c5a3c72ec3d4ff7c87e01a23be591b82978865a7ece9fb3494 -->
+<!-- cache-key: cdktf-0.20.8 input-2b2a4c2e280a318a5e9175f9d2c345e7b31a73965f0d855481a6e46c5ada94d8 -->

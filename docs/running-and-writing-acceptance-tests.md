@@ -4,6 +4,14 @@ Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
 Terraform Providers, see the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing).
 
+## In context
+
+To help place acceptance testing in context, here is an overview of the Terraform AWS Provider's three types of tests.
+
+1. **Acceptance tests** (_You are here!_) are end-to-end evaluations of interactions with AWS. They validate functionalities like creating, reading, and destroying resources within AWS.
+2. [**Unit tests**](unit-tests.md) focus on testing isolated units of code within the software, typically at the function level. They assess functionalities solely within the provider itself.
+3. [**Continuous integration tests**](continuous-integration.md) encompass a suite of automated tests that are executed on every pull request and include linting, compiling code, running unit tests, and performing static analysis.
+
 ## Acceptance Tests Often Cost Money to Run
 
 Our acceptance test suite creates real resources, and as a result, they cost real money to run.
@@ -13,16 +21,17 @@ which are very expensive to run and it's important to be prepared for those cost
 
 Some services which can be cost-prohibitive include (among others):
 
-- WorkSpaces
-- Glue
-- OpenSearch
-- RDS
 - ACM (Amazon Certificate Manager)
-- FSx
-- Kinesis Analytics
+- Bedrock
 - EC2
 - ElastiCache
+- FSx
+- Glue
+- Kinesis Analytics
+- OpenSearch
+- RDS
 - Storage Gateway
+- WorkSpaces
 
 We don't want financial limitations to be a barrier to contribution, so if you are unable to
 pay to run acceptance tests for your contribution, mention this in your
@@ -638,8 +647,8 @@ func TestAccExampleThing_basic(t *testing.T) {
 
 func testAccPreCheckExample(ctx context.Context, t *testing.T) {
   conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
-	input := &example.ListThingsInput{}
-	_, err := conn.ListThingsWithContext(ctx, input)
+	input := example.ListThingsInput{}
+	_, err := conn.ListThingsWithContext(ctx, &input)
 	if testAccPreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -858,9 +867,9 @@ resource "aws_example_thing" "test" {
 
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
-- In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(ctx, t)` to ensure a standardized set of information is required for cross-account testing credentials
+- In the `PreCheck` function, include `acctest.PreCheckAlternateAccount(ctx, t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t)`
-- Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
+- Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -873,7 +882,7 @@ func TestAccExample_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
       acctest.PreCheck(ctx, t)
-      acctest.PreCheckOrganizationsAccount(ctx, t)
+      acctest.PreCheckAlternateAccount(ctx, t)
     },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -916,13 +925,13 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for the usage of `acctest.PreCheckOrganizationsAccount` in the codebase will yield real-world examples of this setup in action.
+Searching for the usage of `acctest.PreCheckAlternateAccount` in the codebase will yield real-world examples of this setup in action.
 
 #### Cross-Region Acceptance Tests
 
 When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
-- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(ctx, t)`
+- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckAlternateAccount(ctx, t)`
 - Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2)` (where the last parameter is number of regions, 2 or 3)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
@@ -1140,12 +1149,12 @@ func sweepThings(region string) error {
   }
 
   conn := client.ExampleConn(ctx)
-  sweepResources := make([]sweep.Sweepable, 0)
+  var sweepResources []sweep.Sweepable
   var errs *multierror.Error
 
-  input := &example.ListThingsInput{}
+  input := example.ListThingsInput{}
 
-  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, lastPage bool) bool {
+  err = conn.ListThingsPages(ctx, &input, func(page *example.ListThingsOutput, lastPage bool) bool {
     if page == nil {
       return !lastPage
     }
@@ -1207,13 +1216,13 @@ func sweepThings(region string) error {
   }
 
   conn := client.ExampleConn(ctx)
-  sweepResources := make([]sweep.Sweepable, 0)
+  var sweepResources []sweep.Sweepable
   var errs *multierror.Error
 
-  input := &example.ListThingsInput{}
+  input := example.ListThingsInput{}
 
   for {
-    output, err := conn.ListThings(input)
+    output, err := conn.ListThings(ctx, &input)
     if awsv1.SkipSweepError(err) {
       log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
       return nil

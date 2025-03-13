@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudsearch_domain", name="Domain")
@@ -45,7 +46,7 @@ func resourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +89,7 @@ func resourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"default_value": {
+						names.AttrDefaultValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -102,7 +103,7 @@ func resourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateIndexName,
@@ -125,9 +126,9 @@ func resourceDomain() *schema.Resource {
 						"source_fields": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`score`), "Cannot be set to reserved field score"),
+							ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.IndexFieldType](),
@@ -140,11 +141,11 @@ func resourceDomain() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+				ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 			},
 			"scaling_parameters": {
 				Type:     schema.TypeList,
@@ -180,11 +181,17 @@ func resourceDomain() *schema.Resource {
 	}
 }
 
+var (
+	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
+	nameRegex      = regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`)
+	scoreRegex     = regexache.MustCompile(`score`)
+)
+
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudsearch.CreateDomainInput{
 		DomainName: aws.String(name),
 	}
@@ -278,14 +285,14 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", domain.ARN)
+	d.Set(names.AttrARN, domain.ARN)
 	if domain.DocService != nil {
 		d.Set("document_service_endpoint", domain.DocService.Endpoint)
 	} else {
 		d.Set("document_service_endpoint", nil)
 	}
 	d.Set("domain_id", domain.DomainId)
-	d.Set("name", domain.DomainName)
+	d.Set(names.AttrName, domain.DomainName)
 	if domain.SearchService != nil {
 		d.Set("search_service_endpoint", domain.SearchService.Endpoint)
 	} else {
@@ -320,9 +327,10 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting scaling_parameters: %s", err)
 	}
 
-	indexResults, err := conn.DescribeIndexFields(ctx, &cloudsearch.DescribeIndexFieldsInput{
-		DomainName: aws.String(d.Get("name").(string)),
-	})
+	input := cloudsearch.DescribeIndexFieldsInput{
+		DomainName: aws.String(d.Get(names.AttrName).(string)),
+	}
+	indexResults, err := conn.DescribeIndexFields(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) index fields: %s", d.Id(), err)
@@ -413,7 +421,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				continue
 			}
 
-			fieldName, _ := tfMap["name"].(string)
+			fieldName, _ := tfMap[names.AttrName].(string)
 
 			if fieldName == "" {
 				continue
@@ -466,9 +474,10 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
-	_, err := conn.DeleteDomain(ctx, &cloudsearch.DeleteDomainInput{
+	input := cloudsearch.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain (%s): %s", d.Id(), err)
@@ -484,9 +493,9 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{2,63}\*?)$`).MatchString(value) {
+	if !indexNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with a letter and be at least 3 and no more than 64 characters long", k))
+			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))
 	}
 
 	if value == "score" {
@@ -768,11 +777,11 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 
 	apiObject := &types.IndexField{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.IndexFieldName = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.IndexFieldType = types.IndexFieldType(v)
 	}
 
@@ -793,7 +802,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -811,7 +820,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -830,7 +839,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.ParseFloat(v, 64)
 
 			if err != nil {
@@ -854,7 +863,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.ParseFloat(v, 64)
 
 			if err != nil {
@@ -879,7 +888,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.Atoi(v)
 
 			if err != nil {
@@ -903,7 +912,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.Atoi(v)
 
 			if err != nil {
@@ -928,7 +937,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -947,7 +956,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -965,7 +974,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -987,7 +996,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			options.AnalysisScheme = aws.String(analysisScheme)
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -1008,7 +1017,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			options.AnalysisScheme = aws.String(analysisScheme)
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -1040,11 +1049,11 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := field.IndexFieldName; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	fieldType := field.IndexFieldType
-	tfMap["type"] = fieldType
+	tfMap[names.AttrType] = fieldType
 
 	switch fieldType {
 	case types.IndexFieldTypeDate:
@@ -1054,7 +1063,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1088,7 +1097,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1119,7 +1128,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Float64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1153,7 +1162,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Float64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1184,7 +1193,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Int64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Int64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1218,7 +1227,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Int64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Int64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1249,7 +1258,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1283,7 +1292,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1317,7 +1326,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1352,7 +1361,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.HighlightEnabled; v != nil {
@@ -1386,7 +1395,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.HighlightEnabled; v != nil {

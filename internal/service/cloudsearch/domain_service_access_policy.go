@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudsearch_domain_service_access_policy", name="Domain Service Access Policy")
@@ -53,7 +54,7 @@ func resourceDomainServiceAccessPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -71,7 +72,7 @@ func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(policy),
 		DomainName:     aws.String(domainName),
@@ -117,7 +118,7 @@ func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("access_policy", policyToSet)
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 
 	return diags
 }
@@ -127,10 +128,11 @@ func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain Service Access Policy: %s", d.Id())
-	_, err := conn.UpdateServiceAccessPolicies(ctx, &cloudsearch.UpdateServiceAccessPoliciesInput{
+	input := cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),
 		DomainName:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.UpdateServiceAccessPolicies(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

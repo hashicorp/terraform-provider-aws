@@ -8,8 +8,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
@@ -35,7 +37,7 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 }`, // lintignore:AWSAT005
 			valid: true,
 		},
-		"account_id": {
+		names.AttrAccountID: {
 			json: `{
   "Statement":[
     {
@@ -205,7 +207,6 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -236,7 +237,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		value string
 		valid bool
 	}{
-		"role_arn": {
+		names.AttrRoleARN: {
 			value: "arn:aws:iam::123456789012:role/role-name", // lintignore:AWSAT005
 			valid: true,
 		},
@@ -244,8 +245,8 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 			value: "arn:aws:iam::123456789012:root", // lintignore:AWSAT005
 			valid: true,
 		},
-		"account_id": {
-			value: "123456789012",
+		names.AttrAccountID: {
+			value: acctest.Ct12Digit,
 			valid: true,
 		},
 		"unique_id": {
@@ -255,7 +256,6 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -376,7 +376,6 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 		},
 	}
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

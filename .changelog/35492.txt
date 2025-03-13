@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_imagebuilder_distribution_configuration: Add `distribution.s3_export_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_distribution_configuration: Add `distribution.s3_export_configuration` argument
+```

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mq_broker_instance_type_offerings", name="Broker Instance Type Offerings")
@@ -27,12 +28,12 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -47,7 +48,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -73,7 +74,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.BrokerStorageType](),
@@ -82,7 +83,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	}
 }
 
-func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -97,7 +98,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 		input.HostInstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_type"); ok {
+	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = aws.String(v.(string))
 	}
 
@@ -117,7 +118,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading MQ Broker Instance Options: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(output)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting broker_instance_options: %s", err)
@@ -126,17 +127,17 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface{} {
+func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []any {
 	if len(bios) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, bio := range bios {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"engine_type":                bio.EngineType,
-			"storage_type":               bio.StorageType,
+			names.AttrStorageType:        bio.StorageType,
 			"supported_deployment_modes": bio.SupportedDeploymentModes,
 			"supported_engine_versions":  bio.SupportedEngineVersions,
 		}
@@ -146,7 +147,7 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface
 		}
 
 		if bio.AvailabilityZones != nil {
-			tfMap["availability_zones"] = flattenAvailabilityZones(bio.AvailabilityZones)
+			tfMap[names.AttrAvailabilityZones] = flattenAvailabilityZones(bio.AvailabilityZones)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -155,18 +156,18 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface
 	return tfList
 }
 
-func flattenAvailabilityZones(azs []types.AvailabilityZone) []interface{} {
+func flattenAvailabilityZones(azs []types.AvailabilityZone) []any {
 	if len(azs) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, az := range azs {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if az.Name != nil {
-			tfMap["name"] = aws.ToString(az.Name)
+			tfMap[names.AttrName] = aws.ToString(az.Name)
 		}
 
 		tfList = append(tfList, tfMap)

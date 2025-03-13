@@ -21,28 +21,33 @@ import (
 
 // @SDKDataSource("aws_api_gateway_vpc_link", name="VPC Link")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,10 +65,10 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name")
-	input := &apigateway.GetVpcLinksInput{}
+	name := d.Get(names.AttrName)
+	input := apigateway.GetVpcLinksInput{}
 
-	match, err := findVPCLink(ctx, conn, input, func(v *types.VpcLink) bool {
+	match, err := findVPCLink(ctx, conn, &input, func(v *types.VpcLink) bool {
 		return aws.ToString(v.Name) == name
 	})
 
@@ -72,10 +77,11 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.ToString(match.Id))
-	d.Set("description", match.Description)
-	d.Set("name", match.Name)
-	d.Set("status", match.Status)
-	d.Set("status_message", match.StatusMessage)
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrDescription, match.Description)
+	d.Set(names.AttrName, match.Name)
+	d.Set(names.AttrStatus, match.Status)
+	d.Set(names.AttrStatusMessage, match.StatusMessage)
 	d.Set("target_arns", match.TargetArns)
 
 	setTagsOut(ctx, match.Tags)

@@ -7,17 +7,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpcs")
-func DataSourceVPCs() *schema.Resource {
+// @SDKDataSource("aws_vpcs", name="VPCs")
+func dataSourceVPCs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCsRead,
 
@@ -26,30 +27,30 @@ func DataSourceVPCs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcsInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
 			newCustomFilterList(filters.(*schema.Set))...)
 	}
@@ -58,7 +59,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filters = nil
 	}
 
-	output, err := FindVPCs(ctx, conn, input)
+	output, err := findVPCs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPCs: %s", err)
@@ -67,11 +68,11 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var vpcIDs []string
 
 	for _, v := range output {
-		vpcIDs = append(vpcIDs, aws.StringValue(v.VpcId))
+		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", vpcIDs)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrIDs, vpcIDs)
 
 	return diags
 }

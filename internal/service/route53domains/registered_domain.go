@@ -14,17 +14,18 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,15 +78,15 @@ func resourceRegisteredDomain() *schema.Resource {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Computed:         true,
-								ValidateDiagFunc: enum.Validate[types.ContactType](),
+								ValidateDiagFunc: enum.Validate[awstypes.ContactType](),
 							},
 							"country_code": {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Computed:         true,
-								ValidateDiagFunc: enum.Validate[types.CountryCode](),
+								ValidateDiagFunc: enum.Validate[awstypes.CountryCode](),
 							},
-							"email": {
+							names.AttrEmail: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -127,7 +128,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(0, 30),
 							},
-							"state": {
+							names.AttrState: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -170,11 +171,11 @@ func resourceRegisteredDomain() *schema.Resource {
 					Optional: true,
 					Default:  true,
 				},
-				"creation_date": {
+				names.AttrCreationDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"domain_name": {
+				names.AttrDomainName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -198,7 +199,7 @@ func resourceRegisteredDomain() *schema.Resource {
 									ValidateFunc: validation.IsIPAddress,
 								},
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
@@ -255,8 +256,6 @@ func resourceRegisteredDomain() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -264,7 +263,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -273,7 +272,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(domainDetail.DomainName))
 
-	var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
+	var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
 
 	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.AdminContact) {
@@ -339,7 +338,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -361,7 +360,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Domains Domain %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -380,9 +379,9 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
-		d.Set("creation_date", aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
 	if domainDetail.BillingContact != nil {
 		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
@@ -392,7 +391,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("billing_contact", nil)
 	}
 	d.Set("billing_privacy", domainDetail.BillingPrivacy)
-	d.Set("domain_name", domainDetail.DomainName)
+	d.Set(names.AttrDomainName, domainDetail.DomainName)
 	if domainDetail.ExpirationDate != nil {
 		d.Set("expiration_date", aws.ToTime(domainDetail.ExpirationDate).Format(time.RFC3339))
 	} else {
@@ -438,7 +437,7 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	if d.HasChanges("admin_contact", "billing_contact", "registrant_contact", "tech_contact") {
-		var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
+		var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
 
 		if key := "admin_contact"; d.HasChange(key) {
 			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -505,6 +504,31 @@ func hasDomainTransferLock(statusList []string) bool {
 	return slices.Contains(statusList, eppStatusClientTransferProhibited)
 }
 
+func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, name string) (*route53domains.GetDomainDetailOutput, error) {
+	input := &route53domains.GetDomainDetailInput{
+		DomainName: aws.String(name),
+	}
+
+	output, err := conn.GetDomainDetail(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, domainName string, autoRenew bool) error {
 	if autoRenew {
 		input := &route53domains.EnableDomainAutoRenewInput{
@@ -531,7 +555,7 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 	return nil
 }
 
-func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, billingContact, registrantContact, techContact *types.ContactDetail, timeout time.Duration) error {
+func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainContactInput{
 		AdminContact:      adminContact,
 		BillingContact:    billingContact,
@@ -575,7 +599,7 @@ func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client
 	return nil
 }
 
-func modifyDomainNameservers(ctx context.Context, conn *route53domains.Client, domainName string, nameservers []types.Nameserver, timeout time.Duration) error {
+func modifyDomainNameservers(ctx context.Context, conn *route53domains.Client, domainName string, nameservers []awstypes.Nameserver, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainNameserversInput{
 		DomainName:  aws.String(domainName),
 		Nameservers: nameservers,
@@ -628,7 +652,7 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 	return nil
 }
 
-func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{} {
+func flattenContactDetail(apiObject *awstypes.ContactDetail) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -651,7 +675,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	tfMap["country_code"] = apiObject.CountryCode
 
 	if v := apiObject.Email; v != nil {
-		tfMap["email"] = aws.ToString(v)
+		tfMap[names.AttrEmail] = aws.ToString(v)
 	}
 
 	if v := apiObject.ExtraParams; v != nil {
@@ -679,7 +703,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.ToString(v)
+		tfMap[names.AttrState] = aws.ToString(v)
 	}
 
 	if v := apiObject.ZipCode; v != nil {
@@ -689,7 +713,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	return tfMap
 }
 
-func flattenExtraParams(apiObjects []types.ExtraParam) map[string]interface{} {
+func flattenExtraParams(apiObjects []awstypes.ExtraParam) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -703,12 +727,12 @@ func flattenExtraParams(apiObjects []types.ExtraParam) map[string]interface{} {
 	return tfMap
 }
 
-func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
+func expandContactDetail(tfMap map[string]interface{}) *awstypes.ContactDetail {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ContactDetail{}
+	apiObject := &awstypes.ContactDetail{}
 
 	if v, ok := tfMap["address_line_1"].(string); ok {
 		apiObject.AddressLine1 = aws.String(v)
@@ -723,14 +747,14 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 	}
 
 	if v, ok := tfMap["contact_type"].(string); ok {
-		apiObject.ContactType = types.ContactType(v)
+		apiObject.ContactType = awstypes.ContactType(v)
 	}
 
 	if v, ok := tfMap["country_code"].(string); ok {
-		apiObject.CountryCode = types.CountryCode(v)
+		apiObject.CountryCode = awstypes.CountryCode(v)
 	}
 
-	if v, ok := tfMap["email"].(string); ok {
+	if v, ok := tfMap[names.AttrEmail].(string); ok {
 		apiObject.Email = aws.String(v)
 	}
 
@@ -758,7 +782,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.PhoneNumber = aws.String(v)
 	}
 
-	if v, ok := tfMap["state"].(string); ok {
+	if v, ok := tfMap[names.AttrState].(string); ok {
 		apiObject.State = aws.String(v)
 	}
 
@@ -769,12 +793,12 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 	return apiObject
 }
 
-func expandExtraParams(tfMap map[string]interface{}) []types.ExtraParam {
+func expandExtraParams(tfMap map[string]interface{}) []awstypes.ExtraParam {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	var apiObjects []types.ExtraParam
+	var apiObjects []awstypes.ExtraParam
 
 	for k, vRaw := range tfMap {
 		v, ok := vRaw.(string)
@@ -783,8 +807,8 @@ func expandExtraParams(tfMap map[string]interface{}) []types.ExtraParam {
 			continue
 		}
 
-		apiObjects = append(apiObjects, types.ExtraParam{
-			Name:  types.ExtraParamName(k),
+		apiObjects = append(apiObjects, awstypes.ExtraParam{
+			Name:  awstypes.ExtraParamName(k),
 			Value: aws.String(v),
 		})
 	}
@@ -792,7 +816,7 @@ func expandExtraParams(tfMap map[string]interface{}) []types.ExtraParam {
 	return apiObjects
 }
 
-func flattenNameserver(apiObject *types.Nameserver) map[string]interface{} {
+func flattenNameserver(apiObject *awstypes.Nameserver) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -804,36 +828,36 @@ func flattenNameserver(apiObject *types.Nameserver) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func expandNameserver(tfMap map[string]interface{}) *types.Nameserver {
+func expandNameserver(tfMap map[string]interface{}) *awstypes.Nameserver {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.Nameserver{}
+	apiObject := &awstypes.Nameserver{}
 
 	if v, ok := tfMap["glue_ips"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.GlueIps = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandNameservers(tfList []interface{}) []types.Nameserver {
+func expandNameservers(tfList []interface{}) []awstypes.Nameserver {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []types.Nameserver
+	var apiObjects []awstypes.Nameserver
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -854,7 +878,7 @@ func expandNameservers(tfList []interface{}) []types.Nameserver {
 	return apiObjects
 }
 
-func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
+func flattenNameservers(apiObjects []awstypes.Nameserver) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -32,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Key Value Store")
+// @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -47,15 +46,11 @@ type keyValueStoreResource struct {
 	framework.WithTimeouts
 }
 
-func (r *keyValueStoreResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_key_value_store"
-}
-
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
 			"etag": schema.StringAttribute{
@@ -301,8 +296,8 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice("PROVISIONING"),
-		Target:  enum.Slice("READY"),
+		Pending: []string{keyValueStoreStatusProvisioning},
+		Target:  []string{keyValueStoreStatusReady},
 		Refresh: statusKeyValueStore(ctx, conn, name),
 		Timeout: timeout,
 	}

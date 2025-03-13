@@ -557,6 +557,7 @@ This resource supports the following arguments:
 - `minSize` - (Required) Minimum size of the Auto Scaling Group.
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 - `availabilityZones` - (Optional) A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the `vpcZoneIdentifier` attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with `vpcZoneIdentifier`.
+- `availabilityZoneDistribution` (Optional) The instance capacity distribution across Availability Zones. See [Availability Zone Distribution](#availability_zone_distribution) below for more details.
 - `capacityRebalance` - (Optional) Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 - `context` - (Optional) Reserved.
 - `defaultCooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
@@ -623,6 +624,10 @@ This resource supports the following arguments:
 - `warmPool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
   to the specified Auto Scaling group. Defined [below](#warm_pool)
 - `forceDeleteWarmPool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
+
+### availability_zone_distribution
+
+- `capacityDistributionStrategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only` and `balanced-best-effort`. Default is `balanced-best-effort`.
 
 ### launch_template
 
@@ -763,6 +768,7 @@ This configuration block supports the following:
     * ssd - solid state drive
   ```
 
+- `maxSpotPriceAsPercentageOfOptimalOnDemandPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spotMaxPricePercentageOverLowestPrice`
 - `memoryGibPerVcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -780,7 +786,7 @@ This configuration block supports the following:
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
 - `requireHibernateSupport` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-- `spotMaxPricePercentageOverLowestPrice` - (Optional) Price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+- `spotMaxPricePercentageOverLowestPrice` - (Optional) Price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `maxSpotPriceAsPercentageOfOptimalOnDemandPrice`
 
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
@@ -991,4 +997,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d8221eb8800cc9d4da77a73ffbf6e1b69ce95525c4e2a7a980891635e0256cc8 -->
+<!-- cache-key: cdktf-0.20.8 input-21f5299d25ae04839c346d7d0a5013fcf19c4d24a82449631f3586dda584cbde -->

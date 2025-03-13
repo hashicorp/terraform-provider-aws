@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_amplify_branch", name="Branch")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amplify/types;types.Branch", serialize=true, serializeDelay=true)
 func resourceBranch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBranchCreate,
@@ -41,15 +42,13 @@ func resourceBranch() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"app_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +87,7 @@ func resourceBranch() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -97,7 +96,7 @@ func resourceBranch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -143,7 +142,7 @@ func resourceBranch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.Stage](),
@@ -181,7 +180,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
 	id := branchCreateResourceID(appID, branchName)
-	input := &amplify.CreateBranchInput{
+	input := amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
@@ -196,11 +195,11 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.BasicAuthCredentials = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -232,7 +231,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PullRequestEnvironmentName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("stage"); ok {
+	if v, ok := d.GetOk(names.AttrStage); ok {
 		input.Stage = types.Stage(v.(string))
 	}
 
@@ -240,7 +239,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Ttl = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateBranch(ctx, input)
+	_, err := conn.CreateBranch(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Branch (%s): %s", id, err)
@@ -273,15 +272,15 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("app_id", appID)
-	d.Set("arn", branch.BranchArn)
+	d.Set(names.AttrARN, branch.BranchArn)
 	d.Set("associated_resources", branch.AssociatedResources)
 	d.Set("backend_environment_arn", branch.BackendEnvironmentArn)
 	d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
 	d.Set("branch_name", branch.BranchName)
 	d.Set("custom_domains", branch.CustomDomains)
-	d.Set("description", branch.Description)
+	d.Set(names.AttrDescription, branch.Description)
 	d.Set("destination_branch", branch.DestinationBranch)
-	d.Set("display_name", branch.DisplayName)
+	d.Set(names.AttrDisplayName, branch.DisplayName)
 	d.Set("enable_auto_build", branch.EnableAutoBuild)
 	d.Set("enable_basic_auth", branch.EnableBasicAuth)
 	d.Set("enable_notification", branch.EnableNotification)
@@ -291,7 +290,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("framework", branch.Framework)
 	d.Set("pull_request_environment_name", branch.PullRequestEnvironmentName)
 	d.Set("source_branch", branch.SourceBranch)
-	d.Set("stage", branch.Stage)
+	d.Set(names.AttrStage, branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
 	setTagsOut(ctx, branch.Tags)
@@ -303,13 +302,13 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		appID, branchName, err := branchParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &amplify.UpdateBranchInput{
+		input := amplify.UpdateBranchInput{
 			AppId:      aws.String(appID),
 			BranchName: aws.String(branchName),
 		}
@@ -322,12 +321,12 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.BasicAuthCredentials = aws.String(d.Get("basic_auth_credentials").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("display_name") {
-			input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChange(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
 		if d.HasChange("enable_auto_build") {
@@ -366,15 +365,15 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.PullRequestEnvironmentName = aws.String(d.Get("pull_request_environment_name").(string))
 		}
 
-		if d.HasChange("stage") {
-			input.Stage = types.Stage(d.Get("stage").(string))
+		if d.HasChange(names.AttrStage) {
+			input.Stage = types.Stage(d.Get(names.AttrStage).(string))
 		}
 
 		if d.HasChange("ttl") {
 			input.Ttl = aws.String(d.Get("ttl").(string))
 		}
 
-		_, err = conn.UpdateBranch(ctx, input)
+		_, err = conn.UpdateBranch(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify Branch (%s): %s", d.Id(), err)
@@ -394,10 +393,11 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())
-	_, err = conn.DeleteBranch(ctx, &amplify.DeleteBranchInput{
+	input := amplify.DeleteBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
-	})
+	}
+	_, err = conn.DeleteBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -411,17 +411,17 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
-	input := &amplify.GetBranchInput{
+	input := amplify.GetBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
 	}
 
-	output, err := conn.GetBranch(ctx, input)
+	output, err := conn.GetBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -430,7 +430,7 @@ func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, br
 	}
 
 	if output == nil || output.Branch == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.Branch, nil

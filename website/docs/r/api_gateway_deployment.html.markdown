@@ -130,12 +130,24 @@ resource "aws_api_gateway_stage" "example" {
 
 This resource supports the following arguments:
 
-* `rest_api_id` - (Required) REST API identifier.
+* `canary_settings` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Input configuration for the canary deployment when the deployment is a canary release deployment.
+  See [`canary_settings](#canary_settings-argument-reference) below.
+  Has no effect when `stage_name` is not set.
 * `description` - (Optional) Description of the deployment
-* `stage_name` - (Optional) Name of the stage to create with this deployment. If the specified stage already exists, it will be updated to point to the new deployment. We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.
-* `stage_description` - (Optional) Description to set on the stage managed by the `stage_name` argument.
+* `rest_api_id` - (Required) REST API identifier.
+* `stage_description` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Description to set on the stage managed by the `stage_name` argument.
+  Has no effect when `stage_name` is not set.
+* `stage_name` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Name of the stage to create with this deployment.
+  If the specified stage already exists, it will be updated to point to the new deployment.
+  We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
 * `variables` - (Optional) Map to set on the stage managed by the `stage_name` argument.
+
+### `canary_settings` Argument Reference
+
+* `percent_traffic` - Percentage (0.0-100.0) of traffic routed to the canary deployment.
+* `stage_variable_overrides` - Stage variable overrides used for the canary release deployment. They can override existing stage variables or add new stage variables for the canary release deployment. These stage variables are represented as a string-to-string map between stage variable names and their values.
+* `use_stage_cache` - Boolean flag to indicate whether the canary release deployment uses the stage cache or not.
 
 ## Attribute Reference
 

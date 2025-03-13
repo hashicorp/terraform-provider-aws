@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,6 +29,8 @@ import (
 
 // @SDKResource("aws_apigatewayv2_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetStageOutput")
+// @Testing(importStateIdFunc="testAccStageImportStateIdFunc")
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
@@ -49,12 +50,12 @@ func resourceStage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -66,7 +67,7 @@ func resourceStage() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +120,7 @@ func resourceStage() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -132,7 +133,7 @@ func resourceStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -183,8 +184,6 @@ func resourceStage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -199,7 +198,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiID, err)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	protocolType := outputGA.ProtocolType
 	input := &apigatewayv2.CreateStageInput{
 		ApiId:      aws.String(apiID),
@@ -224,7 +223,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DeploymentId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -268,16 +267,16 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(outputGS.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set("arn", stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("auto_deploy", outputGS.AutoDeploy)
 	d.Set("client_certificate_id", outputGS.ClientCertificateId)
 	if err := d.Set("default_route_settings", flattenDefaultRouteSettings(outputGS.DefaultRouteSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_route_settings: %s", err)
 	}
 	d.Set("deployment_id", outputGS.DeploymentId)
-	d.Set("description", outputGS.Description)
-	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
-	d.Set("name", stageName)
+	d.Set(names.AttrDescription, outputGS.Description)
+	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrName, stageName)
 	if err := d.Set("route_settings", flattenRouteSettings(outputGS.RouteSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
 	}
@@ -301,7 +300,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
-		"default_route_settings", "deployment_id", "description",
+		"default_route_settings", "deployment_id", names.AttrDescription,
 		"route_settings", "stage_variables") {
 		apiID := d.Get("api_id").(string)
 		outputGA, err := findAPIByID(ctx, conn, apiID)
@@ -336,8 +335,8 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.DeploymentId = aws.String(d.Get("deployment_id").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("route_settings") {
@@ -396,10 +395,11 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigatewayv2.DeleteStageInput{
+	input := apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -469,6 +469,33 @@ func findStage(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 	return output, nil
 }
 
+func findStages(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetStagesInput) ([]awstypes.Stage, error) {
+	var output []awstypes.Stage
+
+	err := getStagesPages(ctx, conn, input, func(page *apigatewayv2.GetStagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSettings {
 	settings := &awstypes.AccessLogSettings{}
 
@@ -477,10 +504,10 @@ func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSetting
 	}
 	mSettings := vSettings[0].(map[string]interface{})
 
-	if vDestinationArn, ok := mSettings["destination_arn"].(string); ok && vDestinationArn != "" {
+	if vDestinationArn, ok := mSettings[names.AttrDestinationARN].(string); ok && vDestinationArn != "" {
 		settings.DestinationArn = aws.String(vDestinationArn)
 	}
-	if vFormat, ok := mSettings["format"].(string); ok && vFormat != "" {
+	if vFormat, ok := mSettings[names.AttrFormat].(string); ok && vFormat != "" {
 		settings.Format = aws.String(vFormat)
 	}
 
@@ -493,8 +520,8 @@ func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []interface{
 	}
 
 	return []interface{}{map[string]interface{}{
-		"destination_arn": aws.ToString(settings.DestinationArn),
-		"format":          aws.ToString(settings.Format),
+		names.AttrDestinationARN: aws.ToString(settings.DestinationArn),
+		names.AttrFormat:         aws.ToString(settings.Format),
 	}}
 }
 
@@ -586,21 +613,10 @@ func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []interfac
 	return vSettings
 }
 
-func stageARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/apis/%s/stages/%s", apiID, stageName),
-	}.String()
+func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/apis/%s/stages/%s", apiID, stageName))
 }
 
-func stageInvokeARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  fmt.Sprintf("%s/%s", apiID, stageName),
-	}.String()
+func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARN(ctx, "execute-api", fmt.Sprintf("%s/%s", apiID, stageName))
 }

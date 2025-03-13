@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_amplify_domain_association", name="Domain Association")
@@ -43,15 +45,39 @@ func resourceDomainAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"certificate_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_verification_dns_record": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.CertificateType](),
+						},
+						"custom_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
 			},
 			"certificate_verification_dns_record": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -76,7 +102,7 @@ func resourceDomainAssociation() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -102,16 +128,20 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	id := domainAssociationCreateResourceID(appID, domainName)
-	input := &amplify.CreateDomainAssociationInput{
+	input := amplify.CreateDomainAssociationInput{
 		AppId:               aws.String(appID),
 		DomainName:          aws.String(domainName),
 		EnableAutoSubDomain: aws.Bool(d.Get("enable_auto_sub_domain").(bool)),
 		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
-	_, err := conn.CreateDomainAssociation(ctx, input)
+	if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CertificateSettings = expandCertificateSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	_, err := conn.CreateDomainAssociation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Domain Association (%s): %s", id, err)
@@ -154,12 +184,15 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("app_id", appID)
-	d.Set("arn", domainAssociation.DomainAssociationArn)
+	d.Set(names.AttrARN, domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
-	d.Set("domain_name", domainAssociation.DomainName)
+	d.Set(names.AttrDomainName, domainAssociation.DomainName)
 	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
+	}
+	if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
 	}
 
 	return diags
@@ -174,10 +207,16 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("enable_auto_sub_domain", "sub_domain") {
-		input := &amplify.UpdateDomainAssociationInput{
+	if d.HasChanges("certificate_settings", "enable_auto_sub_domain", "sub_domain") {
+		input := amplify.UpdateDomainAssociationInput{
 			AppId:      aws.String(appID),
 			DomainName: aws.String(domainName),
+		}
+
+		if d.HasChange("certificate_settings") {
+			if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("enable_auto_sub_domain") {
@@ -188,16 +227,16 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 			input.SubDomainSettings = expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateDomainAssociation(ctx, input)
+		_, err := conn.UpdateDomainAssociation(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify Domain Association (%s): %s", d.Id(), err)
 		}
-	}
 
-	if d.Get("wait_for_verification").(bool) {
-		if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
+		if d.Get("wait_for_verification").(bool) {
+			if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -214,10 +253,11 @@ func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Domain Association: %s", d.Id())
-	_, err = conn.DeleteDomainAssociation(ctx, &amplify.DeleteDomainAssociationInput{
+	input := amplify.DeleteDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
-	})
+	}
+	_, err = conn.DeleteDomainAssociation(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -231,12 +271,12 @@ func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
-	input := &amplify.GetDomainAssociationInput{
+	input := amplify.GetDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
 	}
 
-	output, err := conn.GetDomainAssociation(ctx, input)
+	output, err := conn.GetDomainAssociation(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -277,8 +317,18 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.DomainStatusCreating, types.DomainStatusInProgress, types.DomainStatusRequestingCertificate),
-		Target:  enum.Slice(types.DomainStatusPendingVerification, types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
+		Pending: enum.Slice(
+			types.DomainStatusCreating,
+			types.DomainStatusInProgress,
+			types.DomainStatusRequestingCertificate,
+			types.DomainStatusImportingCustomCertificate,
+		),
+		Target: enum.Slice(
+			types.DomainStatusPendingVerification,
+			types.DomainStatusPendingDeployment,
+			types.DomainStatusAvailable,
+			types.DomainStatusAwaitingAppCname,
+		),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,
 	}
@@ -301,8 +351,48 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 		timeout = 15 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.DomainStatusUpdating, types.DomainStatusInProgress, types.DomainStatusPendingVerification),
-		Target:  enum.Slice(types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
+		Pending: enum.Slice(
+			types.DomainStatusUpdating,
+			types.DomainStatusInProgress,
+			types.DomainStatusPendingVerification,
+			types.DomainStatusAwaitingAppCname,
+			types.DomainStatusImportingCustomCertificate,
+		),
+		Target: enum.Slice(
+			types.DomainStatusPendingDeployment,
+			types.DomainStatusAvailable,
+		),
+		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*types.DomainAssociation); ok {
+		if v.DomainStatus == types.DomainStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+		}
+
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
+	const (
+		timeout = 15 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.DomainStatusUpdating,
+			types.DomainStatusInProgress,
+			types.DomainStatusPendingVerification,
+			types.DomainStatusPendingDeployment,
+		),
+		Target: enum.Slice(
+			types.DomainStatusAvailable,
+		),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,
 	}
@@ -351,7 +441,7 @@ func expandSubDomainSetting(tfMap map[string]interface{}) *types.SubDomainSettin
 	}
 
 	// Empty prefix is allowed.
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -384,6 +474,41 @@ func expandSubDomainSettings(tfList []interface{}) []types.SubDomainSetting {
 	return apiObjects
 }
 
+func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CertificateSettings{
+		Type: types.CertificateType(tfMap[names.AttrType].(string)),
+	}
+
+	if v, ok := tfMap["custom_certificate_arn"].(string); ok && v != "" {
+		apiObject.CustomCertificateArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenCertificateSettings(apiObject *types.Certificate) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap[names.AttrType] = apiObject.Type
+
+	if v := apiObject.CertificateVerificationDNSRecord; v != nil {
+		tfMap["certificate_verification_dns_record"] = aws.ToString(v)
+	}
+	if v := apiObject.CustomCertificateArn; v != nil {
+		tfMap["custom_certificate_arn"] = aws.ToString(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
@@ -399,7 +524,7 @@ func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
 		}
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 	}
 

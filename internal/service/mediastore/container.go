@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,25 +37,23 @@ func ResourceContainer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -65,7 +62,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
 	input := &mediastore.CreateContainerInput{
-		ContainerName: aws.String(d.Get("name").(string)),
+		ContainerName: aws.String(d.Get(names.AttrName).(string)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -102,9 +99,9 @@ func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := aws.ToString(resp.ARN)
-	d.Set("arn", arn)
-	d.Set("name", resp.Name)
-	d.Set("endpoint", resp.Endpoint)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrEndpoint, resp.Endpoint)
 
 	return diags
 }

@@ -38,12 +38,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `name` - (Required) Friendly EventBridge event bus name.
+* `name` - (Required) Name of the event bus.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN.
+* `arn` - ARN of the event bus.
+* `description` - Event bus description.
+* `id` - Name of the event bus.
+* `kmsKeyIdentifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
 
-<!-- cache-key: cdktf-0.20.1 input-6d48ebb9d36b6f8a656ed8f66550b6d3efee3a308c32d635751c6d385e62d112 -->
+<!-- cache-key: cdktf-0.20.8 input-0f202eb646a70b6cabb315f5503e544b82e58b15b92eb5ed135673db2adbee31 -->

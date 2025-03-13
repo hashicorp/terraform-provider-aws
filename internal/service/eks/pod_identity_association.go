@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Pod Identity Association")
+// @FrameworkResource("aws_eks_pod_identity_association", name="Pod Identity Association")
 // @Tags(identifierAttribute="association_arn")
 func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &podIdentityAssociationResource{}
@@ -46,8 +46,8 @@ type podIdentityAssociationResourceModel struct {
 	Namespace      types.String `tfsdk:"namespace"`
 	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount types.String `tfsdk:"service_account"`
-	Tags           types.Map    `tfsdk:"tags"`
-	TagsAll        types.Map    `tfsdk:"tags_all"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (model *podIdentityAssociationResourceModel) setID() {
@@ -62,10 +62,6 @@ type podIdentityAssociationResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *podIdentityAssociationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_eks_pod_identity_association"
-}
-
 func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -75,26 +71,26 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"association_id": schema.StringAttribute{
+			names.AttrAssociationID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cluster_name": schema.StringAttribute{
+			names.AttrClusterName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"namespace": schema.StringAttribute{
+			names.AttrNamespace: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -266,13 +262,9 @@ func (r *podIdentityAssociationResource) ImportState(ctx context.Context, req re
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("association_id"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_name"), parts[0])...)
-}
-
-func (r *podIdentityAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrAssociationID), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])...)
 }
 
 func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, associationID, clusterName string) (*awstypes.PodIdentityAssociation, error) {

@@ -39,7 +39,7 @@ func TestAccAutoScalingNotification_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
-					resource.TestCheckResourceAttrSet(resourceName, "topic_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTopicARN),
 				),
 			},
 		},

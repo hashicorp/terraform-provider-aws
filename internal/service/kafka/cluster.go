@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,13 +52,15 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
-				return verify.SemVerLessThan(new.(string), old.(string))
+				return semver.LessThan(new.(string), old.(string))
 			}),
-			verify.SetTagsDiff,
+			customdiff.ForceNewIfChange("storage_mode", func(_ context.Context, old, new, meta interface{}) bool {
+				return types.StorageMode(new.(string)) == types.StorageModeLocal
+			}),
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +185,7 @@ func resourceCluster() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													Computed:         true,
@@ -194,11 +197,11 @@ func resourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -220,15 +223,16 @@ func resourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"provisioned_throughput": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
+													Type:             schema.TypeList,
+													Optional:         true,
+													MaxItems:         1,
+													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															// This feature is available for
 															// storage volume larger than 10 GiB and
 															// broker types kafka.m5.4xlarge and larger.
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -242,7 +246,7 @@ func resourceCluster() *schema.Resource {
 														},
 													},
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:     schema.TypeInt,
 													Optional: true,
 													// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
@@ -304,7 +308,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -321,7 +325,7 @@ func resourceCluster() *schema.Resource {
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -402,14 +406,14 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
+									names.AttrCloudWatchLogs: {
 										Type:             schema.TypeList,
 										Optional:         true,
 										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -431,7 +435,7 @@ func resourceCluster() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -445,15 +449,15 @@ func resourceCluster() *schema.Resource {
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket": {
+												names.AttrBucket: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -541,7 +545,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	name := d.Get("cluster_name").(string)
+	name := d.Get(names.AttrClusterName).(string)
 	input := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
 		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
@@ -649,7 +653,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	clusterARN := aws.ToString(cluster.ClusterArn)
-	d.Set("arn", clusterARN)
+	d.Set(names.AttrARN, clusterARN)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.ToString(output.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslIam)))
 	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslScram)))
@@ -674,7 +678,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("client_authentication", nil)
 	}
-	d.Set("cluster_name", cluster.ClusterName)
+	d.Set(names.AttrClusterName, cluster.ClusterName)
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
@@ -787,6 +791,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+		} else if o, n := d.GetChange("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+			// Disable when a previously configured provisioned_throughput block is removed
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = &types.ProvisionedThroughput{Enabled: aws.Bool(false)}
 		}
 
 		output, err := conn.UpdateBrokerStorage(ctx, input)
@@ -952,6 +959,31 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) security: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("storage_mode") {
+		input := kafka.UpdateStorageInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+			StorageMode:    types.StorageMode(d.Get("storage_mode").(string)),
+		}
+
+		output, err := conn.UpdateStorage(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) storage: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
@@ -1235,11 +1267,11 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *types.BrokerNodeGr
 		apiObject.ConnectivityInfo = expandConnectivityInfo(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
@@ -1293,7 +1325,7 @@ func expandEBSStorageInfo(tfMap map[string]interface{}) *types.EBSStorageInfo {
 		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
@@ -1307,7 +1339,7 @@ func expandProvisionedThroughput(tfMap map[string]interface{}) *types.Provisione
 
 	apiObject := &types.ProvisionedThroughput{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1325,7 +1357,7 @@ func expandPublicAccess(tfMap map[string]interface{}) *types.PublicAccess {
 
 	apiObject := &types.PublicAccess{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -1458,7 +1490,7 @@ func expandConfigurationInfo(tfMap map[string]interface{}) *types.ConfigurationI
 
 	apiObject := &types.ConfigurationInfo{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
@@ -1528,7 +1560,7 @@ func expandBrokerLogs(tfMap map[string]interface{}) *types.BrokerLogs {
 
 	apiObject := &types.BrokerLogs{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
 	}
 
@@ -1550,7 +1582,7 @@ func expandCloudWatchLogs(tfMap map[string]interface{}) *types.CloudWatchLogs {
 
 	apiObject := &types.CloudWatchLogs{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1572,7 +1604,7 @@ func expandFirehose(tfMap map[string]interface{}) *types.Firehose {
 		apiObject.DeliveryStream = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1586,15 +1618,15 @@ func expandS3(tfMap map[string]interface{}) *types.S3 {
 
 	apiObject := &types.S3{}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -1679,11 +1711,11 @@ func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.ToString(v)
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.StorageInfo; v != nil {
@@ -1737,7 +1769,7 @@ func flattenEBSStorageInfo(apiObject *types.EBSStorageInfo) []interface{} {
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.ToInt32(v)
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1751,7 +1783,7 @@ func flattenProvisionedThroughput(apiObject *types.ProvisionedThroughput) []inte
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.VolumeThroughput; v != nil {
@@ -1769,7 +1801,7 @@ func flattenPublicAccess(apiObject *types.PublicAccess) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1898,7 +1930,7 @@ func flattenBrokerSoftwareInfo(apiObject *types.BrokerSoftwareInfo) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ConfigurationArn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.ConfigurationRevision; v != nil {
@@ -1966,7 +1998,7 @@ func flattenBrokerLogs(apiObject *types.BrokerLogs) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogs(v)}
+		tfMap[names.AttrCloudWatchLogs] = []interface{}{flattenCloudWatchLogs(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {
@@ -1988,7 +2020,7 @@ func flattenCloudWatchLogs(apiObject *types.CloudWatchLogs) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.LogGroup; v != nil {
@@ -2010,7 +2042,7 @@ func flattenFirehose(apiObject *types.Firehose) map[string]interface{} {
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap
@@ -2024,15 +2056,15 @@ func flattenS3(apiObject *types.S3) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return tfMap

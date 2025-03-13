@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Policy Template")
+// @FrameworkResource("aws_verifiedpermissions_policy_template", name="Policy Template")
 func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyTemplate{}
 
@@ -44,25 +44,21 @@ type resourcePolicyTemplate struct {
 	framework.WithImportByID
 }
 
-func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_policy_template"
-}
-
 // Schema returns the schema for this resource.
 func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -219,12 +215,12 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	}
 
 	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	input := &verifiedpermissions.DeletePolicyTemplateInput{
-		PolicyStoreId:    aws.String(state.PolicyStoreID.ValueString()),
-		PolicyTemplateId: aws.String(state.PolicyTemplateID.ValueString()),
+		PolicyStoreId:    state.PolicyStoreID.ValueStringPointer(),
+		PolicyTemplateId: state.PolicyTemplateID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePolicyTemplate(ctx, input)

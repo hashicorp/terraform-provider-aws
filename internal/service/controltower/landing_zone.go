@@ -51,7 +51,7 @@ func resourceLandingZone() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func resourceLandingZone() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -82,15 +82,13 @@ func resourceLandingZone() *schema.Resource {
 					return json
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -106,7 +104,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &controltower.CreateLandingZoneInput{
 		Manifest: manifest,
 		Tags:     getTagsIn(ctx),
-		Version:  aws.String(d.Get("version").(string)),
+		Version:  aws.String(d.Get(names.AttrVersion).(string)),
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
@@ -145,7 +143,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ControlTower Landing Zone (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", landingZone.Arn)
+	d.Set(names.AttrARN, landingZone.Arn)
 	if landingZone.DriftStatus != nil {
 		if err := d.Set("drift_status", []interface{}{flattenLandingZoneDriftStatusSummary(landingZone.DriftStatus)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting drift_status: %s", err)
@@ -165,7 +163,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("manifest_json", nil)
 	}
-	d.Set("version", landingZone.Version)
+	d.Set(names.AttrVersion, landingZone.Version)
 
 	return diags
 }
@@ -174,7 +172,7 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -183,7 +181,7 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &controltower.UpdateLandingZoneInput{
 			LandingZoneIdentifier: aws.String(d.Id()),
 			Manifest:              manifest,
-			Version:               aws.String(d.Get("version").(string)),
+			Version:               aws.String(d.Get(names.AttrVersion).(string)),
 		}
 
 		output, err := conn.UpdateLandingZone(ctx, input)
@@ -205,16 +203,17 @@ func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ControlTower Landing Zone: %s", d.Id())
-	output, err := conn.DeleteLandingZone(ctx, &controltower.DeleteLandingZoneInput{
+	input := controltower.DeleteLandingZoneInput{
 		LandingZoneIdentifier: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.DeleteLandingZone(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Landing Zone: %s", err)
 	}
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
-		sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -323,7 +322,7 @@ func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatu
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap

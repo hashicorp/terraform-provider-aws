@@ -10,6 +10,9 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,18 +36,19 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/environment/+.`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "application_id", appResourceName, "id"),
-					resource.TestCheckResourceAttr(dataSourceName, "description", "Example AppConfig Environment"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_appconfig_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrApplicationID, appResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "Example AppConfig Environment"),
 					resource.TestMatchResourceAttr(dataSourceName, "environment_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "monitor.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "state"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -119,10 +123,6 @@ resource "aws_appconfig_environment" "test" {
   monitor {
     alarm_arn      = aws_cloudwatch_metric_alarm.test.arn
     alarm_role_arn = aws_iam_role.test.arn
-  }
-
-  tags = {
-    key1 = "value1"
   }
 }
 
