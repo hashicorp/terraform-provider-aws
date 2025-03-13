@@ -220,6 +220,12 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"database_insights_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
+			},
 			"db_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -817,6 +823,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -1068,6 +1078,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if v, ok := d.GetOk("backup_window"); ok {
 			input.PreferredBackupWindow = aws.String(v.(string))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
@@ -1717,6 +1731,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.EnableCustomerOwnedIp = aws.Bool(v.(bool))
 		}
 
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -1975,6 +1993,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
 	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
+	d.Set("database_insights_mode", v.DatabaseInsightsMode)
 	d.Set("db_name", v.DBName)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
@@ -2491,6 +2510,10 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 	if d.HasChange("customer_owned_ip_enabled") {
 		needsModify = true
 		input.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
+	}
+
+	if d.HasChange("database_insights_mode") {
+		input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
 	}
 
 	if d.HasChange("db_subnet_group_name") {
