@@ -7,10 +7,16 @@ NOTES:
 FEATURES:
 
 * **New Resource:** `aws_network_interface_permission` ([#40797](https://github.com/hashicorp/terraform-provider-aws/issues/40797))
+* **New Resource:** `aws_route53_records_exclusive` ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
 
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `secondary_sources.auth` configuration block ([#40191](https://github.com/hashicorp/terraform-provider-aws/issues/40191))
+* resource/aws_route53_hosted_zone_dnssec: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
+* resource/aws_route53_key_signing_key: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
+* resource/aws_route53_record: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
+* resource/aws_route53_zone: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
+* resource/aws_route53_zone_association: Add configurable operation timeouts ([#41741](https://github.com/hashicorp/terraform-provider-aws/issues/41741))
 * resource/aws_vpc_ipv4_cidr_block_association: Support optional import of the `ipv4_ipam_pool_id` and `ipv4_netmask_length` attributes ([#41779](https://github.com/hashicorp/terraform-provider-aws/issues/41779))
 * resource/aws_vpc_ipv6_cidr_block_association: Support optional import of the `ipv6_ipam_pool_id` and `ipv6_netmask_length` attributes ([#41779](https://github.com/hashicorp/terraform-provider-aws/issues/41779))
 
