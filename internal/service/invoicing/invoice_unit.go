@@ -160,16 +160,6 @@ func resourceInvoiceUnitRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("linked_accounts", res.Rule.LinkedAccounts)
 	d.Set("tax_inheritance_disabled", res.TaxInheritanceDisabled)
 
-	rtags, err := conn.ListTagsForResource(ctx, &invoicing.ListTagsForResourceInput{
-		ResourceArn: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Invoice Unit tags(%s): %s", d.Id(), err)
-	}
-
-	d.Set("tags", rtags.ResourceTags)
-
 	return diags
 }
 
