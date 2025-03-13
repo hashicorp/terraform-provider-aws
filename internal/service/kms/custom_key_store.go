@@ -106,7 +106,7 @@ func resourceCustomKeyStore() *schema.Resource {
 	}
 }
 
-func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -131,8 +131,8 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		input.TrustAnchorCertificate = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("xks_proxy_authentication_credential"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.XksProxyAuthenticationCredential = expandXksProxyAuthenticationCredential(v.([]interface{}))
+	if v, ok := d.GetOk("xks_proxy_authentication_credential"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.XksProxyAuthenticationCredential = expandXksProxyAuthenticationCredential(v.([]any))
 	}
 
 	if v, ok := d.GetOk("xks_proxy_connectivity"); ok {
@@ -162,7 +162,7 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCustomKeyStoreRead(ctx, d, meta)...)
 }
 
-func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -192,7 +192,7 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -241,7 +241,7 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCustomKeyStoreRead(ctx, d, meta)...)
 }
 
-func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -303,12 +303,12 @@ func findCustomKeyStores(ctx context.Context, conn *kms.Client, input *kms.Descr
 	return output, nil
 }
 
-func expandXksProxyAuthenticationCredential(tfList []interface{}) *awstypes.XksProxyAuthenticationCredentialType {
+func expandXksProxyAuthenticationCredential(tfList []any) *awstypes.XksProxyAuthenticationCredentialType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
