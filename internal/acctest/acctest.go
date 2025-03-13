@@ -2202,7 +2202,7 @@ func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.Te
 // indexesIntoTypeSet is copied from
 // https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1680
 func indexesIntoTypeSet(key string) bool {
-	for _, part := range strings.Split(key, ".") {
+	for part := range strings.SplitSeq(key, ".") {
 		if i, err := strconv.Atoi(part); err == nil && i > 100 {
 			return true
 		}
