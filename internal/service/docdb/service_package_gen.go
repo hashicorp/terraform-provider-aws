@@ -25,6 +25,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  dataSourceCluster,
+			TypeName: "aws_docdb_cluster",
+			Name:     "Cluster",
+		},
+		{
 			Factory:  dataSourceEngineVersion,
 			TypeName: "aws_docdb_engine_version",
 			Name:     "Engine Version",

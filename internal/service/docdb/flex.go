@@ -91,3 +91,25 @@ func validEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, err
 	}
 	return
 }
+
+func flattenManagedMasterUserSecret(apiObject *awstypes.ClusterMasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
