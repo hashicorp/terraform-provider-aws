@@ -41,5 +41,39 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: make TEST=./internal/acctest/... modern-check
+      - run: make TEST=./internal/attrmap/... modern-check
+      - run: make TEST=./internal/conns/... modern-check
+      - run: make TEST=./internal/create/... modern-check
+      - run: make TEST=./internal/enum/... modern-check
+      - run: make TEST=./internal/envvar/... modern-check
+      - run: make TEST=./internal/errs/... modern-check
+      - run: make TEST=./internal/experimental/... modern-check
+      - run: make TEST=./internal/flex/... modern-check
+      - run: make TEST=./internal/framework/... modern-check
+      - run: make TEST=./internal/function/... modern-check
+      - run: make TEST=./internal/generate/... modern-check
+      - run: make TEST=./internal/io/... modern-check
+      - run: make TEST=./internal/json/... modern-check
+      - run: make TEST=./internal/logging/... modern-check
+      - run: make TEST=./internal/maps/... modern-check
+      - run: make TEST=./internal/namevaluesfilters/... modern-check
+      - run: make TEST=./internal/provider/... modern-check
+      - run: make TEST=./internal/reflect/... modern-check
+      - run: make TEST=./internal/retry/... modern-check
+      - run: make TEST=./internal/sdkv2/... modern-check
+      - run: make TEST=./internal/semver/... modern-check
+      - run: make TEST=./internal/slices/... modern-check
+      - run: make TEST=./internal/sweep/... modern-check
+      - run: make TEST=./internal/tags/... modern-check
+      - run: make TEST=./internal/tfresource/... modern-check
+      - run: make TEST=./internal/types/... modern-check
+      - run: make TEST=./internal/vault/... modern-check
+      - run: make TEST=./internal/verify/... modern-check
+      - run: make TEST=./internal/yaml/... modern-check
+      - run: make TEST=./names/... modern-check
+      - run: make TEST=./version/... modern-check
+
+      # Services
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/wafv2 modern-check
