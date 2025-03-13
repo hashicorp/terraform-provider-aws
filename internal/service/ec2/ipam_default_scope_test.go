@@ -4,17 +4,13 @@
 package ec2_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +30,7 @@ func TestAccIPAMDefaultScope_basic(t *testing.T) {
 				Config: testAccIPAMDefaultScopeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttrPair(resourceName, "id", ipamName, "private_default_scope_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, ipamName, "private_default_scope_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtTrue),
@@ -121,57 +117,6 @@ func TestAccIPAMDefaultScope_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckIPAMDefaultScopeExists(ctx context.Context, n string, v *awstypes.IpamScope) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Scope ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		output, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckIPAMDefaultScopeDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_vpc_ipam_scope" {
-				continue
-			}
-
-			_, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("IPAM Scope still exists: %s", rs.Primary.ID)
-		}
-
-		return nil
-	}
 }
 
 const testAccIPAMDefaultScopeConfig_base = `

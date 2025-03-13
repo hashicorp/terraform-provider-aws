@@ -106,7 +106,6 @@ func resourceIPAMDefaultScopeDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 
 	log.Printf("[WARN] Default IPAM Scope (%s) not deleted, removing from state", d.Id())
-	d.SetId("")
 
 	return diags
 }
