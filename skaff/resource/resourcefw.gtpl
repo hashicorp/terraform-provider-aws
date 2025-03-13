@@ -372,7 +372,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, state.ID.String(), err),
+			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, state.ID.String(), err),
 			err.Error(),
 		)
 		return
