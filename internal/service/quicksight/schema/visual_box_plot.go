@@ -128,12 +128,12 @@ func paginationConfigurationSchema() *schema.Schema {
 	}
 }
 
-func expandBoxPlotVisual(tfList []interface{}) *awstypes.BoxPlotVisual {
+func expandBoxPlotVisual(tfList []any) *awstypes.BoxPlotVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -143,80 +143,80 @@ func expandBoxPlotVisual(tfList []interface{}) *awstypes.BoxPlotVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandBoxPlotChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandBoxPlotChartConfiguration(tfList []interface{}) *awstypes.BoxPlotChartConfiguration {
+func expandBoxPlotChartConfiguration(tfList []any) *awstypes.BoxPlotChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.BoxPlotChartConfiguration{}
 
-	if v, ok := tfMap["box_plot_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["box_plot_options"].([]any); ok && len(v) > 0 {
 		apiObject.BoxPlotOptions = expandBoxPlotOptions(v)
 	}
-	if v, ok := tfMap["category_axis"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_axis"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryAxis = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandBoxPlotFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["primary_y_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_y_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["primary_y_axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_y_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["reference_lines"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["reference_lines"].([]any); ok && len(v) > 0 {
 		apiObject.ReferenceLines = expandReferenceLines(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandBoxPlotSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
 	return apiObject
 }
 
-func expandBoxPlotOptions(tfList []interface{}) *awstypes.BoxPlotOptions {
+func expandBoxPlotOptions(tfList []any) *awstypes.BoxPlotOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -229,19 +229,19 @@ func expandBoxPlotOptions(tfList []interface{}) *awstypes.BoxPlotOptions {
 	if v, ok := tfMap["outlier_visibility"].(string); ok && v != "" {
 		apiObject.OutlierVisibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["style_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["style_options"].([]any); ok && len(v) > 0 {
 		apiObject.StyleOptions = expandBoxPlotStyleOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandBoxPlotStyleOptions(tfList []interface{}) *awstypes.BoxPlotStyleOptions {
+func expandBoxPlotStyleOptions(tfList []any) *awstypes.BoxPlotStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -255,75 +255,75 @@ func expandBoxPlotStyleOptions(tfList []interface{}) *awstypes.BoxPlotStyleOptio
 	return apiObject
 }
 
-func expandBoxPlotFieldWells(tfList []interface{}) *awstypes.BoxPlotFieldWells {
+func expandBoxPlotFieldWells(tfList []any) *awstypes.BoxPlotFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.BoxPlotFieldWells{}
 
-	if v, ok := tfMap["box_plot_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["box_plot_aggregated_field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.BoxPlotAggregatedFieldWells = expandBoxPlotAggregatedFieldWells(v)
 	}
 
 	return apiObject
 }
 
-func expandBoxPlotAggregatedFieldWells(tfList []interface{}) *awstypes.BoxPlotAggregatedFieldWells {
+func expandBoxPlotAggregatedFieldWells(tfList []any) *awstypes.BoxPlotAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.BoxPlotAggregatedFieldWells{}
 
-	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["group_by"].([]any); ok && len(v) > 0 {
 		apiObject.GroupBy = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandBoxPlotSortConfiguration(tfList []interface{}) *awstypes.BoxPlotSortConfiguration {
+func expandBoxPlotSortConfiguration(tfList []any) *awstypes.BoxPlotSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.BoxPlotSortConfiguration{}
 
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
-	if v, ok := tfMap["pagination_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["pagination_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PaginationConfiguration = expandPaginationConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandPaginationConfiguration(tfList []interface{}) *awstypes.PaginationConfiguration {
+func expandPaginationConfiguration(tfList []any) *awstypes.PaginationConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -340,12 +340,12 @@ func expandPaginationConfiguration(tfList []interface{}) *awstypes.PaginationCon
 	return apiObject
 }
 
-func flattenBoxPlotVisual(apiObject *awstypes.BoxPlotVisual) []interface{} {
+func flattenBoxPlotVisual(apiObject *awstypes.BoxPlotVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
@@ -364,15 +364,15 @@ func flattenBoxPlotVisual(apiObject *awstypes.BoxPlotVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBoxPlotChartConfiguration(apiObject *awstypes.BoxPlotChartConfiguration) []interface{} {
+func flattenBoxPlotChartConfiguration(apiObject *awstypes.BoxPlotChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BoxPlotOptions != nil {
 		tfMap["box_plot_options"] = flattenBoxPlotOptions(apiObject.BoxPlotOptions)
@@ -408,15 +408,15 @@ func flattenBoxPlotChartConfiguration(apiObject *awstypes.BoxPlotChartConfigurat
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBoxPlotOptions(apiObject *awstypes.BoxPlotOptions) []interface{} {
+func flattenBoxPlotOptions(apiObject *awstypes.BoxPlotOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["all_data_points_visibility"] = apiObject.AllDataPointsVisibility
 	tfMap["outlier_visibility"] = apiObject.OutlierVisibility
@@ -424,41 +424,41 @@ func flattenBoxPlotOptions(apiObject *awstypes.BoxPlotOptions) []interface{} {
 		tfMap["style_options"] = flattenBoxPlotStyleOptions(apiObject.StyleOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBoxPlotStyleOptions(apiObject *awstypes.BoxPlotStyleOptions) []interface{} {
+func flattenBoxPlotStyleOptions(apiObject *awstypes.BoxPlotStyleOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"fill_style": apiObject.FillStyle,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBoxPlotFieldWells(apiObject *awstypes.BoxPlotFieldWells) []interface{} {
+func flattenBoxPlotFieldWells(apiObject *awstypes.BoxPlotFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BoxPlotAggregatedFieldWells != nil {
 		tfMap["box_plot_aggregated_field_wells"] = flattenBoxPlotAggregatedFieldWells(apiObject.BoxPlotAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBoxPlotAggregatedFieldWells(apiObject *awstypes.BoxPlotAggregatedFieldWells) []interface{} {
+func flattenBoxPlotAggregatedFieldWells(apiObject *awstypes.BoxPlotAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.GroupBy != nil {
 		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
@@ -467,15 +467,15 @@ func flattenBoxPlotAggregatedFieldWells(apiObject *awstypes.BoxPlotAggregatedFie
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBoxPlotSortConfiguration(apiObject *awstypes.BoxPlotSortConfiguration) []interface{} {
+func flattenBoxPlotSortConfiguration(apiObject *awstypes.BoxPlotSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategorySort != nil {
 		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
@@ -484,15 +484,15 @@ func flattenBoxPlotSortConfiguration(apiObject *awstypes.BoxPlotSortConfiguratio
 		tfMap["pagination_configuration"] = flattenPaginationConfiguration(apiObject.PaginationConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPaginationConfiguration(apiObject *awstypes.PaginationConfiguration) []interface{} {
+func flattenPaginationConfiguration(apiObject *awstypes.PaginationConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.PageNumber != nil {
 		tfMap["page_number"] = aws.ToInt64(apiObject.PageNumber)
@@ -501,5 +501,5 @@ func flattenPaginationConfiguration(apiObject *awstypes.PaginationConfiguration)
 		tfMap["page_size"] = aws.ToInt64(apiObject.PageSize)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
