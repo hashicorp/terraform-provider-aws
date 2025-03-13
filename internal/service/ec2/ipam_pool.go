@@ -148,7 +148,7 @@ func resourceIPAMPool() *schema.Resource {
 	}
 }
 
-func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -174,8 +174,8 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AllocationMinNetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("allocation_resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.AllocationResourceTags = ipamResourceTags(tftags.New(ctx, v.(map[string]interface{})))
+	if v, ok := d.GetOk("allocation_resource_tags"); ok && len(v.(map[string]any)) > 0 {
+		input.AllocationResourceTags = ipamResourceTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	if v, ok := d.GetOk("auto_import"); ok {
@@ -228,7 +228,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -265,7 +265,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -322,7 +322,7 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

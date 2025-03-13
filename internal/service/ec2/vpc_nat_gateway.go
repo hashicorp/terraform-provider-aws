@@ -110,7 +110,7 @@ func resourceNATGateway() *schema.Resource {
 	}
 }
 
-func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -162,7 +162,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceNATGatewayRead(ctx, d, meta)...)
 }
 
-func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -209,7 +209,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -329,7 +329,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceNATGatewayRead(ctx, d, meta)...)
 }
 
-func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -354,7 +354,7 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	switch connectivityType := awstypes.ConnectivityType(diff.Get("connectivity_type").(string)); connectivityType {
 	case awstypes.ConnectivityTypePrivate:
 		if _, ok := diff.GetOk("allocation_id"); ok {

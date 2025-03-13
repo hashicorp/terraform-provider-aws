@@ -181,7 +181,7 @@ func resourceRoute() *schema.Resource {
 	}
 }
 
-func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -254,7 +254,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
@@ -279,7 +279,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -302,7 +302,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
 
@@ -344,7 +344,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -425,7 +425,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -458,7 +458,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Deleting Route: %v", input)
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
@@ -484,7 +484,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "_")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", d.Id())

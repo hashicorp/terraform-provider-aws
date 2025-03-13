@@ -75,6 +75,7 @@ jobs:
       - run: make TEST=./version/... modern-check
 
       # Services
+      - run: make TEST=./internal/service/ec2 modern-check
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/wafregional modern-check
       - run: make TEST=./internal/service/wafv2 modern-check
