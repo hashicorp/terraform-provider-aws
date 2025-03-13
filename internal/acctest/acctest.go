@@ -55,6 +55,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -922,7 +923,7 @@ func PartitionDNSSuffix() string {
 }
 
 func PartitionReverseDNSPrefix() string {
-	return conns.ReverseDNS(PartitionDNSSuffix())
+	return dns.Reverse(PartitionDNSSuffix())
 }
 
 func alternateRegionPartition() string {
@@ -1449,7 +1450,7 @@ func NamedProvider(name string, providers map[string]*schema.Provider) *schema.P
 	return p
 }
 
-func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
@@ -1525,6 +1526,15 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 			}
 		}
 		return nil
+	}
+}
+
+func ErrorCheckSequence(funcs ...resource.ErrorCheckFunc) resource.ErrorCheckFunc {
+	return func(err error) error {
+		for _, f := range funcs {
+			err = f(err)
+		}
+		return err
 	}
 }
 

@@ -66,7 +66,7 @@ func resourceIPAMPreviewNextCIDR() *schema.Resource {
 	}
 }
 
-func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	poolId := d.Get("ipam_pool_id").(string)
@@ -103,7 +103,7 @@ func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceIPAMPreviewNextCIDRRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	cidr, poolId, err := decodeIPAMPreviewNextCIDRID(d.Id())
 

@@ -64,7 +64,7 @@ func dataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -83,7 +83,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("instance_tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("instance_tags").(map[string]any))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(

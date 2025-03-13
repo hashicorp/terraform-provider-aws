@@ -94,6 +94,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "EIP Domain Name",
 		},
 		{
+			Factory:  newNetworkInterfacePermissionResource,
+			TypeName: "aws_network_interface_permission",
+			Name:     "Network Interface Permission",
+		},
+		{
 			Factory:  newVPCBlockPublicAccessExclusionResource,
 			TypeName: "aws_vpc_block_public_access_exclusion",
 			Name:     "VPC Block Public Access Exclusion",
