@@ -106,14 +106,14 @@ func resourceProject() *schema.Resource {
 	}
 }
 
-func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("project_name").(string)
 	input := &sagemaker.CreateProjectInput{
 		ProjectName:                       aws.String(name),
-		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
+		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]any)),
 		Tags:                              getTagsIn(ctx),
 	}
 
@@ -121,7 +121,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ProjectDescription = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
 		return conn.CreateProject(ctx, input)
 	}, ErrCodeValidationException)
 	if err != nil {
@@ -137,7 +137,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -165,7 +165,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -179,7 +179,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("service_catalog_provisioning_details") {
-			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]interface{}))
+			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]any))
 		}
 
 		_, err := conn.UpdateProject(ctx, input)
@@ -196,7 +196,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -253,12 +253,12 @@ func findProjectByName(ctx context.Context, conn *sagemaker.Client, name string)
 	return output, nil
 }
 
-func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *awstypes.ServiceCatalogProvisioningDetails {
+func expandProjectServiceCatalogProvisioningDetails(l []any) *awstypes.ServiceCatalogProvisioningDetails {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	scpd := &awstypes.ServiceCatalogProvisioningDetails{
 		ProductId: aws.String(m["product_id"].(string)),
@@ -272,19 +272,19 @@ func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *awstypes.S
 		scpd.ProvisioningArtifactId = aws.String(v)
 	}
 
-	if v, ok := m["provisioning_parameter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["provisioning_parameter"].([]any); ok && len(v) > 0 {
 		scpd.ProvisioningParameters = expandProjectProvisioningParameters(v)
 	}
 
 	return scpd
 }
 
-func expandProjectServiceCatalogProvisioningDetailsUpdate(l []interface{}) *awstypes.ServiceCatalogProvisioningUpdateDetails {
+func expandProjectServiceCatalogProvisioningDetailsUpdate(l []any) *awstypes.ServiceCatalogProvisioningUpdateDetails {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	scpd := &awstypes.ServiceCatalogProvisioningUpdateDetails{}
 
@@ -292,14 +292,14 @@ func expandProjectServiceCatalogProvisioningDetailsUpdate(l []interface{}) *awst
 		scpd.ProvisioningArtifactId = aws.String(v)
 	}
 
-	if v, ok := m["provisioning_parameter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["provisioning_parameter"].([]any); ok && len(v) > 0 {
 		scpd.ProvisioningParameters = expandProjectProvisioningParameters(v)
 	}
 
 	return scpd
 }
 
-func expandProjectProvisioningParameters(l []interface{}) []awstypes.ProvisioningParameter {
+func expandProjectProvisioningParameters(l []any) []awstypes.ProvisioningParameter {
 	if len(l) == 0 {
 		return nil
 	}
@@ -307,7 +307,7 @@ func expandProjectProvisioningParameters(l []interface{}) []awstypes.Provisionin
 	params := make([]awstypes.ProvisioningParameter, 0, len(l))
 
 	for _, lRaw := range l {
-		data := lRaw.(map[string]interface{})
+		data := lRaw.(map[string]any)
 
 		scpd := awstypes.ProvisioningParameter{
 			Key: aws.String(data[names.AttrKey].(string)),
@@ -323,12 +323,12 @@ func expandProjectProvisioningParameters(l []interface{}) []awstypes.Provisionin
 	return params
 }
 
-func flattenProjectServiceCatalogProvisioningDetails(scpd *awstypes.ServiceCatalogProvisioningDetails) []map[string]interface{} {
+func flattenProjectServiceCatalogProvisioningDetails(scpd *awstypes.ServiceCatalogProvisioningDetails) []map[string]any {
 	if scpd == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"product_id": aws.ToString(scpd.ProductId),
 	}
 
@@ -344,14 +344,14 @@ func flattenProjectServiceCatalogProvisioningDetails(scpd *awstypes.ServiceCatal
 		m["provisioning_parameter"] = flattenProjectProvisioningParameters(scpd.ProvisioningParameters)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenProjectProvisioningParameters(scpd []awstypes.ProvisioningParameter) []map[string]interface{} {
-	params := make([]map[string]interface{}, 0, len(scpd))
+func flattenProjectProvisioningParameters(scpd []awstypes.ProvisioningParameter) []map[string]any {
+	params := make([]map[string]any, 0, len(scpd))
 
 	for _, lRaw := range scpd {
-		param := make(map[string]interface{})
+		param := make(map[string]any)
 		param[names.AttrKey] = aws.ToString(lRaw.Key)
 
 		if lRaw.Value != nil {
