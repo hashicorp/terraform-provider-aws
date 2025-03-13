@@ -92,7 +92,7 @@ func resourceTrustStore() *schema.Resource {
 	}
 }
 
-func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -136,7 +136,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.TrustStores[0].TrustStoreArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findTrustStoreByARN(ctx, conn, d.Id())
 	})
 
@@ -153,7 +153,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceTrustStoreRead(ctx, d, meta)...)
 		}
 
@@ -165,7 +165,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceTrustStoreRead(ctx, d, meta)...)
 }
 
-func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -188,7 +188,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceTrustStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -213,7 +213,7 @@ func resourceTrustStoreUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceTrustStoreRead(ctx, d, meta)...)
 }
 
-func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -222,7 +222,7 @@ func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Trust Store: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteTrustStore(ctx, &elasticloadbalancingv2.DeleteTrustStoreInput{
 			TrustStoreArn: aws.String(d.Id()),
 		})
@@ -294,7 +294,7 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 }
 
 func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTrustStoreByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
