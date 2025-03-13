@@ -55,7 +55,7 @@ func TestBoolFromFramework(t *testing.T) {
 func BenchmarkBoolFromFramework(b *testing.B) {
 	ctx := context.Background()
 	input := types.BoolValue(true)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.BoolFromFramework(ctx, input)
 		if r == nil {
 			b.Fatal("should never see this")
@@ -105,7 +105,7 @@ func TestBoolValueFromFramework(t *testing.T) {
 func BenchmarkBoolValueFromFramework(b *testing.B) {
 	ctx := context.Background()
 	input := types.BoolValue(true)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.BoolValueFromFramework(ctx, input)
 		if !r {
 			b.Fatal("should never see this")
@@ -151,7 +151,7 @@ func TestBoolToFramework(t *testing.T) {
 func BenchmarkBoolToFramework(b *testing.B) {
 	ctx := context.Background()
 	input := aws.Bool(true)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.BoolToFramework(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
@@ -197,7 +197,7 @@ func TestBoolToFrameworkLegacy(t *testing.T) {
 func BenchmarkBoolToFrameworkLegacy(b *testing.B) {
 	ctx := context.Background()
 	input := aws.Bool(true)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.BoolToFrameworkLegacy(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")

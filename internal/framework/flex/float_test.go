@@ -51,7 +51,7 @@ func TestFloat64ToFramework(t *testing.T) {
 func BenchmarkFloat64ToFramework(b *testing.B) {
 	ctx := context.Background()
 	input := aws.Float64(42.1)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.Float64ToFramework(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
@@ -97,7 +97,7 @@ func TestFloat64ToFrameworkLegacy(t *testing.T) {
 func BenchmarkFloat64ToFrameworkLegacy(b *testing.B) {
 	ctx := context.Background()
 	input := aws.Float64(42.1)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.Float64ToFrameworkLegacy(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
@@ -143,7 +143,7 @@ func TestFloat32ToFrameworkFloat64(t *testing.T) {
 func BenchmarkFloat32ToFrameworkFloat64(b *testing.B) {
 	ctx := context.Background()
 	input := aws.Float32(42.1)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.Float32ToFrameworkFloat64(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
@@ -189,7 +189,7 @@ func TestFloat32ToFrameworkFloat64Legacy(t *testing.T) {
 func BenchmarkFloat32ToFrameworkFloat64Legacy(b *testing.B) {
 	ctx := context.Background()
 	input := aws.Float32(42.1)
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.Float32ToFrameworkFloat64Legacy(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
