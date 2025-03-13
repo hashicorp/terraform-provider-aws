@@ -108,12 +108,12 @@ func resourceIPAM() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() == "" { // Create.
 					currentRegion := meta.(*conns.AWSClient).Region(ctx)
 
 					for _, v := range diff.Get("operating_regions").(*schema.Set).List() {
-						if v.(map[string]interface{})["region_name"].(string) == currentRegion {
+						if v.(map[string]any)["region_name"].(string) == currentRegion {
 							return nil
 						}
 					}
@@ -127,7 +127,7 @@ func resourceIPAM() *schema.Resource {
 	}
 }
 
-func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -164,7 +164,7 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceIPAMRead(ctx, d, meta)...)
 }
 
-func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -198,7 +198,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -256,7 +256,7 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceIPAMRead(ctx, d, meta)...)
 }
 
-func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -286,63 +286,63 @@ func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func expandIPAMOperatingRegions(operatingRegions []interface{}) []awstypes.AddIpamOperatingRegion {
+func expandIPAMOperatingRegions(operatingRegions []any) []awstypes.AddIpamOperatingRegion {
 	regions := make([]awstypes.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
+		region := regionRaw.(map[string]any)
 		regions = append(regions, expandIPAMOperatingRegion(region))
 	}
 
 	return regions
 }
 
-func expandIPAMOperatingRegion(operatingRegion map[string]interface{}) awstypes.AddIpamOperatingRegion {
+func expandIPAMOperatingRegion(operatingRegion map[string]any) awstypes.AddIpamOperatingRegion {
 	region := awstypes.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return region
 }
 
-func flattenIPAMOperatingRegions(operatingRegions []awstypes.IpamOperatingRegion) []interface{} {
-	regions := []interface{}{}
+func flattenIPAMOperatingRegions(operatingRegions []awstypes.IpamOperatingRegion) []any {
+	regions := []any{}
 	for _, operatingRegion := range operatingRegions {
 		regions = append(regions, flattenIPAMOperatingRegion(operatingRegion))
 	}
 	return regions
 }
 
-func flattenIPAMOperatingRegion(operatingRegion awstypes.IpamOperatingRegion) map[string]interface{} {
-	region := make(map[string]interface{})
+func flattenIPAMOperatingRegion(operatingRegion awstypes.IpamOperatingRegion) map[string]any {
+	region := make(map[string]any)
 	region["region_name"] = aws.ToString(operatingRegion.RegionName)
 	return region
 }
 
-func expandIPAMOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []awstypes.AddIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateAddRegions(operatingRegions []any) []awstypes.AddIpamOperatingRegion {
 	regionUpdates := make([]awstypes.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
+		region := regionRaw.(map[string]any)
 		regionUpdates = append(regionUpdates, expandIPAMOperatingRegionsUpdateAddRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIPAMOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) awstypes.AddIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateAddRegion(operatingRegion map[string]any) awstypes.AddIpamOperatingRegion {
 	regionUpdate := awstypes.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandIPAMOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []awstypes.RemoveIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateDeleteRegions(operatingRegions []any) []awstypes.RemoveIpamOperatingRegion {
 	regionUpdates := make([]awstypes.RemoveIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
+		region := regionRaw.(map[string]any)
 		regionUpdates = append(regionUpdates, expandIPAMOperatingRegionsUpdateDeleteRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIPAMOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) awstypes.RemoveIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]any) awstypes.RemoveIpamOperatingRegion {
 	regionUpdate := awstypes.RemoveIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}

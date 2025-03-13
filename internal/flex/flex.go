@@ -464,3 +464,37 @@ func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
 
 	return add, remove, unchanged
 }
+
+// DiffSlicesWithModify is a variant of DiffSlices which can account for
+// cases when a partially equal item should be modified, rather than
+// deleted and re-created
+func DiffSlicesWithModify[E any](old []E, new []E, eq func(E, E) bool, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove, modify, and what is unchanged.
+	remove := make([]E, 0)
+	modify := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		modifyEq := func(v E) bool { return modifyEq(v, e) }
+
+		if slices.ContainsFunc(new, eq) {
+			// Unchanged, remove from add.
+			unchanged = append(unchanged, e)
+			add = slices.DeleteFunc(add, eq)
+		} else {
+			if i := slices.IndexFunc(new, modifyEq); i != -1 {
+				// Modify, grab the indexed item from new, remove from add.
+				modify = append(modify, new[i])
+				add = slices.DeleteFunc(add, modifyEq)
+			} else {
+				// Delete it!
+				remove = append(remove, e)
+			}
+		}
+	}
+
+	return add, remove, modify, unchanged
+}

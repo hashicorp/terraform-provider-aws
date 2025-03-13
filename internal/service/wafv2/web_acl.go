@@ -15,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -94,11 +96,24 @@ func resourceWebACL() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
@@ -190,8 +205,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
-
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateWebACLInput{
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]any)),
 		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]any)),
@@ -241,6 +255,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	output := outputRaw.(*wafv2.CreateWebACLOutput)
 
 	d.SetId(aws.ToString(output.Summary.Id))
+	d.Set(names.AttrName, name) // Required in Read.
 
 	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
@@ -264,10 +279,10 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	webACL := output.WebACL
 	d.Set("application_integration_url", output.ApplicationIntegrationURL)
 	d.Set(names.AttrARN, webACL.ARN)
-	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting association_config: %s", err)
 	}
+	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting captcha_config: %s", err)
 	}
@@ -283,7 +298,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
-
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 	if _, ok := d.GetOk("rule_json"); !ok {
 		rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
 		if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
@@ -293,8 +308,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("rule_json", d.Get("rule_json"))
 		d.Set(names.AttrRule, nil)
 	}
-
-	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
+	d.Set("token_domains", webACL.TokenDomains)
 	if err := d.Set("visibility_config", flattenVisibilityConfig(webACL.VisibilityConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting visibility_config: %s", err)
 	}

@@ -87,7 +87,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 	}
 }
 
-func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -115,7 +115,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVerifiedAccessInstanceRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -149,7 +149,7 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -173,7 +173,7 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVerifiedAccessInstanceRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -195,12 +195,12 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustProviderCondensed) []interface{} {
+func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustProviderCondensed) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		v := flattenVerifiedAccessTrustProvider(apiObject)
@@ -213,8 +213,8 @@ func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustP
 	return tfList
 }
 
-func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProviderCondensed) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProviderCondensed) map[string]any {
+	tfMap := map[string]any{
 		"device_trust_provider_type": string(apiObject.DeviceTrustProviderType),
 		"trust_provider_type":        string(apiObject.TrustProviderType),
 		"user_trust_provider_type":   string(apiObject.UserTrustProviderType),
