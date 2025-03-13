@@ -487,6 +487,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-cidr_options-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCidrOptions` for the string literal "cidr_options"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cidr_options"'
+      - pattern-not-regex: '"cidr_options":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrCidrOptions"
+    options:
+      constant_propagation: false
+
   - id: literal-client_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrClientID` for the string literal "client_id"
@@ -2464,6 +2482,24 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPort"
+    options:
+      constant_propagation: false
+
+  - id: literal-port_ranges-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPortRanges` for the string literal "port_ranges"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"port_ranges"'
+      - pattern-not-regex: '"port_ranges":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrPortRanges"
     options:
       constant_propagation: false
 

@@ -25,6 +25,7 @@ certificate,Certificate
 certificate_arn,CertificateARN
 certificate_chain,CertificateChain
 cidr_block,CIDRBlock
+cidr_options,CidrOptions
 client_id,ClientID
 client_secret,ClientSecret
 cloudwatch_log_group_arn,CloudWatchLogGroupARN
@@ -135,6 +136,7 @@ path,Path
 permissions,Permissions
 policy,Policy
 port,Port
+port_ranges,PortRanges
 preferred_maintenance_window,PreferredMaintenanceWindow
 prefix,Prefix
 principal,Principal

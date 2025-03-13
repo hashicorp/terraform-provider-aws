@@ -318,24 +318,30 @@ func verifiedAccessAttachmentType_Values() []string {
 const (
 	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
 	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
+	verifiedAccessEndpointTypeRds              = "rds"
+	verifiedAccessEndpointTypeCidr             = "cidr"
 )
 
 func verifiedAccessEndpointType_Values() []string {
 	return []string{
 		verifiedAccessEndpointTypeLoadBalancer,
 		verifiedAccessEndpointTypeNetworkInterface,
+		verifiedAccessEndpointTypeRds,
+		verifiedAccessEndpointTypeCidr,
 	}
 }
 
 const (
 	verifiedAccessEndpointProtocolHTTP  = "http"
 	verifiedAccessEndpointProtocolHTTPS = "https"
+	verifiedAccessEndpointProtocolTCP   = "tcp"
 )
 
 func verifiedAccessEndpointProtocol_Values() []string {
 	return []string{
 		verifiedAccessEndpointProtocolHTTP,
 		verifiedAccessEndpointProtocolHTTPS,
+		verifiedAccessEndpointProtocolTCP,
 	}
 }
 
