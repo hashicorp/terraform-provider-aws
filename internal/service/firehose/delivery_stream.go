@@ -960,7 +960,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"read_from_timestamp": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								Computed:     true,
+								ForceNew:     true,
 								ValidateFunc: validation.IsRFC3339Time,
 							},
 							"topic_name": {

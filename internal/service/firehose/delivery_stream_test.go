@@ -1006,7 +1006,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.authentication_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.msk_cluster_arn"),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.topic_name", "test"),
-					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.read_from_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.read_from_timestamp", ""),
 				),
 			},
 			{
