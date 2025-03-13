@@ -822,9 +822,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
 			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
+
 		if v := d.Get("database_insights_mode"); v.(string) != "" {
 			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -1076,6 +1078,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("backup_window"); ok {
 			input.PreferredBackupWindow = aws.String(v.(string))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
@@ -1723,6 +1729,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
 			input.EnableCustomerOwnedIp = aws.Bool(v.(bool))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
