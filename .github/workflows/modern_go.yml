@@ -79,5 +79,6 @@ jobs:
       - run: make TEST=./internal/service/kms modern-check
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/sns modern-check
+      - run: make TEST=./internal/service/sts modern-check
       - run: make TEST=./internal/service/wafregional modern-check
       - run: make TEST=./internal/service/wafv2 modern-check
