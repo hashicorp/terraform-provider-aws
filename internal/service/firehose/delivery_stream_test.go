@@ -3354,9 +3354,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       role_arn     = aws_iam_role.msk_source.arn
     }
 
-    msk_cluster_arn = aws_msk_serverless_cluster.test.arn
-    topic_name      = "test"
-		read_from_timestamp = "2025-03-11T14:30:00Z"
+    msk_cluster_arn     = aws_msk_serverless_cluster.test.arn
+    topic_name          = "test"
+    read_from_timestamp = "2025-03-11T14:30:00Z"
   }
 
   destination = "extended_s3"
