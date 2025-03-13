@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -39,6 +40,19 @@ func resourceInvocation() *schema.Resource {
 				Type:    resourceInvocationConfigV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: invocationStateUpgradeV0,
 				Version: 0,
+			},
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := invocationParseResourceID(d.Id())
+				if parts[0] == "" || parts[1] == "" || parts[2] == "" {
+					return nil, fmt.Errorf("unexpected format of ID (%q), expected FUNCTION_NAME_QUALIFIER_RESULTHASH (e.g. function_name_test_$LATEST_md5HASH)", d.Id())
+				}
+
+				d.Set("function_name", parts[0])
+				d.Set("qualifier", parts[1])
+
+				return []*schema.ResourceData{d}, nil
 			},
 		},
 
@@ -247,4 +261,17 @@ func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.Resou
 		return diff.SetNewComputed("result")
 	}
 	return nil
+}
+
+func invocationParseResourceID(id string) [3]string {
+	r, err := regexp.Compile(`(?P<functionName>.*)_(?P<qualifier>[0-9]*|\$LATEST)_(?P<result>.*)`)
+	if err != nil {
+		return [3]string{"", "", ""}
+	}
+	if !r.MatchString(id) {
+		return [3]string{"", "", ""}
+	}
+	parts := r.FindStringSubmatch(id)
+
+	return [3]string{parts[1], parts[2], parts[3]}
 }
