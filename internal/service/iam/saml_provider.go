@@ -66,7 +66,7 @@ func resourceSAMLProvider() *schema.Resource {
 	}
 }
 
-func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -99,7 +99,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 		err := samlProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 		}
 
@@ -111,7 +111,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
-func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -148,7 +148,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -169,7 +169,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
-func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)

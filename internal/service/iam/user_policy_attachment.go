@@ -51,7 +51,7 @@ func resourceUserPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -68,7 +68,7 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -77,7 +77,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
 	}, d.IsNewResource())
 
@@ -94,7 +94,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<policy_arn>", d.Id())
@@ -122,7 +122,7 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 }
 
 func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (any, error) {
 		return conn.AttachUserPolicy(ctx, &iam.AttachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
@@ -137,7 +137,7 @@ func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN s
 }
 
 func detachPolicyFromUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (any, error) {
 		return conn.DetachUserPolicy(ctx, &iam.DetachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
