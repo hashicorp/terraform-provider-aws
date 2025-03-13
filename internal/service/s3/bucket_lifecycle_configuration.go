@@ -223,9 +223,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_greater_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// PlanModifiers: []planmodifier.Int64{
-													// 	int64planmodifier.UseStateForUnknown(),
-													// },
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.UseStateForUnknown(),
+													},
 													Validators: []validator.Int64{
 														int64validator.AtLeast(0),
 													},
@@ -233,9 +233,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_less_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// PlanModifiers: []planmodifier.Int64{
-													// 	int64planmodifier.UseStateForUnknown(),
-													// },
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.UseStateForUnknown(),
+													},
 													Validators: []validator.Int64{
 														int64validator.AtLeast(1),
 													},
@@ -243,9 +243,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												names.AttrPrefix: schema.StringAttribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// PlanModifiers: []planmodifier.String{
-													// 	stringplanmodifier.UseStateForUnknown(),
-													// },
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
 												},
 												names.AttrTags: schema.MapAttribute{
 													ElementType: types.StringType,

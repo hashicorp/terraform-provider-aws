@@ -411,6 +411,69 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 400, 65000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(400),
+									"object_size_less_than":    knownvalue.Int64Exact(65000),
+									names.AttrPrefix:           knownvalue.StringExact(""),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter: checkPlanFilter_And(
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(400),
+										"object_size_less_than":    knownvalue.Int64Exact(65000),
+										names.AttrPrefix:           knownvalue.StringExact(""),
+										names.AttrTags:             knownvalue.Null(),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								// names.AttrPrefix:                unknown,
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":     checkTransitions(),
+							}),
+						})),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrPrefix)),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -2265,6 +2328,30 @@ func filterDefaults() map[string]knownvalue.Check {
 		"object_size_less_than":    knownvalue.Null(),
 		names.AttrPrefix:           knownvalue.Null(),
 		"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
+	}
+}
+
+func checkPlanFilter_And(check knownvalue.Check) knownvalue.Check {
+	checks := planFilterDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"and": knownvalue.ListExact([]knownvalue.Check{
+			check,
+		}),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func planFilterDefaults() map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		"and": knownvalue.ListExact([]knownvalue.Check{}),
+		// "object_size_greater_than": unknown,
+		// "object_size_less_than":    unknown,
+		// names.AttrPrefix:           unknown,
+		"tag": knownvalue.ListExact([]knownvalue.Check{}),
 	}
 }
 
