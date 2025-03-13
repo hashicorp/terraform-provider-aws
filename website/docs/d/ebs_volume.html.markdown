@@ -46,7 +46,8 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Volume ID (e.g., vol-59fcb34e).
 * `volume_id` - Volume ID (e.g., vol-59fcb34e).
 * `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
-* `availability_zone` - AZ where the EBS volume exists.
+* `availability_zone` - AZ where the EBS volume exists.        
+* `create_time` - The time stamp when volume creation was initiated.
 * `encrypted` - Whether the disk is encrypted.
 * `iops` - Amount of IOPS for the disk.
 * `multi_attach_enabled` - (Optional) Specifies whether Amazon EBS Multi-Attach is enabled.
