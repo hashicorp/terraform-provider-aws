@@ -86,6 +86,8 @@ func resourceIPAMDefaultScopeCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Scope (%s): %s", d.Id(), err)
 	}
 
+	d.SetId(aws.ToString(scope.IpamScopeId))
+
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
@@ -96,8 +98,6 @@ func resourceIPAMDefaultScopeCreate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default IPAM Scope (%s) tags: %s", d.Id(), err)
 		}
 	}
-
-	d.SetId(aws.ToString(scope.IpamScopeId))
 
 	return append(diags, resourceIPAMScopeRead(ctx, d, meta)...)
 }

@@ -28,103 +28,100 @@ func TestAccIPAMDefaultScope_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMDefaultScopeConfig_basic("test"),
+				Config: testAccIPAMDefaultScopeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", ipamName, "private_default_scope_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "pool_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccIPAMDefaultScopeConfig_basic("test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"default_scope_id"},
 			},
 		},
 	})
 }
 
-// func TestAccIPAMDefaultScope_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var scope awstypes.IpamScope
-// 	resourceName := "aws_vpc_ipam_scope.test"
+// It is not possible to delete the default scope so we'll test parent IPAM disappears instead
+func TestAccIPAMDefaultScope_disappears_IPAM(t *testing.T) {
+	ctx := acctest.Context(t)
+	var scope awstypes.IpamScope
+	parentResourceName := "aws_vpc_ipam.test"
+	resourceName := "aws_vpc_ipam_default_scope.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccIPAMScopeConfig_basic("test"),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-// 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMDefaultScopeConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), parentResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// func TestAccIPAMDefaultScope_tags(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var scope awstypes.IpamScope
-// 	resourceName := "aws_vpc_ipam_scope.test"
+func TestAccIPAMDefaultScope_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var scope awstypes.IpamScope
+	resourceName := "aws_vpc_ipam_default_scope.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccIPAMScopeConfig_tags(acctest.CtKey1, acctest.CtValue1),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				Config: testAccIPAMScopeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-// 				),
-// 			},
-// 			{
-// 				Config: testAccIPAMScopeConfig_tags(acctest.CtKey2, acctest.CtValue2),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMDefaultScopeConfig_tags(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"default_scope_id"},
+			},
+			{
+				Config: testAccIPAMDefaultScopeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccIPAMDefaultScopeConfig_tags(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckIPAMDefaultScopeExists(ctx context.Context, n string, v *awstypes.IpamScope) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -187,35 +184,35 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-func testAccIPAMDefaultScopeConfig_basic(description string) string {
+func testAccIPAMDefaultScopeConfig_basic() string {
 	return acctest.ConfigCompose(testAccIPAMDefaultScopeConfig_base, `
 resource "aws_vpc_ipam_default_scope" "test" {
-  default_scope_id     = aws_vpc_ipam.test.private_default_scope_id
+  default_scope_id = aws_vpc_ipam.test.private_default_scope_id
 }
 `)
 }
 
-// func testAccIPAMDefaultScopeConfig_tags(tagKey1, tagValue1 string) string {
-// 	return acctest.ConfigCompose(testAccIPAMDefaultScopeConfig_base, fmt.Sprintf(`
-// resource "aws_vpc_ipam_scope" "test" {
-//   ipam_id = aws_vpc_ipam.test.
+func testAccIPAMDefaultScopeConfig_tags(tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccIPAMDefaultScopeConfig_base, fmt.Sprintf(`
+resource "aws_vpc_ipam_default_scope" "test" {
+  default_scope_id = aws_vpc_ipam.test.private_default_scope_id
 
-//   tags = {
-//     %[1]q = %[2]q
-//   }
-// }
-// `, tagKey1, tagValue1))
-// }
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
 
-// func testAccIPAMDefaultScopeConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-// 	return acctest.ConfigCompose(testAccIPAMDefaultScopeConfig_base, fmt.Sprintf(`
-// resource "aws_vpc_ipam_scope" "test" {
-//   ipam_id = aws_vpc_ipam.test.id
+func testAccIPAMDefaultScopeConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccIPAMDefaultScopeConfig_base, fmt.Sprintf(`
+resource "aws_vpc_ipam_default_scope" "test" {
+  default_scope_id = aws_vpc_ipam.test.private_default_scope_id
 
-//   tags = {
-//     %[1]q = %[2]q
-//     %[3]q = %[4]q
-//   }
-// }
-// `, tagKey1, tagValue1, tagKey2, tagValue2))
-// }
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
+}
