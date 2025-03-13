@@ -1285,7 +1285,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	if m, ok := d[names.AttrTags].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]awstypes.SpotFleetTagSpecification, 0)
 
-		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
+		tags := svcTags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := awstypes.SpotFleetTagSpecification{
 			ResourceType: awstypes.ResourceTypeInstance,

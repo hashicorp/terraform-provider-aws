@@ -444,7 +444,7 @@ func expandControlScope(ctx context.Context, tfList []interface{}) *awstypes.Con
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
 	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		apiObject.Tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	return apiObject
@@ -498,7 +498,7 @@ func flattenControlScope(ctx context.Context, apiObject *awstypes.ControlScope) 
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{tfMap}

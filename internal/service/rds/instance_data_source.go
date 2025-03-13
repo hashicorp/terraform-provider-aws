@@ -226,7 +226,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	filter := tfslices.PredicateTrue[*types.DBInstance]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		filter = func(v *types.DBInstance) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 

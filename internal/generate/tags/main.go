@@ -21,7 +21,13 @@ import (
 )
 
 const (
+	defaultCreateTagsFunc         = "createTags"
+	defaultGetTagFunc             = "findTag"
+	defaultGetTagsInFunc          = "getTagsIn"
+	defaultKeyValueTagsFunc       = "keyValueTags"
 	defaultListTagsFunc           = "listTags"
+	defaultSetTagsOutFunc         = "setTagsOut"
+	defaultTagsFunc               = "svcTags"
 	defaultUpdateTagsFunc         = "updateTags"
 	defaultWaitTagsPropagatedFunc = "waitTagsPropagated"
 )
@@ -30,9 +36,9 @@ var (
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 
 	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	createTagsFunc           = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
+	createTagsFunc           = flag.String("CreateTagsFunc", defaultCreateTagsFunc, "createTagsFunc")
 	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
-	getTagFunc               = flag.String("GetTagFunc", "findTag", "getTagFunc")
+	getTagFunc               = flag.String("GetTagFunc", defaultGetTagFunc, "getTagFunc")
 	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
 	listTagsFunc             = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
@@ -44,10 +50,10 @@ var (
 	emptyMap         = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 	serviceTagsSlice = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
 
-	keyValueTagsFunc = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
-	tagsFunc         = flag.String("TagsFunc", "Tags", "tagsFunc")
-	getTagsInFunc    = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
-	setTagsOutFunc   = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
+	keyValueTagsFunc = flag.String("KeyValueTagsFunc", defaultKeyValueTagsFunc, "keyValueTagsFunc")
+	tagsFunc         = flag.String("TagsFunc", defaultTagsFunc, "tagsFunc")
+	getTagsInFunc    = flag.String("GetTagsInFunc", defaultGetTagsInFunc, "getTagsInFunc")
+	setTagsOutFunc   = flag.String("SetTagsOutFunc", defaultSetTagsOutFunc, "setTagsOutFunc")
 
 	waitForPropagation      = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 	waitTagsPropagatedFunc  = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")

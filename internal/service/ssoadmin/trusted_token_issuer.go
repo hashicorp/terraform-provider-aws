@@ -229,7 +229,7 @@ func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.Read
 		)
 		return
 	}
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

@@ -12,7 +12,7 @@
 //go:generate go run ../../generate/listpages/main.go -ListOps=ListRealtimeLogConfigs -InputPaginator=Marker -OutputPaginator=RealtimeLogConfigs.NextMarker -- list_realtime_log_configs_gen.go
 //go:generate go run ../../generate/listpages/main.go -ListOps=ListResponseHeadersPolicies -InputPaginator=Marker -OutputPaginator=ResponseHeadersPolicyList.NextMarker -- list_response_headers_policies_pages_gen.go
 //go:generate go run ../../generate/listpages/main.go -ListOps=ListVpcOrigins -InputPaginator=Marker -OutputPaginator=VpcOriginList.NextMarker -- list_vpc_origin_pages_gen.go
-//go:generate go run ../../generate/tags/main.go -ListTags -ListTagsInIDElem=Resource -ListTagsOutTagsElem=Tags.Items -ServiceTagsSlice "-TagInCustomVal=&awstypes.Tags{Items: Tags(updatedTags)}" -TagInIDElem=Resource "-UntagInCustomVal=&awstypes.TagKeys{Items: removedTags.Keys()}" -UpdateTags
+//go:generate go run ../../generate/tags/main.go -ListTags -ListTagsInIDElem=Resource -ListTagsOutTagsElem=Tags.Items -ServiceTagsSlice "-TagInCustomVal=&awstypes.Tags{Items: svcTags(updatedTags)}" -TagInIDElem=Resource "-UntagInCustomVal=&awstypes.TagKeys{Items: removedTags.Keys()}" -UpdateTags
 //go:generate go run ../../generate/servicepackage/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 

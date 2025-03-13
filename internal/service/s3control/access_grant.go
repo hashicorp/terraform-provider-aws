@@ -249,7 +249,7 @@ func (r *accessGrantResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
