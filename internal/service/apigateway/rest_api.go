@@ -646,7 +646,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 			if output.EndpointConfiguration != nil {
 				for _, v := range output.EndpointConfiguration.VpcEndpointIds {
 					if slices.Contains(endpointConfiguration.VpcEndpointIds, v) {
-
+						continue
 					}
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpRemove,
@@ -658,7 +658,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 
 			for _, v := range endpointConfiguration.VpcEndpointIds {
 				if slices.Contains(output.EndpointConfiguration.VpcEndpointIds, v) {
-
+					continue
 				}
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpAdd,
