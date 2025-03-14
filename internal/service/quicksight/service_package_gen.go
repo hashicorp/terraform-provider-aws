@@ -7,46 +7,67 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
+	return []*itypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
+	return []*itypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newFolderMembershipResource,
 			TypeName: "aws_quicksight_folder_membership",
 			Name:     "Folder Membership",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newIAMPolicyAssignmentResource,
 			TypeName: "aws_quicksight_iam_policy_assignment",
 			Name:     "IAM Policy Assignment",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newIngestionResource,
 			TypeName: "aws_quicksight_ingestion",
 			Name:     "Ingestion",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newNamespaceResource,
 			TypeName: "aws_quicksight_namespace",
 			Name:     "Namespace",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  newRefreshScheduleResource,
 			TypeName: "aws_quicksight_refresh_schedule",
 			Name:     "Refresh Schedule",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newResourceRoleMembership,
@@ -57,128 +78,200 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newTemplateAliasResource,
 			TypeName: "aws_quicksight_template_alias",
 			Name:     "Template Alias",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newVPCConnectionResource,
 			TypeName: "aws_quicksight_vpc_connection",
 			Name:     "VPC Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
+	return []*itypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  dataSourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceGroup,
 			TypeName: "aws_quicksight_group",
 			Name:     "Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceTheme,
 			TypeName: "aws_quicksight_theme",
 			Name:     "Theme",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
+	return []*itypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccountSubscription,
 			TypeName: "aws_quicksight_account_subscription",
 			Name:     "Account Subscription",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceDashboard,
 			TypeName: "aws_quicksight_dashboard",
 			Name:     "Dashboard",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceDataSource,
 			TypeName: "aws_quicksight_data_source",
 			Name:     "Data Source",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceFolder,
 			TypeName: "aws_quicksight_folder",
 			Name:     "Folder",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceGroup,
 			TypeName: "aws_quicksight_group",
 			Name:     "Group",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceGroupMembership,
 			TypeName: "aws_quicksight_group_membership",
 			Name:     "Group Membership",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  resourceTemplate,
 			TypeName: "aws_quicksight_template",
 			Name:     "Template",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceTheme,
 			TypeName: "aws_quicksight_theme",
 			Name:     "Theme",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: &itypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
@@ -193,6 +286,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*quicksight.Options){
 		quicksight.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *quicksight.Options) {
+			if region := config["region"].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         "quicksight",
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

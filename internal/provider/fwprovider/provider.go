@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -354,10 +355,18 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 			opts := wrappedDataSourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
+					var overrideRegion string
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						if diags.HasError() {
+							return ctx, diags
+						}
+					}
+
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
@@ -437,10 +446,18 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
+					var overrideRegion string
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						if diags.HasError() {
+							return ctx, diags
+						}
+					}
+
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
@@ -495,10 +512,18 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 				interceptors := ephemeralResourceInterceptors{}
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, _ getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 						var diags diag.Diagnostics
+						var overrideRegion string
 
-						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+							if diags.HasError() {
+								return ctx, diags
+							}
+						}
+
+						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 						if c != nil {
 							ctx = c.RegisterLogger(ctx)
 							ctx = flex.RegisterLogger(ctx)

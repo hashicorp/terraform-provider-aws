@@ -12,6 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ServicePackageResourceRegion represents resource-level Region information.
+type ServicePackageResourceRegion struct {
+	IsGlobal          bool // Is the resource global?
+	IsOverrideEnabled bool // Is per-resource Region override supported?
+}
+
 // ServicePackageResourceTags represents resource-level tagging information.
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
@@ -24,6 +30,7 @@ type ServicePackageEphemeralResource struct {
 	Factory  func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
 	TypeName string
 	Name     string
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
@@ -33,6 +40,7 @@ type ServicePackageFrameworkDataSource struct {
 	TypeName string
 	Name     string
 	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
@@ -42,6 +50,7 @@ type ServicePackageFrameworkResource struct {
 	TypeName string
 	Name     string
 	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -51,6 +60,7 @@ type ServicePackageSDKDataSource struct {
 	TypeName string
 	Name     string
 	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }
 
 // ServicePackageSDKResource represents a Terraform Plugin SDK resource
@@ -60,4 +70,5 @@ type ServicePackageSDKResource struct {
 	TypeName string
 	Name     string
 	Tags     *ServicePackageResourceTags
+	Region   *ServicePackageResourceRegion
 }

@@ -316,10 +316,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
+					var overrideRegion string
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						if v, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = v.(string)
+						}
+					}
+
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if v, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 						ctx = v.RegisterLogger(ctx)
@@ -363,13 +370,42 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			var customizeDiffFuncs []schema.CustomizeDiffFunc
+			s := r.SchemaMap()
+
+			if v := v.Region; v != nil && v.IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
+					continue
+				}
+
+				// Inject a top-level "region" attribute.
+				regionSchema := &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				}
+				if !v.IsGlobal {
+					// TODO Replace with a CustomizeDiffFunc that doesn't ForceNew if
+					// region is updated from "" to the provider-configured Region.
+					regionSchema.ForceNew = true
+				}
+				// TODO Validate that Region is in the configured partition.
+
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
+					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
+				}
+			}
+
 			interceptors := interceptorItems{}
 			if v.Tags != nil {
-				schema := r.SchemaMap()
-
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				if v, ok := schema[names.AttrTags]; ok {
+				if v, ok := s[names.AttrTags]; ok {
 					if v.Computed {
 						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -378,7 +414,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
-				if v, ok := schema[names.AttrTagsAll]; ok {
+				if v, ok := s[names.AttrTagsAll]; ok {
 					if !v.Computed {
 						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -398,10 +434,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
 					var diags diag.Diagnostics
+					var overrideRegion string
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						if v, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = v.(string)
+						}
+					}
+
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if v, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 						ctx = v.RegisterLogger(ctx)

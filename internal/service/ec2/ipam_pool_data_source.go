@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpc_ipam_pool", name="IPAM Pool")
+// @Region(global=true)
 // @Tags
 // @Testing(tagsTest=false)
 func dataSourceIPAMPool() *schema.Resource {
