@@ -53,17 +53,47 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR Association ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR association ID and optionally the IPv6 IPAM pool ID and netmask length. For example:
 
 ```terraform
 import {
   to = aws_vpc_ipv6_cidr_block_association.example
-  id = "vpc-cidr-assoc-xxxxxxxx"
+  id = "vpc-cidr-assoc-0754129087e149dcd"
 }
 ```
 
-Using `terraform import`, import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR Association ID. For example:
+or
+
+```terraform
+import {
+  to = aws_vpc_ipv6_cidr_block_association.example
+  id = "vpc-cidr-assoc-0754129087e149dcd,ipam-pool-0611d1d6bbc05ce60"
+}
+```
+
+or
+
+```terraform
+import {
+  to = aws_vpc_ipv6_cidr_block_association.example
+  id = "vpc-cidr-assoc-0754129087e149dcd,ipam-pool-0611d1d6bbc05ce60,56"
+}
+```
+
+Using `terraform import`, import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR association ID and optionally the IPv6 IPAM pool ID and netmask length. For example:
 
 ```console
-% terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
+% terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-0754129087e149dcd
+```
+
+or
+
+```console
+% terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-0754129087e149dcd,ipam-pool-0611d1d6bbc05ce60
+```
+
+or
+
+```console
+% terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-0754129087e149dcd,ipam-pool-0611d1d6bbc05ce60,56
 ```

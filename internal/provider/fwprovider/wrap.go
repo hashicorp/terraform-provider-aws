@@ -90,7 +90,7 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
 				"data source":            w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -216,7 +216,7 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
 				"ephemeral resource":     w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -394,7 +394,7 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
 				"resource":               w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -424,7 +424,7 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping UpgradeState", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
 				"resource":               w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -442,7 +442,7 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping MoveState", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
 				"resource":               w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})

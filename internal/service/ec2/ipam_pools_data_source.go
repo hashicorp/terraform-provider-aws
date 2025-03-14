@@ -103,7 +103,7 @@ func dataSourceIPAMPools() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -130,16 +130,16 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func flattenIPAMPools(ctx context.Context, c []awstypes.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
-	pools := []interface{}{}
+func flattenIPAMPools(ctx context.Context, c []awstypes.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []any {
+	pools := []any{}
 	for _, pool := range c {
 		pools = append(pools, flattenIPAMPool(ctx, pool, ignoreTagsConfig))
 	}
 	return pools
 }
 
-func flattenIPAMPool(ctx context.Context, p awstypes.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
-	pool := make(map[string]interface{})
+func flattenIPAMPool(ctx context.Context, p awstypes.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]any {
+	pool := make(map[string]any)
 
 	pool["address_family"] = p.AddressFamily
 	pool["allocation_default_netmask_length"] = aws.ToInt32(p.AllocationDefaultNetmaskLength)

@@ -84,6 +84,7 @@ val services = mapOf(
     "docdbelastic" to ServiceSpec("DocumentDB Elastic"),
     "drs" to ServiceSpec("DRS (Elastic Disaster Recovery)"),
     "ds" to ServiceSpec("Directory Service", vpcLock = true),
+    "dsql" to ServiceSpec("DSQL"),
     "dynamodb" to ServiceSpec("DynamoDB"),
     "ec2" to ServiceSpec("EC2 (Elastic Compute Cloud)", vpcLock = true, patternOverride = "TestAccEC2", excludePattern = "TestAccEC2EBS|TestAccEC2Outposts"),
     "ec2ebs" to ServiceSpec("EBS (EC2)", vpcLock = true, patternOverride = "TestAccEC2EBS", splitPackageRealPackage = "ec2"),

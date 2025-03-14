@@ -139,7 +139,7 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 	}
 }
 
-func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -154,16 +154,16 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("device_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeviceOptions = expandCreateVerifiedAccessTrustProviderDeviceOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("device_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeviceOptions = expandCreateVerifiedAccessTrustProviderDeviceOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("device_trust_provider_type"); ok {
 		input.DeviceTrustProviderType = types.DeviceTrustProviderType(v.(string))
 	}
 
-	if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("user_trust_provider_type"); ok {
@@ -181,7 +181,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceVerifiedAccessTrustProviderRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -222,7 +222,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -237,8 +237,8 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 		}
 
 		if d.HasChange("oidc_options") {
-			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -252,7 +252,7 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 	return append(diags, resourceVerifiedAccessTrustProviderRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -274,26 +274,26 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func flattenDeviceOptions(apiObject *types.DeviceOptions) []interface{} {
+func flattenDeviceOptions(apiObject *types.DeviceOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.TenantId; v != nil {
 		tfMap["tenant_id"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []interface{} {
+func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrClientSecret: clientSecret,
 	}
 
@@ -316,10 +316,10 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []int
 		tfMap["user_info_endpoint"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]interface{}) *types.CreateVerifiedAccessTrustProviderDeviceOptions {
+func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]any) *types.CreateVerifiedAccessTrustProviderDeviceOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -333,7 +333,7 @@ func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]inter
 	return apiObject
 }
 
-func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interface{}) *types.CreateVerifiedAccessTrustProviderOidcOptions {
+func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *types.CreateVerifiedAccessTrustProviderOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -365,7 +365,7 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interfa
 	return apiObject
 }
 
-func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interface{}) *types.ModifyVerifiedAccessTrustProviderOidcOptions {
+func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *types.ModifyVerifiedAccessTrustProviderOidcOptions {
 	if tfMap == nil {
 		return nil
 	}

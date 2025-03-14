@@ -22,6 +22,12 @@ type testResourceData2 struct {
 	Name types.String
 }
 
+type testResourceData3 struct {
+	testResourceData2
+	Number types.Int64
+	Age    types.Int64
+}
+
 func TestCalculate(t *testing.T) {
 	t.Parallel()
 
@@ -71,6 +77,32 @@ func TestCalculate(t *testing.T) {
 		"has multiple changes": {
 			plan:  testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
 			state: testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(2), Age: types.Int64Value(200)},
+			expectedIgnoredFieldNames: []string{
+				"Name",
+			},
+			expectedChange: true,
+			expectErr:      false,
+		},
+
+		"embedded no change": {
+			plan:  testResourceData3{testResourceData2: testResourceData2{Name: types.StringValue("test")}, Number: types.Int64Value(1), Age: types.Int64Value(100)},
+			state: testResourceData3{testResourceData2: testResourceData2{Name: types.StringValue("test")}, Number: types.Int64Value(1), Age: types.Int64Value(100)},
+			expectedIgnoredFieldNames: []string{
+				"Name",
+				"Number",
+				"Age",
+			},
+			expectedChange: false,
+			expectErr:      false,
+		},
+		"embedded different struct types": {
+			plan:      testResourceData3{testResourceData2: testResourceData2{Name: types.StringValue("test")}, Number: types.Int64Value(1)},
+			state:     testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1)},
+			expectErr: true,
+		},
+		"embedded has multiple changes": {
+			plan:  testResourceData3{testResourceData2: testResourceData2{Name: types.StringValue("test")}, Number: types.Int64Value(1), Age: types.Int64Value(100)},
+			state: testResourceData3{testResourceData2: testResourceData2{Name: types.StringValue("test")}, Number: types.Int64Value(2), Age: types.Int64Value(200)},
 			expectedIgnoredFieldNames: []string{
 				"Name",
 			},

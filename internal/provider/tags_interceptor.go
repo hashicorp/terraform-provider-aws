@@ -51,7 +51,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 		switch why {
 		case Create, Update:
 			// Merge the resource's configured tags with any provider configured default_tags.
-			tags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+			tags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)))
 			// Remove system tags.
 			tags = tags.IgnoreSystem(sp.ServicePackageName())
 
@@ -209,7 +209,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOpti
 		switch why {
 		case Read:
 			// Get the data source's configured tags.
-			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
 			tagsInContext.TagsIn = option.Some(tags)
 		}
 	case After:
@@ -264,7 +264,7 @@ func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 }
 
 // setTagsAll is a CustomizeDiff function that calculates the new value for the `tags_all` attribute.
-func setTagsAll(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func setTagsAll(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	c := meta.(*conns.AWSClient)
 
 	if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
@@ -274,7 +274,7 @@ func setTagsAll(ctx context.Context, d *schema.ResourceDiff, meta interface{}) e
 		return nil
 	}
 
-	newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+	newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
 	allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
 	if d.HasChange(names.AttrTags) {
 		if newTags.HasZeroValue() {
@@ -303,7 +303,7 @@ func setTagsAll(ctx context.Context, d *schema.ResourceDiff, meta interface{}) e
 		}
 
 		var newTagsAll tftags.KeyValueTags
-		if v, ok := d.Get(names.AttrTagsAll).(map[string]interface{}); ok {
+		if v, ok := d.Get(names.AttrTagsAll).(map[string]any); ok {
 			newTagsAll = tftags.New(ctx, v)
 		}
 		if len(allTags) > 0 && !newTagsAll.DeepEqual(allTags) && allTags.HasZeroValue() {

@@ -127,7 +127,7 @@ func resourceCapacityReservation() *schema.Resource {
 	}
 }
 
-func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -186,7 +186,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceCapacityReservationRead(ctx, d, meta)...)
 }
 
-func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -226,7 +226,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -257,7 +257,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceCapacityReservationRead(ctx, d, meta)...)
 }
 
-func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

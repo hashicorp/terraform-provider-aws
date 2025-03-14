@@ -18,7 +18,7 @@ func Context(t *testing.T) context.Context {
 
 	helperlogging.SetOutput(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	ctx = tfsdklog.RegisterTestSink(ctx, t)
 	ctx = logger(ctx, t, "acctest")
 	ctx = awsSDKLogger(ctx)

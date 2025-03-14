@@ -103,7 +103,7 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 	}
 }
 
-func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -116,8 +116,8 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Cidr = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cidr_authorization_context"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CidrAuthorizationContext = expandIPAMCIDRAuthorizationContext(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cidr_authorization_context"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CidrAuthorizationContext = expandIPAMCIDRAuthorizationContext(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("netmask_length"); ok {
@@ -147,7 +147,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceIPAMPoolCIDRRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -175,7 +175,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -226,7 +226,7 @@ func ipamPoolCIDRParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *awstypes.IpamCidrAuthorizationContext {
+func expandIPAMCIDRAuthorizationContext(tfMap map[string]any) *awstypes.IpamCidrAuthorizationContext {
 	if tfMap == nil {
 		return nil
 	}
@@ -244,7 +244,7 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func resourceIPAMPoolCIDRCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceIPAMPoolCIDRCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// cidr can be set by a value returned from IPAM or explicitly in config.
 	if diff.Id() != "" && diff.HasChange("cidr") {
 		// If netmask is set then cidr is derived from IPAM, ignore changes.
