@@ -76,7 +76,7 @@ func dataSourceComputeEnvironment() *schema.Resource {
 	}
 }
 
-func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
