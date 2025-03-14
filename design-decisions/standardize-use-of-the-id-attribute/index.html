@@ -1,0 +1,1160 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Standardize Use of the `id` Attribute - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#standardize-use-of-the-id-attribute" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Standardize Use of the `id` Attribute
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    Background
+  </a>
+  
+    <nav class="md-nav" aria-label="Background">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#id-attributes-in-the-aws-provider" class="md-nav__link">
+    id Attributes in the AWS Provider
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposal" class="md-nav__link">
+    Proposal
+  </a>
+  
+    <nav class="md-nav" aria-label="Proposal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#import-methods-and-testing" class="md-nav__link">
+    Import Methods and Testing
+  </a>
+  
+    <nav class="md-nav" aria-label="Import Methods and Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-value" class="md-nav__link">
+    Single Value
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-part-value" class="md-nav__link">
+    Multi-part Value
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#abandoned-ideas" class="md-nav__link">
+    Abandoned Ideas
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    References
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="standardize-use-of-the-id-attribute">Standardize Use of the <code>id</code> Attribute<a class="headerlink" href="#standardize-use-of-the-id-attribute" title="Permanent link">#</a></h1>
+<p><strong>Summary:</strong> Define a standard for use of the <code>id</code> attribute given improvements to provider development and testing libraries have removed its requirement.<br />
+<strong>Created</strong>: 2024-05-24<br />
+<strong>Author</strong>: <a href="https://github.com/jar-b">@jar-b</a>  </p>
+<hr />
+<p>Historically all resources in the Terraform AWS provider have included a read-only <code>id</code> attribute, as <a href="https://developer.hashicorp.com/terraform/plugin/sdkv2">Terraform Plugin SDK V2</a> and its associated acceptance testing library requires it. In most cases, this attribute corresponds to a unique identifier generated by AWS during resource creation. However, for some resources the identifier is a value provided by the user and the resulting <code>id</code> attribute inherently duplicates the value of some other required argument.</p>
+<p>With the general availability of <a href="https://developer.hashicorp.com/terraform/plugin/framework">Terraform Plugin Framework</a>, the separation of the provider testing functionality into its own standalone library (<a href="https://github.com/hashicorp/terraform-plugin-testing"><code>terraform-plugin-testing</code></a>), and some <a href="https://github.com/hashicorp/terraform-plugin-testing/pull/164">corresponding enhancements</a> made to this library, resources are no longer required to have an <code>id</code> attribute. This leaves an opportunity for provider developers to define a standard for when to use an <code>id</code> attribute. Broadly, the two options are:</p>
+<ul>
+<li>Continue to require an <code>id</code> attribute in all resources for consistency.  </li>
+<li>Omit the <code>id</code> attribute when it is redundant with some other required argument(s).</li>
+</ul>
+<p>This RFC will propose a standard for the Terraform AWS provider. A secondary goal is to gain feedback from other HashiCorp-owned provider teams to determine if a common standard can be shared across the provider ecosystem.</p>
+<h2 id="background">Background<a class="headerlink" href="#background" title="Permanent link">#</a></h2>
+<p>Prior to general availability of the Terraform Plugin Framework, all providers were built with the Terraform Plugin SDK. As the Terraform Plugin SDK was developed with pre-v1.0 versions of Terraform, an internal core implementation detail requiring the presence of an <code>id</code> attribute was incorporated into the library design. This requirement was accordingly passed along to provider developers in the form of an implicit requirement that all resources have an <code>id</code> attribute.</p>
+<p>This convention is most noticeable in the method for setting <code>id</code> attributes (<code>d.SetId(“value”)</code>, versus <code>d.Set(“field”, “value”)</code>), the special syntax for removing objects from state during a read operation when deleted outside of Terraform (<code>d.SetId(“”)</code>), and the acceptance testing helpers for <code>import</code>, which rely on a populated <code>id</code> attribute to complete the import command and verify the results.</p>
+<p>The corresponding method for removing Terraform Plugin Framework-based resources from state during read (<a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-framework@v1.8.0/tfsdk#State.RemoveResource"><code>State.RemoveResource</code></a>) includes no mention of an ID. In version <a href="https://github.com/hashicorp/terraform-plugin-testing/releases/tag/v1.5.0"><code>1.5.0</code></a> of <code>terraform-plugin-testing</code>, <a href="https://github.com/hashicorp/terraform-plugin-testing/pull/164">additional fields were added</a> to the <code>TestStep</code> struct to enable testing imports for resources that do not implement an <code>id</code> attribute. With these advancements, providers using Terraform Plugin Framework, either exclusively or via a <a href="https://developer.hashicorp.com/terraform/plugin/framework/migrating/mux">muxed</a> provider configuration, and <code>terraform-plugin-testing</code> in place of the legacy testing packages embedded in Terraform Plugin SDK V2 are no longer bound to the requirement of including an <code>id</code> attribute in every resource.</p>
+<p>From a Terraform core perspective, releases after 0.12 no longer treat <code>id</code> as a special attribute. Terraform 0.11 and earlier implicitly required it. Due to the linkage between Terraform 0.12 and protocol version 5, and the fact that supported provider SDKs today only speak protocol version 5 (and 6), the primary Hashicorp-owned providers, like <code>hashicorp/aws</code>, inherently only support Terraform 0.12 and later. Therefore it is safe to remove the <code>id</code> attribute since there is no concern for a Terraform version that requires it.</p>
+<h3 id="id-attributes-in-the-aws-provider"><code>id</code> Attributes in the AWS Provider<a class="headerlink" href="#id-attributes-in-the-aws-provider" title="Permanent link">#</a></h3>
+<p>In the AWS provider, the <code>id</code> attribute most commonly corresponds to an identifier generated by AWS during creation of the resource. The Create API typically returns this value as a field named <code>Id</code> or, in some cases, <code>Id</code> with a prefixed with a resource name (eg. <code>InstanceId</code>). When a resource can be referenced by a unique, remotely generated identifier, storing this value in a computed <code>id</code> is a straightforward choice and the meaning of the attribute is easily understood by the practitioner.</p>
+<p>However, there are cases where AWS does not generate a unique identifier during resource creation, and instead one or more of the arguments supplied to the Create API functions as the identifier. For single value identifiers this is commonly a field like <code>name</code>. For “relationship” resources (ie. resources creating a link between two other resources, such as an <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment">IAM policy attachment)</a>, the unique identifier may be a “multi-part key” made up of identifiers from both resources being linked. Historically, multi-part keys <a href="https://github.com/hashicorp/terraform-provider-aws/issues/27843">have not used a consistent delimiter</a>, further complicating the user experience for practitioners.</p>
+<p>In these situations, the AWS provider copied the identifying value (or a delimited string of values for multi-part keys) to the <code>id</code> attribute. This approach leaves ambiguity for practitioners regarding which attribute should be used if the exported value is referenced somewhere else in the configuration.</p>
+<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link">#</a></h2>
+<p><strong>Going forward, all net-new resources for which an <code>id</code> attribute would be redundant with an existing argument(s) will omit this attribute.</strong> In all other cases the <code>id</code> attribute should continue to be used as it has been historically. When an <code>id</code> is omitted and the unique identifier is a combination of arguments, these should always be delimited with a comma (<code>,</code>), and rely on the internal <a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.51.1/internal/flex/flex.go#L326-L354"><code>ExpandResourceID</code></a> function to handle splitting values within the import method.</p>
+<p>The added clarity of removing redundant attribute values will directly benefit practitioners, especially for resources with complex multi-part keys.</p>
+<p>The trade-offs being made with this decision are:</p>
+<ul>
+<li>A departure from a historical precedent where all resources include an <code>id</code> attribute, which some practitioners may have come to expect and rely on.</li>
+<li>A minor UI difference in how resources without an ID are rendered during <code>plan</code> and <code>apply</code> operations. Specifically, when no <code>id</code> attribute is present the logged line for this resource will omit this extra piece of information.</li>
+</ul>
+<p>Team discussion around this topic consistently landed on a consensus that the clarity gained by having only a single attribute containing the identifier value outweighs the departure from historical conventions.</p>
+<p>It should also be noted that this standard is enabled by an existing policy <a href="https://github.com/hashicorp/terraform-provider-aws/issues/32917">requiring all net-new resources be implemented with Terraform Plugin Framework</a>, and that the AWS provider has already migrated to the standalone <code>terraform-plugin-testing</code> library.</p>
+<h3 id="import-methods-and-testing">Import Methods and Testing<a class="headerlink" href="#import-methods-and-testing" title="Permanent link">#</a></h3>
+<p>For resources omitting an <code>id</code> argument, minor changes are required to customize the import method and acceptance test the import operation. For testing specifically, the import verification <code>TestStep</code> will now require the <code>ImportStateVerifyIdentifierAttribute</code> and one of <code>ImportStateID</code> or <code>ImportStateIdFunc</code> be configured. Examples for single non-id identifier and a multi-part key are included below.</p>
+<h4 id="single-value">Single Value<a class="headerlink" href="#single-value" title="Permanent link">#</a></h4>
+<p><code>ImportState</code> method:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceEndpointPrivateDNS</span><span class="p">)</span><span class="w"> </span><span class="nx">ImportState</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStateRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">*</span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStateResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStatePassthroughID</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">Root</span><span class="p">(</span><span class="s">&quot;vpc_endpoint_id&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>TestStep</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nx">ResourceName</span><span class="p">:</span><span class="w">                         </span><span class="nx">resourceName</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ImportState</span><span class="p">:</span><span class="w">                          </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ImportStateIdFunc</span><span class="p">:</span><span class="w">                    </span><span class="nx">testAccVPCEndpointPrivateDNSImportStateIdFunc</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">ImportStateVerify</span><span class="p">:</span><span class="w">                    </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ImportStateVerifyIdentifierAttribute</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;vpc_endpoint_id&quot;</span><span class="p">,</span>
+<span class="p">},</span>
+</code></pre></div>
+<p><code>ImportStateIdFunc</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">testAccVPCEndpointPrivateDNSImportStateIdFunc</span><span class="p">(</span><span class="nx">resourceName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStateIdFunc</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><span class="nx">terraform</span><span class="p">.</span><span class="nx">State</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">rs</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">RootModule</span><span class="p">().</span><span class="nx">Resources</span><span class="p">[</span><span class="nx">resourceName</span><span class="p">]</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;Not found: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">rs</span><span class="p">.</span><span class="nx">Primary</span><span class="p">.</span><span class="nx">Attributes</span><span class="p">[</span><span class="s">&quot;vpc_endpoint_id&quot;</span><span class="p">],</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="multi-part-value">Multi-part Value<a class="headerlink" href="#multi-part-value" title="Permanent link">#</a></h4>
+<p><code>ImportState</code> Method:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceRuntimeManagementConfig</span><span class="p">)</span><span class="w"> </span><span class="nx">ImportState</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStateRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">*</span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStateResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">parts</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">intflex</span><span class="p">.</span><span class="nx">ExpandResourceId</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span><span class="w"> </span><span class="nx">runtimeManagementConfigIDParts</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">            </span><span class="s">&quot;Unexpected Import Identifier&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;Expected import identifier with format: function_name,qualifier. Got: %q&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">ID</span><span class="p">),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">Append</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">State</span><span class="p">.</span><span class="nx">SetAttribute</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">Root</span><span class="p">(</span><span class="s">&quot;function_name&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">...</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">Append</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">State</span><span class="p">.</span><span class="nx">SetAttribute</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">Root</span><span class="p">(</span><span class="s">&quot;qualifier&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>TestStep</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nx">ResourceName</span><span class="p">:</span><span class="w">                         </span><span class="nx">resourceName</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ImportState</span><span class="p">:</span><span class="w">                          </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ImportStateIdFunc</span><span class="p">:</span><span class="w">                    </span><span class="nx">testAccRuntimeManagementConfigImportStateIdFunc</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">ImportStateVerify</span><span class="p">:</span><span class="w">                    </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ImportStateVerifyIdentifierAttribute</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;function_name&quot;</span><span class="p">,</span>
+<span class="p">},</span>
+</code></pre></div>
+<p><code>ImportStateIdFunc</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">testAccRuntimeManagementConfigImportStateIdFunc</span><span class="p">(</span><span class="nx">resourceName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ImportStateIdFunc</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><span class="nx">terraform</span><span class="p">.</span><span class="nx">State</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">rs</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">RootModule</span><span class="p">().</span><span class="nx">Resources</span><span class="p">[</span><span class="nx">resourceName</span><span class="p">]</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;Not found: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;%s,%s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">rs</span><span class="p">.</span><span class="nx">Primary</span><span class="p">.</span><span class="nx">Attributes</span><span class="p">[</span><span class="s">&quot;function_name&quot;</span><span class="p">],</span><span class="w"> </span><span class="nx">rs</span><span class="p">.</span><span class="nx">Primary</span><span class="p">.</span><span class="nx">Attributes</span><span class="p">[</span><span class="s">&quot;qualifier&quot;</span><span class="p">]),</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="abandoned-ideas">Abandoned Ideas<a class="headerlink" href="#abandoned-ideas" title="Permanent link">#</a></h2>
+<p>The alternative to omitting <code>id</code> attributes when possible is to continue requiring all resources to include an <code>id</code> attribute. While this approach provides consistency with the historical design of the provider, the drawbacks of redundant attribute values and complex (and often inconsistently delimited) multi-part identifiers remain. Consensus among the team has been that the benefits of clarity outweigh the departure from precedent in this case.</p>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">#</a></h2>
+<p>Terraform Plugin Framework</p>
+<ul>
+<li><a href="https://developer.hashicorp.com/terraform/plugin/framework/acctests#no-id-found-in-attributes">https://developer.hashicorp.com/terraform/plugin/framework/acctests#no-id-found-in-attributes</a></li>
+</ul>
+<p>Terraform Plugin Testing</p>
+<ul>
+<li><a href="https://github.com/hashicorp/terraform-plugin-testing/issues/84">https://github.com/hashicorp/terraform-plugin-testing/issues/84</a>  </li>
+<li><a href="https://github.com/hashicorp/terraform-plugin-testing/pull/164">https://github.com/hashicorp/terraform-plugin-testing/pull/164</a></li>
+</ul>
+<p>Terraform AWS Provider</p>
+<ul>
+<li>Prototype resources implemented without an <code>id</code> attribute  <ul>
+<li><code>aws_vpc_endpoint_private_dns</code>  <ul>
+<li>The identifier is a single value, <code>vpc_endpoint_id</code>  </li>
+<li><a href="https://github.com/hashicorp/terraform-provider-aws/pull/37628">PR</a>  </li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_private_dns">Registry documentation</a>  </li>
+</ul>
+</li>
+<li><code>aws_lambda_runtime_management_config</code>  <ul>
+<li>The identifier is a multi-part key, made up of the required <code>function_name</code> and optional <code>qualifier</code> arguments  </li>
+<li><a href="https://github.com/hashicorp/terraform-provider-aws/pull/37643">PR</a>  </li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_runtime_management_config">Registry documentation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
