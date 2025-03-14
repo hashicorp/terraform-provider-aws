@@ -88,18 +88,28 @@ func resourceInvoiceUnitCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InvoicingClient(ctx)
 
-	input := invoicing.CreateInvoiceUnitInput{
-		InvoiceReceiver: aws.String(d.Get("invoice_receiver").(string)),
-		Name:            aws.String(d.Get("name").(string)),
-		Rule: &types.InvoiceUnitRule{
-			LinkedAccounts: flex.ExpandStringValueSet(d.Get("linked_accounts").(*schema.Set)),
-		},
+	input := invoicing.CreateInvoiceUnitInput{}
+
+	input.InvoiceReceiver = aws.String(d.Get("invoice_receiver").(string))
+	input.Name = aws.String(d.Get("name").(string))
+	input.Rule = &types.InvoiceUnitRule{
+		LinkedAccounts: flex.ExpandStringValueSet(d.Get("linked_accounts").(*schema.Set)),
 	}
+
+	if v, ok := d.GetOk("tax_inheritance_disabled"); ok {
+		input.TaxInheritanceDisabled = v.(bool)
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	input.ResourceTags = getTagsIn(ctx)
 
 	res, err := conn.CreateInvoiceUnit(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IPAM Scope (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Creating Invoicing Unit: %s", err)
 	}
 
 	d.SetId(aws.ToString(res.InvoiceUnitArn))
@@ -111,13 +121,12 @@ func resourceInvoiceUnitUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InvoicingClient(ctx)
 
-	input := invoicing.UpdateInvoiceUnitInput{
-		Rule: &types.InvoiceUnitRule{
-			LinkedAccounts: flex.ExpandStringValueSet(d.Get("linked_accounts").(*schema.Set)),
-		},
-	}
+	input := invoicing.UpdateInvoiceUnitInput{}
 
 	input.InvoiceUnitArn = aws.String(d.Id())
+	input.Rule = &types.InvoiceUnitRule{
+		LinkedAccounts: flex.ExpandStringValueSet(d.Get("linked_accounts").(*schema.Set)),
+	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
@@ -168,9 +177,11 @@ func resourceInvoiceUnitDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).InvoicingClient(ctx)
 
-	if _, err := conn.DeleteInvoiceUnit(ctx, &invoicing.DeleteInvoiceUnitInput{
-		InvoiceUnitArn: aws.String(d.Id()),
-	}); err != nil {
+	input := invoicing.DeleteInvoiceUnitInput{}
+
+	input.InvoiceUnitArn = aws.String(d.Id())
+
+	if _, err := conn.DeleteInvoiceUnit(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "Error deleting Invoice Unit (%s): %s", d.Id(), err)
 	}
 
