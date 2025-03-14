@@ -13,21 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAPIGatewayAPIKeysDataSource_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"APIKeys": {
-			acctest.CtBasic: testAccAPIGatewayKeysDataSource_basic,
-			"includeValues": testAccAPIGatewayKeysDataSource_includeValues,
-			"manyKeys":      testAccAPIGatewayKeysDataSource_manyKeys,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func testAccAPIGatewayKeysDataSource_basic(t *testing.T) {
+func testAccAPIKeysDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_api_key.test"
@@ -56,7 +42,7 @@ func testAccAPIGatewayKeysDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayKeysDataSource_includeValues(t *testing.T) {
+func testAccAPIKeysDataSource_includeValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -78,7 +64,7 @@ func testAccAPIGatewayKeysDataSource_includeValues(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayKeysDataSource_manyKeys(t *testing.T) {
+func testAccAPIKeysDataSource_manyKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
