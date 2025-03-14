@@ -45,7 +45,7 @@ func resourceInvoiceUnit() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -137,7 +137,7 @@ func resourceInvoiceUnitUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if _, err := conn.UpdateInvoiceUnit(ctx, &input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error updating Invoice Unit (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Updating Invoice Unit (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceInvoiceUnitRead(ctx, d, meta)...)
@@ -162,7 +162,7 @@ func resourceInvoiceUnitRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Invoice Unit (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Reading Invoice Unit (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, res.InvoiceUnitArn)
@@ -185,10 +185,8 @@ func resourceInvoiceUnitDelete(ctx context.Context, d *schema.ResourceData, meta
 	input.InvoiceUnitArn = aws.String(d.Id())
 
 	if _, err := conn.DeleteInvoiceUnit(ctx, &input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting Invoice Unit (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Deleting Invoice Unit (%s): %s", d.Id(), err)
 	}
-
-	d.SetId("")
 
 	return diags
 }

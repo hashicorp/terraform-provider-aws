@@ -48,7 +48,8 @@ func TestAccInvoceUnit_basic(t *testing.T) {
 			{
 				Config: testAccInvoiceUnitConfig_base(rName, rDescription1, invoiceReceiver, linkedAccount),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", rDescription1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescription1),
 					resource.TestCheckResourceAttr(resourceName, "invoice_receiver", invoiceReceiver),
 					resource.TestCheckResourceAttr(resourceName, "tax_inheritance_disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -62,7 +63,8 @@ func TestAccInvoceUnit_basic(t *testing.T) {
 			{
 				Config: testAccInvoiceUnitConfig_base(rName, rDescription2, invoiceReceiver, linkedAccount),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", rDescription2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescription2),
 					resource.TestCheckResourceAttr(resourceName, "invoice_receiver", invoiceReceiver),
 					resource.TestCheckResourceAttr(resourceName, "tax_inheritance_disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
