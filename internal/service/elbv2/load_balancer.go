@@ -1032,7 +1032,7 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 			}
 
 			if ipv4IPAMPoolID != "" {
-				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
 					output, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IPAMPoolID)
 					if err != nil {
 						return nil, err
@@ -1442,7 +1442,7 @@ func expandSubnetMappings(tfList []any) []awstypes.SubnetMapping {
 	return apiObjects
 }
 
-func expandIPAMPools(tfList []interface{}) *awstypes.IpamPools {
+func expandIPAMPools(tfList []any) *awstypes.IpamPools {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1450,7 +1450,7 @@ func expandIPAMPools(tfList []interface{}) *awstypes.IpamPools {
 	var apiObject awstypes.IpamPools
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1464,14 +1464,14 @@ func expandIPAMPools(tfList []interface{}) *awstypes.IpamPools {
 	return &apiObject
 }
 
-func flattenIPAMPools(ipamPools *awstypes.IpamPools) []interface{} {
+func flattenIPAMPools(ipamPools *awstypes.IpamPools) []any {
 	if ipamPools == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"ipv4_ipam_pool_id": aws.ToString(ipamPools.Ipv4IpamPoolId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
