@@ -149,9 +149,11 @@ func resourceInvoiceUnitRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	res, err := conn.GetInvoiceUnit(ctx, &invoicing.GetInvoiceUnitInput{
+	input := invoicing.GetInvoiceUnitInput{
 		InvoiceUnitArn: aws.String(d.Id()),
-	})
+	}
+
+	res, err := conn.GetInvoiceUnit(ctx, &input)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Invoice Unit (%s) not found, removing from state", d.Id())
@@ -166,6 +168,7 @@ func resourceInvoiceUnitRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, res.InvoiceUnitArn)
 	d.Set(names.AttrDescription, res.Description)
 	d.Set("name", res.Name)
+	d.Set("invoice_receiver", res.InvoiceReceiver)
 	d.Set("linked_accounts", res.Rule.LinkedAccounts)
 	d.Set("tax_inheritance_disabled", res.TaxInheritanceDisabled)
 
