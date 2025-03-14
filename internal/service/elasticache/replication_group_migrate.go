@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func replicationGroupStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func replicationGroupStateUpgradeV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	// Set auth_token_update_strategy to new default value.
