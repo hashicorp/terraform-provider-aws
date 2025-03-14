@@ -7193,6 +7193,7 @@ service "simpledb" {
   provider_package_correct = "sdb"
   doc_prefix               = ["simpledb_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "scheduler" {

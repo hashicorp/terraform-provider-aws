@@ -305,7 +305,6 @@ provider "aws" {
 |SFN (Step Functions)|`sfn`(or `stepfunctions`)|`AWS_ENDPOINT_URL_SFN`|`sfn`|
 |Shield|`shield`|`AWS_ENDPOINT_URL_SHIELD`|`shield`|
 |Signer|`signer`|`AWS_ENDPOINT_URL_SIGNER`|`signer`|
-|SDB (SimpleDB)|`simpledb`(or `sdb`)|`AWS_ENDPOINT_URL_SIMPLEDB`|`simpledb`|
 |SNS (Simple Notification)|`sns`|`AWS_ENDPOINT_URL_SNS`|`sns`|
 |SQS (Simple Queue)|`sqs`|`AWS_ENDPOINT_URL_SQS`|`sqs`|
 |SSM (Systems Manager)|`ssm`|`AWS_ENDPOINT_URL_SSM`|`ssm`|

@@ -223,7 +223,6 @@ val services = mapOf(
     "sfn" to ServiceSpec("SFN (Step Functions)"),
     "shield" to ServiceSpec("Shield"),
     "signer" to ServiceSpec("Signer"),
-    "simpledb" to ServiceSpec("SDB (SimpleDB)"),
     "sns" to ServiceSpec("SNS (Simple Notification)"),
     "sqs" to ServiceSpec("SQS (Simple Queue)"),
     "ssm" to ServiceSpec("SSM (Systems Manager)", vpcLock = true),

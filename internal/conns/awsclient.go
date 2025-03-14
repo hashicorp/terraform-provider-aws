@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,7 +39,6 @@ type AWSClient struct {
 	partition                 endpoints.Partition
 	region                    string
 	servicePackages           map[string]ServicePackage
-	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
@@ -81,15 +79,6 @@ func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
-}
-
-// AwsSession and Endpoints can be removed once the simpledb service is removed.
-func (c *AWSClient) AwsSession(context.Context) *session_sdkv1.Session { // nosemgrep:ci.aws-in-func-name
-	return c.session
-}
-
-func (c *AWSClient) Endpoints(context.Context) map[string]string {
-	return maps.Clone(c.endpoints)
 }
 
 // AccountID returns the configured AWS account ID.
@@ -191,11 +180,8 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
-// To have effect it must be called before the AWS SDK v1 Session is created.
 func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
-	if c.session == nil {
-		c.httpClient = httpClient
-	}
+	c.httpClient = httpClient
 }
 
 // HTTPClient returns the http.Client used for AWS API calls.

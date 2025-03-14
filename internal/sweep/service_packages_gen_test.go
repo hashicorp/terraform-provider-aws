@@ -230,7 +230,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -487,7 +486,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		sfn.ServicePackage(ctx),
 		shield.ServicePackage(ctx),
 		signer.ServicePackage(ctx),
-		simpledb.ServicePackage(ctx),
 		sns.ServicePackage(ctx),
 		sqs.ServicePackage(ctx),
 		ssm.ServicePackage(ctx),
