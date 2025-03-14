@@ -33,6 +33,9 @@ func TestAccAPIGateway_serial(t *testing.T) {
 			"ResetOnDelete_false":                  testAccAccount_resetOnDelete_false,
 			"ResetOnDelete_true":                   testAccAccount_resetOnDelete_true,
 		},
+		"APIKeyDataSource": {
+			acctest.CtBasic: testAccAPIKeyDataSource_basic,
+		},
 		"APIKeysDataSource": {
 			acctest.CtBasic: testAccAPIKeysDataSource_basic,
 			"includeValues": testAccAPIKeysDataSource_includeValues,
