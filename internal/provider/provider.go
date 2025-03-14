@@ -387,9 +387,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
 
 				if !v.IsGlobal {
-					// TODO Replace with a CustomizeDiffFunc that doesn't ForceNew if
-					// region is updated from "" to the provider-configured Region.
-					regionSchema.ForceNew = true
+					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionChanges)
 				}
 
 				if f := r.SchemaFunc; f != nil {

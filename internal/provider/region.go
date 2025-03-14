@@ -24,3 +24,18 @@ func verifyRegionInConfiguredPartition(ctx context.Context, d *schema.ResourceDi
 
 	return nil
 }
+
+// forceNewIfRegionChanges is a CustomizeDiff function that forces resource replacement
+// if the value of the top-level `region` attribute changes.
+func forceNewIfRegionChanges(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	if d.Id() != "" && d.HasChange(names.AttrRegion) {
+		providerRegion := meta.(*conns.AWSClient).AwsConfig(ctx).Region
+		o, n := d.GetChange(names.AttrRegion)
+		if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
+			return nil
+		}
+		return d.ForceNew(names.AttrRegion)
+	}
+
+	return nil
+}
