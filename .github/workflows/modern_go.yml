@@ -81,6 +81,7 @@ jobs:
       - run: make TEST=./internal/service/elbv2 modern-check
       - run: make TEST=./internal/service/iam modern-check
       - run: make TEST=./internal/service/kms modern-check
+      - run: make TEST=./internal/service/medialive modern-check
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/quicksight/... modern-check
       - run: make TEST=./internal/service/rds/... modern-check
