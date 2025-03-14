@@ -43,7 +43,7 @@ func TestAccInvoceUnit_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvoicingUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvoiceUnitConfig_base(rName, rDescription1, invoiceReceiver, linkedAccount),
@@ -74,7 +74,7 @@ func TestAccInvoceUnit_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckInvoicingUnitDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInvoiceUnitDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InvoicingClient(ctx)
 
@@ -83,11 +83,11 @@ func testAccCheckInvoicingUnitDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			input := &invoicing.GetInvoiceUnitInput{
+			input := invoicing.GetInvoiceUnitInput{
 				InvoiceUnitArn: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.GetInvoiceUnit(ctx, input)
+			output, err := conn.GetInvoiceUnit(ctx, &input)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue

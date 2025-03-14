@@ -12,14 +12,14 @@ Creates and manages Invoice Units
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_invoicing_invoice_unit" "example" {
-  name = "example"
-  description = "example description"
-  invoice_receiver = "12345678901"
+  name                     = "example"
+  description              = "example description"
+  invoice_receiver         = "12345678901"
   tax_inheritance_disabled = false
   linked_accounts = [
-   "12345678903"
+    "12345678903"
   ]
 }
 ```
@@ -39,6 +39,8 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the invoice unit.
 * `arn` - The ARN of the invoice unit.

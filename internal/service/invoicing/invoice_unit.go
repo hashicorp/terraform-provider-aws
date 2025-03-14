@@ -91,7 +91,7 @@ func resourceInvoiceUnitCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := invoicing.CreateInvoiceUnitInput{}
 
 	input.InvoiceReceiver = aws.String(d.Get("invoice_receiver").(string))
-	input.Name = aws.String(d.Get("name").(string))
+	input.Name = aws.String(d.Get(names.AttrName).(string))
 	input.Rule = &types.InvoiceUnitRule{
 		LinkedAccounts: flex.ExpandStringValueSet(d.Get("linked_accounts").(*schema.Set)),
 	}
@@ -167,7 +167,7 @@ func resourceInvoiceUnitRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, res.InvoiceUnitArn)
 	d.Set(names.AttrDescription, res.Description)
-	d.Set("name", res.Name)
+	d.Set(names.AttrName, res.Name)
 	d.Set("invoice_receiver", res.InvoiceReceiver)
 	d.Set("linked_accounts", res.Rule.LinkedAccounts)
 	d.Set("tax_inheritance_disabled", res.TaxInheritanceDisabled)
