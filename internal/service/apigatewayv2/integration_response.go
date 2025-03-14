@@ -68,7 +68,7 @@ func resourceIntegrationResponse() *schema.Resource {
 	}
 }
 
-func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -83,7 +83,7 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("response_templates"); ok {
-		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("template_selection_expression"); ok {
@@ -101,7 +101,7 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -128,7 +128,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -147,7 +147,7 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("response_templates") {
-		input.ResponseTemplates = flex.ExpandStringValueMap(d.Get("response_templates").(map[string]interface{}))
+		input.ResponseTemplates = flex.ExpandStringValueMap(d.Get("response_templates").(map[string]any))
 	}
 
 	if d.HasChange("template_selection_expression") {
@@ -163,7 +163,7 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -186,7 +186,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceIntegrationResponseImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceIntegrationResponseImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id/integration-response-id'", d.Id())
