@@ -121,7 +121,7 @@ func dataSourceVPC() *schema.Resource {
 	}
 }
 
-func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -205,9 +205,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	cidrAssociations := []interface{}{}
+	cidrAssociations := []any{}
 	for _, v := range vpc.CidrBlockAssociationSet {
-		association := map[string]interface{}{
+		association := map[string]any{
 			names.AttrAssociationID: aws.ToString(v.AssociationId),
 			names.AttrCIDRBlock:     aws.ToString(v.CidrBlock),
 			names.AttrState:         aws.ToString(aws.String(string(v.CidrBlockState.State))),

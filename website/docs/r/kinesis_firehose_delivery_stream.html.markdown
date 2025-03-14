@@ -735,6 +735,7 @@ The `msk_source_configuration` configuration block supports the following argume
 * `authentication_configuration` - (Required) The authentication configuration of the Amazon MSK cluster. See [`authentication_configuration` block](#authentication_configuration-block) below for details.
 * `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
 * `topic_name` - (Required) The topic name within the Amazon MSK cluster.
+* `read_from_timestamp` - (Optional) The start date and time in UTC for the offset position within your MSK topic from where Firehose begins to read. By default, this is set to timestamp when Firehose becomes Active. If you want to create a Firehose stream with Earliest start position set the `read_from_timestamp` parameter to Epoch (1970-01-01T00:00:00Z).
 
 ### `authentication_configuration` block
 

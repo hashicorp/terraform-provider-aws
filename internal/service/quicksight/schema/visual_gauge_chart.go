@@ -155,12 +155,12 @@ func gaugeChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandGaugeChartVisual(tfList []interface{}) *awstypes.GaugeChartVisual {
+func expandGaugeChartVisual(tfList []any) *awstypes.GaugeChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -170,84 +170,84 @@ func expandGaugeChartVisual(tfList []interface{}) *awstypes.GaugeChartVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandGaugeChartConfiguration(v)
 	}
-	if v, ok := tfMap["conditional_formatting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
 		apiObject.ConditionalFormatting = expandGaugeChartConditionalFormatting(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartConfiguration(tfList []interface{}) *awstypes.GaugeChartConfiguration {
+func expandGaugeChartConfiguration(tfList []any) *awstypes.GaugeChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GaugeChartConfiguration{}
 
-	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandGaugeChartFieldWells(v)
 	}
-	if v, ok := tfMap["gauge_chart_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["gauge_chart_options"].([]any); ok && len(v) > 0 {
 		apiObject.GaugeChartOptions = expandGaugeChartOptions(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
 		apiObject.TooltipOptions = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartFieldWells(tfList []interface{}) *awstypes.GaugeChartFieldWells {
+func expandGaugeChartFieldWells(tfList []any) *awstypes.GaugeChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GaugeChartFieldWells{}
 
-	if v, ok := tfMap["target_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["target_values"].([]any); ok && len(v) > 0 {
 		apiObject.TargetValues = expandMeasureFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartOptions(tfList []interface{}) *awstypes.GaugeChartOptions {
+func expandGaugeChartOptions(tfList []any) *awstypes.GaugeChartOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -257,42 +257,42 @@ func expandGaugeChartOptions(tfList []interface{}) *awstypes.GaugeChartOptions {
 	if v, ok := tfMap["primary_value_display_type"].(string); ok && v != "" {
 		apiObject.PrimaryValueDisplayType = awstypes.PrimaryValueDisplayType(v)
 	}
-	if v, ok := tfMap["primary_value_font_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_value_font_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryValueFontConfiguration = expandFontConfiguration(v)
 	}
-	if v, ok := tfMap["arc"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["arc"].([]any); ok && len(v) > 0 {
 		apiObject.Arc = expandArcConfiguration(v)
 	}
-	if v, ok := tfMap["arc_axis"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["arc_axis"].([]any); ok && len(v) > 0 {
 		apiObject.ArcAxis = expandArcAxisConfiguration(v)
 	}
-	if v, ok := tfMap["comparison"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["comparison"].([]any); ok && len(v) > 0 {
 		apiObject.Comparison = expandComparisonConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartConditionalFormatting(tfList []interface{}) *awstypes.GaugeChartConditionalFormatting {
+func expandGaugeChartConditionalFormatting(tfList []any) *awstypes.GaugeChartConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GaugeChartConditionalFormatting{}
 
-	if v, ok := tfMap["conditional_formatting_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["conditional_formatting_options"].([]any); ok && len(v) > 0 {
 		apiObject.ConditionalFormattingOptions = expandGaugeChartConditionalFormattingOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartConditionalFormattingOptions(tfList []interface{}) []awstypes.GaugeChartConditionalFormattingOption {
+func expandGaugeChartConditionalFormattingOptions(tfList []any) []awstypes.GaugeChartConditionalFormattingOption {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -300,7 +300,7 @@ func expandGaugeChartConditionalFormattingOptions(tfList []interface{}) []awstyp
 	var apiObjects []awstypes.GaugeChartConditionalFormattingOption
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -316,70 +316,70 @@ func expandGaugeChartConditionalFormattingOptions(tfList []interface{}) []awstyp
 	return apiObjects
 }
 
-func expandGaugeChartConditionalFormattingOption(tfMap map[string]interface{}) *awstypes.GaugeChartConditionalFormattingOption {
+func expandGaugeChartConditionalFormattingOption(tfMap map[string]any) *awstypes.GaugeChartConditionalFormattingOption {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.GaugeChartConditionalFormattingOption{}
 
-	if v, ok := tfMap["arc"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["arc"].([]any); ok && len(v) > 0 {
 		apiObject.Arc = expandGaugeChartArcConditionalFormatting(v)
 	}
-	if v, ok := tfMap["primary_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_value"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryValue = expandGaugeChartPrimaryValueConditionalFormatting(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartArcConditionalFormatting(tfList []interface{}) *awstypes.GaugeChartArcConditionalFormatting {
+func expandGaugeChartArcConditionalFormatting(tfList []any) *awstypes.GaugeChartArcConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GaugeChartArcConditionalFormatting{}
 
-	if v, ok := tfMap["foreground_color"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["foreground_color"].([]any); ok && len(v) > 0 {
 		apiObject.ForegroundColor = expandConditionalFormattingColor(v)
 	}
 
 	return apiObject
 }
 
-func expandGaugeChartPrimaryValueConditionalFormatting(tfList []interface{}) *awstypes.GaugeChartPrimaryValueConditionalFormatting {
+func expandGaugeChartPrimaryValueConditionalFormatting(tfList []any) *awstypes.GaugeChartPrimaryValueConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GaugeChartPrimaryValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
 		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
-	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
 		apiObject.TextColor = expandConditionalFormattingColor(v)
 	}
 
 	return apiObject
 }
 
-func expandArcConfiguration(tfList []interface{}) *awstypes.ArcConfiguration {
+func expandArcConfiguration(tfList []any) *awstypes.ArcConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -396,19 +396,19 @@ func expandArcConfiguration(tfList []interface{}) *awstypes.ArcConfiguration {
 	return apiObject
 }
 
-func expandArcAxisConfiguration(tfList []interface{}) *awstypes.ArcAxisConfiguration {
+func expandArcAxisConfiguration(tfList []any) *awstypes.ArcAxisConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ArcAxisConfiguration{}
 
-	if v, ok := tfMap["range"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range"].([]any); ok && len(v) > 0 {
 		apiObject.Range = expandArcAxisDisplayRange(v)
 	}
 	if v, ok := tfMap["reserve_range"].(int); ok {
@@ -418,12 +418,12 @@ func expandArcAxisConfiguration(tfList []interface{}) *awstypes.ArcAxisConfigura
 	return apiObject
 }
 
-func expandArcAxisDisplayRange(tfList []interface{}) *awstypes.ArcAxisDisplayRange {
+func expandArcAxisDisplayRange(tfList []any) *awstypes.ArcAxisDisplayRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -440,12 +440,12 @@ func expandArcAxisDisplayRange(tfList []interface{}) *awstypes.ArcAxisDisplayRan
 	return apiObject
 }
 
-func flattenGaugeChartVisual(apiObject *awstypes.GaugeChartVisual) []interface{} {
+func flattenGaugeChartVisual(apiObject *awstypes.GaugeChartVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 
@@ -465,15 +465,15 @@ func flattenGaugeChartVisual(apiObject *awstypes.GaugeChartVisual) []interface{}
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGaugeChartConfiguration(apiObject *awstypes.GaugeChartConfiguration) []interface{} {
+func flattenGaugeChartConfiguration(apiObject *awstypes.GaugeChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DataLabels != nil {
 		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
@@ -491,15 +491,15 @@ func flattenGaugeChartConfiguration(apiObject *awstypes.GaugeChartConfiguration)
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGaugeChartFieldWells(apiObject *awstypes.GaugeChartFieldWells) []interface{} {
+func flattenGaugeChartFieldWells(apiObject *awstypes.GaugeChartFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.TargetValues != nil {
 		tfMap["target_values"] = flattenMeasureFields(apiObject.TargetValues)
@@ -508,15 +508,15 @@ func flattenGaugeChartFieldWells(apiObject *awstypes.GaugeChartFieldWells) []int
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGaugeChartOptions(apiObject *awstypes.GaugeChartOptions) []interface{} {
+func flattenGaugeChartOptions(apiObject *awstypes.GaugeChartOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Arc != nil {
 		tfMap["arc"] = flattenArcConfiguration(apiObject.Arc)
@@ -532,45 +532,45 @@ func flattenGaugeChartOptions(apiObject *awstypes.GaugeChartOptions) []interface
 		tfMap["primary_value_font_configuration"] = flattenFontConfiguration(apiObject.PrimaryValueFontConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenArcConfiguration(apiObject *awstypes.ArcConfiguration) []interface{} {
+func flattenArcConfiguration(apiObject *awstypes.ArcConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ArcAngle != nil {
 		tfMap["arc_angle"] = aws.ToFloat64(apiObject.ArcAngle)
 	}
 	tfMap["arc_thickness"] = apiObject.ArcThickness
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenArcAxisConfiguration(apiObject *awstypes.ArcAxisConfiguration) []interface{} {
+func flattenArcAxisConfiguration(apiObject *awstypes.ArcAxisConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Range != nil {
 		tfMap["range"] = flattenArcAxisDisplayRange(apiObject.Range)
 	}
 	tfMap["reserve_range"] = apiObject.ReserveRange
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenArcAxisDisplayRange(apiObject *awstypes.ArcAxisDisplayRange) []interface{} {
+func flattenArcAxisDisplayRange(apiObject *awstypes.ArcAxisDisplayRange) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Max != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(apiObject.Max)
@@ -579,30 +579,30 @@ func flattenArcAxisDisplayRange(apiObject *awstypes.ArcAxisDisplayRange) []inter
 		tfMap[names.AttrMin] = aws.ToFloat64(apiObject.Min)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComparisonConfiguration(apiObject *awstypes.ComparisonConfiguration) []interface{} {
+func flattenComparisonConfiguration(apiObject *awstypes.ComparisonConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComparisonFormat != nil {
 		tfMap["comparison_format"] = flattenComparisonFormatConfiguration(apiObject.ComparisonFormat)
 	}
 	tfMap["comparison_method"] = apiObject.ComparisonMethod
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComparisonFormatConfiguration(apiObject *awstypes.ComparisonFormatConfiguration) []interface{} {
+func flattenComparisonFormatConfiguration(apiObject *awstypes.ComparisonFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.NumberDisplayFormatConfiguration != nil {
 		tfMap["number_display_format_configuration"] = flattenNumberDisplayFormatConfiguration(apiObject.NumberDisplayFormatConfiguration)
@@ -611,32 +611,32 @@ func flattenComparisonFormatConfiguration(apiObject *awstypes.ComparisonFormatCo
 		tfMap["percentage_display_format_configuration"] = flattenPercentageDisplayFormatConfiguration(apiObject.PercentageDisplayFormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGaugeChartConditionalFormatting(apiObject *awstypes.GaugeChartConditionalFormatting) []interface{} {
+func flattenGaugeChartConditionalFormatting(apiObject *awstypes.GaugeChartConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ConditionalFormattingOptions != nil {
 		tfMap["conditional_formatting_options"] = flattenGaugeChartConditionalFormattingOption(apiObject.ConditionalFormattingOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGaugeChartConditionalFormattingOption(apiObjects []awstypes.GaugeChartConditionalFormattingOption) []interface{} {
+func flattenGaugeChartConditionalFormattingOption(apiObjects []awstypes.GaugeChartConditionalFormattingOption) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Arc != nil {
 			tfMap["arc"] = flattenGaugeChartArcConditionalFormatting(apiObject.Arc)
@@ -651,26 +651,26 @@ func flattenGaugeChartConditionalFormattingOption(apiObjects []awstypes.GaugeCha
 	return tfList
 }
 
-func flattenGaugeChartArcConditionalFormatting(apiObject *awstypes.GaugeChartArcConditionalFormatting) []interface{} {
+func flattenGaugeChartArcConditionalFormatting(apiObject *awstypes.GaugeChartArcConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ForegroundColor != nil {
 		tfMap["foreground_color"] = flattenConditionalFormattingColor(apiObject.ForegroundColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *awstypes.GaugeChartPrimaryValueConditionalFormatting) []interface{} {
+func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *awstypes.GaugeChartPrimaryValueConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Icon != nil {
 		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
@@ -679,5 +679,5 @@ func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *awstypes.Gaug
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

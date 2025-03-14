@@ -73,7 +73,7 @@ func resourceGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 

@@ -140,7 +140,7 @@ func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.Custo
 }
 
 func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
 			return sdkdiag.DiagnosticsError(diags)
@@ -155,7 +155,7 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 		return nil
 	}
 
-	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
+	return func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 		ctx, diags := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
 		if diags.HasError() {
 			return nil, sdkdiag.DiagnosticsError(diags)

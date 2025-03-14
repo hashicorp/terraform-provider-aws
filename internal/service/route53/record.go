@@ -329,6 +329,12 @@ func resourceRecord() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
@@ -388,7 +394,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(strings.Join(vars, "_"))
 
 	if output := outputRaw.(*route53.ChangeResourceRecordSetsOutput); output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -686,7 +692,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -755,7 +761,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
 	}

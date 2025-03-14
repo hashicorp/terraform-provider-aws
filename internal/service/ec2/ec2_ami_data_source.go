@@ -233,7 +233,7 @@ func dataSourceAMI() *schema.Resource {
 	}
 }
 
-func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -242,15 +242,15 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		describeImagesInput.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.ExecutableUsers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		describeImagesInput.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("owners"); ok && len(v.([]any)) > 0 {
+		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]any))
 	}
 
 	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool))
@@ -355,21 +355,21 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []interface{} {
+func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrDeviceName:  aws.ToString(apiObject.DeviceName),
 			names.AttrVirtualName: aws.ToString(apiObject.VirtualName),
 		}
 
 		if apiObject := apiObject.Ebs; apiObject != nil {
-			ebs := map[string]interface{}{
+			ebs := map[string]any{
 				names.AttrDeleteOnTermination: flex.BoolToStringValue(apiObject.DeleteOnTermination),
 				names.AttrEncrypted:           flex.BoolToStringValue(apiObject.Encrypted),
 				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
@@ -388,15 +388,15 @@ func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []i
 	return tfList
 }
 
-func flattenAMIProductCodes(apiObjects []awstypes.ProductCode) []interface{} {
+func flattenAMIProductCodes(apiObjects []awstypes.ProductCode) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"product_code_id":   aws.ToString(apiObject.ProductCodeId),
 			"product_code_type": apiObject.ProductCodeType,
 		})
@@ -421,8 +421,8 @@ func amiRootSnapshotId(image awstypes.Image) string {
 	return ""
 }
 
-func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
-	s := make(map[string]interface{})
+func flattenAMIStateReason(m *awstypes.StateReason) map[string]any {
+	s := make(map[string]any)
 	if m != nil {
 		s["code"] = aws.ToString(m.Code)
 		s[names.AttrMessage] = aws.ToString(m.Message)
