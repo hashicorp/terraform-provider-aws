@@ -121,7 +121,7 @@ func resourcePipeline() *schema.Resource {
 	}
 }
 
-func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -135,7 +135,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("parallelism_configuration"); ok {
-		input.ParallelismConfiguration = expandParallelismConfiguration(v.([]interface{}))
+		input.ParallelismConfiguration = expandParallelismConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("pipeline_definition"); ok {
@@ -143,7 +143,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("pipeline_definition_s3_location"); ok {
-		input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(v.([]interface{}))
+		input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(v.([]any))
 	}
 
 	if v, ok := d.GetOk("pipeline_description"); ok {
@@ -161,7 +161,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -190,7 +190,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -200,7 +200,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("parallelism_configuration") {
-			input.ParallelismConfiguration = expandParallelismConfiguration(d.Get("parallelism_configuration").([]interface{}))
+			input.ParallelismConfiguration = expandParallelismConfiguration(d.Get("parallelism_configuration").([]any))
 		}
 
 		if d.HasChange("pipeline_definition") {
@@ -208,7 +208,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("pipeline_definition_s3_location") {
-			input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(d.Get("pipeline_definition_s3_location").([]interface{}))
+			input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(d.Get("pipeline_definition_s3_location").([]any))
 		}
 
 		if d.HasChange("pipeline_description") {
@@ -233,7 +233,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -279,12 +279,12 @@ func findPipelineByName(ctx context.Context, conn *sagemaker.Client, name string
 	return output, nil
 }
 
-func expandPipelineDefinitionS3Location(l []interface{}) *awstypes.PipelineDefinitionS3Location {
+func expandPipelineDefinitionS3Location(l []any) *awstypes.PipelineDefinitionS3Location {
 	if len(l) == 0 || l[0] == nil {
 		return &awstypes.PipelineDefinitionS3Location{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.PipelineDefinitionS3Location{
 		Bucket:    aws.String(m[names.AttrBucket].(string)),
@@ -298,12 +298,12 @@ func expandPipelineDefinitionS3Location(l []interface{}) *awstypes.PipelineDefin
 	return config
 }
 
-func expandParallelismConfiguration(l []interface{}) *awstypes.ParallelismConfiguration {
+func expandParallelismConfiguration(l []any) *awstypes.ParallelismConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return &awstypes.ParallelismConfiguration{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.ParallelismConfiguration{
 		MaxParallelExecutionSteps: aws.Int32(int32(m["max_parallel_execution_steps"].(int))),
@@ -312,14 +312,14 @@ func expandParallelismConfiguration(l []interface{}) *awstypes.ParallelismConfig
 	return config
 }
 
-func flattenParallelismConfiguration(config *awstypes.ParallelismConfiguration) []map[string]interface{} {
+func flattenParallelismConfiguration(config *awstypes.ParallelismConfiguration) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"max_parallel_execution_steps": aws.ToInt32(config.MaxParallelExecutionSteps),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
