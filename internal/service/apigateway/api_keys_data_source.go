@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -72,7 +71,7 @@ func (d *dataSourceAPIKeys) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, items, &data.Items)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, items, &data.Items)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
