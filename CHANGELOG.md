@@ -3,7 +3,13 @@
 ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
 * resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+
+BUG FIXES:
+
+* resource/aws_timestreaminfluxdb_db_instance: Set new computed value for `secondary_availability_zone` attribute when changing `deployment_type` ([#41849](https://github.com/hashicorp/terraform-provider-aws/issues/41849))
 
 ## 5.91.0 (March 13, 2025)
 
