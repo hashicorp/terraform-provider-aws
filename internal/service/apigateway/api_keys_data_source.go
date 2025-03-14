@@ -57,12 +57,12 @@ func (d *dataSourceAPIKeys) Read(ctx context.Context, request datasource.ReadReq
 	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 
 	conn := d.Meta().APIGatewayClient(ctx)
-	input := &apigateway.GetApiKeysInput{
+	input := apigateway.GetApiKeysInput{
 		IncludeValues: flex.BoolFromFramework(ctx, data.IncludeValues),
 		CustomerId:    flex.StringFromFramework(ctx, data.CustomerID),
 	}
 
-	items, err := findAPIKeys(ctx, conn, input)
+	items, err := findAPIKeys(ctx, conn, &input)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.APIGateway, create.ErrActionReading, DSNameAPIKeys, data.ID.ValueString(), err),
