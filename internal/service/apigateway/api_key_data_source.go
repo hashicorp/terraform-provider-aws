@@ -19,6 +19,7 @@ import (
 // @SDKDataSource("aws_api_gateway_api_key", name="API Key")
 // @Tags
 // @Testing(tagsIdentifierAttribute="arn")
+// @Testing(serialize=true)
 func dataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIKeyRead,

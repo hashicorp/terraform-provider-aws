@@ -33,6 +33,24 @@ func TestAccAPIGateway_serial(t *testing.T) {
 			"ResetOnDelete_false":                  testAccAccount_resetOnDelete_false,
 			"ResetOnDelete_true":                   testAccAccount_resetOnDelete_true,
 		},
+		"APIKey": {
+			acctest.CtBasic:      testAccAPIGatewayAPIKey_basic,
+			"customerID":         testAccAPIGatewayAPIKey_customerID,
+			acctest.CtDisappears: testAccAPIGatewayAPIKey_disappears,
+			"description":        testAccAPIGatewayAPIKey_description,
+			"enabled":            testAccAPIGatewayAPIKey_enabled,
+			"tags":               testAccAPIGatewayAPIKey_tagsSerial,
+			"value":              testAccAPIGatewayAPIKey_value,
+		},
+		"APIKeyDataSource": {
+			acctest.CtBasic: testAccAPIKeyDataSource_basic,
+			"tags":          testAccAPIGatewayAPIKeyDataSource_tagsSerial,
+		},
+		"APIKeysDataSource": {
+			acctest.CtBasic: testAccAPIKeysDataSource_basic,
+			"includeValues": testAccAPIKeysDataSource_includeValues,
+			"manyKeys":      testAccAPIKeysDataSource_manyKeys,
+		},
 		// Some aws_api_gateway_method_settings tests require the account-level CloudWatch Logs role ARN to be set.
 		// Serialize all this resource's acceptance tests.
 		"MethodSettings": {
