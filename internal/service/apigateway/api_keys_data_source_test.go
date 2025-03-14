@@ -35,7 +35,7 @@ func testAccAPIKeysDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.id", resourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.last_updated_date", resourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.name", resourceName, names.AttrName),
-					resource.TestCheckNoResourceAttr(dataSourceName, names.AttrValue),
+					resource.TestCheckNoResourceAttr(dataSourceName, "items.0.value"),
 				),
 			},
 		},
