@@ -149,6 +149,7 @@ protocol,Protocol
 provider_name,ProviderName
 public_key,PublicKey
 publicly_accessible,PubliclyAccessible
+rds_options,RdsOptions
 region,Region
 repository_name,RepositoryName
 resource_arn,ResourceARN

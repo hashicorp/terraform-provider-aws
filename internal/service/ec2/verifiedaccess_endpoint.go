@@ -337,6 +337,10 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrRdsOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RdsOptions = expandCreateVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -393,6 +397,9 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("network_interface_options", flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interface_options: %s", err)
 	}
+	if err := d.Set(names.AttrRdsOptions, flattenVerifiedAccessEndpointRdsOptions(ep.RdsOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rds_options: %s", err)
+	}
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
 	if err := d.Set("sse_specification", flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
@@ -440,6 +447,12 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 		if d.HasChanges("network_interface_options") {
 			if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChanges(names.AttrRdsOptions) {
+			if v, ok := d.GetOk(names.AttrRdsOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.RdsOptions = expandModifyVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -612,6 +625,44 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	return []any{tfmap}
 }
 
+func flattenVerifiedAccessEndpointRdsOptions(apiObject *types.VerifiedAccessEndpointRdsOptions) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfmap := map[string]any{}
+
+	if v := apiObject.Port; v != nil {
+		tfmap[names.AttrPort] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Protocol; v != "" {
+		tfmap[names.AttrProtocol] = v
+	}
+
+	if v := apiObject.RdsEndpoint; v != nil {
+		tfmap[names.AttrEndpoint] = v
+	}
+
+	if v := apiObject.RdsDbClusterArn; v != nil {
+		tfmap["db_cluster_arn"] = v
+	}
+
+	if v := apiObject.RdsDbInstanceArn; v != nil {
+		tfmap["db_instance_arn"] = v
+	}
+
+	if v := apiObject.RdsDbProxyArn; v != nil {
+		tfmap["db_proxy_arn"] = v
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfmap[names.AttrSubnetIDs] = aws.StringSlice(v)
+	}
+
+	return []any{tfmap}
+}
+
 func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
@@ -647,6 +698,40 @@ func expandCreateVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiobject.SubnetIds = flex.ExpandStringValueSet(v)
+	}
+
+	return apiobject
+}
+
+func expandCreateVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointRdsOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiobject := &types.CreateVerifiedAccessEndpointRdsOptions{}
+
+	if v, ok := tfMap[names.AttrPort].(int); ok {
+		apiobject.Port = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	if v, ok := tfMap["db_cluster_arn"].(string); ok && v != "" {
+		apiobject.RdsDbClusterArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["db_instance_arn"].(string); ok && v != "" {
+		apiobject.RdsDbInstanceArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["db_proxy_arn"].(string); ok && v != "" {
+		apiobject.RdsDbProxyArn = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -762,6 +847,28 @@ func expandModifyVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.
 
 	if v, ok := tfMap[names.AttrPortRanges]; ok {
 		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.([]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandModifyVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointRdsOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ModifyVerifiedAccessEndpointRdsOptions{}
+
+	if v, ok := tfMap[names.AttrPort].(int); ok {
+		apiObject.Port = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrEndpoint]; ok {
+		apiObject.RdsEndpoint = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject

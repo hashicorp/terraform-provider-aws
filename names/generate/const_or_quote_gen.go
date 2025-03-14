@@ -164,6 +164,7 @@ func ConstOrQuote(constant string) string {
 		"provider_name":                 "AttrProviderName",
 		"public_key":                    "AttrPublicKey",
 		"publicly_accessible":           "AttrPubliclyAccessible",
+		"rds_options":                   "AttrRdsOptions",
 		"region":                        "AttrRegion",
 		"repository_name":               "AttrRepositoryName",
 		"resource_arn":                  "AttrResourceARN",

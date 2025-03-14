@@ -2719,6 +2719,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-rds_options-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrRdsOptions` for the string literal "rds_options"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"rds_options"'
+      - pattern-not-regex: '"rds_options":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrRdsOptions"
+    options:
+      constant_propagation: false
+
   - id: literal-region-string-constant
     languages: [go]
     message: Use the constant `names.AttrRegion` for the string literal "region"

@@ -156,6 +156,7 @@ const (
 	AttrProviderName               = "provider_name"
 	AttrPublicKey                  = "public_key"
 	AttrPubliclyAccessible         = "publicly_accessible"
+	AttrRdsOptions                 = "rds_options"
 	AttrRegion                     = "region"
 	AttrRepositoryName             = "repository_name"
 	AttrResourceARN                = "resource_arn"
