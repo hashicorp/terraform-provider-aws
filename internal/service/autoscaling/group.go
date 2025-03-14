@@ -8,6 +8,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +35,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -77,6 +77,22 @@ func resourceGroup() *schema.Resource {
 				Computed:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"vpc_zone_identifier"},
+			},
+			"availability_zone_distribution": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_distribution_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
+						},
+					},
+				},
 			},
 			"capacity_rebalance": {
 				Type:     schema.TypeBool,
@@ -1074,6 +1090,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
 		inputCASG.CapacityRebalance = aws.Bool(v.(bool))
 	}
@@ -1258,7 +1278,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 
@@ -1274,6 +1294,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
+	d.Set("availability_zone_distribution", []interface{}{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
@@ -1380,6 +1401,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
+		if d.HasChange("availability_zone_distribution") {
+			if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
 		if d.HasChange("capacity_rebalance") {
 			// If the capacity rebalance field is set to null, we need to explicitly set
 			// it back to "false", or the API won't reset it for us.
@@ -1481,7 +1508,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateAutoScalingGroup(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
+			func() (interface{}, error) {
+				return conn.UpdateAutoScalingGroup(ctx, input)
+			},
+			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Group (%s): %s", d.Id(), err)
@@ -1504,7 +1535,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
 			input := &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1521,7 +1552,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
 			input := &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1545,7 +1576,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
 			input := &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1562,7 +1593,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
 			input := &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1586,7 +1617,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
 			input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1603,7 +1634,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
 			input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1864,7 +1895,7 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 		}
 	}
 	const batchSize = 50 // API limit.
-	for _, chunk := range tfslices.Chunks(instanceIDs, batchSize) {
+	for chunk := range slices.Chunk(instanceIDs, batchSize) {
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          chunk,
@@ -3376,6 +3407,20 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 	return aws.String(strings.Join(vpcZoneIDs, ","))
 }
 
+func expandAvailabilityZoneDistribution(tfMap map[string]interface{}) *awstypes.AvailabilityZoneDistribution {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AvailabilityZoneDistribution{}
+
+	if v, ok := tfMap["capacity_distribution_strategy"].(string); ok && v != "" {
+		apiObject.CapacityDistributionStrategy = awstypes.CapacityDistributionStrategy(v)
+	}
+
+	return apiObject
+}
+
 func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
@@ -3409,6 +3454,19 @@ func expandTrafficSourceIdentifiers(tfList []interface{}) []awstypes.TrafficSour
 	}
 
 	return apiObjects
+}
+
+func flattenAvailabilityZoneDistribution(apiObject *awstypes.AvailabilityZoneDistribution) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.CapacityDistributionStrategy; v != "" {
+		tfMap["capacity_distribution_strategy"] = string(v)
+	}
+
+	return tfMap
 }
 
 func flattenEnabledMetrics(apiObjects []awstypes.EnabledMetric) []string {

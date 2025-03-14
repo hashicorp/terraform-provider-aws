@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmincidents_response_plan")
+// @SDKDataSource("aws_ssmincidents_response_plan", name="Response Plan")
 func DataSourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
@@ -193,9 +193,8 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
 	}

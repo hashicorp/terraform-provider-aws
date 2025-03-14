@@ -5,7 +5,6 @@ package identitystore
 
 import (
 	"context"
-	"errors"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,14 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_identitystore_user")
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_identitystore_user", name="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -154,7 +152,7 @@ func DataSourceUser() *schema.Resource {
 				},
 			},
 			names.AttrFilter: {
-				Deprecated:    "Use the alternate_identifier attribute instead.",
+				Deprecated:    "filter is deprecated. Use alternate_identifier instead.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -280,31 +278,26 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-const (
-	DSNameUser = "User Data Source"
-)
-
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
 	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 {
 		// Use ListUsers for backwards compat.
+		var output []types.User
 		input := &identitystore.ListUsersInput{
 			Filters:         expandFilters(d.Get(names.AttrFilter).([]interface{})),
 			IdentityStoreId: aws.String(identityStoreID),
 		}
-		paginator := identitystore.NewListUsersPaginator(conn, input)
-		var results []types.User
 
-		for paginator.HasMorePages() {
-			page, err := paginator.NextPage(ctx)
+		pages := identitystore.NewListUsersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
 			if err != nil {
-				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+				return sdkdiag.AppendErrorf(diags, "reading IdentityStore Users (%s): %s", identityStoreID, err)
 			}
 
 			for _, user := range page.Users {
@@ -312,25 +305,36 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 					continue
 				}
 
-				results = append(results, user)
+				output = append(output, user)
 			}
 		}
 
-		if len(results) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria\n%v; try different search", input.Filters)
-		}
+		user, err := tfresource.AssertSingleValueResult(output)
 
-		if len(results) > 1 {
-			return sdkdiag.AppendErrorf(diags, "multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IdentityStore User", err))
 		}
-
-		user := results[0]
 
 		d.SetId(aws.ToString(user.UserId))
+		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting addresses: %s", err)
+		}
 		d.Set(names.AttrDisplayName, user.DisplayName)
+		if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting emails: %s", err)
+		}
+		if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
+		}
 		d.Set("identity_store_id", user.IdentityStoreId)
 		d.Set("locale", user.Locale)
+		if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
+		}
 		d.Set("nickname", user.NickName)
+		if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting phone_numbers: %s", err)
+		}
 		d.Set("preferred_language", user.PreferredLanguage)
 		d.Set("profile_url", user.ProfileUrl)
 		d.Set("timezone", user.Timezone)
@@ -338,26 +342,6 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("user_id", user.UserId)
 		d.Set(names.AttrUserName, user.UserName)
 		d.Set("user_type", user.UserType)
-
-		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
 
 		return diags
 	}
@@ -373,12 +357,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		output, err := conn.GetUserId(ctx, input)
 
 		if err != nil {
-			var e *types.ResourceNotFoundException
-			if errors.As(err, &e) {
-				return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
-			} else {
-				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
-			}
+			return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", identityStoreID, err)
 		}
 
 		userID = aws.ToString(output.UserId)
@@ -393,22 +372,32 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		userID = v.(string)
 	}
 
-	user, err := FindUserByTwoPartKey(ctx, conn, identityStoreID, userID)
+	user, err := findUserByTwoPartKey(ctx, conn, identityStoreID, userID)
 
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
-		}
-
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+		return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", userID, err)
 	}
 
 	d.SetId(aws.ToString(user.UserId))
-
+	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting addresses: %s", err)
+	}
 	d.Set(names.AttrDisplayName, user.DisplayName)
+	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting emails: %s", err)
+	}
+	if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
+	}
 	d.Set("identity_store_id", user.IdentityStoreId)
 	d.Set("locale", user.Locale)
+	if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
+	}
 	d.Set("nickname", user.NickName)
+	if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting phone_numbers: %s", err)
+	}
 	d.Set("preferred_language", user.PreferredLanguage)
 	d.Set("profile_url", user.ProfileUrl)
 	d.Set("timezone", user.Timezone)
@@ -416,26 +405,6 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("user_id", user.UserId)
 	d.Set(names.AttrUserName, user.UserName)
 	d.Set("user_type", user.UserType)
-
-	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
 
 	return diags
 }

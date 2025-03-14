@@ -180,12 +180,10 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -204,12 +202,12 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoadBalancerOptions = expandCreateVerifiedAccessEndpointLoadBalancerOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoadBalancerOptions = expandCreateVerifiedAccessEndpointLoadBalancerOptions(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointEniOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("policy_document"); ok {
@@ -220,8 +218,8 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SseSpecification = expandCreateVerifiedAccessEndpointSseSpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SseSpecification = expandCreateVerifiedAccessEndpointSseSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVerifiedAccessEndpoint(ctx, input)
@@ -239,7 +237,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVerifiedAccessEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -286,7 +284,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -301,14 +299,14 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		if d.HasChanges("load_balancer_options") {
-			if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LoadBalancerOptions = expandModifyVerifiedAccessEndpointLoadBalancerOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.LoadBalancerOptions = expandModifyVerifiedAccessEndpointLoadBalancerOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChanges("network_interface_options") {
-			if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointEniOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -349,15 +347,16 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVerifiedAccessEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &ec2.DeleteVerifiedAccessEndpointInput{
+	input := ec2.DeleteVerifiedAccessEndpointInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessEndpointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
 		return diags
@@ -374,12 +373,12 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []interface{} {
+func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfmap := map[string]interface{}{}
+	tfmap := map[string]any{}
 
 	if v := apiObject.LoadBalancerArn; v != nil {
 		tfmap["load_balancer_arn"] = aws.ToString(v)
@@ -397,15 +396,15 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 		tfmap[names.AttrSubnetIDs] = aws.StringSlice(v)
 	}
 
-	return []interface{}{tfmap}
+	return []any{tfmap}
 }
 
-func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndpointEniOptions) []interface{} {
+func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndpointEniOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfmap := map[string]interface{}{}
+	tfmap := map[string]any{}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
 		tfmap[names.AttrNetworkInterfaceID] = aws.ToString(v)
@@ -419,15 +418,15 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 		tfmap[names.AttrProtocol] = v
 	}
 
-	return []interface{}{tfmap}
+	return []any{tfmap}
 }
 
-func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAccessSseSpecificationResponse) []interface{} {
+func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfmap := map[string]interface{}{}
+	tfmap := map[string]any{}
 
 	if v := apiObject.CustomerManagedKeyEnabled; v != nil {
 		tfmap["customer_managed_key_enabled"] = aws.ToBool(v)
@@ -437,10 +436,10 @@ func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAcces
 		tfmap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfmap}
+	return []any{tfmap}
 }
 
-func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]interface{}) *types.CreateVerifiedAccessEndpointLoadBalancerOptions {
+func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointLoadBalancerOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -466,7 +465,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 	return apiobject
 }
 
-func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) *types.CreateVerifiedAccessEndpointEniOptions {
+func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointEniOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -487,7 +486,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 	return apiobject
 }
 
-func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]interface{}) *types.ModifyVerifiedAccessEndpointLoadBalancerOptions {
+func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointLoadBalancerOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -509,7 +508,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) *types.ModifyVerifiedAccessEndpointEniOptions {
+func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointEniOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -526,7 +525,7 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandCreateVerifiedAccessEndpointSseSpecification(tfMap map[string]interface{}) *types.VerifiedAccessSseSpecificationRequest {
+func expandCreateVerifiedAccessEndpointSseSpecification(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}

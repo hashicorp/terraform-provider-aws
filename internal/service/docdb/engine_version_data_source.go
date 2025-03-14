@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_docdb_engine_version")
-func DataSourceEngineVersion() *schema.Resource {
+// @SDKDataSource("aws_docdb_engine_version", name="Engine Version")
+func dataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{

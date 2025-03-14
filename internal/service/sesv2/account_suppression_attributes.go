@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Account Suppression Attributes")
+// @FrameworkResource("aws_sesv2_account_suppression_attributes", name="Account Suppression Attributes")
 func newAccountSuppressionAttributesResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSuppressionAttributesResource{}
 
@@ -31,10 +31,6 @@ type accountSuppressionAttributesResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoOpDelete
 	framework.WithImportByID
-}
-
-func (*accountSuppressionAttributesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_sesv2_account_suppression_attributes"
 }
 
 func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -59,7 +55,7 @@ func (r *accountSuppressionAttributesResource) Create(ctx context.Context, reque
 
 	conn := r.Meta().SESV2Client(ctx)
 
-	id := r.Meta().AccountID
+	id := r.Meta().AccountID(ctx)
 	input := &sesv2.PutAccountSuppressionAttributesInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {

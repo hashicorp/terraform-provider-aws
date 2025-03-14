@@ -168,9 +168,9 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	fsID := aws.ToString(mt.FileSystemId)
 	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()

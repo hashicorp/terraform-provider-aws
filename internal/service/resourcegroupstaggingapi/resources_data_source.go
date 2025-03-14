@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_resourcegroupstaggingapi_resources")
+// @SDKDataSource("aws_resourcegroupstaggingapi_resources", name="Resources")
 func dataSourceResources() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcesRead,
@@ -142,7 +142,7 @@ func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta i
 		taggings = append(taggings, page.ResourceTagMappingList...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Partition)
+	d.SetId(meta.(*conns.AWSClient).Partition(ctx))
 
 	if err := d.Set("resource_tag_mapping_list", flattenResourceTagMappings(ctx, taggings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resource tag mapping list: %s", err)

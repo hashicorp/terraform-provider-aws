@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -78,7 +79,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "export_only.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export_only.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_only.0", names.AttrDatabase),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 				),
@@ -153,12 +154,7 @@ func isInDestroyedStatus(s string) bool {
 		tfrds.StatusFailed,
 		tfrds.StatusCanceled,
 	}
-	for _, status := range deletedStatuses {
-		if s == status {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(deletedStatuses, s)
 }
 
 func testAccExportTaskConfigBase(rName string) string {

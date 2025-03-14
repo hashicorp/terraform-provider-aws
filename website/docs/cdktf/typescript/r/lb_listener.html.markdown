@@ -382,20 +382,40 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `defaultAction` - (Required) Configuration block for default actions. Detailed below.
+* `defaultAction` - (Required) Configuration block for default actions. See below.
 * `loadBalancerArn` - (Required, Forces New Resource) ARN of the load balancer.
 
 The following arguments are optional:
 
 * `alpnPolicy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `TLS`. Valid values are `HTTP1Only`, `HTTP2Only`, `HTTP2Optional`, `HTTP2Preferred`, and `None`.
 * `certificateArn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
-* `mutualAuthentication` - (Optional) The mutual authentication configuration information. Detailed below.
+* `mutualAuthentication` - (Optional) The mutual authentication configuration information. See below.
 * `port` - (Optional) Port on which the load balancer is listening. Not valid for Gateway Load Balancers.
 * `protocol` - (Optional) Protocol for connections from clients to the load balancer. For Application Load Balancers, valid values are `HTTP` and `HTTPS`, with a default of `HTTP`. For Network Load Balancers, valid values are `TCP`, `TLS`, `UDP`, and `TCP_UDP`. Not valid to use `UDP` or `TCP_UDP` if dual-stack mode is enabled. Not valid for Gateway Load Balancers.
 * `sslPolicy` - (Optional) Name of the SSL Policy for the listener. Required if `protocol` is `HTTPS` or `TLS`. Default is `ELBSecurityPolicy-2016-08`.
+* `tcpIdleTimeoutSeconds` - (Optional) TCP idle timeout value in seconds. Can only be set if protocol is `TCP` on Network Load Balancer, or with a Gateway Load Balancer. Not supported for Application Load Balancers. Valid values are between `60` and `6000` inclusive. Default: `350`.
+* `routingHttpResponseServerEnabled` - (Optional) Enables you to allow or remove the HTTP response server header. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. Valid values are `true` or `false`.
+* `routingHttpResponseStrictTransportSecurityHeaderValue` - (Optional) Informs browsers that the site should only be accessed using HTTPS, and that any future attempts to access it using HTTP should automatically be converted to HTTPS. Default values are `max-age=31536000; includeSubDomains; preload` consult the Strict-Transport-Security documentation for further details.
+* `routingHttpResponseAccessControlAllowOriginHeaderValue` - (Optional) Specifies which origins are allowed to access the server. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. A valid value is a URI, eg: `https://example.com`.
+* `routingHttpResponseAccessControlAllowMethodsHeaderValue` - (Optional) Set which HTTP methods are allowed when accessing the server from a different origin. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. Valid values are `GET`, `HEAD`, `POST`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE` or `PATCH`.
+* `routingHttpResponseAccessControlAllowHeadersHeaderValue` - (Optional) Specifies which headers can be used during the request. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. Valid values are `*`, `Accept`, `Accept-Language`, `Cache-Control`, `Content-Language`, `Content-Length`, `Content-Type`, `Expires`, `Last-Modified`, `Pragma`. Dependent on your use-case other headers can be exposed and then set as a value consult the Access-Control-Allow-Headers documentation.
+* `routingHttpResponseAccessControlAllowCredentialsHeaderValue` - (Optional) Specifies which headers the browser can expose to the requesting client. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. The only valid value is `true`.
+* `routingHttpResponseAccessControlExposeHeadersHeaderValue` - (Optional) Specifies whether the browser should include credentials such as cookies or authentication when making requests. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. Valid values are `*`, `Cache-Control`, `Content-Language`, `Content-Length`, `Content-Type`, `Expires`, `Last-Modified`, or `Pragma`. Dependent on your use-case other headers can be exposed, consult the Access-Control-Expose-Headers documentation.
+* `routingHttpResponseAccessControlMaxAgeHeaderValue` - (Optional) Specifies how long the results of a preflight request can be cached, in seconds. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. Valid values are between `0` and `86400`. This value is browser specific, consult the Access-Control-Max-Age documentation.
+* `routingHttpResponseContentSecurityPolicyHeaderValue` - (Optional) Specifies restrictions enforced by the browser to help minimize the risk of certain types of security threats. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. Values for this are extensive, and can be impactful when set, consult Content-Security-Policy documentation.
+* `routingHttpResponseXContentTypeOptionsHeaderValue` - (Optional) Indicates whether the MIME types advertised in the Content-Type headers should be followed and not be changed. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. The only valid value is `nosniff`.
+* `routingHttpResponseXFrameOptionsHeaderValue` - (Optional) Indicates whether the browser is allowed to render a page in a frame, iframe, embed or object. Can only be set if protocol is `HTTP` or `HTTPS` for Application Load Balancers. Not supported for Network Load Balancer, or with a Gateway Load Balancer. The only valid values are `DENY`, `SAMEORIGIN`, or `ALLOW-FROM https://example.com`.
+* `routingHttpRequestXAmznMtlsClientcertSerialNumberHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Mtls-Clientcert-Serial-Number` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznMtlsClientcertIssuerHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Mtls-Clientcert-Issuer` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznMtlsClientcertSubjectHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Mtls-Clientcert-Subject` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznMtlsClientcertValidityHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Mtls-Clientcert-Validity` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznMtlsClientcertLeafHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Mtls-Clientcert-Leaf` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznMtlsClientcertHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Mtls-Clientcert` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznTlsVersionHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Tls-Version` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
+* `routingHttpRequestXAmznTlsCipherSuiteHeaderName` - (Optional) Enables you to modify the header name of the `X-Amzn-Tls-Cipher-Suite` HTTP request header. Can only be set if protocol is `HTTPS` for Application Load Balancers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-~> **NOTE::** Please note that listeners that are attached to Application Load Balancers must use either `HTTP` or `HTTPS` protocols while listeners that are attached to Network Load Balancers must use the `TCP` protocol.
+~> **Note::** When a `Name` key is specified in the map, the AWS Console maps the value to the `Name Tag` column value inside the `Listener Rules` table within a specific load balancer listener page. Otherwise, the value resolves to `Default`.
 
 ### default_action
 
@@ -405,22 +425,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authenticateCognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. Detailed below.
-* `authenticateOidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. Detailed below.
+* `authenticateCognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. See below.
+* `authenticateOidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. See below.
 * `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
-* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
-  Specify only if `type` is `forward`.
-  Cannot be specified with `targetGroupArn`.
-  Detailed below.
-* `order` - (Optional) Order for the action.
-  The action with the lowest value for order is performed first.
-  Valid values are between `1` and `50000`.
-  Defaults to the position in the list of actions.
-* `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. Detailed below.
-* `targetGroupArn` - (Optional) ARN of the Target Group to which to route traffic.
-  Specify only if `type` is `forward` and you want to route to a single target group.
-  To route to one or more target groups, use a `forward` block instead.
-  Cannot be specified with `forward`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. See below.
+* `order` - (Optional) Order for the action. The action with the lowest value for order is performed first. Valid values are between `1` and `50000`. Defaults to the position in the list of actions.
+* `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. See below.
+* `targetGroupArn` - (Optional) ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead. Can be specified with `forward` but ARNs must match.
 
 #### authenticate_cognito
 
@@ -432,7 +443,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authenticationRequestExtraParams` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10. Detailed below.
+* `authenticationRequestExtraParams` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10. See below.
 * `onUnauthenticatedRequest` - (Optional) Behavior if the user is not authenticated. Valid values are `deny`, `allow` and `authenticate`.
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
 * `sessionCookieName` - (Optional) Name of the cookie used to maintain session information.
@@ -477,11 +488,11 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `targetGroup` - (Required) Set of 1-5 target group blocks. Detailed below.
+* `targetGroup` - (Required) Set of 1-5 target group blocks. See below.
 
 The following arguments are optional:
 
-* `stickiness` - (Optional) Configuration block for target group stickiness for the rule. Detailed below.
+* `stickiness` - (Optional) Configuration block for target group stickiness for the rule. See below.
 
 ##### target_group
 
@@ -521,9 +532,10 @@ The following arguments are optional:
 
 ### mutual_authentication
 
+* `advertiseTrustStoreCaNames` - (Optional) Valid values are `off` and `on`.
+* `ignoreClientCertificateExpiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 * `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
 * `trustStoreArn` - (Required) ARN of the elbv2 Trust Store.
-* `ignoreClientCertificateExpiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 
 ## Attribute Reference
 
@@ -532,6 +544,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the listener (matches `id`).
 * `id` - ARN of the listener (matches `arn`).
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `targetGroup` and `arn` to avoid import differences.
 
 ## Import
 
@@ -565,4 +579,4 @@ Using `terraform import`, import listeners using their ARN. For example:
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1f46c4aa2b9ea709e13451b419a3882f783a8175b65cac66950c86836ee1335e -->
+<!-- cache-key: cdktf-0.20.8 input-c2250758493b5ed609658689aa3135572f1a227d5a24eadc8bbe2b8749bed8ad -->

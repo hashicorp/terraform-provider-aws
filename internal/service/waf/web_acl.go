@@ -6,10 +6,10 @@ package waf
 import (
 	"context"
 	"log"
+	"slices"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -157,8 +156,6 @@ func resourceWebACL() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -186,14 +183,8 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(output.(*waf.CreateWebACLOutput).WebACL.WebACLId))
 
 	if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{}); len(loggingConfiguration) == 1 {
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "waf",
-			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  "webacl/" + d.Id(),
-		}.String()
 		input := &waf.PutLoggingConfigurationInput{
-			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, arn),
+			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, webACLARN(ctx, meta.(*conns.AWSClient), d.Id())),
 		}
 
 		_, err := conn.PutLoggingConfiguration(ctx, input)
@@ -486,7 +477,7 @@ func diffWebACLRules(oldR, newR []interface{}) []awstypes.WebACLUpdate {
 		aclRule := or.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newR, aclRule); contains {
-			newR = append(newR[:idx], newR[idx+1:]...)
+			newR = slices.Delete(newR, idx, idx+1)
 			continue
 		}
 		updates = append(updates, expandWebACLUpdate(string(awstypes.ChangeActionDelete), aclRule))
@@ -587,4 +578,9 @@ func flattenWebACLRules(ts []awstypes.ActivatedRule) []map[string]interface{} {
 		out[i] = m
 	}
 	return out
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func webACLARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "webacl/"+id)
 }

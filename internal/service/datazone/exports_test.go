@@ -14,6 +14,7 @@ var (
 	ResourceGlossary                          = newResourceGlossary
 	ResourceGlossaryTerm                      = newResourceGlossaryTerm
 	ResourceProject                           = newResourceProject
+	ResourceUserProfile                       = newResourceUserProfile
 
 	FindAssetTypeByID          = findAssetTypeByID
 	FindEnvironmentByID        = findEnvironmentByID
@@ -21,6 +22,7 @@ var (
 	FindFormTypeByID           = findFormTypeByID
 	FindGlossaryByID           = findGlossaryByID
 	FindGlossaryTermByID       = findGlossaryTermByID
+	FindUserProfileByID        = findUserProfileByID
 
 	IsResourceMissing = isResourceMissing
 )

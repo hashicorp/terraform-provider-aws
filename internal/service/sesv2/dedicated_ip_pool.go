@@ -10,7 +10,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,8 +57,6 @@ func resourceDedicatedIPPool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -109,9 +105,9 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	poolName := aws.ToString(out.PoolName)
+	d.Set(names.AttrARN, dedicatedIPPoolARN(ctx, meta.(*conns.AWSClient), poolName))
 	d.Set("pool_name", poolName)
-	d.Set("scaling_mode", string(out.ScalingMode))
-	d.Set(names.AttrARN, dedicatedIPPoolARN(meta, poolName))
+	d.Set("scaling_mode", out.ScalingMode)
 
 	return diags
 }
@@ -170,12 +166,6 @@ func findDedicatedIPPool(ctx context.Context, conn *sesv2.Client, input *sesv2.G
 	return output.DedicatedIpPool, nil
 }
 
-func dedicatedIPPoolARN(meta interface{}, poolName string) string {
-	return arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("dedicated-ip-pool/%s", poolName),
-	}.String()
+func dedicatedIPPoolARN(ctx context.Context, c *conns.AWSClient, poolName string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("dedicated-ip-pool/%s", poolName))
 }

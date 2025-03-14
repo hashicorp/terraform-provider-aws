@@ -31,8 +31,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Namespace")
+// @FrameworkResource("aws_quicksight_namespace", name="Namespace")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.NamespaceInfoV2")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
 	r.SetDefaultCreateTimeout(2 * time.Minute)
@@ -50,10 +52,6 @@ type namespaceResource struct {
 	framework.WithTimeouts
 	framework.WithNoOpUpdate[resourceNamespaceData]
 	framework.WithImportByID
-}
-
-func (r *namespaceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_namespace"
 }
 
 func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -117,7 +115,7 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, namespace := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace)
 	in := quicksight.CreateNamespaceInput{
@@ -246,10 +244,6 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *namespaceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findNamespaceByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) (*awstypes.NamespaceInfoV2, error) {
 	input := &quicksight.DescribeNamespaceInput{
 		AwsAccountId: aws.String(awsAccountID),
@@ -349,7 +343,7 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 }
 
 func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
 		if tfresource.NotFound(err) {

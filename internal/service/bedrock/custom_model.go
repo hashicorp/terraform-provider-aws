@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -42,8 +41,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Model")
+// @FrameworkResource("aws_bedrock_custom_model", name="Custom Model")
 // @Tags(identifierAttribute="job_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetModelCustomizationJobOutput")
+// @Testing(serialize=true)
+// @Testing(importIgnore="base_model_identifier")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -56,10 +58,6 @@ type customModelResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *customModelResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_custom_model"
 }
 
 func (r *customModelResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -136,30 +134,14 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"training_metrics": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingMetricsModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"training_loss": types.Float64Type,
-					},
-				},
-			},
-			"validation_metrics": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelValidationMetricsModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"validation_loss": types.Float64Type,
-					},
-				},
-			},
+			names.AttrTags:       tftags.TagsAttribute(),
+			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
+			"training_metrics":   framework.ResourceComputedListOfObjectsAttribute[trainingMetricsModel](ctx),
+			"validation_metrics": framework.ResourceComputedListOfObjectsAttribute[validatorMetricModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"output_data_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelOutputDataConfigModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[outputDataConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -187,7 +169,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				Delete: true,
 			}),
 			"training_data_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingDataConfigModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[trainingDataConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -211,7 +193,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"validation_data_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelValidationDataConfigModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[validationDataConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -221,7 +203,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"validator": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[customModelValidatorConfigModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[validatorModel](ctx),
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
 							},
@@ -238,7 +220,8 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 											stringplanmodifier.RequiresReplace(),
 										},
 										Validators: []validator.String{
-											fwvalidators.S3URI()},
+											fwvalidators.S3URI(),
+										},
 									},
 								},
 							},
@@ -247,7 +230,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrVPCConfig: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelVPCConfigModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -323,8 +306,8 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	data.CustomModelARN = fwflex.StringToFramework(ctx, job.OutputModelArn)
 	data.JobARN = fwflex.StringToFramework(ctx, job.JobArn)
 	data.JobStatus = fwtypes.StringEnumValue(job.Status)
-	data.TrainingMetrics = fwtypes.NewListNestedObjectValueOfNull[customModelTrainingMetricsModel](ctx)
-	data.ValidationMetrics = fwtypes.NewListNestedObjectValueOfNull[customModelValidationMetricsModel](ctx)
+	data.TrainingMetrics = fwtypes.NewListNestedObjectValueOfNull[trainingMetricsModel](ctx)
+	data.ValidationMetrics = fwtypes.NewListNestedObjectValueOfNull[validatorMetricModel](ctx)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -472,9 +455,10 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if !data.CustomModelARN.IsNull() {
-		_, err := conn.DeleteCustomModel(ctx, &bedrock.DeleteCustomModelInput{
+		input := bedrock.DeleteCustomModelInput{
 			ModelIdentifier: fwflex.StringFromFramework(ctx, data.CustomModelARN),
-		})
+		}
+		_, err := conn.DeleteCustomModel(ctx, &input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -486,10 +470,6 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 			return
 		}
 	}
-}
-
-func (r *customModelResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetCustomModelOutput, error) {
@@ -617,26 +597,26 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 }
 
 type customModelResourceModel struct {
-	BaseModelIdentifier  fwtypes.ARN                                                           `tfsdk:"base_model_identifier"`
-	CustomModelARN       types.String                                                          `tfsdk:"custom_model_arn"`
-	CustomModelKmsKeyID  fwtypes.ARN                                                           `tfsdk:"custom_model_kms_key_id"`
-	CustomModelName      types.String                                                          `tfsdk:"custom_model_name"`
-	CustomizationType    fwtypes.StringEnum[awstypes.CustomizationType]                        `tfsdk:"customization_type"`
-	HyperParameters      fwtypes.MapValueOf[types.String]                                      `tfsdk:"hyperparameters"`
-	ID                   types.String                                                          `tfsdk:"id"`
-	JobARN               types.String                                                          `tfsdk:"job_arn"`
-	JobName              types.String                                                          `tfsdk:"job_name"`
-	JobStatus            fwtypes.StringEnum[awstypes.ModelCustomizationJobStatus]              `tfsdk:"job_status"`
-	OutputDataConfig     fwtypes.ListNestedObjectValueOf[customModelOutputDataConfigModel]     `tfsdk:"output_data_config"`
-	RoleARN              fwtypes.ARN                                                           `tfsdk:"role_arn"`
-	Tags                 tftags.Map                                                            `tfsdk:"tags"`
-	TagsAll              tftags.Map                                                            `tfsdk:"tags_all"`
-	Timeouts             timeouts.Value                                                        `tfsdk:"timeouts"`
-	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[customModelTrainingDataConfigModel]   `tfsdk:"training_data_config"`
-	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]      `tfsdk:"training_metrics"`
-	ValidationDataConfig fwtypes.ListNestedObjectValueOf[customModelValidationDataConfigModel] `tfsdk:"validation_data_config"`
-	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel]    `tfsdk:"validation_metrics"`
-	VPCConfig            fwtypes.ListNestedObjectValueOf[customModelVPCConfigModel]            `tfsdk:"vpc_config"`
+	BaseModelIdentifier  fwtypes.ARN                                                `tfsdk:"base_model_identifier"`
+	CustomModelARN       types.String                                               `tfsdk:"custom_model_arn"`
+	CustomModelKmsKeyID  fwtypes.ARN                                                `tfsdk:"custom_model_kms_key_id"`
+	CustomModelName      types.String                                               `tfsdk:"custom_model_name"`
+	CustomizationType    fwtypes.StringEnum[awstypes.CustomizationType]             `tfsdk:"customization_type"`
+	HyperParameters      fwtypes.MapValueOf[types.String]                           `tfsdk:"hyperparameters"`
+	ID                   types.String                                               `tfsdk:"id"`
+	JobARN               types.String                                               `tfsdk:"job_arn"`
+	JobName              types.String                                               `tfsdk:"job_name"`
+	JobStatus            fwtypes.StringEnum[awstypes.ModelCustomizationJobStatus]   `tfsdk:"job_status"`
+	OutputDataConfig     fwtypes.ListNestedObjectValueOf[outputDataConfigModel]     `tfsdk:"output_data_config"`
+	RoleARN              fwtypes.ARN                                                `tfsdk:"role_arn"`
+	Tags                 tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll              tftags.Map                                                 `tfsdk:"tags_all"`
+	Timeouts             timeouts.Value                                             `tfsdk:"timeouts"`
+	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[trainingDataConfigModel]   `tfsdk:"training_data_config"`
+	TrainingMetrics      fwtypes.ListNestedObjectValueOf[trainingMetricsModel]      `tfsdk:"training_metrics"`
+	ValidationDataConfig fwtypes.ListNestedObjectValueOf[validationDataConfigModel] `tfsdk:"validation_data_config"`
+	ValidationMetrics    fwtypes.ListNestedObjectValueOf[validatorMetricModel]      `tfsdk:"validation_metrics"`
+	VPCConfig            fwtypes.ListNestedObjectValueOf[vpcConfigModel]            `tfsdk:"vpc_config"`
 }
 
 func (data *customModelResourceModel) InitFromID() error {
@@ -649,31 +629,31 @@ func (data *customModelResourceModel) setID() {
 	data.ID = data.JobARN
 }
 
-type customModelOutputDataConfigModel struct {
+type outputDataConfigModel struct {
 	S3URI types.String `tfsdk:"s3_uri"`
 }
 
-type customModelTrainingDataConfigModel struct {
+type trainingDataConfigModel struct {
 	S3URI types.String `tfsdk:"s3_uri"`
 }
 
-type customModelTrainingMetricsModel struct {
+type trainingMetricsModel struct {
 	TrainingLoss types.Float64 `tfsdk:"training_loss"`
 }
 
-type customModelValidationDataConfigModel struct {
-	Validators fwtypes.ListNestedObjectValueOf[customModelValidatorConfigModel] `tfsdk:"validator"`
+type validationDataConfigModel struct {
+	Validators fwtypes.ListNestedObjectValueOf[validatorModel] `tfsdk:"validator"`
 }
 
-type customModelValidationMetricsModel struct {
+type validatorMetricModel struct {
 	ValidationLoss types.Float64 `tfsdk:"validation_loss"`
 }
 
-type customModelValidatorConfigModel struct {
+type validatorModel struct {
 	S3URI types.String `tfsdk:"s3_uri"`
 }
 
-type customModelVPCConfigModel struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+type vpcConfigModel struct {
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
 }

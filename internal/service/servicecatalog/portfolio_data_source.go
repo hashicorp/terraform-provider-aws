@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Portfolio")
 func dataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,

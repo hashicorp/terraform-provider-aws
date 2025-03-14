@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_elasticache_reserved_cache_node")
+// @FrameworkResource("aws_elasticache_reserved_cache_node", name="Reserved Cache Node")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTests=false)
 func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigure, error) {
@@ -49,10 +50,6 @@ type resourceReservedCacheNode struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceReservedCacheNode) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_elasticache_reserved_cache_node"
-}
-
 func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -68,11 +65,11 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				},
 			},
 			"cache_node_type": schema.StringAttribute{
-				CustomType: fwtypes.RFC3339DurationType,
-				Computed:   true,
+				Computed: true,
 			},
 			names.AttrDuration: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.RFC3339DurationType,
+				Computed:   true,
 			},
 			"fixed_price": schema.Float64Attribute{
 				Computed: true,
@@ -105,7 +102,8 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				},
 			},
 			names.AttrStartTime: schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
@@ -211,10 +209,6 @@ func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request res
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
-func (r *resourceReservedCacheNode) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
 	return []flex.AutoFlexOptionsFunc{
 		flex.WithFieldNamePrefix("ReservedCacheNode"),
@@ -222,7 +216,7 @@ func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
 }
 
 type resourceReservedCacheNodeModel struct {
-	ARN                          types.String                                          `tfsdk:"arn"`
+	ReservationARN               types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
 	Duration                     fwtypes.RFC3339Duration                               `tfsdk:"duration" autoflex:",noflatten"`
@@ -232,7 +226,7 @@ type resourceReservedCacheNodeModel struct {
 	OfferingType                 types.String                                          `tfsdk:"offering_type"`
 	ProductDescription           types.String                                          `tfsdk:"product_description"`
 	RecurringCharges             fwtypes.ListNestedObjectValueOf[recurringChargeModel] `tfsdk:"recurring_charges"`
-	StartTime                    types.String                                          `tfsdk:"start_time"`
+	StartTime                    timetypes.RFC3339                                     `tfsdk:"start_time"`
 	State                        types.String                                          `tfsdk:"state"`
 	Tags                         tftags.Map                                            `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                            `tfsdk:"tags_all"`

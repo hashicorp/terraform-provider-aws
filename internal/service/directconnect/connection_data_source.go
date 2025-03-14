@@ -46,6 +46,10 @@ func dataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			names.AttrState: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -70,7 +74,7 @@ func dataSourceConnection() *schema.Resource {
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &directconnect.DescribeConnectionsInput{}
@@ -85,7 +89,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(connection.ConnectionId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
 		AccountID: aws.ToString(connection.OwnerAccount),
@@ -96,6 +100,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("bandwidth", connection.Bandwidth)
 	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
+	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set(names.AttrProviderName, connection.ProviderName)

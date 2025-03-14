@@ -11,8 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,26 +22,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_opensearchserverless_security_policy", name="Security Policy")
 func newResourceSecurityPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSecurityPolicy{}, nil
 }
 
 type resourceSecurityPolicyData struct {
-	Description   types.String         `tfsdk:"description"`
-	ID            types.String         `tfsdk:"id"`
-	Name          types.String         `tfsdk:"name"`
-	Policy        jsontypes.Normalized `tfsdk:"policy"`
-	PolicyVersion types.String         `tfsdk:"policy_version"`
-	Type          types.String         `tfsdk:"type"`
+	Description   types.String                                    `tfsdk:"description"`
+	ID            types.String                                    `tfsdk:"id"`
+	Name          types.String                                    `tfsdk:"name"`
+	Policy        fwtypes.SmithyJSON[document.Interface]          `tfsdk:"policy"`
+	PolicyVersion types.String                                    `tfsdk:"policy_version"`
+	Type          fwtypes.StringEnum[awstypes.SecurityPolicyType] `tfsdk:"type"`
 }
 
 const (
@@ -50,10 +50,6 @@ const (
 
 type resourceSecurityPolicy struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceSecurityPolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_security_policy"
 }
 
 func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -76,7 +72,7 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Required:   true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
@@ -84,15 +80,10 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrType: schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.SecurityPolicyType](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.SecurityPolicyType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -182,8 +173,13 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	if !plan.Description.Equal(state.Description) ||
-		!plan.Policy.Equal(state.Policy) {
+	diff, diags := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := &opensearchserverless.UpdateSecurityPolicyInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
@@ -192,6 +188,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		}
 
 		input.ClientToken = aws.String(id.UniqueId())
+		input.PolicyVersion = state.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		out, err := conn.UpdateSecurityPolicy(ctx, input)
 
@@ -220,7 +217,7 @@ func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.Delete
 	_, err := conn.DeleteSecurityPolicy(ctx, &opensearchserverless.DeleteSecurityPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        state.Name.ValueStringPointer(),
-		Type:        awstypes.SecurityPolicyType(state.Type.ValueString()),
+		Type:        state.Type.ValueEnum(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -245,7 +242,7 @@ func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.I
 	state := resourceSecurityPolicyData{
 		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
-		Type: types.StringValue(parts[1]),
+		Type: fwtypes.StringEnumValue(awstypes.SecurityPolicyType(parts[1])),
 	}
 
 	diags := resp.State.Set(ctx, &state)

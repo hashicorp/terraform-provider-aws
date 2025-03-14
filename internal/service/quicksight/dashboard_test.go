@@ -103,7 +103,7 @@ func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
 			{
@@ -150,7 +150,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 					testAccCheckDashboardVersionExists(ctx, resourceName, 1, &dashboardV1),
 				),
 			},

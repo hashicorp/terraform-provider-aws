@@ -100,7 +100,7 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceRegistryScanningConfigurationRead(ctx, d, meta)...)

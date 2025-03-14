@@ -39,7 +39,7 @@ func TestAccELBBackendServerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendServerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test1", "policy_name"),
 				),
 			},
@@ -96,7 +96,7 @@ func TestAccELBBackendServerPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendServerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test1", "policy_name"),
 				),
 			},
@@ -105,7 +105,7 @@ func TestAccELBBackendServerPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendServerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test3", "policy_name"),
 				),
 			},

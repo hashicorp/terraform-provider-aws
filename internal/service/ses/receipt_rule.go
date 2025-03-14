@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -300,8 +300,10 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.CreateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
-				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidLambdaConfiguration, "Could not invoke Lambda function") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidS3Configuration, "Could not write to bucket") {
 				return true, err
 			}
 
@@ -336,10 +338,10 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -500,8 +502,10 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.UpdateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
-				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidLambdaConfiguration, "Could not invoke Lambda function") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Could not assume the provided IAM Role") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Unable to write to S3 bucket") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidS3Configuration, "Could not write to bucket") {
 				return true, err
 			}
 
@@ -764,7 +768,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 	for k := range actions {
 		keys = append(keys, k)
 	}
-	sort.Ints(keys)
+	slices.Sort(keys)
 
 	sortedActions := []awstypes.ReceiptAction{}
 	for _, k := range keys {

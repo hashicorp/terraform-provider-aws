@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -21,17 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Foundation Models")
+// @FrameworkDataSource("aws_bedrock_foundation_models", name="Foundation Models")
 func newFoundationModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &foundationModelsDataSource{}, nil
 }
 
 type foundationModelsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *foundationModelsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_foundation_models"
 }
 
 func (d *foundationModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -55,24 +50,8 @@ func (d *foundationModelsDataSource) Schema(ctx context.Context, request datasou
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9- ]{1,63}$`), ""),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			"model_summaries": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[foundationModelSummaryModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"customizations_supported":     types.SetType{ElemType: types.StringType},
-						"inference_types_supported":    types.SetType{ElemType: types.StringType},
-						"input_modalities":             types.SetType{ElemType: types.StringType},
-						"model_arn":                    types.StringType,
-						"model_id":                     types.StringType,
-						"model_name":                   types.StringType,
-						"output_modalities":            types.SetType{ElemType: types.StringType},
-						names.AttrProviderName:         types.StringType,
-						"response_streaming_supported": types.BoolType,
-					},
-				},
-			},
+			names.AttrID:      framework.IDAttribute(),
+			"model_summaries": framework.DataSourceComputedListOfObjectAttribute[foundationModelSummaryModel](ctx),
 		},
 	}
 }
@@ -105,7 +84,7 @@ func (d *foundationModelsDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -120,13 +99,13 @@ type foundationModelsDataSourceModel struct {
 }
 
 type foundationModelSummaryModel struct {
-	CustomizationsSupported    fwtypes.SetValueOf[types.String] `tfsdk:"customizations_supported"`
-	InferenceTypesSupported    fwtypes.SetValueOf[types.String] `tfsdk:"inference_types_supported"`
-	InputModalities            fwtypes.SetValueOf[types.String] `tfsdk:"input_modalities"`
-	ModelARN                   types.String                     `tfsdk:"model_arn"`
-	ModelID                    types.String                     `tfsdk:"model_id"`
-	ModelName                  types.String                     `tfsdk:"model_name"`
-	OutputModalities           fwtypes.SetValueOf[types.String] `tfsdk:"output_modalities"`
-	ProviderName               types.String                     `tfsdk:"provider_name"`
-	ResponseStreamingSupported types.Bool                       `tfsdk:"response_streaming_supported"`
+	CustomizationsSupported    fwtypes.SetOfString `tfsdk:"customizations_supported"`
+	InferenceTypesSupported    fwtypes.SetOfString `tfsdk:"inference_types_supported"`
+	InputModalities            fwtypes.SetOfString `tfsdk:"input_modalities"`
+	ModelARN                   fwtypes.ARN         `tfsdk:"model_arn"`
+	ModelID                    types.String        `tfsdk:"model_id"`
+	ModelName                  types.String        `tfsdk:"model_name"`
+	OutputModalities           fwtypes.SetOfString `tfsdk:"output_modalities"`
+	ProviderName               types.String        `tfsdk:"provider_name"`
+	ResponseStreamingSupported types.Bool          `tfsdk:"response_streaming_supported"`
 }

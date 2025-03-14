@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceUser() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -75,6 +72,10 @@ func resourceUser() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 100),
+						},
+						"secondary_email": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -345,10 +346,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Deleting Connect User: %s", d.Id())
-	_, err = conn.DeleteUser(ctx, &connect.DeleteUserInput{
+	input := connect.DeleteUserInput{
 		InstanceId: aws.String(instanceID),
 		UserId:     aws.String(userID),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -434,6 +436,10 @@ func expandUserIdentityInfo(tfList []interface{}) *awstypes.UserIdentityInfo {
 		apiObject.LastName = aws.String(v)
 	}
 
+	if v, ok := tfMap["secondary_email"].(string); ok && v != "" {
+		apiObject.SecondaryEmail = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -483,6 +489,10 @@ func flattenUserIdentityInfo(apiObject *awstypes.UserIdentityInfo) []interface{}
 
 	if v := apiObject.LastName; v != nil {
 		tfMap["last_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecondaryEmail; v != nil {
+		tfMap["secondary_email"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

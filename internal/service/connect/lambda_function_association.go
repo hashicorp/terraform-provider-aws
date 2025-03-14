@@ -60,15 +60,17 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	functionARN := d.Get(names.AttrFunctionARN).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{instanceID, functionARN}, lambdaFunctionAssociationResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{instanceID, functionARN}, lambdaFunctionAssociationResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &connect.AssociateLambdaFunctionInput{
 		FunctionArn: aws.String(functionARN),
 		InstanceId:  aws.String(instanceID),
 	}
 
-	_, err := conn.AssociateLambdaFunction(ctx, input)
-
-	if err != nil {
+	if _, err := conn.AssociateLambdaFunction(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Lambda Function Association (%s): %s", id, err)
 	}
 
@@ -117,10 +119,11 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 	instanceID, functionARN := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Connect Lambda Function Association: %s", d.Id())
-	_, err = conn.DisassociateLambdaFunction(ctx, &connect.DisassociateLambdaFunctionInput{
+	input := connect.DisassociateLambdaFunctionInput{
 		InstanceId:  aws.String(instanceID),
 		FunctionArn: aws.String(functionARN),
-	})
+	}
+	_, err = conn.DisassociateLambdaFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

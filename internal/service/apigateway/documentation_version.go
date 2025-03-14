@@ -58,7 +58,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
-	input := &apigateway.CreateDocumentationVersionInput{
+	input := apigateway.CreateDocumentationVersionInput{
 		DocumentationVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		RestApiId:            aws.String(apiID),
 	}
@@ -67,7 +67,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateDocumentationVersion(ctx, input)
+	output, err := conn.CreateDocumentationVersion(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Documentation Version: %s", err)
@@ -115,7 +115,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.UpdateDocumentationVersion(ctx, &apigateway.UpdateDocumentationVersionInput{
+	input := apigateway.UpdateDocumentationVersionInput{
 		DocumentationVersion: aws.String(documentationVersion),
 		PatchOperations: []types.PatchOperation{
 			{
@@ -125,7 +125,8 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 			},
 		},
 		RestApiId: aws.String(apiID),
-	})
+	}
+	_, err = conn.UpdateDocumentationVersion(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Documentation Version (%s): %s", d.Id(), err)
@@ -144,10 +145,11 @@ func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
-	_, err = conn.DeleteDocumentationVersion(ctx, &apigateway.DeleteDocumentationVersionInput{
+	input := apigateway.DeleteDocumentationVersionInput{
 		DocumentationVersion: aws.String(documentationVersion),
 		RestApiId:            aws.String(apiID),
-	})
+	}
+	_, err = conn.DeleteDocumentationVersion(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -161,12 +163,12 @@ func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func findDocumentationVersionByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, documentationVersion string) (*apigateway.GetDocumentationVersionOutput, error) {
-	input := &apigateway.GetDocumentationVersionInput{
+	input := apigateway.GetDocumentationVersionInput{
 		DocumentationVersion: aws.String(documentationVersion),
 		RestApiId:            aws.String(apiID),
 	}
 
-	output, err := conn.GetDocumentationVersion(ctx, input)
+	output, err := conn.GetDocumentationVersion(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

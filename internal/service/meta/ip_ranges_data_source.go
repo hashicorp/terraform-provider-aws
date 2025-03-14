@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -24,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="IP Ranges")
+// @FrameworkDataSource("aws_ip_ranges", name="IP Ranges")
 func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &ipRangesDataSource{}
 
@@ -33,10 +32,6 @@ func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure,
 
 type ipRangesDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*ipRangesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_ip_ranges"
 }
 
 func (d *ipRangesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -126,7 +121,7 @@ func (d *ipRangesDataSource) Read(ctx context.Context, request datasource.ReadRe
 			ipv4Prefixes = append(ipv4Prefixes, v.Prefix)
 		}
 	}
-	sort.Strings(ipv4Prefixes)
+	slices.Sort(ipv4Prefixes)
 
 	var ipv6Prefixes []string
 	for _, v := range ipRanges.IPv6Prefixes {
@@ -134,7 +129,7 @@ func (d *ipRangesDataSource) Read(ctx context.Context, request datasource.ReadRe
 			ipv6Prefixes = append(ipv6Prefixes, v.Prefix)
 		}
 	}
-	sort.Strings(ipv6Prefixes)
+	slices.Sort(ipv6Prefixes)
 
 	data.CreateDate = fwflex.StringValueToFrameworkLegacy(ctx, ipRanges.CreateDate)
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, ipRanges.SyncToken)

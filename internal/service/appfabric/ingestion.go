@@ -48,10 +48,6 @@ type ingestionResource struct {
 	framework.WithImportByID
 }
 
-func (*ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion"
-}
-
 func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -110,9 +106,14 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric Ingestion", err.Error())
+	}
+
 	// Additional fields.
 	input.AppBundleIdentifier = fwflex.StringFromFramework(ctx, data.AppBundleARN)
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	input.ClientToken = aws.String(uuid)
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIngestion(ctx, input)
@@ -130,7 +131,12 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Ingestion.Arn)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID AppFabric Ingestion", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -181,10 +187,11 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
+	input := appfabric.DeleteIngestionInput{
 		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
 		IngestionIdentifier: data.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -195,10 +202,6 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 		return
 	}
-}
-
-func (r *ingestionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, arn string) (*awstypes.Ingestion, error) {
@@ -255,6 +258,11 @@ func (m *ingestionResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *ingestionResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleARN.ValueString(), m.ARN.ValueString()}, ingestionResourceIDPartCount, false)))
+func (m *ingestionResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppBundleARN.ValueString(),
+		m.ARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ingestionResourceIDPartCount, false)
 }

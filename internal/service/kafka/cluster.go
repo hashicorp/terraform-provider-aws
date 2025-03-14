@@ -54,7 +54,9 @@ func resourceCluster() *schema.Resource {
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return semver.LessThan(new.(string), old.(string))
 			}),
-			verify.SetTagsDiff,
+			customdiff.ForceNewIfChange("storage_mode", func(_ context.Context, old, new, meta interface{}) bool {
+				return types.StorageMode(new.(string)) == types.StorageModeLocal
+			}),
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -221,9 +223,10 @@ func resourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"provisioned_throughput": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
+													Type:             schema.TypeList,
+													Optional:         true,
+													MaxItems:         1,
+													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															// This feature is available for
@@ -788,6 +791,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+		} else if o, n := d.GetChange("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+			// Disable when a previously configured provisioned_throughput block is removed
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = &types.ProvisionedThroughput{Enabled: aws.Bool(false)}
 		}
 
 		output, err := conn.UpdateBrokerStorage(ctx, input)
@@ -953,6 +959,31 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) security: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("storage_mode") {
+		input := kafka.UpdateStorageInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+			StorageMode:    types.StorageMode(d.Get("storage_mode").(string)),
+		}
+
+		output, err := conn.UpdateStorage(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) storage: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.ToString(output.ClusterOperationArn)

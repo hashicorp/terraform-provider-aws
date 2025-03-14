@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -113,25 +113,16 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading WAF IPSet (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "ipset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
-
-	var descriptors []map[string]interface{}
-
+	d.Set(names.AttrARN, ipSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	var tfList []interface{}
 	for _, descriptor := range ipSet.IPSetDescriptors {
-		d := map[string]interface{}{
-			names.AttrType:  string(descriptor.Type),
+		tfMap := map[string]interface{}{
+			names.AttrType:  descriptor.Type,
 			names.AttrValue: aws.ToString(descriptor.Value),
 		}
-		descriptors = append(descriptors, d)
+		tfList = append(tfList, tfMap)
 	}
-
-	if err := d.Set("ip_set_descriptors", descriptors); err != nil {
+	if err := d.Set("ip_set_descriptors", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_set_descriptors: %s", err)
 	}
 	d.Set(names.AttrName, ipSet.Name)
@@ -242,7 +233,7 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 		descriptor := od.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newD, descriptor); contains {
-			newD = append(newD[:idx], newD[idx+1:]...)
+			newD = slices.Delete(newD, idx, idx+1)
 			continue
 		}
 
@@ -278,4 +269,9 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 	}
 	updatesBatches = append(updatesBatches, updates)
 	return updatesBatches
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func ipSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "ipset/"+id)
 }

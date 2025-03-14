@@ -35,7 +35,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
 				),
 			},
 		},
@@ -86,9 +86,10 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
+			input := dax.DescribeParameterGroupsInput{
 				ParameterGroupNames: []string{rs.Primary.ID},
-			})
+			}
+			_, err := conn.DescribeParameterGroups(ctx, &input)
 			if err != nil {
 				if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 					return nil
@@ -109,9 +110,10 @@ func testAccCheckParameterGroupExists(ctx context.Context, name string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
-		_, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
+		input := dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []string{rs.Primary.ID},
-		})
+		}
+		_, err := conn.DescribeParameterGroups(ctx, &input)
 
 		return err
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/opsworks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,6 +36,7 @@ const (
 // @Tags
 func resourceStack() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceStackCreate,
 		ReadWithoutTimeout:   resourceStackRead,
 		UpdateWithoutTimeout: resourceStackUpdate,
@@ -197,8 +199,6 @@ func resourceStack() *schema.Resource {
 				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -295,10 +295,10 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.ToString(outputRaw.(*opsworks.CreateStackOutput).StackId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.OpsWorks,
 		Region:    region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
 	}.String()
 
@@ -335,7 +335,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
-		region = names.USEast1RegionID
+		region = endpoints.UsEast1RegionID
 
 		stack, err = findStackByID(ctx, conn, d.Id(), func(o *opsworks.Options) {
 			o.Region = region

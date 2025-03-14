@@ -52,7 +52,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 
 * `ACCTEST_PARALLELISM` - (Default: `20`) Number of concurrent acceptance tests to run. Overridden if `P` is set.
 * `ACCTEST_TIMEOUT` - (Default: `360m`) Timeout before acceptance tests panic.
-* `AWSSDKPATCH_OPTS` - (Default: _None_) See the [awssdkpatch tool](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) for more information.
 * `BASE_REF` - (Default: `main`) Origin reference to use for Git `diff` comparison, as in `origin/BASE_REF`.
 * `CURDIR` - (Default: Value of `$PWD`) Root path to use for `/.ci/scripts/`.
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
@@ -91,9 +90,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | Target | Description | CI? | Legacy? | Vars |
 | --- | --- | --- | --- | --- |
 | `acctest-lint`<sup>M</sup> | Run all CI acceptance test checks | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `awssdkpatch`<sup>D</sup> | Install [awssdkpatch](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) |  |  | `GO_VER` |
-| `awssdkpatch-apply`<sup>D</sup> | Apply a patch generated with [awssdkpatch](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) |  |  | `AWSSDKPATCH_OPTS`, `GO_VER`, `K`, `PKG`, `PKG_NAME` |
-| `awssdkpatch-gen`<sup>D</sup> | Generate a patch file using [awssdkpatch](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) |  |  | `AWSSDKPATCH_OPTS`, `GO_VER`, `K`, `PKG`, `PKG_NAME` |
 | `build`<sup>D</sup> | Build the provider |  |  | `GO_VER` |
 | `changelog-misspell` | CHANGELOG Misspell / misspell | ✔️ |  |  |
 | `ci`<sup>M</sup> | Run all CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
@@ -125,14 +121,18 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
 | `go-misspell` | Provider Checks / misspell | ✔️ |  |  |
 | `golangci-lint`<sup>M</sup> | All golangci-lint Checks | ✔️ |  | `K`, `PKG`, `TEST` |
-| `golangci-lint1` | golangci-lint Checks / 1 of 2 | ✔️ |  | `K`, `PKG`, `TEST` |
-| `golangci-lint2` | golangci-lint Checks / 2 of 2 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint1` | golangci-lint Checks / 1 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint2` | golangci-lint Checks / 2 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint3` | golangci-lint Checks / 3 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint4` | golangci-lint Checks / 4 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint5` | golangci-lint Checks / 5 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `help` | Display help |  |  |  |
 | `import-lint` | Provider Checks / import-lint | ✔️ |  | `K`, `PKG`, `TEST` |
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
+| `modern-check` | Check for modern GO | ✔️ |  | `TEST` |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
@@ -163,6 +163,9 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-lint-fix` | Fix acceptance test linter findings |  |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-short`<sup>D</sup> | Run acceptace tests with the -short flag |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-tflint` | Acceptance Test Linting / tflint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |

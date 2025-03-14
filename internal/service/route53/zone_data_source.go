@@ -8,13 +8,13 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -87,7 +87,7 @@ func dataSourceZone() *schema.Resource {
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	zoneID, zoneIDExists := d.GetOk("zone_id")
@@ -109,7 +109,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 			if zoneIDExists && hostedZoneID == zoneID.(string) {
 				hostedZones = append(hostedZones, hostedZone)
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if (normalizeZoneName(aws.ToString(hostedZone.Name)) == normalizeZoneName(name)) && (hostedZone.Config.PrivateZone == d.Get("private_zone").(bool) || (hostedZone.Config.PrivateZone && vpcIDExists)) {
+			} else if (normalizeDomainName(aws.ToString(hostedZone.Name)) == normalizeDomainName(name)) && (hostedZone.Config.PrivateZone == d.Get("private_zone").(bool) || (hostedZone.Config.PrivateZone && vpcIDExists)) {
 				matchingVPC := false
 				if vpcIDExists {
 					hostedZone, err := findHostedZoneByID(ctx, conn, hostedZoneID)
@@ -154,12 +154,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 	d.SetId(hostedZoneID)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "route53",
-		Resource:  "hostedzone/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", hostedZone.CallerReference)
 	d.Set(names.AttrComment, hostedZone.Config.Comment)
 	if hostedZone.LinkedService != nil {
@@ -168,12 +163,12 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set(names.AttrName, normalizeZoneName(aws.ToString(hostedZone.Name)))
+	d.Set(names.AttrName, normalizeDomainName(aws.ToString(hostedZone.Name)))
 	d.Set("private_zone", hostedZone.Config.PrivateZone)
 	d.Set("resource_record_set_count", hostedZone.ResourceRecordSetCount)
 	d.Set("zone_id", hostedZoneID)
 
-	nameServers, err := hostedZoneNameServers(ctx, conn, hostedZoneID, aws.ToString(hostedZone.Name))
+	nameServers, err := findHostedZoneNameServers(ctx, conn, hostedZoneID, aws.ToString(hostedZone.Name))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -195,7 +190,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func hostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zoneName string) ([]string, error) {
+func findHostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zoneName string) ([]string, error) {
 	output, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
@@ -217,4 +212,35 @@ func hostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zo
 	}
 
 	return nameServers, nil
+}
+
+func findHostedZone(ctx context.Context, conn *route53.Client, input *route53.ListHostedZonesInput, filter tfslices.Predicate[*awstypes.HostedZone]) (*awstypes.HostedZone, error) {
+	output, err := findHostedZones(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findHostedZones(ctx context.Context, conn *route53.Client, input *route53.ListHostedZonesInput, filter tfslices.Predicate[*awstypes.HostedZone]) ([]awstypes.HostedZone, error) {
+	var output []awstypes.HostedZone
+
+	pages := route53.NewListHostedZonesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.HostedZones {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

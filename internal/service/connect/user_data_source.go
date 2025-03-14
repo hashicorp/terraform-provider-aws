@@ -58,6 +58,10 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"secondary_email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

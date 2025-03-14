@@ -100,6 +100,29 @@ func resourceSpace() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -163,6 +186,29 @@ func resourceSpace() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -397,8 +443,6 @@ func resourceSpace() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -430,16 +474,16 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.SpaceDisplayName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker AI Space create config: %#v", *input)
 	out, err := conn.CreateSpace(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Space: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Space: %s", err)
 	}
 
 	d.SetId(aws.ToString(out.SpaceArn))
 
 	if err := waitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
@@ -451,19 +495,19 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	space, err := findSpaceByName(ctx, conn, domainID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Space (%s), removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Space (%s), removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, space.SpaceArn)
@@ -474,15 +518,15 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrURL, space.Url)
 
 	if err := d.Set("ownership_settings", flattenOwnershipSettings(space.OwnershipSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_settings", flattenSpaceSettings(space.SpaceSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_sharing_settings", flattenSpaceSharingSettings(space.SpaceSharingSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -509,14 +553,14 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.SpaceDisplayName = aws.String(d.Get("space_display_name").(string))
 		}
 
-		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI Space update config: %#v", *input)
 		_, err := conn.UpdateSpace(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Space: %s", err)
 		}
 
 		if err := waitSpaceInService(ctx, conn, domainID, name); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -537,13 +581,13 @@ func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if _, err := conn.DeleteSpace(ctx, input); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Space (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Space (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitSpaceDeleted(ctx, conn, domainID, name); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to delete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
@@ -687,6 +731,10 @@ func expandSpaceCodeEditorAppSettings(l []interface{}) *awstypes.SpaceCodeEditor
 
 	config := &awstypes.SpaceCodeEditorAppSettings{}
 
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
+	}
+
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
@@ -700,6 +748,10 @@ func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettin
 	}
 
 	m := map[string]interface{}{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
+	}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
@@ -716,6 +768,10 @@ func expandSpaceJupyterLabAppSettings(l []interface{}) *awstypes.SpaceJupyterLab
 	m := l[0].(map[string]interface{})
 
 	config := &awstypes.SpaceJupyterLabAppSettings{}
+
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
+	}
 
 	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
 		config.CodeRepositories = expandCodeRepositories(v.List())
@@ -734,6 +790,10 @@ func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettin
 	}
 
 	m := map[string]interface{}{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
+	}
 
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
@@ -947,6 +1007,66 @@ func flattenSpaceSharingSettings(config *awstypes.SpaceSharingSettings) []map[st
 
 	m := map[string]interface{}{
 		"sharing_type": config.SharingType,
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandSpaceAppLifecycleManagement(l []interface{}) *awstypes.SpaceAppLifecycleManagement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.SpaceAppLifecycleManagement{}
+
+	if v, ok := m["idle_settings"].([]interface{}); ok && len(v) > 0 {
+		config.IdleSettings = expandSpaceIdleSettings(v)
+	}
+
+	return config
+}
+
+func expandSpaceIdleSettings(l []interface{}) *awstypes.SpaceIdleSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.SpaceIdleSettings{}
+
+	if v, ok := m["idle_timeout_in_minutes"].(int); ok {
+		config.IdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	return config
+}
+
+func flattenSpaceAppLifecycleManagement(config *awstypes.SpaceAppLifecycleManagement) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleSettings != nil {
+		m["idle_settings"] = flattenSpaceIdleSettings(config.IdleSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenSpaceIdleSettings(config *awstypes.SpaceIdleSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleTimeoutInMinutes != nil {
+		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
 	}
 
 	return []map[string]interface{}{m}

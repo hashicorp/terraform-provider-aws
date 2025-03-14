@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Image")
+// @FrameworkDataSource("aws_appstream_image", name="Image")
 func newDataSourceImage(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceImage{}, nil
 }
@@ -36,10 +36,6 @@ const (
 
 type dataSourceImage struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceImage) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_appstream_image"
 }
 
 func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -220,7 +216,7 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	if image.PublicBaseImageReleasedDate != nil {
-		data.PubilcBaseImageReleasedDate = timetypes.NewRFC3339TimeValue(*image.PublicBaseImageReleasedDate)
+		data.PublicBaseImageReleasedDate = timetypes.NewRFC3339TimeValue(*image.PublicBaseImageReleasedDate)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -269,7 +265,7 @@ type dsImage struct {
 	Name                        types.String                                        `tfsdk:"name"`
 	NameRegex                   fwtypes.Regexp                                      `tfsdk:"name_regex"`
 	Platform                    types.String                                        `tfsdk:"platform"`
-	PubilcBaseImageReleasedDate timetypes.RFC3339                                   `tfsdk:"public_base_image_released_date"`
+	PublicBaseImageReleasedDate timetypes.RFC3339                                   `tfsdk:"public_base_image_released_date"`
 	State                       types.String                                        `tfsdk:"state"`
 	StateChangeReason           fwtypes.ListNestedObjectValueOf[dsStateChange]      `tfsdk:"state_change_reason"`
 	Type                        fwtypes.StringEnum[awstypes.VisibilityType]         `tfsdk:"type"`

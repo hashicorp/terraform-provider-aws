@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -26,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Enrollment Status")
+// @FrameworkResource("aws_costoptimizationhub_enrollment_status", name="Enrollment Status")
 func newResourceEnrollmentStatus(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnrollmentStatus{}
 
@@ -45,10 +44,6 @@ type resourceEnrollmentStatus struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourceEnrollmentStatus) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_costoptimizationhub_enrollment_status"
 }
 
 func (r *resourceEnrollmentStatus) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -105,7 +100,7 @@ func (r *resourceEnrollmentStatus) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	data.Status = fwflex.StringValueToFramework(ctx, aws.ToString(out.Status))
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -250,10 +245,6 @@ func findEnrollmentStatus(ctx context.Context, conn *costoptimizationhub.Client)
 	// out includes the IncludeMemberAccounts field ATM but it is always nil
 
 	return out, nil
-}
-
-func (r *resourceEnrollmentStatus) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceEnrollmentStatusData struct {

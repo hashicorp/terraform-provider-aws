@@ -39,8 +39,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Guardrail")
+// @FrameworkResource("aws_bedrock_guardrail", name="Guardrail")
 // @Tags(identifierAttribute="guardrail_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetGuardrailOutput")
+// @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
+// @Testing(importStateIdAttribute="guardrail_id")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
 
@@ -58,10 +61,6 @@ const (
 type resourceGuardrail struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceGuardrail) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_guardrail"
 }
 
 func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -135,8 +134,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"filters_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[filtersConfig](ctx),
+						"filters_config": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[filtersConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"input_strength": schema.StringAttribute{
@@ -389,7 +388,7 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	output, err := findGuardrailByID(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+	output, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -410,7 +409,7 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := findGuardrailByID(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
+	out, err := findGuardrailByTwoPartKey(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -487,7 +486,7 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 
-		output, err := findGuardrailByID(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+		output, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -548,11 +547,7 @@ func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.Import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
-func (r *resourceGuardrail) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
+func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
 		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
@@ -588,7 +583,7 @@ func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, 
 	return nil, err
 }
 
-func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
+func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GuardrailStatusDeleting, awstypes.GuardrailStatusReady),
 		Target:  []string{},
@@ -604,9 +599,9 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 	return nil, err
 }
 
-func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string, version string) retry.StateRefreshFunc {
+func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findGuardrailByID(ctx, conn, id, version)
+		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -619,29 +614,30 @@ func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string, versi
 	}
 }
 
-func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, version string) (*bedrock.GetGuardrailOutput, error) {
-	in := &bedrock.GetGuardrailInput{
+func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, version string) (*bedrock.GetGuardrailOutput, error) {
+	input := &bedrock.GetGuardrailInput{
 		GuardrailIdentifier: aws.String(id),
 		GuardrailVersion:    aws.String(version),
 	}
 
-	out, err := conn.GetGuardrail(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetGuardrail(ctx, input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 type resourceGuardrailData struct {
@@ -666,7 +662,7 @@ type resourceGuardrailData struct {
 }
 
 type contentPolicyConfig struct {
-	Filters fwtypes.ListNestedObjectValueOf[filtersConfig] `tfsdk:"filters_config"`
+	Filters fwtypes.SetNestedObjectValueOf[filtersConfig] `tfsdk:"filters_config"`
 }
 
 type filtersConfig struct {

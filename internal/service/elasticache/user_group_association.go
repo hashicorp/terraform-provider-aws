@@ -62,17 +62,18 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	userGroupID := d.Get("user_group_id").(string)
 	userID := d.Get("user_id").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(userGroupID),
 		UserIdsToAdd: []string{userID},
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	if _, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, input)
-	})
-
-	if err != nil {
+	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%s): %s", id, err)
 	}
 

@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
@@ -8,6 +9,10 @@ data "aws_instance" "test" {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = "t4g.nano"
+
+  metadata_options {
+    http_tokens = "required"
+  }
 
   tags = var.resource_tags
 }
@@ -31,12 +36,6 @@ data "aws_ami" "amzn2-ami-minimal-hvm-ebs-arm64" {
     name   = "architecture"
     values = ["arm64"]
   }
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {

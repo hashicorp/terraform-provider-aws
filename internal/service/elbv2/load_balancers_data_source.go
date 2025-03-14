@@ -42,7 +42,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	results, err := findLoadBalancers(ctx, conn, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
 
@@ -80,7 +80,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 		loadBalancerARNs = append(loadBalancerARNs, aws.ToString(lb.LoadBalancerArn))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, loadBalancerARNs)
 
 	return diags

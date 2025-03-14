@@ -245,8 +245,6 @@ func resourceFlowDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -266,7 +264,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
 		loopConfig, err := expandFlowDefinitionHumanLoopActivationConfig(v.([]interface{}))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating SageMaker Flow Definition Human Loop Activation Config (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Flow Definition Human Loop Activation Config (%s): %s", name, err)
 		}
 		input.HumanLoopActivationConfig = loopConfig
 	}
@@ -275,19 +273,19 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.HumanLoopRequestSource = expandFlowDefinitionHumanLoopRequestSource(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %#v", input)
+	log.Printf("[DEBUG] Creating SageMaker AI Flow Definition: %#v", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateFlowDefinition(ctx, input)
 	}, ErrCodeValidationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Flow Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Flow Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitFlowDefinitionActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Flow Definition (%s) to become active: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Flow Definition (%s) to become active: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceFlowDefinitionRead(ctx, d, meta)...)
@@ -300,13 +298,13 @@ func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	flowDefinition, err := findFlowDefinitionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Flow Definition (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Flow Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Flow Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Flow Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, flowDefinition.FlowDefinitionArn)
@@ -344,7 +342,7 @@ func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Flow Definition: %s", d.Id())
 	_, err := conn.DeleteFlowDefinition(ctx, &sagemaker.DeleteFlowDefinitionInput{
 		FlowDefinitionName: aws.String(d.Id()),
 	})
@@ -354,11 +352,11 @@ func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Flow Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Flow Definition (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFlowDefinitionDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Flow Definition (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Flow Definition (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

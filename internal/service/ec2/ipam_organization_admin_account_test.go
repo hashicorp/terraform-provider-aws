@@ -65,7 +65,7 @@ func testAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceIdentity, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
 				),

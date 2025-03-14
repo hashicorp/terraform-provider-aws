@@ -23,9 +23,9 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-// Tests are serialized as SageMaker Domain resources are limited to 1 per account by default.
-// SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
-// SageMaker Workteam tests must also be serialized
+// Tests are serialized as SageMaker AI Domain resources are limited to 1 per account by default.
+// SageMaker AI UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
+// SageMaker AI Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
 	t.Parallel()
 
@@ -54,6 +54,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"codeEditorAppSettings_customImage":                       testAccDomain_codeEditorAppSettings_customImage,
 			"codeEditorAppSettings_defaultResourceSpecAndCustomImage": testAccDomain_codeEditorAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterLabAppSettings":                                   testAccDomain_jupyterLabAppSettings,
+			"jupyterLabAppSettingsAppLifecycle":                       testAccDomain_jupyterLabAppSettingsAppLifecycle,
+			"jupyterLabAppSettingsEMRSettings":                        testAccDomain_jupyterLabAppSettingsEMRSettings,
+			"jupyterLabAppSettingsBuiltInLifecycle":                   testAccDomain_jupyterLabAppSettingsBuiltInLifecycle,
 			"kms":                                                     testAccDomain_kms,
 			"defaultUserSettingsSecurityGroupUpdated":                 testAccDomain_defaultUserSettingsSecurityGroupUpdated,
 			"sharingSettings":                                         testAccDomain_sharingSettings,
@@ -61,6 +64,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"canvas":                                                  testAccDomain_canvasAppSettings,
 			"modelRegisterSettings":                                   testAccDomain_modelRegisterSettings,
 			"generativeAi":                                            testAccDomain_generativeAiSettings,
+			"emrServerlessSettings":                                   testAccDomain_emrServerlessSettings,
 			"identityProviderOauthSettings":                           testAccDomain_identityProviderOAuthSettings,
 			"directDeploySettings":                                    testAccDomain_directDeploySettings,
 			"kendraSettings":                                          testAccDomain_kendraSettings,
@@ -70,6 +74,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"rSessionAppSettings":                                     testAccDomain_rSessionAppSettings,
 			"rStudioServerProAppSettings":                             testAccDomain_rStudioServerProAppSettings,
 			"rStudioServerProDomainSettings":                          testAccDomain_rStudioServerProDomainSettings,
+			"rStudioDomainDisabledNetworkUpdate":                      testAccDomain_rStudioDomainDisabledNetworkUpdate,
 			"spaceSettingsKernelGatewayAppSettings":                   testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"spaceSettingsJupyterLabAppSettings":                      testAccDomain_spaceSettingsJupyterLabAppSettings,
 			"spaceSettingsSpaceStorageSettings":                       testAccDomain_spaceSettingsSpaceStorageSettings,
@@ -80,6 +85,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"posix":                                                   testAccDomain_posix,
 			"spaceStorageSettings":                                    testAccDomain_spaceStorageSettings,
 			"studioWebPortalSettings_hiddenAppTypes":                  testAccDomain_studioWebPortalSettings_hiddenAppTypes,
+			"studioWebPortalSettings_hiddenInstanceTypes":             testAccDomain_studioWebPortalSettings_hiddenInstanceTypes,
 			"studioWebPortalSettings_hiddenMlTools":                   testAccDomain_studioWebPortalSettings_hiddenMlTools,
 		},
 		"FlowDefinition": {
@@ -98,6 +104,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
 			"jupyterLabAppSettings":                    testAccSpace_jupyterLabAppSettings,
+			"jupyterLabAppSettingsLifecycle":           testAccSpace_jupyterLabAppSettingsAppLifecycle,
 			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
 			"storageSettings":                          testAccSpace_storageSettings,
 			"customFileSystem":                         testAccSpace_customFileSystem,
@@ -128,6 +135,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			acctest.CtDisappears:        testAccWorkteam_disappears,
 			"tags":                      testAccWorkteam_tags,
 			"CognitoConfig":             testAccWorkteam_cognitoConfig,
+			"CognitoOmitWorkforceName":  testAccWorkteam_cognitoOmitWorkforceName,
 			"NotificationConfig":        testAccWorkteam_notificationConfig,
 			"WorkerAccessConfiguration": testAccWorkteam_workerAccessConfiguration,
 			"OidcConfig":                testAccWorkteam_oidcConfig,

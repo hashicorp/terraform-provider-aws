@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct1,
+			version: "1",
 			valid:   false,
 		},
 		{
@@ -278,6 +278,22 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			engine:  tfelasticache.EngineRedis,
 			version: "7.0",
 			valid:   true,
+		},
+
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2.6",
+			valid:   false,
 		},
 	}
 
@@ -773,6 +789,18 @@ func (d *mockChangesDiffer) Get(key string) any {
 
 func (d *mockChangesDiffer) GetOk(string) (any, bool) {
 	return nil, false
+}
+
+func (d *mockChangesDiffer) GetRawConfig() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawPlan() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+	return cty.NilVal
 }
 
 func (d *mockChangesDiffer) HasChange(key string) bool {

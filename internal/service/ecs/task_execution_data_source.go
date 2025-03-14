@@ -181,8 +181,9 @@ func dataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 						},
 						"inference_accelerator_overrides": {
-							Type:     schema.TypeSet,
-							Optional: true,
+							Deprecated: "inference_accelerator_overrides is deprecated. AWS no longer supports the Elastic Inference service.",
+							Type:       schema.TypeSet,
+							Optional:   true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrDeviceName: {
@@ -285,7 +286,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		TaskDefinition: aws.String(taskDefinition),
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +22,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,17 +72,14 @@ func resourceSubnetGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceSubnetGroupCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceSubnetGroupCustomizeDiff,
 	}
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
@@ -204,7 +199,7 @@ func resourceSubnetGroupCustomizeDiff(ctx context.Context, diff *schema.Resource
 	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging,
 	// thus we must suppress the diff originating from the provider-level default_tags configuration.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213.
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	if len(defaultTagsConfig.GetTags()) > 0 && diff.Get(names.AttrName).(string) == "default" {
 		return nil
 	}

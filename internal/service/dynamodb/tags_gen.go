@@ -43,16 +43,16 @@ func findTag(ctx context.Context, conn *dynamodb.Client, identifier, key string,
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *dynamodb.Client, identifier string, optFns ...func(*dynamodb.Options)) (tftags.KeyValueTags, error) {
-	input := &dynamodb.ListTagsOfResourceInput{
+	input := dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsOfResource(ctx, input, optFns...)
+	output, err := conn.ListTagsOfResource(ctx, &input, optFns...)
 
 	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -127,6 +127,15 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
+// createTags creates dynamodb service tags for new resources.
+func createTags(ctx context.Context, conn *dynamodb.Client, identifier string, tags []awstypes.Tag, optFns ...func(*dynamodb.Options)) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
+}
+
 // updateTags updates dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -139,12 +148,12 @@ func updateTags(ctx context.Context, conn *dynamodb.Client, identifier string, o
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DynamoDB)
 	if len(removedTags) > 0 {
-		input := &dynamodb.UntagResourceInput{
+		input := dynamodb.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -154,12 +163,12 @@ func updateTags(ctx context.Context, conn *dynamodb.Client, identifier string, o
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DynamoDB)
 	if len(updatedTags) > 0 {
-		input := &dynamodb.TagResourceInput{
+		input := dynamodb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -208,9 +217,9 @@ func waitTagsPropagated(ctx context.Context, conn *dynamodb.Client, id string, t
 		return output.Equal(tags), nil
 	}
 	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
+		ContinuousTargetOccurence: 2,
 		MinTimeout:                1 * time.Second,
 	}
 
-	return tfresource.WaitUntil(ctx, 10*time.Minute, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, 2*time.Minute, checkFunc, opts)
 }

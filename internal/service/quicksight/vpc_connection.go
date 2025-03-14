@@ -34,8 +34,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="VPC Connection")
+// @FrameworkResource("aws_quicksight_vpc_connection", name="VPC Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.VPCConnection")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcConnectionResource{}
 
@@ -50,10 +52,6 @@ type vpcConnectionResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *vpcConnectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_quicksight_vpc_connection"
 }
 
 const (
@@ -161,7 +159,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{
@@ -381,10 +379,6 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *vpcConnectionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) (*awstypes.VPCConnection, error) {
 	input := &quicksight.DescribeVPCConnectionInput{
 		AwsAccountId:    aws.String(awsAccountID),
@@ -430,7 +424,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *quicksight.CreateVPCConnectionInput) (*quicksight.CreateVPCConnectionOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx,
 		iamPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateVPCConnection(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -501,7 +495,7 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsA
 }
 
 func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
 
 		if tfresource.NotFound(err) {

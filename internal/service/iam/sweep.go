@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,7 +40,7 @@ func RegisterSweepers() {
 		"aws_iam_role",
 	)
 
-	awsv1.Register("aws_iam_openid_connect_provider", sweepOpenIDConnectProvider)
+	awsv2.Register("aws_iam_openid_connect_provider", sweepOpenIDConnectProvider)
 
 	resource.AddTestSweepers("aws_iam_policy", &resource.Sweeper{
 		Name: "aws_iam_policy",
@@ -87,11 +85,11 @@ func RegisterSweepers() {
 		F: sweepRoles,
 	})
 
-	awsv1.Register("aws_iam_saml_provider", sweepSAMLProvider)
+	awsv2.Register("aws_iam_saml_provider", sweepSAMLProvider)
 
-	awsv1.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
+	awsv2.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
 
-	awsv1.Register("aws_iam_signing_certificate", sweepSigningCertificates)
+	awsv2.Register("aws_iam_signing_certificate", sweepSigningCertificates)
 
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
 		Name: "aws_iam_server_certificate",
@@ -409,8 +407,8 @@ func newPolicySweeper(resource *schema.Resource, d *schema.ResourceData, client 
 	}
 }
 
-func (ps policySweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	if err := ps.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+func (ps policySweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := ps.sweepable.Delete(ctx, optFns...); err != nil {
 		accessDenied := regexache.MustCompile(`AccessDenied: .+ with an explicit deny`)
 		if accessDenied.MatchString(err.Error()) {
 			log.Printf("[DEBUG] Skipping IAM Policy (%s): %s", ps.d.Id(), err)
@@ -729,6 +727,12 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 			r := resourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
+
+			if user := device.User; user != nil {
+				if userName := aws.ToString(user.UserName); userName != "" {
+					d.Set(names.AttrUserName, userName)
+				}
+			}
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}

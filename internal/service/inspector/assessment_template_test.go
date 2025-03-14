@@ -40,11 +40,11 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "inspector", regexache.MustCompile(`target/.+/template/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector", regexache.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDuration, "3600"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "rules_package_arns.#", "data.aws_inspector_rules_packages.available", "arns.#"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_inspector_assessment_target.test", names.AttrARN),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -119,7 +119,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -154,7 +154,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1),
 				),
 			},
@@ -167,7 +167,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1Updated),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "2"),
 				),
 			},
 			{

@@ -1,0 +1,15 @@
+```release-note:bug
+data-source/aws_batch_job_definition: Properly handles ignored tags.
+```
+
+```release-note:bug
+resource/aws_dynamodb_table_replica: Properly handles default and ignored tags.
+```
+
+```release-note:bug
+resource/aws_cognito_user_pool: Properly handles ignored tags.
+```
+
+```release-note:bug
+data-source/aws_cognito_user_pool: Properly handles ignored tags.
+```

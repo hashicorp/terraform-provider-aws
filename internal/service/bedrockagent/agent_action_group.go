@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -34,23 +36,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Action Group")
+// @FrameworkResource("aws_bedrockagent_agent_action_group", name="Agent Action Group")
 func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentActionGroupResource{}
 
-	r.SetDefaultDeleteTimeout(120 * time.Minute)
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
 type agentActionGroupResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*agentActionGroupResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_action_group"
 }
 
 func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -90,6 +88,14 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 			"parent_action_group_signature": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ActionGroupSignature](),
 				Optional:   true,
+			},
+			"prepare_agent": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"skip_resource_in_use_check": schema.BoolAttribute{
 				Optional: true,
@@ -222,6 +228,10 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
 		},
 	}
 }
@@ -252,7 +262,20 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	// Set values for unknowns.
 	data.ActionGroupID = fwflex.StringToFramework(ctx, output.AgentActionGroup.ActionGroupId)
 	data.ActionGroupState = fwtypes.StringEnumValue(output.AgentActionGroup.ActionGroupState)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Action Group", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
+
+	if data.PrepareAgent.ValueBool() {
+		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError("preparing Agent", err.Error())
+
+			return
+		}
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -337,6 +360,14 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 		return
 	}
 
+	if new.PrepareAgent.ValueBool() {
+		if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError("preparing Agent", err.Error())
+
+			return
+		}
+	}
+
 	new.ActionGroupState = fwtypes.StringEnumValue(output.ActionGroupState)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -351,12 +382,13 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentActionGroup(ctx, &bedrockagent.DeleteAgentActionGroupInput{
+	input := bedrockagent.DeleteAgentActionGroupInput{
 		ActionGroupId:          fwflex.StringFromFramework(ctx, data.ActionGroupID),
 		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
 		AgentVersion:           fwflex.StringFromFramework(ctx, data.AgentVersion),
 		SkipResourceInUseCheck: data.SkipResourceInUseCheck.ValueBool(),
-	})
+	}
+	_, err := conn.DeleteAgentActionGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -367,6 +399,12 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 		return
 	}
+}
+
+func (r *agentActionGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	// Set prepare_agent to default value on import
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
 func findAgentActionGroupByThreePartKey(ctx context.Context, conn *bedrockagent.Client, actionGroupID, agentID, agentVersion string) (*awstypes.AgentActionGroup, error) {
@@ -408,7 +446,9 @@ type agentActionGroupResourceModel struct {
 	FunctionSchema             fwtypes.ListNestedObjectValueOf[functionSchemaModel]      `tfsdk:"function_schema"`
 	ID                         types.String                                              `tfsdk:"id"`
 	ParentActionGroupSignature fwtypes.StringEnum[awstypes.ActionGroupSignature]         `tfsdk:"parent_action_group_signature"`
+	PrepareAgent               types.Bool                                                `tfsdk:"prepare_agent"`
 	SkipResourceInUseCheck     types.Bool                                                `tfsdk:"skip_resource_in_use_check"`
+	Timeouts                   timeouts.Value                                            `tfsdk:"timeouts"`
 }
 
 const (
@@ -430,8 +470,14 @@ func (m *agentActionGroupResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentActionGroupResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ActionGroupID.ValueString(), m.AgentID.ValueString(), m.AgentVersion.ValueString()}, agentActionGroupResourceIDPartCount, false)))
+func (m *agentActionGroupResourceModel) setID() (string, error) {
+	parts := []string{
+		m.ActionGroupID.ValueString(),
+		m.AgentID.ValueString(),
+		m.AgentVersion.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentActionGroupResourceIDPartCount, false)
 }
 
 type actionGroupExecutorModel struct {

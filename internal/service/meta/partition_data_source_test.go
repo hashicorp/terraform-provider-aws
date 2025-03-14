@@ -26,7 +26,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 				Config: testAccPartitionDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "partition", func(value string) error {
-						expected := acctest.Provider.Meta().(*conns.AWSClient).Partition
+						expected := acctest.Provider.Meta().(*conns.AWSClient).Partition(ctx)
 						if value != expected {
 							return fmt.Errorf("Incorrect Partition: expected %q, got %q", expected, value)
 						}

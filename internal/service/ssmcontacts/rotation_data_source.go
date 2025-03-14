@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Rotation")
+// @FrameworkDataSource("aws_ssmcontacts_rotation", name="Rotation")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
 func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRotation{}
 
@@ -28,10 +30,6 @@ func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure,
 
 type dataSourceRotation struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceRotation) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ssmcontacts_rotation"
 }
 
 func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -88,8 +86,8 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	rc := &dsRecurrenceData{}
-	rc.RecurrenceMultiplier = fwflex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
-	rc.NumberOfOnCalls = fwflex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
+	rc.RecurrenceMultiplier = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.RecurrenceMultiplier)
+	rc.NumberOfOnCalls = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.NumberOfOnCalls)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
 	if response.Diagnostics.HasError() {
@@ -118,18 +116,6 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	data.StartTime = fwflex.TimeToFramework(ctx, output.StartTime)
 	data.TimeZoneID = fwflex.StringToFramework(ctx, output.TimeZoneId)
 	data.ID = fwflex.StringToFramework(ctx, output.RotationArn)
-
-	tags, err := listTags(ctx, conn, data.ARN.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSMContacts, create.ErrActionSetting, ResNameRotation, data.ARN.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -193,12 +179,12 @@ func flattenShiftCoveragesDataSource(ctx context.Context, object map[string][]aw
 		for _, v := range value {
 			ct := dsCoverageTimesData{
 				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.End.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.End.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.Start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)

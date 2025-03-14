@@ -40,15 +40,15 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReservedInstanceConfig_basic(rName, acctest.Ct1),
+				Config: testAccReservedInstanceConfig_basic(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`ri:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`ri:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "currency_code", resourceName, "currency_code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "lease_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "offering_id"),

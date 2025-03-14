@@ -41,10 +41,6 @@ type workspaceServiceAccountTokenResource struct {
 	framework.WithNoUpdate
 }
 
-func (r *workspaceServiceAccountTokenResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_grafana_workspace_service_account_token"
-}
-
 func (r *workspaceServiceAccountTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -133,7 +129,12 @@ func (r *workspaceServiceAccountTokenResource) Create(ctx context.Context, reque
 	// Set values for unknowns.
 	data.Key = fwflex.StringToFramework(ctx, output.ServiceAccountToken.Key)
 	data.TokenID = fwflex.StringToFramework(ctx, output.ServiceAccountToken.Id)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("setting resource ID", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	serviceAccountToken, err := findWorkspaceServiceAccountTokenByThreePartKey(ctx, conn, data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString(), data.TokenID.ValueString())
 
@@ -187,7 +188,12 @@ func (r *workspaceServiceAccountTokenResource) Read(ctx context.Context, request
 
 	// Restore resource ID.
 	// It has been overwritten by the 'Id' field from the API response.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("setting resource ID", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -300,6 +306,12 @@ func (data *workspaceServiceAccountTokenResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *workspaceServiceAccountTokenResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString(), data.TokenID.ValueString()}, workspaceServiceAccountTokenResourceIDPartCount, false)))
+func (data *workspaceServiceAccountTokenResourceModel) setID() (string, error) {
+	parts := []string{
+		data.WorkspaceID.ValueString(),
+		data.ServiceAccountID.ValueString(),
+		data.TokenID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, workspaceServiceAccountTokenResourceIDPartCount, false)
 }

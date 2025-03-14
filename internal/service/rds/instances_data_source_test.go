@@ -27,9 +27,9 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
@@ -51,9 +51,9 @@ func TestAccRDSInstancesDataSource_matchTags(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},

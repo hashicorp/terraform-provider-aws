@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Default Tags")
+// @FrameworkDataSource("aws_default_tags", name="Default Tags")
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 
@@ -24,10 +24,6 @@ func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigu
 
 type defaultTagsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*defaultTagsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_default_tags"
 }
 
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -49,11 +45,11 @@ func (d *defaultTagsDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	defaultTagsConfig := d.Meta().DefaultTagsConfig
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	defaultTagsConfig := d.Meta().DefaultTagsConfig(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := defaultTagsConfig.GetTags()
 
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

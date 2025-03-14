@@ -23,11 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Runtime Version")
+// @FrameworkDataSource("aws_synthetics_runtime_version", name="Runtime Version")
 func newDataSourceRuntimeVersion(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceRuntimeVersion{}, nil
 }
@@ -38,10 +37,6 @@ const (
 
 type dataSourceRuntimeVersion struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceRuntimeVersion) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_synthetics_runtime_version"
 }
 
 func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -62,7 +57,7 @@ func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.Sc
 			"latest": schema.BoolAttribute{
 				Optional: true,
 				Validators: []validator.Bool{
-					fwvalidators.BoolEquals(true),
+					boolvalidator.Equals(true),
 					boolvalidator.ExactlyOneOf(path.Expressions{
 						path.MatchRoot("latest"),
 						path.MatchRoot(names.AttrVersion),

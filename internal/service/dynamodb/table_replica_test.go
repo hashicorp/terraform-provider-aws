@@ -26,6 +26,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
+	tableResourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +39,8 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -204,68 +206,6 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableReplica_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTableReplicaConfig_tags1(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTableReplicaConfig_tags2(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
-					resource.TestCheckResourceAttr(resourceName, "tags.arise", "Melandru"),
-					resource.TestCheckResourceAttr(resourceName, "tags.brightest", "Lights"),
-					resource.TestCheckResourceAttr(resourceName, "tags.shooting", "Stars"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTableReplicaConfig_tags3(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -336,6 +276,59 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
+				),
+			},
+			// disable deletion protection to allow acceptance test cleanup to complete
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -431,7 +424,6 @@ resource "aws_dynamodb_table_replica" "test" {
 
   tags = {
     Name = %[1]q
-    Pozo = "Amargo"
   }
 }
 `, rName))
@@ -545,119 +537,6 @@ resource "aws_dynamodb_table_replica" "test" {
 `, rName, pitr))
 }
 
-func testAccTableReplicaConfig_tags1(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [replica]
-  }
-}
-
-resource "aws_dynamodb_table_replica" "test" {
-  provider         = "awsalternate"
-  global_table_arn = aws_dynamodb_table.test.arn
-
-  tags = {
-    Name = %[1]q
-    tape = "Valladolid"
-  }
-}
-`, rName))
-}
-
-func testAccTableReplicaConfig_tags2(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [replica]
-  }
-}
-
-resource "aws_dynamodb_table_replica" "test" {
-  provider         = "awsalternate"
-  global_table_arn = aws_dynamodb_table.test.arn
-
-  tags = {
-    Name      = %[1]q
-    tape      = "Valladolid"
-    brightest = "Lights"
-    arise     = "Melandru"
-    shooting  = "Stars"
-  }
-}
-`, rName))
-}
-
-func testAccTableReplicaConfig_tags3(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [replica]
-  }
-}
-
-resource "aws_dynamodb_table_replica" "test" {
-  provider         = "awsalternate"
-  global_table_arn = aws_dynamodb_table.test.arn
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
 func testAccTableReplicaConfig_tableClass(rName, class string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
@@ -758,4 +637,38 @@ resource "aws_dynamodb_table_replica" "test" {
   point_in_time_recovery = true
 }
 `, rName, key))
+}
+
+func testAccTableReplicaConfig_deletionProtection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  provider         = "awsalternate"
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.test.arn
+
+  deletion_protection_enabled = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, deletionProtection))
 }

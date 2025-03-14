@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,22 +38,22 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.5.3"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "custom_configure_recipes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "custom_deploy_recipes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_configure_recipes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_deploy_recipes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_instance_profile_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_json", ""),
-					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "custom_setup_recipes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "custom_shutdown_recipes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "custom_undeploy_recipes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "custom_setup_recipes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_shutdown_recipes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_undeploy_recipes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elastic_load_balancer", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", acctest.CtTrue),
@@ -62,8 +63,8 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.2.2"),
 					resource.TestCheckNoResourceAttr(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "use_ebs_optimized_instances", acctest.CtFalse),
 				),
 			},
@@ -120,7 +121,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -128,7 +129,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -137,7 +138,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -160,8 +161,8 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
-			acctest.PreCheckAlternateRegionIs(t, names.USWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckAlternateRegion(t, endpoints.UsWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
@@ -171,7 +172,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -179,7 +180,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags2AlternateRegion(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -188,7 +189,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

@@ -39,7 +39,7 @@ import (
 
 const dataLakeMutexKey = "aws_securitylake_data_lake"
 
-// @FrameworkResource(name="Data Lake")
+// @FrameworkResource("aws_securitylake_data_lake", name="Data Lake")
 // @Tags(identifierAttribute="arn")
 func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataLakeResource{}
@@ -55,10 +55,6 @@ type dataLakeResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *dataLakeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_data_lake"
 }
 
 func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -270,7 +266,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 
 	// Transparent tagging fails with "ResourceNotFoundException: The request failed because the specified resource doesn't exist."
 	// if the data lake's AWS Region isn't the configured one.
-	if region := configuration.Region.ValueString(); region != r.Meta().Region {
+	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
 			setTagsOut(ctx, Tags(tags))
 		}
@@ -327,12 +323,17 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	conn := r.Meta().SecurityLakeClient(ctx)
-
-	input := &securitylake.DeleteDataLakeInput{
-		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+	region, err := regionFromARNString(data.ID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Security Lake Data Lake (%s)", data.ID.ValueString()), err.Error())
+		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
+	input := &securitylake.DeleteDataLakeInput{
+		Regions: []string{region},
+	}
+
+	_, err = retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
 		return conn.DeleteDataLake(ctx, input)
 	})
 
@@ -357,13 +358,14 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
+	region, err := regionFromARNString(arn)
+	if err != nil {
+		return nil, err
+	}
+
 	input := &securitylake.ListDataLakesInput{
-		Regions: []string{errs.Must(regionFromARNString(arn))},
+		Regions: []string{region},
 	}
 
 	return findDataLake(ctx, conn, input, func(v *awstypes.DataLakeResource) bool {

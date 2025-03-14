@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_sesv2_dedicated_ip_pool", name="Dedicated IP Pool")
+// @Tags(identifierAttribute="arn")
 func dataSourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDedicatedIPPoolRead,
@@ -77,27 +78,14 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 
 	poolName := aws.ToString(out.PoolName)
 	d.SetId(poolName)
+	d.Set(names.AttrARN, dedicatedIPPoolARN(ctx, meta.(*conns.AWSClient), poolName))
 	d.Set("scaling_mode", out.ScalingMode)
-	d.Set(names.AttrARN, dedicatedIPPoolARN(meta, poolName))
 
 	outIP, err := findDedicatedIPsByPoolName(ctx, conn, poolName)
 	if err != nil {
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameDedicatedIPPool, poolName, err)
 	}
 	d.Set("dedicated_ips", flattenDedicatedIPs(outIP))
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameDedicatedIPPool, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, dsNameDedicatedIPPool, d.Id(), err)
-	}
 
 	return diags
 }

@@ -40,7 +40,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `instance_count` - (Optional) Number of cache node instances to reserve.
+* `cache_node_count` - (Optional) Number of cache node instances to reserve.
   Default value is `1`.
 * `id` - (Optional) Customer-specified identifier to track this reservation.
   If not specified, AWS will assign a random ID.

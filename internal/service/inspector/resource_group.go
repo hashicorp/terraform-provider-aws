@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_inspector_resource_group")
+// @SDKResource("aws_inspector_resource_group", name="Resource Group")
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,
@@ -87,7 +87,6 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	resourceGroup := resp.ResourceGroups[0]
 	d.Set(names.AttrARN, resourceGroup.Arn)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, flattenResourceGroupTags(resourceGroup.Tags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

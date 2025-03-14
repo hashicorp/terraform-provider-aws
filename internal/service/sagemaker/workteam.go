@@ -166,7 +166,7 @@ func resourceWorkteam() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workforce_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"workteam_name": {
@@ -179,8 +179,6 @@ func resourceWorkteam() *schema.Resource {
 				),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -191,7 +189,6 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("workteam_name").(string)
 	input := &sagemaker.CreateWorkteamInput{
 		WorkteamName:      aws.String(name),
-		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		Tags:              getTagsIn(ctx),
@@ -205,13 +202,16 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
+	if v, ok := d.GetOk("workforce_name"); ok {
+		input.WorkforceName = aws.String(v.(string))
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateWorkteam(ctx, input)
 	}, ErrCodeValidationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workteam (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Workteam (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -226,13 +226,13 @@ func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	workteam, err := findWorkteamByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Workteam (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Workteam (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workteam (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Workteam (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, workteam.WorkteamArn)
@@ -277,11 +277,10 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating SageMaker Workteam: %#v", input)
 		_, err := conn.UpdateWorkteam(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Workteam (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Workteam (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -292,7 +291,7 @@ func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Workteam: %s", d.Id())
 	_, err := conn.DeleteWorkteam(ctx, &sagemaker.DeleteWorkteamInput{
 		WorkteamName: aws.String(d.Id()),
 	})
@@ -302,7 +301,7 @@ func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workteam (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Workteam (%s): %s", d.Id(), err)
 	}
 
 	return diags

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -33,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grant")
+// @FrameworkResource("aws_s3control_access_grant", name="Access Grant")
 // @Tags
 func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantResource{}
@@ -44,10 +43,6 @@ func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, er
 type accessGrantResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *accessGrantResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grant"
 }
 
 func (r *accessGrantResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -168,7 +163,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
@@ -194,7 +189,12 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	data.AccessGrantARN = fwflex.StringToFramework(ctx, output.AccessGrantArn)
 	data.AccessGrantID = fwflex.StringToFramework(ctx, output.AccessGrantId)
 	data.GrantScope = fwflex.StringToFramework(ctx, output.GrantScope)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating S3 Access Grant", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -309,10 +309,6 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {
 	input := &s3control.GetAccessGrantInput{
 		AccessGrantId: aws.String(grantID),
@@ -381,8 +377,13 @@ func (data *accessGrantResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *accessGrantResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AccountID.ValueString(), data.AccessGrantID.ValueString()}, accessGrantResourceIDPartCount, false)))
+func (data *accessGrantResourceModel) setID() (string, error) {
+	parts := []string{
+		data.AccountID.ValueString(),
+		data.AccessGrantID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, accessGrantResourceIDPartCount, false)
 }
 
 // API returns <AccessGrantsLocationConfiguration><S3SubPrefix></S3SubPrefix></AccessGrantsLocationConfiguration>.

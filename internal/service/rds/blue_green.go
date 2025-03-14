@@ -10,22 +10,23 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc)
+type cleanupWaiterFunc func(context.Context, *rds.Client, ...tfresource.OptionsFunc)
 
 type blueGreenOrchestrator struct {
-	conn           *rds_sdkv2.Client
+	conn           *rds.Client
 	cleanupWaiters []cleanupWaiterFunc
 }
 
-func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
+func newBlueGreenOrchestrator(conn *rds.Client) *blueGreenOrchestrator {
 	return &blueGreenOrchestrator{
 		conn: conn,
 	}
@@ -45,7 +46,7 @@ func (o *blueGreenOrchestrator) CleanUp(ctx context.Context) {
 	}
 }
 
-func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds_sdkv2.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
+func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
 	createOut, err := o.conn.CreateBlueGreenDeployment(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
@@ -63,11 +64,11 @@ func (o *blueGreenOrchestrator) waitForDeploymentAvailable(ctx context.Context, 
 }
 
 func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
-	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
+	input := &rds.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
 	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -90,10 +91,10 @@ func (o *blueGreenOrchestrator) AddCleanupWaiter(f cleanupWaiterFunc) {
 }
 
 type instanceHandler struct {
-	conn *rds_sdkv2.Client
+	conn *rds.Client
 }
 
-func newInstanceHandler(conn *rds_sdkv2.Client) *instanceHandler {
+func newInstanceHandler(conn *rds.Client) *instanceHandler {
 	return &instanceHandler{
 		conn: conn,
 	}
@@ -101,7 +102,7 @@ func newInstanceHandler(conn *rds_sdkv2.Client) *instanceHandler {
 
 func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceData) error {
 	needsPreConditions := false
-	input := &rds_sdkv2.ModifyDBInstanceInput{
+	input := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
 	}
@@ -127,8 +128,8 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
-	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
+func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.CreateBlueGreenDeploymentInput {
+	input := &rds.CreateBlueGreenDeploymentInput{
 		BlueGreenDeploymentName: aws.String(d.Get(names.AttrIdentifier).(string)),
 		Source:                  aws.String(d.Get(names.AttrARN).(string)),
 	}
@@ -144,12 +145,15 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv
 }
 
 func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) error {
-	modifyInput := &rds_sdkv2.ModifyDBInstanceInput{
+	modifyInput := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
-	needsModify := dbInstancePopulateModify(modifyInput, d)
+	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
+	if diags.HasError() {
+		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	}
 
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)

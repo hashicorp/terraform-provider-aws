@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_batch_compute_environment: Add plan-time validation of `update_policy.job_execution_timeout_minutes`
+```

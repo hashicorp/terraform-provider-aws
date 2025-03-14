@@ -5,7 +5,7 @@ package elb
 
 import (
 	"errors"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -47,7 +47,7 @@ func flattenBackendServerDescriptionPolicies(apiObjects []awstypes.BackendServer
 	for _, apiObject := range apiObjects {
 		k := aws.ToInt32(apiObject.InstancePort)
 		tfMap[k] = append(tfMap[k], apiObject.PolicyNames...)
-		sort.Strings(tfMap[k])
+		slices.Sort(tfMap[k])
 	}
 
 	return tfMap

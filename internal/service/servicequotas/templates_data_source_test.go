@@ -6,6 +6,7 @@ package servicequotas_test
 import (
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,7 +20,7 @@ func testAccTemplatesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
@@ -31,7 +32,7 @@ func testAccTemplatesDataSource_basic(t *testing.T) {
 				Config: testAccTemplatesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "templates.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "templates.#", "1"),
 				),
 			},
 		},

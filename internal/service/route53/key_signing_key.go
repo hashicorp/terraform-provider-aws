@@ -121,6 +121,12 @@ func resourceKeySigningKey() *schema.Resource {
 				}, false),
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
@@ -131,7 +137,10 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	hostedZoneID := d.Get(names.AttrHostedZoneID).(string)
 	name := d.Get(names.AttrName).(string)
 	status := d.Get(names.AttrStatus).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{hostedZoneID, name}, keySigningKeyResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{hostedZoneID, name}, keySigningKeyResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &route53.CreateKeySigningKeyInput{
 		CallerReference: aws.String(sdkid.UniqueId()),
 		HostedZoneId:    aws.String(hostedZoneID),
@@ -152,7 +161,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(id)
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -248,7 +257,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if changeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(changeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(changeInfo.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 			}
 		}
@@ -289,7 +298,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if output.ChangeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 			}
 		}
@@ -310,7 +319,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}

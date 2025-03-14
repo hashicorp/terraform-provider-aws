@@ -26,7 +26,6 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,7 +88,7 @@ func resourceAssociation() *schema.Resource {
 				Type:       schema.TypeString,
 				ForceNew:   true,
 				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
+				Deprecated: "instance_id is deprecated. Use targets instead.",
 			},
 			"max_concurrency": {
 				Type:         schema.TypeString,
@@ -174,8 +173,6 @@ func resourceAssociation() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -277,10 +274,10 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "association/" + aws.ToString(association.AssociationId),
 	}.String()
 	d.Set(names.AttrARN, arn)

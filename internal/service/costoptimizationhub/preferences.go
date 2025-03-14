@@ -10,21 +10,23 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Preferences")
+// @FrameworkResource("aws_costoptimizationhub_preferences", name="Preferences")
 func newResourcePreferences(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePreferences{}
 
@@ -36,17 +38,13 @@ func newResourcePreferences(_ context.Context) (resource.ResourceWithConfigure, 
 }
 
 const (
-	ResNamePreferences = "Preferences"
+	resNamePreferences = "Preferences"
 )
 
 type resourcePreferences struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourcePreferences) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_costoptimizationhub_preferences"
 }
 
 func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -96,20 +94,20 @@ func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateReq
 	out, err := conn.UpdatePreferences(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNamePreferences, "UpdatePreferences", err),
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, resNamePreferences, "UpdatePreferences", err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNamePreferences, "UpdatePreferences", nil),
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, resNamePreferences, "UpdatePreferences", nil),
 			errors.New("empty out").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	plan.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	plan.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 
@@ -126,22 +124,23 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	out, err := findPreferences(ctx, conn)
-	if err != nil {
-		//Check if err is of type AccessDeniedException and contains the message "AWS account is not enrolled for recommendations"
-		//If that is the case, the Enrollment Status is inactive and hence this resource needs to be removed from state
-		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "AWS account is not enrolled for recommendations") {
-			resp.State.RemoveResource(ctx)
-			return
-		}
 
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, ResNamePreferences, state.ID.String(), err),
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, resNamePreferences, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	state.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	state.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 
@@ -171,7 +170,7 @@ func (r *resourcePreferences) Update(ctx context.Context, req resource.UpdateReq
 		out, err := conn.UpdatePreferences(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNamePreferences, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, resNamePreferences, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
@@ -179,7 +178,7 @@ func (r *resourcePreferences) Update(ctx context.Context, req resource.UpdateReq
 
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNamePreferences, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, resNamePreferences, plan.ID.String(), nil),
 				errors.New("empty out").Error(),
 			)
 			return
@@ -211,14 +210,14 @@ func (r *resourcePreferences) Delete(ctx context.Context, req resource.DeleteReq
 	out, err := conn.UpdatePreferences(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNamePreferences, "UpdatePreferences", err),
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, resNamePreferences, "UpdatePreferences", err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, ResNamePreferences, "UpdatePreferences", nil),
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionCreating, resNamePreferences, "UpdatePreferences", nil),
 			errors.New("empty out").Error(),
 		)
 		return
@@ -226,18 +225,25 @@ func (r *resourcePreferences) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*costoptimizationhub.GetPreferencesOutput, error) {
-	in := &costoptimizationhub.GetPreferencesInput{}
+	input := &costoptimizationhub.GetPreferencesInput{}
+	output, err := conn.GetPreferences(ctx, input)
 
-	out, err := conn.GetPreferences(ctx, in)
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "AWS account is not enrolled for recommendations") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	return out, nil
-}
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
 
-func (r *resourcePreferences) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	return output, nil
 }
 
 type resourcePreferencesData struct {

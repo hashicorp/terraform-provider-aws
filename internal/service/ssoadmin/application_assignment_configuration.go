@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Assignment Configuration")
+// @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
 func newResourceApplicationAssignmentConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAssignmentConfiguration{}, nil
 }
@@ -35,10 +35,6 @@ const (
 
 type resourceApplicationAssignmentConfiguration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplicationAssignmentConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_assignment_configuration"
 }
 
 func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

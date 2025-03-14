@@ -5,8 +5,8 @@ package grafana
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,12 +21,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newWorkspaceServiceAccountResource,
-			Name:    "Workspace Service Account",
+			Factory:  newWorkspaceServiceAccountResource,
+			TypeName: "aws_grafana_workspace_service_account",
+			Name:     "Workspace Service Account",
 		},
 		{
-			Factory: newWorkspaceServiceAccountTokenResource,
-			Name:    "Workspace Service Account Token",
+			Factory:  newWorkspaceServiceAccountTokenResource,
+			TypeName: "aws_grafana_workspace_service_account_token",
+			Name:     "Workspace Service Account Token",
 		},
 	}
 }
@@ -80,13 +82,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*grafana_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return grafana_sdkv2.NewFromConfig(cfg,
-		grafana_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*grafana.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*grafana.Options){
+		grafana.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return grafana.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*grafana.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*grafana.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *grafana.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*grafana.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

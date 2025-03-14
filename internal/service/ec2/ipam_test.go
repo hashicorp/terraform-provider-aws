@@ -37,15 +37,16 @@ func TestAccIPAM_basic(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "ipam/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scope_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_association_id", regexache.MustCompile(`^ipam-res-disco-assoc-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_id", regexache.MustCompile(`^ipam-res-disco-[0-9a-f]+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -129,7 +130,7 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 				Config: testAccIPAMConfig_twoOperatingRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
 				),
 			},
 			{
@@ -141,14 +142,14 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 				),
 			},
 			{
 				Config: testAccIPAMConfig_twoOperatingRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
 				),
 			},
 		},
@@ -232,7 +233,7 @@ func TestAccIPAM_tags(t *testing.T) {
 				Config: testAccIPAMConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -245,7 +246,7 @@ func TestAccIPAM_tags(t *testing.T) {
 				Config: testAccIPAMConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -254,8 +255,42 @@ func TestAccIPAM_tags(t *testing.T) {
 				Config: testAccIPAMConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIPAM_enablePrivateGUA(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ipam awstypes.Ipam
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMConfig_enablePrivateGUA(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIPAMConfig_enablePrivateGUA(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
 				),
 			},
 		},
@@ -267,10 +302,6 @@ func testAccCheckIPAMExists(ctx context.Context, n string, v *awstypes.Ipam) res
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -317,10 +348,11 @@ func testAccCheckIPAMScopeCreate(ctx context.Context, ipam *awstypes.Ipam) resou
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := conn.CreateIpamScope(ctx, &ec2.CreateIpamScopeInput{
+		input := ec2.CreateIpamScopeInput{
 			ClientToken: aws.String(id.UniqueId()),
 			IpamId:      ipam.IpamId,
-		})
+		}
+		_, err := conn.CreateIpamScope(ctx, &input)
 
 		return err
 	}
@@ -425,4 +457,18 @@ resource "aws_vpc_ipam" "test" {
   tier = "%s"
 }
 `, tier)
+}
+
+func testAccIPAMConfig_enablePrivateGUA(enablePrivateGUA bool) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  enable_private_gua = %[1]t
+
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+}
+`, enablePrivateGUA)
 }

@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,6 +70,12 @@ func resourceEndpoint() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.IsIPAddress,
+						},
+						"ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IsIPv6Address,
 						},
 						"ip_id": {
 							Type:     schema.TypeString,
@@ -123,8 +128,6 @@ func resourceEndpoint() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -448,6 +451,9 @@ func expandEndpointIPAddressUpdate(vIpAddress interface{}) *awstypes.IpAddressUp
 	if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
 		ipAddressUpdate.Ip = aws.String(vIp)
 	}
+	if vIpv6, ok := mIpAddress["ipv6"].(string); ok && vIpv6 != "" {
+		ipAddressUpdate.Ipv6 = aws.String(vIpv6)
+	}
 	if vIpId, ok := mIpAddress["ip_id"].(string); ok && vIpId != "" {
 		ipAddressUpdate.IpId = aws.String(vIpId)
 	}
@@ -469,6 +475,9 @@ func expandEndpointIPAddresses(vIpAddresses *schema.Set) []awstypes.IpAddressReq
 		if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
 			ipAddressRequest.Ip = aws.String(vIp)
 		}
+		if vIpv6, ok := mIpAddress["ipv6"].(string); ok && vIpv6 != "" {
+			ipAddressRequest.Ipv6 = aws.String(vIpv6)
+		}
 
 		ipAddressRequests = append(ipAddressRequests, ipAddressRequest)
 	}
@@ -486,6 +495,7 @@ func flattenEndpointIPAddresses(ipAddresses []awstypes.IpAddressResponse) []inte
 	for _, ipAddress := range ipAddresses {
 		mIpAddress := map[string]interface{}{
 			names.AttrSubnetID: aws.ToString(ipAddress.SubnetId),
+			"ipv6":             aws.ToString(ipAddress.Ipv6),
 			"ip":               aws.ToString(ipAddress.Ip),
 			"ip_id":            aws.ToString(ipAddress.IpId),
 		}

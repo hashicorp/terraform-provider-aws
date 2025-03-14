@@ -37,10 +37,6 @@ type resourceSubscription struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceSubscription) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_shield_subscription"
-}
-
 func (r *resourceSubscription) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -67,7 +63,7 @@ func (r *resourceSubscription) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.StringValue(r.Meta().AccountID)
+	plan.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	if plan.AutoRenew.Equal(types.StringValue(string(awstypes.AutoRenewDisabled))) {
 		resp.Diagnostics.AddError(

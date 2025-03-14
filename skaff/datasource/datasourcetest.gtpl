@@ -31,11 +31,9 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 {{- end }}
@@ -44,14 +42,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
-{{- else }}
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -67,9 +60,7 @@ import (
     // any normal context constants, variables, or functions.
 {{- end }}
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
-{{- if .AWSGoSDKV2 }}
 	"github.com/hashicorp/terraform-provider-aws/names"
-{{- end }}
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
@@ -170,31 +161,23 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var {{ .DataSourceLower }} {{ .ServicePackage }}.Describe{{ .DataSource }}Response
+	var {{ .DataSourceLower }} {{ .SDKPackage }}.Describe{{ .DataSource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			{{- if .AWSGoSDKV2 }}
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
-			{{- else }}
-			acctest.PreCheckPartitionHasService(t, {{ .ServicePackage }}.EndpointsID)
-			{{- end }}
 			testAccPreCheck(ctx, t)
 		},
-		{{- if .AWSGoSDKV2 }}
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		{{- else }}
-		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		{{- end }}
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .DataSource }}Exists(ctx, dataSourceName, &{{ .DataSourceLower }}),
 					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
@@ -204,7 +187,13 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:+.`)),
+					{{- if .IncludeComments }}
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					// Alternatively, if the data source returns the values for a corresponding resource, use `resource.TestCheckResourceAttrPair` to
+					// check that the values are the same.
+					{{- end }}
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
 				),
 			},
 		},

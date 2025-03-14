@@ -6,7 +6,6 @@ package docdb
 import (
 	"context"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_docdb_cluster_snapshot")
+// @SDKResource("aws_docdb_cluster_snapshot", name="Cluster Snapshot")
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
@@ -162,9 +162,10 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Snapshot: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
+	input := docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &input)
 
 	if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
 		return diags
@@ -226,7 +227,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			if !reflect.ValueOf(v).IsZero() {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

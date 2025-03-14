@@ -222,7 +222,7 @@ func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, n stri
 func testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, embeddingModel, description, state string) string {
 	return acctest.ConfigCompose(
 		testAccAgentConfig_basic(rName, agentModel, description),
-		testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel),
+		testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel, ""),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_knowledge_base_association" "test" {
   agent_id             = aws_bedrockagent_agent.test.id

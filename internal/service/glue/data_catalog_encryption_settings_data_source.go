@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_glue_data_catalog_encryption_settings")
+// @SDKDataSource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
 func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,

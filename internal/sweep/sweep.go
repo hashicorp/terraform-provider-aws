@@ -16,12 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ThrottlingRetryTimeout = 10 * time.Minute
-
 	ResourcePrefix = "tf-acc-test"
 )
 
@@ -58,7 +55,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 	}
-	meta.ServicePackages = servicePackageMap
+	meta.SetServicePackages(ctx, servicePackageMap)
 
 	conf := &conns.Config{
 		MaxRetries:       5,
@@ -104,7 +101,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 }
 
 type Sweepable interface {
-	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
+	Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error
 }
 
 func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
@@ -116,19 +113,11 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 
 	for _, sweepable := range sweepables {
 		g.Go(func() error {
-			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
+			return sweepable.Delete(ctx, optFns...)
 		})
 	}
 
 	return g.Wait().ErrorOrNil()
-}
-
-func Partition(region string) string {
-	return names.PartitionForRegion(region)
-}
-
-func PartitionDNSSuffix(region string) string {
-	return names.DNSSuffixForPartition(Partition(region))
 }
 
 type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)

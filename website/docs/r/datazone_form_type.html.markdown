@@ -16,7 +16,7 @@ Terraform resource for managing an AWS DataZone Form Type.
 
 ```terraform
 resource "aws_iam_role" "domain_execution_role" {
-  name = "example name"
+  name = "example-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -38,7 +38,7 @@ resource "aws_iam_role" "domain_execution_role" {
   })
 
   inline_policy {
-    name = "example name"
+    name = "example-policy"
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
@@ -58,12 +58,12 @@ resource "aws_iam_role" "domain_execution_role" {
 }
 
 resource "aws_datazone_domain" "test" {
-  name                  = "example name"
+  name                  = "example"
   domain_execution_role = aws_iam_role.domain_execution_role.arn
 }
 
 resource "aws_security_group" "test" {
-  name = "example name"
+  name = "example"
 }
 
 resource "aws_datazone_project" "test" {

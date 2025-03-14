@@ -43,14 +43,12 @@ func resourceDomain() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"app_network_access_type": {
 				Type:             schema.TypeString,
-				ForceNew:         true,
 				Optional:         true,
 				Default:          awstypes.AppNetworkAccessTypePublicInternetOnly,
 				ValidateDiagFunc: enum.Validate[awstypes.AppNetworkAccessType](),
 			},
 			"app_security_group_management": {
 				Type:             schema.TypeString,
-				ForceNew:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AppSecurityGroupManagement](),
 			},
@@ -222,6 +220,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -286,6 +327,31 @@ func resourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
@@ -381,6 +447,12 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auto_mount_home_efs": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AutoMountHomeEFS](),
+						},
 						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -393,6 +465,25 @@ func resourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												names.AttrStatus: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+												},
+											},
+										},
+									},
+									"emr_serverless_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrExecutionRoleARN: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Optional:         true,
@@ -521,6 +612,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -646,6 +780,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -710,6 +887,31 @@ func resourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
@@ -1061,6 +1263,14 @@ func resourceDomain() *schema.Resource {
 											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
 										},
 									},
+									"hidden_instance_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+										},
+									},
 									"hidden_ml_tools": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -1227,6 +1437,12 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 16,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tag_propagation": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.TagPropagationDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.TagPropagation](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrURL: {
@@ -1239,8 +1455,6 @@ func resourceDomain() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1258,7 +1472,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("app_security_group_management"); ok {
+	if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]interface{})) {
 		input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 	}
 
@@ -1274,22 +1488,26 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker Domain create config: %#v", *input)
+	if v, ok := d.GetOk("tag_propagation"); ok {
+		input.TagPropagation = awstypes.TagPropagation(v.(string))
+	}
+
+	log.Printf("[DEBUG] SageMaker AI Domain create config: %#v", *input)
 	output, err := conn.CreateDomain(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain: %s", err)
 	}
 
 	domainArn := aws.ToString(output.DomainArn)
 	domainID, err := decodeDomainID(domainArn)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(domainID)
 
 	if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
@@ -1303,10 +1521,10 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Domain (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker AI Domain (%s); removing from state", d.Id())
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_network_access_type", domain.AppNetworkAccessType)
@@ -1319,23 +1537,24 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
+	d.Set("tag_propagation", domain.TagPropagation)
 	d.Set(names.AttrURL, domain.Url)
 	d.Set(names.AttrVPCID, domain.VpcId)
 
 	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(domain.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("default_user_settings", flattenUserSettings(domain.DefaultUserSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_user_settings for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_user_settings for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("default_space_settings", flattenDefaultSpaceSettings(domain.DefaultSpaceSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_space_settings for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_space_settings for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("domain_settings", flattenDomainSettings(domain.DomainSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting domain_settings for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting domain_settings for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1350,6 +1569,14 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			DomainId: aws.String(d.Id()),
 		}
 
+		if v, ok := d.GetOk("app_network_access_type"); ok {
+			input.AppNetworkAccessType = awstypes.AppNetworkAccessType(v.(string))
+		}
+
+		if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]interface{})) {
+			input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
+		}
+
 		if v, ok := d.GetOk("default_user_settings"); ok && len(v.([]interface{})) > 0 {
 			input.DefaultUserSettings = expandUserSettings(v.([]interface{}))
 		}
@@ -1362,14 +1589,18 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] SageMaker Domain update config: %#v", *input)
+		if v, ok := d.GetOk("tag_propagation"); ok {
+			input.TagPropagation = awstypes.TagPropagation(v.(string))
+		}
+
+		log.Printf("[DEBUG] SageMaker AI Domain update config: %#v", *input)
 		_, err := conn.UpdateDomain(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Domain: %s", err)
 		}
 
 		if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Domain (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -1390,12 +1621,12 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if _, err := conn.DeleteDomain(ctx, input); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Domain (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Domain (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitDomainDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Domain (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1530,6 +1761,32 @@ func expandDomainSettingsUpdate(l []interface{}) *awstypes.DomainSettingsForUpda
 	return config
 }
 
+// rstudioDomainEnabled takes domain_settings and returns true if rstudio is enabled
+func rstudioDomainEnabled(domainSettings []interface{}) bool {
+	if len(domainSettings) == 0 || domainSettings[0] == nil {
+		return false
+	}
+
+	m := domainSettings[0].(map[string]interface{})
+
+	v, ok := m["r_studio_server_pro_domain_settings"].([]interface{})
+	if !ok || len(v) < 1 {
+		return false
+	}
+
+	rsspds, ok := v[0].(map[string]interface{})
+	if !ok || len(rsspds) == 0 {
+		return false
+	}
+
+	domainExecutionRoleArn, ok := rsspds["domain_execution_role_arn"].(string)
+	if !ok || domainExecutionRoleArn == "" {
+		return false
+	}
+
+	return true
+}
+
 func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *awstypes.RStudioServerProDomainSettingsForUpdate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1582,6 +1839,10 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 	m := l[0].(map[string]interface{})
 
 	config := &awstypes.UserSettings{}
+
+	if v, ok := m["auto_mount_home_efs"].(string); ok && v != "" {
+		config.AutoMountHomeEFS = awstypes.AutoMountHomeEFS(v)
+	}
 
 	if v, ok := m["canvas_app_settings"].([]interface{}); ok && len(v) > 0 {
 		config.CanvasAppSettings = expandCanvasAppSettings(v)
@@ -1705,6 +1966,14 @@ func expandDomainCodeEditorAppSettings(l []interface{}) *awstypes.CodeEditorAppS
 
 	config := &awstypes.CodeEditorAppSettings{}
 
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["built_in_lifecycle_config_arn"].(string); ok && v != "" {
+		config.BuiltInLifecycleConfigArn = aws.String(v)
+	}
+
 	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
 	}
@@ -1729,6 +1998,14 @@ func expandDomainJupyterLabAppSettings(l []interface{}) *awstypes.JupyterLabAppS
 
 	config := &awstypes.JupyterLabAppSettings{}
 
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["built_in_lifecycle_config_arn"].(string); ok && v != "" {
+		config.BuiltInLifecycleConfigArn = aws.String(v)
+	}
+
 	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
@@ -1743,6 +2020,54 @@ func expandDomainJupyterLabAppSettings(l []interface{}) *awstypes.JupyterLabAppS
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
 		config.LifecycleConfigArns = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["emr_settings"].([]interface{}); ok && len(v) > 0 {
+		config.EmrSettings = expandEMRSettings(v)
+	}
+
+	return config
+}
+
+func expandAppLifecycleManagement(l []interface{}) *awstypes.AppLifecycleManagement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.AppLifecycleManagement{}
+
+	if v, ok := m["idle_settings"].([]interface{}); ok && len(v) > 0 {
+		config.IdleSettings = expandIdleSettings(v)
+	}
+
+	return config
+}
+
+func expandIdleSettings(l []interface{}) *awstypes.IdleSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.IdleSettings{}
+
+	if v, ok := m["idle_timeout_in_minutes"].(int); ok {
+		config.IdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["lifecycle_management"].(string); ok && v != "" {
+		config.LifecycleManagement = awstypes.LifecycleManagement(v)
+	}
+
+	if v, ok := m["max_idle_timeout_in_minutes"].(int); ok {
+		config.MaxIdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["min_idle_timeout_in_minutes"].(int); ok {
+		config.MinIdleTimeoutInMinutes = aws.Int32(int32(v))
 	}
 
 	return config
@@ -1900,6 +2225,26 @@ func expandResourceSpec(l []interface{}) *awstypes.ResourceSpec {
 	return config
 }
 
+func expandEMRSettings(l []interface{}) *awstypes.EmrSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.EmrSettings{}
+
+	if v, ok := m["assumable_role_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.AssumableRoleArns = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["execution_role_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.ExecutionRoleArns = flex.ExpandStringValueSet(v)
+	}
+
+	return config
+}
+
 func expandDomainShareSettings(l []interface{}) *awstypes.SharingSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1934,6 +2279,11 @@ func expandCanvasAppSettings(l []interface{}) *awstypes.CanvasAppSettings {
 	if v, ok := m["direct_deploy_settings"].([]interface{}); ok {
 		config.DirectDeploySettings = expandDirectDeploySettings(v)
 	}
+
+	if v, ok := m["emr_serverless_settings"].([]interface{}); ok {
+		config.EmrServerlessSettings = expandEMRServerlessSettings(v)
+	}
+
 	if v, ok := m["generative_ai_settings"].([]interface{}); ok {
 		config.GenerativeAiSettings = expandGenerativeAiSettings(v)
 	}
@@ -1951,6 +2301,26 @@ func expandCanvasAppSettings(l []interface{}) *awstypes.CanvasAppSettings {
 	}
 	if v, ok := m["workspace_settings"].([]interface{}); ok {
 		config.WorkspaceSettings = expandWorkspaceSettings(v)
+	}
+
+	return config
+}
+
+func expandEMRServerlessSettings(l []interface{}) *awstypes.EmrServerlessSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.EmrServerlessSettings{}
+
+	if v, ok := m[names.AttrExecutionRoleARN].(string); ok && v != "" {
+		config.ExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
+		config.Status = awstypes.FeatureStatus(v)
 	}
 
 	return config
@@ -2124,6 +2494,10 @@ func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSet
 		config.HiddenAppTypes = flex.ExpandStringyValueSet[awstypes.AppType](v)
 	}
 
+	if v, ok := m["hidden_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenInstanceTypes = flex.ExpandStringyValueSet[awstypes.AppInstanceType](v)
+	}
+
 	if v, ok := m["hidden_ml_tools"].(*schema.Set); ok && v.Len() > 0 {
 		config.HiddenMlTools = flex.ExpandStringyValueSet[awstypes.MlTools](v)
 	}
@@ -2137,6 +2511,8 @@ func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{}
 	}
 
 	m := map[string]interface{}{}
+
+	m["auto_mount_home_efs"] = config.AutoMountHomeEFS
 
 	if config.CanvasAppSettings != nil {
 		m["canvas_app_settings"] = flattenCanvasAppSettings(config.CanvasAppSettings)
@@ -2248,6 +2624,44 @@ func flattenResourceSpec(config *awstypes.ResourceSpec) []map[string]interface{}
 	return []map[string]interface{}{m}
 }
 
+func flattenAppLifecycleManagement(config *awstypes.AppLifecycleManagement) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleSettings != nil {
+		m["idle_settings"] = flattenIdleSettings(config.IdleSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenIdleSettings(config *awstypes.IdleSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleTimeoutInMinutes != nil {
+		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
+	}
+
+	m["lifecycle_management"] = config.LifecycleManagement
+
+	if config.MaxIdleTimeoutInMinutes != nil {
+		m["max_idle_timeout_in_minutes"] = aws.ToInt32(config.MaxIdleTimeoutInMinutes)
+	}
+
+	if config.MinIdleTimeoutInMinutes != nil {
+		m["min_idle_timeout_in_minutes"] = aws.ToInt32(config.MinIdleTimeoutInMinutes)
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenDefaultSpaceStorageSettings(config *awstypes.DefaultSpaceStorageSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -2257,6 +2671,24 @@ func flattenDefaultSpaceStorageSettings(config *awstypes.DefaultSpaceStorageSett
 
 	if config.DefaultEbsStorageSettings != nil {
 		m["default_ebs_storage_settings"] = flattenDefaultEBSStorageSettings(config.DefaultEbsStorageSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEMRSettings(config *awstypes.EmrSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.AssumableRoleArns != nil {
+		m["assumable_role_arns"] = flex.FlattenStringValueSet(config.AssumableRoleArns)
+	}
+
+	if config.ExecutionRoleArns != nil {
+		m["execution_role_arns"] = flex.FlattenStringValueSet(config.ExecutionRoleArns)
 	}
 
 	return []map[string]interface{}{m}
@@ -2319,6 +2751,14 @@ func flattenDomainCodeEditorAppSettings(config *awstypes.CodeEditorAppSettings) 
 
 	m := map[string]interface{}{}
 
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenAppLifecycleManagement(config.AppLifecycleManagement)
+	}
+
+	if config.BuiltInLifecycleConfigArn != nil {
+		m["built_in_lifecycle_config_arn"] = aws.ToString(config.BuiltInLifecycleConfigArn)
+	}
+
 	if config.CustomImages != nil {
 		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
 	}
@@ -2341,6 +2781,14 @@ func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) 
 
 	m := map[string]interface{}{}
 
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenAppLifecycleManagement(config.AppLifecycleManagement)
+	}
+
+	if config.BuiltInLifecycleConfigArn != nil {
+		m["built_in_lifecycle_config_arn"] = aws.ToString(config.BuiltInLifecycleConfigArn)
+	}
+
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
 	}
@@ -2355,6 +2803,10 @@ func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) 
 
 	if config.LifecycleConfigArns != nil {
 		m["lifecycle_config_arns"] = flex.FlattenStringValueSet(config.LifecycleConfigArns)
+	}
+
+	if config.EmrSettings != nil {
+		m["emr_settings"] = flattenEMRSettings(config.EmrSettings)
 	}
 
 	return []map[string]interface{}{m}
@@ -2449,6 +2901,7 @@ func flattenCanvasAppSettings(config *awstypes.CanvasAppSettings) []map[string]i
 
 	m := map[string]interface{}{
 		"direct_deploy_settings":           flattenDirectDeploySettings(config.DirectDeploySettings),
+		"emr_serverless_settings":          flattenEMRServerlessSettings(config.EmrServerlessSettings),
 		"generative_ai_settings":           flattenGenerativeAiSettings(config.GenerativeAiSettings),
 		"identity_provider_oauth_settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
 		"kendra_settings":                  flattenKendraSettings(config.KendraSettings),
@@ -2467,6 +2920,19 @@ func flattenDirectDeploySettings(config *awstypes.DirectDeploySettings) []map[st
 
 	m := map[string]interface{}{
 		names.AttrStatus: config.Status,
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEMRServerlessSettings(config *awstypes.EmrServerlessSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrExecutionRoleARN: aws.ToString(config.ExecutionRoleArn),
+		names.AttrStatus:           config.Status,
 	}
 
 	return []map[string]interface{}{m}
@@ -2865,6 +3331,10 @@ func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []
 
 	if config.HiddenAppTypes != nil {
 		m["hidden_app_types"] = flex.FlattenStringyValueSet[awstypes.AppType](config.HiddenAppTypes)
+	}
+
+	if config.HiddenInstanceTypes != nil {
+		m["hidden_instance_types"] = flex.FlattenStringyValueSet[awstypes.AppInstanceType](config.HiddenInstanceTypes)
 	}
 
 	if config.HiddenMlTools != nil {

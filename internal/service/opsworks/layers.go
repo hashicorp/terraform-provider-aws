@@ -447,6 +447,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	}
 
 	return &schema.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 			return lt.Create(ctx, d, meta)
 		},
@@ -467,8 +468,6 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return resourceSchema
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1213,7 +1212,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) awstypes.VolumeConf
 	}
 
 	if v, ok := tfMap["raid_level"].(string); ok && v != "" {
-		if v, err := strconv.Atoi(v); err == nil {
+		if v, err := strconv.ParseInt(v, 10, 32); err == nil {
 			apiObject.RaidLevel = aws.Int32(int32(v))
 		}
 	}

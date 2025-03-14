@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="IAM Policy Assignment")
+// @FrameworkResource("aws_quicksight_iam_policy_assignment", name="IAM Policy Assignment")
 func newIAMPolicyAssignmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &iamPolicyAssignmentResource{}, nil
 }
@@ -48,10 +48,6 @@ const (
 type iamPolicyAssignmentResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *iamPolicyAssignmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_iam_policy_assignment"
 }
 
 func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -125,7 +121,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, namespace, assignmentName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace), flex.StringValueFromFramework(ctx, plan.AssignmentName)
 	in := quicksight.CreateIAMPolicyAssignmentInput{
@@ -167,7 +163,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 	plan.AssignmentID = flex.StringToFramework(ctx, out.AssignmentId)
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 	if err != nil {
@@ -312,7 +308,7 @@ func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, req resource.D
 	}
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 	if err != nil {

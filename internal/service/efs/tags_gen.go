@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *efs.Client, identifier string, optFns ...func(*efs.Options)) (tftags.KeyValueTags, error) {
-	input := &efs.DescribeTagsInput{
+	input := efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
 	var output []awstypes.Tag
 
-	pages := efs.NewDescribeTagsPaginator(conn, input)
+	pages := efs.NewDescribeTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -117,12 +117,12 @@ func updateTags(ctx context.Context, conn *efs.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.EFS)
 	if len(removedTags) > 0 {
-		input := &efs.UntagResourceInput{
+		input := efs.UntagResourceInput{
 			ResourceId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -132,12 +132,12 @@ func updateTags(ctx context.Context, conn *efs.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.EFS)
 	if len(updatedTags) > 0 {
-		input := &efs.TagResourceInput{
+		input := efs.TagResourceInput{
 			ResourceId: aws.String(identifier),
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

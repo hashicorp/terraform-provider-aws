@@ -23,6 +23,10 @@ func dataSourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kms_key_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -48,6 +52,7 @@ func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(eventBusName)
 	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 

@@ -117,12 +117,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sns_topic.user_updates
-  id = "arn:aws:sns:us-west-2:0123456789012:my-topic"
+  id = "arn:aws:sns:us-west-2:123456789012:my-topic"
 }
 ```
 
 Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 
 ```console
-% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+% terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:123456789012:my-topic
 ```

@@ -40,10 +40,6 @@ type workspaceServiceAccountResource struct {
 	framework.WithImportByID
 }
 
-func (*workspaceServiceAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_grafana_workspace_service_account"
-}
-
 func (r *workspaceServiceAccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -102,7 +98,12 @@ func (r *workspaceServiceAccountResource) Create(ctx context.Context, request re
 
 	// Set values for unknowns.
 	data.ServiceAccountID = fwflex.StringToFramework(ctx, output.Id)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Grafana Workspace Service Account (%s)", name), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -145,7 +146,12 @@ func (r *workspaceServiceAccountResource) Read(ctx context.Context, request reso
 
 	// Restore resource ID.
 	// It has been overwritten by the 'Id' field from the API response.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Grafana Workspace Service Account (%s)", id), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	// Role is returned from the API in lowercase.
 	data.GrafanaRole = fwtypes.StringEnumValueToUpper(output.GrafanaRole)
@@ -254,6 +260,11 @@ func (data *workspaceServiceAccountResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *workspaceServiceAccountResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString()}, workspaceServiceAccountResourceIDPartCount, false)))
+func (data *workspaceServiceAccountResourceModel) setID() (string, error) {
+	parts := []string{
+		data.WorkspaceID.ValueString(),
+		data.ServiceAccountID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, workspaceServiceAccountResourceIDPartCount, false)
 }

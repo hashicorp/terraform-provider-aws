@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisvideo/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,9 +37,13 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(`stream/`+rName+`/\d+$`)), // TODO: Last component is Unix timestamp of `creation_time`
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", "alias/aws/kinesisvideo"),
+					resource.TestCheckResourceAttr(resourceName, "media_type", ""),
 				),
 			},
 			{
@@ -55,9 +60,9 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 	var stream awstypes.StreamInfo
 	resourceName := "aws_kinesis_video_stream.test"
 	kmsResourceName := "aws_kms_key.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	deviceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	deviceNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KinesisVideoEndpointID) },
@@ -66,22 +71,22 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_options(rName1, rName2, "video/h264"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccStreamConfig_options(rName, deviceName, "video/h264"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(`stream/`+rName+`/\d+$`)), // TODO: Last component is Unix timestamp of `creation_time`
+					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h264"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, deviceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccStreamConfig_options(rName1, rName3, "video/h120"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccStreamConfig_options(rName, deviceNameUpdated, "video/h120"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h120"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, deviceNameUpdated),
 				),
 			},
 			{
@@ -109,7 +114,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 				Config: testAccStreamConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -117,7 +122,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 				Config: testAccStreamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -131,7 +136,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 				Config: testAccStreamConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -218,13 +223,8 @@ resource "aws_kinesis_video_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_options(rName1, rName2, mediaType string) string {
+func testAccStreamConfig_options(rName, deviceName, mediaType string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
 resource "aws_kinesis_video_stream" "test" {
   name = %[1]q
 
@@ -233,7 +233,12 @@ resource "aws_kinesis_video_stream" "test" {
   kms_key_id              = aws_kms_key.test.id
   media_type              = %[3]q
 }
-`, rName1, rName2, mediaType)
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName, deviceName, mediaType)
 }
 
 func testAccStreamConfig_tags1(rName, tagKey1, tagValue1 string) string {

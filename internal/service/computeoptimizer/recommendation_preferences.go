@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Recommendation Preferences")
+// @FrameworkResource("aws_computeoptimizer_recommendation_preferences", name="Recommendation Preferences")
 func newRecommendationPreferencesResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &recommendationPreferencesResource{}
 
@@ -45,10 +45,6 @@ func newRecommendationPreferencesResource(context.Context) (resource.ResourceWit
 type recommendationPreferencesResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*recommendationPreferencesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_computeoptimizer_recommendation_preferences"
 }
 
 func (r *recommendationPreferencesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -220,7 +216,12 @@ func (r *recommendationPreferencesResource) Create(ctx context.Context, request 
 	}
 
 	// Set values for unknowns.
-	data.setID(ctx)
+	id, err := data.setID(ctx)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Compute Optimizer Recommendation Preferences (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	// Read the resource to get other Computed attribute values.
 	scope := fwdiag.Must(data.Scope.ToPtr(ctx))
@@ -439,9 +440,15 @@ func (m *recommendationPreferencesResourceModel) InitFromID(ctx context.Context)
 	return nil
 }
 
-func (m *recommendationPreferencesResourceModel) setID(ctx context.Context) {
+func (m *recommendationPreferencesResourceModel) setID(ctx context.Context) (string, error) {
 	scope := fwdiag.Must(m.Scope.ToPtr(ctx))
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString()}, recommendationPreferencesResourceIDPartCount, false)))
+	parts := []string{
+		m.ResourceType.ValueString(),
+		scope.Name.ValueString(),
+		scope.Value.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, recommendationPreferencesResourceIDPartCount, false)
 }
 
 type externalMetricsPreferenceModel struct {

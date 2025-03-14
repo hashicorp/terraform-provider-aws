@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,17 +39,7 @@ func resourceAccountPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy_document": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validAccountPolicyDocument,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"policy_document": sdkv2.JSONDocumentSchemaRequired(),
 			"policy_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -58,13 +49,13 @@ func resourceAccountPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.PolicyType](),
+				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
 			},
 			names.AttrScope: {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          types.ScopeAll,
-				ValidateDiagFunc: enum.Validate[types.Scope](),
+				Default:          awstypes.ScopeAll,
+				ValidateDiagFunc: enum.Validate[awstypes.Scope](),
 			},
 			"selection_criteria": {
 				Type:     schema.TypeString,
@@ -88,8 +79,8 @@ func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	input := &cloudwatchlogs.PutAccountPolicyInput{
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
-		PolicyType:     types.PolicyType(d.Get("policy_type").(string)),
-		Scope:          types.Scope(d.Get(names.AttrScope).(string)),
+		PolicyType:     awstypes.PolicyType(d.Get("policy_type").(string)),
+		Scope:          awstypes.Scope(d.Get(names.AttrScope).(string)),
 	}
 
 	if v, ok := d.GetOk("selection_criteria"); ok {
@@ -99,7 +90,7 @@ func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.PutAccountPolicy(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Account Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Account Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.AccountPolicy.PolicyName))
@@ -111,7 +102,7 @@ func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	output, err := findAccountPolicyByTwoPartKey(ctx, conn, types.PolicyType(d.Get("policy_type").(string)), d.Id())
+	output, err := findAccountPolicyByTwoPartKey(ctx, conn, awstypes.PolicyType(d.Get("policy_type").(string)), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Account Policy (%s) not found, removing from state", d.Id())
@@ -149,10 +140,10 @@ func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Account Policy: %s", d.Id())
 	_, err := conn.DeleteAccountPolicy(ctx, &cloudwatchlogs.DeleteAccountPolicyInput{
 		PolicyName: aws.String(d.Id()),
-		PolicyType: types.PolicyType(d.Get("policy_type").(string)),
+		PolicyType: awstypes.PolicyType(d.Get("policy_type").(string)),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -178,15 +169,48 @@ func resourceAccountPolicyImport(d *schema.ResourceData, meta interface{}) ([]*s
 	return []*schema.ResourceData{d}, nil
 }
 
-func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, policyType types.PolicyType, policyName string) (*types.AccountPolicy, error) {
-	input := &cloudwatchlogs.DescribeAccountPoliciesInput{
+func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, policyType awstypes.PolicyType, policyName string) (*awstypes.AccountPolicy, error) {
+	input := cloudwatchlogs.DescribeAccountPoliciesInput{
 		PolicyName: aws.String(policyName),
 		PolicyType: policyType,
 	}
+	output, err := findAccountPolicy(ctx, conn, &input)
 
-	output, err := conn.DescribeAccountPolicies(ctx, input)
+	if err != nil {
+		return nil, err
+	}
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if output.PolicyDocument == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, err
+}
+
+func findAccountPolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeAccountPoliciesInput) (*awstypes.AccountPolicy, error) {
+	output, err := findAccountPolicies(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAccountPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeAccountPoliciesInput) ([]awstypes.AccountPolicy, error) {
+	var output []awstypes.AccountPolicy
+
+	err := describeAccountPoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeAccountPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.AccountPolicies...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -197,9 +221,5 @@ func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Cli
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.AccountPolicies)
+	return output, nil
 }

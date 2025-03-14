@@ -46,9 +46,9 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
-					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserName),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPassword),
 				),
@@ -60,9 +60,9 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 					testAccCheckDirectoryConfigNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
-					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPasswordUpdated),
 				),
@@ -127,7 +127,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN1),
 				),
 			},
@@ -136,7 +136,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.1", orgUnitDN2),
 				),
@@ -146,7 +146,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN2),
 				),
 			},
@@ -162,7 +162,8 @@ func testAccCheckDirectoryConfigExists(ctx context.Context, resourceName string,
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-		resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}})
+		input := appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}}
+		resp, err := conn.DescribeDirectoryConfigs(ctx, &input)
 
 		if err != nil {
 			return err
@@ -187,7 +188,8 @@ func testAccCheckDirectoryConfigDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}})
+			input := appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}}
+			resp, err := conn.DescribeDirectoryConfigs(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

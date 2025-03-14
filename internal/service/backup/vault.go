@@ -16,9 +16,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,7 +31,9 @@ import (
 
 // @SDKResource("aws_backup_vault", name="Vault")
 // @Tags(identifierAttribute="arn")
-func ResourceVault() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
+// @Testing(importIgnore="force_destroy")
+func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
 		ReadWithoutTimeout:   resourceVaultRead,
@@ -77,8 +81,6 @@ func ResourceVault() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -111,7 +113,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := findVaultByName(ctx, conn, d.Id())
+	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault (%s) not found, removing from state", d.Id())
@@ -150,7 +152,6 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		var errs []error
 
 		pages := backup.NewListRecoveryPointsByBackupVaultPaginator(conn, input)
-
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 
@@ -166,18 +167,19 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 				recoveryPointARN := aws.ToString(v.RecoveryPointArn)
 
 				log.Printf("[DEBUG] Deleting Backup Vault recovery point: %s", recoveryPointARN)
-				_, err := conn.DeleteRecoveryPoint(ctx, &backup.DeleteRecoveryPointInput{
+				input := backup.DeleteRecoveryPointInput{
 					BackupVaultName:  aws.String(d.Id()),
 					RecoveryPointArn: aws.String(recoveryPointARN),
-				})
+				}
+				_, err := conn.DeleteRecoveryPoint(ctx, &input)
 
 				if err != nil {
-					errs = append(errs, fmt.Errorf("deleting recovery point (%s): %w", recoveryPointARN, err))
+					errs = append(errs, fmt.Errorf("deleting Backup Vault recovery point (%s): %w", recoveryPointARN, err))
 					continue
 				}
 
 				if _, err := waitRecoveryPointDeleted(ctx, conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-					errs = append(errs, fmt.Errorf("waiting for recovery point (%s) delete: %w", recoveryPointARN, err))
+					errs = append(errs, fmt.Errorf("waiting for Backup Vault recovery point (%s) delete: %w", recoveryPointARN, err))
 					continue
 				}
 			}
@@ -185,9 +187,10 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
-	_, err := conn.DeleteBackupVault(ctx, &backup.DeleteBackupVaultInput{
+	input := backup.DeleteBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVault(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return diags
@@ -198,4 +201,118 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) { // nosemgrep:ci.backup-in-func-name
+	output, err := findVaultByName(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.VaultType != awstypes.VaultTypeBackupVault && output.VaultType != "" {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output, nil
+}
+
+func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
+	input := &backup.DescribeBackupVaultInput{
+		BackupVaultName: aws.String(name),
+	}
+
+	output, err := findVault(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeBackupVaultInput) (*backup.DescribeBackupVaultOutput, error) {
+	output, err := conn.DescribeBackupVault(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findRecoveryPointByTwoPartKey(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) (*backup.DescribeRecoveryPointOutput, error) {
+	input := &backup.DescribeRecoveryPointInput{
+		BackupVaultName:  aws.String(backupVaultName),
+		RecoveryPointArn: aws.String(recoveryPointARN),
+	}
+
+	return findRecoveryPoint(ctx, conn, input)
+}
+
+func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.DescribeRecoveryPointInput) (*backup.DescribeRecoveryPointOutput, error) {
+	output, err := conn.DescribeRecoveryPoint(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RecoveryPointStatusDeleting),
+		Target:  []string{},
+		Refresh: statusRecoveryPoint(ctx, conn, backupVaultName, recoveryPointARN),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*backup.DescribeRecoveryPointOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
 }

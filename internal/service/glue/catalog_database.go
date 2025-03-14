@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,7 +38,6 @@ func ResourceCatalogDatabase() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -155,7 +153,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	name := d.Get(names.AttrName).(string)
 
 	dbInput := &awstypes.DatabaseInput{
@@ -273,10 +271,10 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 
 	database := out.Database
 	databaseArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("database/%s", aws.ToString(database.Name)),
 	}.String()
 	d.Set(names.AttrARN, databaseArn)
@@ -454,7 +452,7 @@ func expandDatabasePrincipalPermission(tfMap map[string]interface{}) awstypes.Pr
 		apiObject.Permissions = flex.ExpandStringyValueSet[awstypes.Permission](v)
 	}
 
-	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
 	}
 

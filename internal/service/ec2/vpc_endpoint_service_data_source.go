@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,6 +65,15 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"private_dns_names": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			names.AttrRegion: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"service": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -78,6 +88,11 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"service"},
+			},
+			"service_regions": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 			"service_type": {
 				Type:             schema.TypeString,
@@ -99,10 +114,10 @@ func dataSourceVPCEndpointService() *schema.Resource {
 	}
 }
 
-func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
 		Filters: newAttributeFilterList(
@@ -117,16 +132,20 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk(names.AttrServiceName); ok {
 		serviceName = v.(string)
 	} else if v, ok := d.GetOk("service"); ok {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region, v.(string))
+		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region(ctx), v.(string))
 	}
 
 	if serviceName != "" {
 		input.ServiceNames = []string{serviceName}
 	}
 
+	if v, ok := d.GetOk("service_regions"); ok {
+		input.ServiceRegions = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]interface{}))))...)
+			Tags(tftags.New(ctx, v.(map[string]any))))...)
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -169,15 +188,16 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	sd := serviceDetails[0]
 	serviceID := aws.ToString(sd.ServiceId)
 	serviceName = aws.ToString(sd.ServiceName)
+	serviceRegion := aws.ToString(sd.ServiceRegion)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(serviceName)))
 
 	d.Set("acceptance_required", sd.AcceptanceRequired)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    serviceRegion,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -187,6 +207,14 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+	d.Set(names.AttrRegion, serviceRegion)
+
+	privateDnsNames := make([]string, len(sd.PrivateDnsNames))
+	for i, privateDnsDetail := range sd.PrivateDnsNames {
+		privateDnsNames[i] = aws.ToString(privateDnsDetail.PrivateDnsName)
+	}
+	d.Set("private_dns_names", privateDnsNames)
+
 	d.Set("service_id", serviceID)
 	d.Set(names.AttrServiceName, serviceName)
 	if len(sd.ServiceType) > 0 {

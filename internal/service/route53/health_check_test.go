@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -33,15 +34,15 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_basic(acctest.Ct2, true),
+				Config: testAccHealthCheckConfig_basic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("healthcheck/.+")),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
-					resource.TestCheckResourceAttr(resourceName, "failure_threshold", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "2"),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -76,7 +77,7 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 				Config: testAccHealthCheckConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -89,7 +90,7 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 				Config: testAccHealthCheckConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -98,7 +99,7 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 				Config: testAccHealthCheckConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -174,16 +175,16 @@ func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 	resourceName := "aws_route53_health_check.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.StandardPartitionID) }, // GovCloud has 2 regions, test requires 3
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // GovCloud has 2 regions, test requires 3
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_regions(names.USWest2RegionID, names.USEast1RegionID, names.EUWest1RegionID),
+				Config: testAccHealthCheckConfig_regions(endpoints.UsWest2RegionID, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "3"),
 				),
 			},
 			{
@@ -282,6 +283,46 @@ func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53HealthCheck_triggers(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	resourceName := "aws_route53_health_check.test"
+	alarmResourceName := "aws_cloudwatch_metric_alarm.test"
+	threshold := "80"
+	thresholdUpdated := "90"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHealthCheckConfig_triggers(threshold),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_alarm_name", alarmResourceName, "alarm_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "triggers.threshold", alarmResourceName, "threshold"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrTriggers},
+			},
+			{
+				Config: testAccHealthCheckConfig_triggers(thresholdUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_alarm_name", alarmResourceName, "alarm_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "triggers.threshold", alarmResourceName, "threshold"),
+				),
 			},
 		},
 	})
@@ -412,7 +453,7 @@ func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_basic(acctest.Ct2, true),
+				Config: testAccHealthCheckConfig_basic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceHealthCheck(), resourceName),
@@ -603,6 +644,35 @@ resource "aws_route53_health_check" "test" {
   insufficient_data_health_status = "Healthy"
 }
 `
+
+func testAccHealthCheckConfig_triggers(threshold string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = "cloudwatch-healthcheck-alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = %[1]q
+  alarm_description   = "This metric monitors ec2 cpu utilization"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_route53_health_check" "test" {
+  type                            = "CLOUDWATCH_METRIC"
+  cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
+  cloudwatch_alarm_region         = data.aws_region.current.name
+  insufficient_data_health_status = "Healthy"
+
+  triggers = {
+    threshold = aws_cloudwatch_metric_alarm.test.threshold
+  }
+}
+`, threshold)
+}
 
 func testAccHealthCheckConfig_searchString(search string, invert bool) string {
 	return fmt.Sprintf(`

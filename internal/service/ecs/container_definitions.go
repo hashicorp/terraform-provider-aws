@@ -4,14 +4,16 @@
 package ecs
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	_ "github.com/aws/aws-sdk-go-v2/service/ecs" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -145,8 +147,8 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 
 func (cd containerDefinitions) orderEnvironmentVariables() {
 	for i, def := range cd {
-		sort.Slice(def.Environment, func(i, j int) bool {
-			return aws.ToString(def.Environment[i].Name) < aws.ToString(def.Environment[j].Name)
+		slices.SortFunc(def.Environment, func(a, b awstypes.KeyValuePair) int {
+			return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 		})
 		cd[i].Environment = def.Environment
 	}
@@ -154,16 +156,16 @@ func (cd containerDefinitions) orderEnvironmentVariables() {
 
 func (cd containerDefinitions) orderSecrets() {
 	for i, def := range cd {
-		sort.Slice(def.Secrets, func(i, j int) bool {
-			return aws.ToString(def.Secrets[i].Name) < aws.ToString(def.Secrets[j].Name)
+		slices.SortFunc(def.Secrets, func(a, b awstypes.Secret) int {
+			return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 		})
 		cd[i].Secrets = def.Secrets
 	}
 }
 
 func (cd containerDefinitions) orderContainers() {
-	sort.Slice(cd, func(i, j int) bool {
-		return aws.ToString(cd[i].Name) < aws.ToString(cd[j].Name)
+	slices.SortFunc(cd, func(a, b awstypes.ContainerDefinition) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 	})
 }
 
@@ -222,9 +224,26 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 		if itypes.IsZero(&apiObject) {
 			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
 		}
+		if !isValidVersionConsistency(apiObject) {
+			return nil, fmt.Errorf("invalid version consistency value (%[1]s) for container definition supplied at index (%[2]d)", apiObject.VersionConsistency, i)
+		}
 	}
 
 	containerDefinitions(apiObjects).compactArrays()
 
 	return apiObjects, nil
+}
+
+func isValidVersionConsistency(cd awstypes.ContainerDefinition) bool {
+	if cd.VersionConsistency == "" {
+		return true
+	}
+
+	for _, v := range enum.EnumValues[awstypes.VersionConsistency]() {
+		if cd.VersionConsistency == v {
+			return true
+		}
+	}
+
+	return false
 }

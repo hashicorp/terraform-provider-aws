@@ -84,6 +84,38 @@ func resourceFeatureGroup() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FeatureType](),
 						},
+						"collection_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vector_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dimension": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(1, 8192),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"collection_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CollectionType](),
+						},
 					},
 				},
 			},
@@ -251,9 +283,33 @@ func resourceFeatureGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"throughput_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"throughput_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
+						},
+						"provisioned_read_capacity_units": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 10000000),
+						},
+						"provisioned_write_capacity_units": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 10000000),
+						},
+					},
+				},
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -283,7 +339,11 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
+	if v, ok := d.GetOk("throughput_config"); ok {
+		input.ThroughputConfig = expandThroughputConfig(v.([]interface{}))
+	}
+
+	log.Printf("[DEBUG] SageMaker AI Feature Group create config: %#v", *input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateFeatureGroup(ctx, input)
 		if err != nil {
@@ -303,13 +363,13 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Feature Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Feature Group: %s", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitFeatureGroupCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
@@ -322,13 +382,13 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := findFeatureGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Feature Group (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Feature Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("feature_group_name", output.FeatureGroupName)
@@ -339,15 +399,19 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, output.FeatureGroupArn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("online_store_config", flattenFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting online_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting online_store_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("offline_store_config", flattenFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("throughput_config", flattenThroughputConfig(output.ThroughputConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting throughput_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -366,10 +430,18 @@ func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfigUpdate(d.Get("online_store_config").([]interface{}))
 		}
 
+		if d.HasChange("throughput_config") {
+			input.ThroughputConfig = expandThroughputConfigUpdate(d.Get("throughput_config").([]interface{}))
+		}
+
 		_, err := conn.UpdateFeatureGroup(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Feature Group (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitFeatureGroupUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -388,11 +460,11 @@ func resourceFeatureGroupDelete(ctx context.Context, d *schema.ResourceData, met
 		if errs.IsA[*awstypes.ResourceNotFound](err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Feature Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFeatureGroupDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -434,10 +506,48 @@ func expandFeatureGroupFeatureDefinition(l []interface{}) []awstypes.FeatureDefi
 			FeatureType: awstypes.FeatureType(data["feature_type"].(string)),
 		}
 
+		if v, ok := data["collection_config"].([]interface{}); ok && len(v) > 0 {
+			featureDef.CollectionConfig = expandCollectionConfig(v)
+		}
+
+		if v, ok := data["collection_type"].(string); ok && v != "" {
+			featureDef.CollectionType = awstypes.CollectionType(v)
+		}
+
 		featureDefs = append(featureDefs, featureDef)
 	}
 
 	return featureDefs
+}
+
+func expandCollectionConfig(l []interface{}) *awstypes.CollectionConfigMemberVectorConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	vectorConfig := expandVectorConfig(m["vector_config"].([]interface{}))
+
+	config := &awstypes.CollectionConfigMemberVectorConfig{
+		Value: *vectorConfig,
+	}
+
+	return config
+}
+
+func expandVectorConfig(l []interface{}) *awstypes.VectorConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.VectorConfig{
+		Dimension: aws.Int32(int32(m["dimension"].(int))),
+	}
+
+	return config
 }
 
 func flattenFeatureGroupFeatureDefinition(config []awstypes.FeatureDefinition) []map[string]interface{} {
@@ -449,9 +559,41 @@ func flattenFeatureGroupFeatureDefinition(config []awstypes.FeatureDefinition) [
 			"feature_type": i.FeatureType,
 		}
 
+		if i.CollectionConfig != nil {
+			feature["collection_config"] = flattenCollectionConfig(i.CollectionConfig.(*awstypes.CollectionConfigMemberVectorConfig))
+		}
+
+		if i.CollectionType != "" {
+			feature["collection_type"] = i.CollectionType
+		}
+
 		features = append(features, feature)
 	}
 	return features
+}
+
+func flattenCollectionConfig(config *awstypes.CollectionConfigMemberVectorConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"vector_config": flattenVectorConfig(&config.Value),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenVectorConfig(config *awstypes.VectorConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"dimension": aws.ToInt32(config.Dimension),
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func expandFeatureGroupOnlineStoreConfig(l []interface{}) *awstypes.OnlineStoreConfig {
@@ -690,4 +832,70 @@ func expandFeatureGroupOnlineStoreConfigUpdate(l []interface{}) *awstypes.Online
 	}
 
 	return config
+}
+
+func expandThroughputConfig(l []interface{}) *awstypes.ThroughputConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.ThroughputConfig{
+		ThroughputMode: awstypes.ThroughputMode(m["throughput_mode"].(string)),
+	}
+
+	if config.ThroughputMode == awstypes.ThroughputModeProvisioned {
+		if v, ok := m["provisioned_read_capacity_units"].(int); ok {
+			config.ProvisionedReadCapacityUnits = aws.Int32(int32(v))
+		}
+
+		if v, ok := m["provisioned_write_capacity_units"].(int); ok {
+			config.ProvisionedWriteCapacityUnits = aws.Int32(int32(v))
+		}
+	}
+
+	return config
+}
+
+func expandThroughputConfigUpdate(l []interface{}) *awstypes.ThroughputConfigUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.ThroughputConfigUpdate{
+		ThroughputMode: awstypes.ThroughputMode(m["throughput_mode"].(string)),
+	}
+
+	if v, ok := m["provisioned_read_capacity_units"].(int); ok {
+		config.ProvisionedReadCapacityUnits = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["provisioned_write_capacity_units"].(int); ok {
+		config.ProvisionedWriteCapacityUnits = aws.Int32(int32(v))
+	}
+
+	return config
+}
+
+func flattenThroughputConfig(config *awstypes.ThroughputConfigDescription) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"throughput_mode": config.ThroughputMode,
+	}
+
+	if config.ProvisionedReadCapacityUnits != nil {
+		m["provisioned_read_capacity_units"] = aws.ToInt32(config.ProvisionedReadCapacityUnits)
+	}
+
+	if config.ProvisionedWriteCapacityUnits != nil {
+		m["provisioned_write_capacity_units"] = aws.ToInt32(config.ProvisionedWriteCapacityUnits)
+	}
+
+	return []map[string]interface{}{m}
 }

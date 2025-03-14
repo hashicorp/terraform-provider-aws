@@ -7,8 +7,9 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -55,13 +56,13 @@ func main() {
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].HumanFriendly < td.Services[j].HumanFriendly
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.HumanFriendly, b.HumanFriendly)
 	})
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("allowsubcats", tmpl, td); err != nil {
+	if err := d.BufferTemplate("allowsubcats", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

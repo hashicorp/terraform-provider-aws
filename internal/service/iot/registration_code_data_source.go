@@ -39,7 +39,7 @@ func dataSourceRegistrationCodeRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IoT Registration Code: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("registration_code", output.RegistrationCode)
 
 	return diags

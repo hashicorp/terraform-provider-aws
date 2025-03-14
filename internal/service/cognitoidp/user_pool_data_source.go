@@ -20,16 +20,13 @@ import (
 
 // @FrameworkDataSource("aws_cognito_user_pool", name="User Pool")
 // @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &userPoolDataSource{}, nil
 }
 
 type userPoolDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*userPoolDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_cognito_user_pool"
 }
 
 func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -162,7 +159,12 @@ func (d *userPoolDataSource) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	data.ID = data.UserPoolID
-	data.Tags = data.UserPoolTags
+
+	// Cannot use Transparent Tagging because of UserPoolTags
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
+	tags := KeyValueTags(ctx, output.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	data.UserPoolTags = data.Tags
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

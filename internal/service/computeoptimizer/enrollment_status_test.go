@@ -38,7 +38,7 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 					testAccCheckEnrollmentStatusExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "number_of_member_accounts_opted_in", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "number_of_member_accounts_opted_in", "0"),
 				),
 			},
 			{
@@ -52,7 +52,7 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 					testAccCheckEnrollmentStatusExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "number_of_member_accounts_opted_in", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "number_of_member_accounts_opted_in", "0"),
 				),
 			},
 		},

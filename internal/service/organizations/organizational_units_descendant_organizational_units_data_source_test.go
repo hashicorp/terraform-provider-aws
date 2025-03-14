@@ -32,8 +32,8 @@ func testOrganizationalUnitDescendantOUsDataSource_basic(t *testing.T) {
 				Config: testOrganizationalUnitDescendantOusDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(topOUDataSourceName, "children.#", 2),
-					resource.TestCheckResourceAttr(newOU1DataSourceName, "children.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(newOU2DataSourceName, "children.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(newOU1DataSourceName, "children.#", "1"),
+					resource.TestCheckResourceAttr(newOU2DataSourceName, "children.#", "0"),
 				),
 			},
 		},

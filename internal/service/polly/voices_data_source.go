@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Voices")
+// @FrameworkDataSource("aws_polly_voices", name="Voices")
 func newDataSourceVoices(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVoices{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type dataSourceVoices struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceVoices) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_polly_voices"
 }
 
 func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -95,7 +91,7 @@ func (d *dataSourceVoices) Read(ctx context.Context, req datasource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().AccountID)
+	data.ID = types.StringValue(d.Meta().AccountID(ctx))
 
 	input := &polly.DescribeVoicesInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)

@@ -57,10 +57,10 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	for _, v := range output {
 		userPoolID := aws.ToString(v.Id)
 		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "cognito-idp",
-			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: meta.(*conns.AWSClient).AccountID,
+			Region:    meta.(*conns.AWSClient).Region(ctx),
+			AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 			Resource:  "userpool/" + userPoolID,
 		}.String()
 

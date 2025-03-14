@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,10 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,8 +102,6 @@ func resourceParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -226,7 +223,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func addDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, name string, parameters []awstypes.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
-	for _, chunk := range tfslices.Chunks(parameters, dbParameterGroupMaxParamsBulkEdit) {
+	for chunk := range slices.Chunk(parameters, dbParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ModifyDBParameterGroupInput{
 			DBParameterGroupName: aws.String(name),
 			Parameters:           chunk,
@@ -243,7 +240,7 @@ func addDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, na
 }
 
 func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, name string, parameters []awstypes.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
-	for _, chunk := range tfslices.Chunks(parameters, dbParameterGroupMaxParamsBulkEdit) {
+	for chunk := range slices.Chunk(parameters, dbParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ResetDBParameterGroupInput{
 			DBParameterGroupName: aws.String(name),
 			Parameters:           chunk,

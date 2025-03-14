@@ -122,6 +122,11 @@ func TestAccMediaLiveChannel_captionDescriptions(t *testing.T) {
 						names.AttrName:          "test-caption-name",
 						"destination_settings.0.dvb_sub_destination_settings.0.font_resolution": "100",
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.caption_descriptions.*", map[string]string{
+						"caption_selector_name": "test-caption-selector-teletext",
+						names.AttrName:          "test-caption-name-teletext",
+						"destination_settings.0.teletext_destination_settings.0": "",
+					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
 						names.AttrName: "test-video-name",
 					}),
@@ -192,7 +197,7 @@ func TestAccMediaLiveChannel_M2TS_settings(t *testing.T) {
 						"arib_captions_pid_control": "AUTO",
 						"video_pid":                 "101",
 						"fragment_time":             "1.92",
-						"program_num":               acctest.Ct1,
+						"program_num":               "1",
 						"segmentation_time":         "1.92",
 					}),
 				),
@@ -451,29 +456,29 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h264Settings(t *tes
 						"flicker_aq":              "ENABLED",
 						"force_field_pictures":    "DISABLED",
 						"framerate_control":       "SPECIFIED",
-						"framerate_denominator":   acctest.Ct1,
+						"framerate_denominator":   "1",
 						"framerate_numerator":     "50",
 						"gop_b_reference":         "DISABLED",
-						"gop_closed_cadence":      acctest.Ct1,
-						"gop_num_b_frames":        acctest.Ct1,
+						"gop_closed_cadence":      "1",
+						"gop_num_b_frames":        "1",
 						"gop_size":                "1.92",
 						"gop_size_units":          "SECONDS",
 						"level":                   "H264_LEVEL_AUTO",
 						"look_ahead_rate_control": "HIGH",
-						"max_bitrate":             acctest.Ct0,
-						"min_i_interval":          acctest.Ct0,
-						"num_ref_frames":          acctest.Ct3,
+						"max_bitrate":             "0",
+						"min_i_interval":          "0",
+						"num_ref_frames":          "3",
 						"par_control":             "INITIALIZE_FROM_SOURCE",
-						"par_denominator":         acctest.Ct0,
-						"par_numerator":           acctest.Ct0,
+						"par_denominator":         "0",
+						"par_numerator":           "0",
 						names.AttrProfile:         "HIGH",
 						"quality_level":           "",
-						"qvbr_quality_level":      acctest.Ct0,
+						"qvbr_quality_level":      "0",
 						"rate_control_mode":       "CBR",
 						"scan_type":               "PROGRESSIVE",
 						"scene_change_detect":     "DISABLED",
-						"slices":                  acctest.Ct1,
-						"spatial_aq":              acctest.Ct0,
+						"slices":                  "1",
+						"spatial_aq":              "0",
 						"subgop_length":           "FIXED",
 						"syntax":                  "DEFAULT",
 						"temporal_aq":             "ENABLED",
@@ -542,27 +547,34 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h265Settings(t *tes
 						"width":            "1280",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.*", map[string]string{
-						"adaptive_quantization":   "LOW",
-						"afd_signaling":           "FIXED",
-						"bitrate":                 "5400000",
-						"buf_size":                "20000000",
-						"color_metadata":          "IGNORE",
-						"fixed_afd":               "AFD_0000",
-						"flicker_aq":              "ENABLED",
-						"framerate_denominator":   acctest.Ct1,
-						"framerate_numerator":     "50",
-						"gop_closed_cadence":      acctest.Ct1,
-						"gop_size":                "1.92",
-						"gop_size_units":          "SECONDS",
-						"level":                   "H265_LEVEL_AUTO",
-						"look_ahead_rate_control": "HIGH",
-						"min_i_interval":          "6",
-						names.AttrProfile:         "MAIN_10BIT",
-						"rate_control_mode":       "CBR",
-						"scan_type":               "PROGRESSIVE",
-						"scene_change_detect":     "ENABLED",
-						"slices":                  acctest.Ct2,
-						"tier":                    "HIGH",
+						"adaptive_quantization":      "LOW",
+						"afd_signaling":              "FIXED",
+						"bitrate":                    "5400000",
+						"buf_size":                   "20000000",
+						"color_metadata":             "IGNORE",
+						"fixed_afd":                  "AFD_0000",
+						"flicker_aq":                 "ENABLED",
+						"framerate_denominator":      "1",
+						"framerate_numerator":        "50",
+						"gop_closed_cadence":         "1",
+						"gop_size":                   "1.92",
+						"gop_size_units":             "SECONDS",
+						"level":                      "H265_LEVEL_AUTO",
+						"look_ahead_rate_control":    "HIGH",
+						"min_i_interval":             "6",
+						"min_qp":                     "0",
+						"mv_over_picture_boundaries": "ENABLED",
+						"mv_temporal_predictor":      "ENABLED",
+						names.AttrProfile:            "MAIN_10BIT",
+						"rate_control_mode":          "CBR",
+						"scan_type":                  "PROGRESSIVE",
+						"scene_change_detect":        "ENABLED",
+						"slices":                     "2",
+						"tier":                       "HIGH",
+						"tile_height":                "64",
+						"tile_padding":               "PADDED",
+						"tile_width":                 "256",
+						"treeblock_size":             "AUTO",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.0.color_space_settings.0.hdr10_settings.*", map[string]string{
 						"max_cll":  "16",
@@ -1646,11 +1658,14 @@ resource "aws_medialive_channel" "test" {
           afd_signaling = "FIXED"
           fixed_afd     = "AFD_0000"
 
-          gop_closed_cadence = 1
-          gop_size           = 1.92
-          gop_size_units     = "SECONDS"
-          min_i_interval     = 6
-          scan_type          = "PROGRESSIVE"
+          gop_closed_cadence         = 1
+          gop_size                   = 1.92
+          gop_size_units             = "SECONDS"
+          min_i_interval             = 6
+          min_qp                     = 0
+          mv_over_picture_boundaries = "ENABLED"
+          mv_temporal_predictor      = "ENABLED"
+          scan_type                  = "PROGRESSIVE"
 
           level                   = "H265_LEVEL_AUTO"
           look_ahead_rate_control = "HIGH"
@@ -1661,6 +1676,11 @@ resource "aws_medialive_channel" "test" {
 
           slices = 2
           tier   = "HIGH"
+
+          tile_height  = 64
+          tile_padding = "PADDED"
+          tile_width   = 256
+
 
           timecode_insertion = "DISABLED"
 
@@ -1683,6 +1703,8 @@ resource "aws_medialive_channel" "test" {
             timecode_burnin_position  = "BOTTOM_CENTER"
             prefix                    = "terraform-test"
           }
+
+          treeblock_size = "AUTO"
         }
       }
     }
@@ -1903,6 +1925,15 @@ resource "aws_medialive_channel" "test" {
         name = %[1]q
       }
 
+      caption_selector {
+        name = "test-caption-selector-teletext"
+        selector_settings {
+          teletext_source_settings {
+            page_number = "100"
+          }
+        }
+      }
+
       audio_selector {
         name = "test-audio-selector"
       }
@@ -1947,6 +1978,15 @@ resource "aws_medialive_channel" "test" {
       }
     }
 
+    caption_descriptions {
+      name                  = "test-caption-name-teletext"
+      caption_selector_name = "test-caption-selector-teletext"
+
+      destination_settings {
+        teletext_destination_settings {}
+      }
+    }
+
     output_groups {
       output_group_settings {
         archive_group_settings {
@@ -1960,7 +2000,7 @@ resource "aws_medialive_channel" "test" {
         output_name               = "test-output-name"
         video_description_name    = "test-video-name"
         audio_description_names   = ["test-audio-name"]
-        caption_description_names = ["test-caption-name"]
+        caption_description_names = ["test-caption-name", "test-caption-name-teletext"]
         output_settings {
           archive_output_settings {
             name_modifier = "_1"

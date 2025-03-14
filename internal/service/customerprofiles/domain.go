@@ -5,7 +5,6 @@ package customerprofiles
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,11 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_customerprofiles_domain")
+// @SDKResource("aws_customerprofiles_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
@@ -201,8 +199,6 @@ func ResourceDomain() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -313,7 +309,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Customer Profiles Domain: (%s) %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
@@ -370,9 +366,10 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
-	_, err := conn.DeleteDomain(ctx, &customerprofiles.DeleteDomainInput{
+	input := customerprofiles.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDomain(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -910,6 +907,6 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 
 // CreateDomainOutput does not have an ARN attribute which is needed for Tagging, therefore we construct it.
 // https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonconnectcustomerprofiles.html#amazonconnectcustomerprofiles-resources-for-iam-policies
-func buildDomainARN(conn *conns.AWSClient, domainName string) string {
-	return fmt.Sprintf("arn:%s:profile:%s:%s:domains/%s", conn.Partition, conn.Region, conn.AccountID, domainName)
+func domainARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
+	return c.RegionalARN(ctx, "profile", "domains/"+domainName) // nosemgrep:ci.literal-profile-string-constant
 }

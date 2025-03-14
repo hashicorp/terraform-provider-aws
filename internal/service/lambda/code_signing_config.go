@@ -19,12 +19,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_code_signing_config", name="Code Signing Config")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCodeSigningConfigCreate,
@@ -88,6 +91,8 @@ func resourceCodeSigningConfig() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -99,6 +104,7 @@ func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData
 	input := &lambda.CreateCodeSigningConfigInput{
 		AllowedPublishers: expandAllowedPublishers(d.Get("allowed_publishers").([]interface{})),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -153,31 +159,33 @@ func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	input := &lambda.UpdateCodeSigningConfigInput{
-		CodeSigningConfigArn: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &lambda.UpdateCodeSigningConfigInput{
+			CodeSigningConfigArn: aws.String(d.Id()),
+		}
 
-	if d.HasChange("allowed_publishers") {
-		input.AllowedPublishers = expandAllowedPublishers(d.Get("allowed_publishers").([]interface{}))
-	}
+		if d.HasChange("allowed_publishers") {
+			input.AllowedPublishers = expandAllowedPublishers(d.Get("allowed_publishers").([]interface{}))
+		}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
-	}
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
 
-	if d.HasChange("policies") {
-		if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
-			input.CodeSigningPolicies = &awstypes.CodeSigningPolicies{
-				UntrustedArtifactOnDeployment: awstypes.CodeSigningPolicy(tfMap["untrusted_artifact_on_deployment"].(string)),
+		if d.HasChange("policies") {
+			if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+				input.CodeSigningPolicies = &awstypes.CodeSigningPolicies{
+					UntrustedArtifactOnDeployment: awstypes.CodeSigningPolicy(tfMap["untrusted_artifact_on_deployment"].(string)),
+				}
 			}
 		}
-	}
 
-	_, err := conn.UpdateCodeSigningConfig(ctx, input)
+		_, err := conn.UpdateCodeSigningConfig(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Lambda Code Signing Config (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Code Signing Config (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceCodeSigningConfigRead(ctx, d, meta)...)
