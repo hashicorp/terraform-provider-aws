@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -239,6 +240,16 @@ func resourcePipeline() *schema.Resource {
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[types.ActionCategory](),
 										},
+										"commands": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 50,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 1000),
+											},
+										},
 										names.AttrConfiguration: {
 											Type:     schema.TypeMap,
 											Optional: true,
@@ -270,10 +281,39 @@ func resourcePipeline() *schema.Resource {
 												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
 											),
 										},
+										// TODO How to detect whether output_artifact or output_artifacts has changed.
+										// TODO Add a ConflictsWith.
+										// "output_artifact": {
+										// 	Type:     schema.TypeList,
+										// 	Optional: true,
+										// 	Computed: true,
+										// 	Elem: &schema.Resource{
+										// 		Schema: map[string]*schema.Schema{
+										// 			"files": {
+										// 				Type:     schema.TypeList,
+										// 				Optional: true,
+										// 				MaxItems: 10,
+										// 				Elem: &schema.Schema{
+										// 					Type:         schema.TypeString,
+										// 					ValidateFunc: validation.StringLenBetween(1, 128),
+										// 				},
+										// 			},
+										// 			names.AttrName: {
+										// 				Type:     schema.TypeString,
+										// 				Required: true,
+										// 				ValidateFunc: validation.All(
+										// 					validation.StringLenBetween(1, 100),
+										// 					validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
+										// 				),
+										// 			},
+										// 		},
+										// 	},
+										// },
 										"output_artifacts": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Elem:     &schema.Schema{Type: schema.TypeString},
+											// Computed: true,
+											Elem: &schema.Schema{Type: schema.TypeString},
 										},
 										names.AttrOwner: {
 											Type:             schema.TypeString,
@@ -1027,12 +1067,20 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
+	if v, ok := tfMap["commands"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Commands = flex.ExpandStringValueList(v)
+	}
+
 	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["input_artifacts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InputArtifacts = expandInputArtifacts(v)
+		apiObject.InputArtifacts = tfslices.ApplyToAll(flex.ExpandStringValueList(v), func(v string) types.InputArtifact {
+			return types.InputArtifact{
+				Name: aws.String(v),
+			}
+		})
 	}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -1043,8 +1091,15 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.Namespace = aws.String(v)
 	}
 
+	// if v, ok := tfMap["output_artifact"].([]interface{}); ok && len(v) > 0 {
+	// 	apiObject.OutputArtifacts = expandOutputArtifacts(v)
+	// } else
 	if v, ok := tfMap["output_artifacts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.OutputArtifacts = expandOutputArtifacts(v)
+		apiObject.OutputArtifacts = tfslices.ApplyToAll(flex.ExpandStringValueList(v), func(v string) types.OutputArtifact {
+			return types.OutputArtifact{
+				Name: aws.String(v),
+			}
+		})
 	}
 
 	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
@@ -1104,30 +1159,6 @@ func expandActionDeclarations(tfList []interface{}) []types.ActionDeclaration {
 	return apiObjects
 }
 
-func expandInputArtifacts(tfList []interface{}) []types.InputArtifact {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []types.InputArtifact
-
-	for _, v := range tfList {
-		v, ok := v.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := types.InputArtifact{
-			Name: aws.String(v),
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
 func expandOutputArtifacts(tfList []interface{}) []types.OutputArtifact {
 	if len(tfList) == 0 {
 		return nil
@@ -1135,15 +1166,19 @@ func expandOutputArtifacts(tfList []interface{}) []types.OutputArtifact {
 
 	var apiObjects []types.OutputArtifact
 
-	for _, v := range tfList {
-		v, ok := v.(string)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
 		if !ok {
 			continue
 		}
 
 		apiObject := types.OutputArtifact{
-			Name: aws.String(v),
+			Name: aws.String(tfMap[names.AttrName].(string)),
+		}
+
+		if v, ok := tfMap["files"].([]interface{}); ok && len(v) > 0 {
+			apiObject.Files = flex.ExpandStringValueList(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -1442,28 +1477,6 @@ func expandConditionRuleTypeId(tfMap map[string]interface{}) *types.RuleTypeId {
 	return apiObject
 }
 
-func expandConditionRuleInputArtifacts(tfList []interface{}) []types.InputArtifact {
-	if len(tfList) == 0 {
-		return nil
-	}
-	var apiObjects []types.InputArtifact
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := types.InputArtifact{
-			Name: aws.String(tfMap),
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-	return apiObjects
-}
-
 func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 	if tfMap == nil {
 		return nil
@@ -1490,7 +1503,11 @@ func expandConditionRule(tfMap map[string]interface{}) *types.RuleDeclaration {
 	}
 
 	if v, ok := tfMap["input_artifacts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InputArtifacts = expandConditionRuleInputArtifacts(v)
+		apiObject.InputArtifacts = tfslices.ApplyToAll(flex.ExpandStringValueList(v), func(v string) types.InputArtifact {
+			return types.InputArtifact{
+				Name: aws.String(v),
+			}
+		})
 	}
 
 	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
@@ -1739,7 +1756,9 @@ func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]interface
 	}
 
 	if v := apiObjects.InputArtifacts; v != nil {
-		tfMap["input_artifacts"] = flattenInputArtifacts(v)
+		tfMap["input_artifacts"] = tfslices.ApplyToAll(v, func(v types.InputArtifact) string {
+			return aws.ToString(v.Name)
+		})
 	}
 
 	if v := apiObjects.Region; v != nil {
@@ -1905,6 +1924,10 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 		}
 	}
 
+	if v := apiObject.Commands; len(v) > 0 {
+		tfMap["commands"] = apiObject.Commands
+	}
+
 	if v := apiObject.Configuration; v != nil {
 		// The AWS API returns "****" for the OAuthToken value. Copy the value from the configuration.
 		if actionProvider == providerGitHub {
@@ -1918,7 +1941,9 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.InputArtifacts; len(v) > 0 {
-		tfMap["input_artifacts"] = flattenInputArtifacts(v)
+		tfMap["input_artifacts"] = tfslices.ApplyToAll(v, func(v types.InputArtifact) string {
+			return aws.ToString(v.Name)
+		})
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -1930,7 +1955,10 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.OutputArtifacts; len(v) > 0 {
-		tfMap["output_artifacts"] = flattenOutputArtifacts(v)
+		// tfMap["output_artifact"] = flattenOutputArtifacts(v)
+		tfMap["output_artifacts"] = tfslices.ApplyToAll(v, func(v types.OutputArtifact) string {
+			return aws.ToString(v.Name)
+		})
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -1966,32 +1994,23 @@ func flattenActionDeclarations(d *schema.ResourceData, i int, apiObjects []types
 	return tfList
 }
 
-func flattenInputArtifacts(apiObjects []types.InputArtifact) []string {
+func flattenOutputArtifacts(apiObjects []types.OutputArtifact) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []*string
+	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, apiObject.Name)
+		tfMap := map[string]interface{}{
+			"files":        apiObject.Files,
+			names.AttrName: aws.ToString(apiObject.Name),
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
-	return aws.ToStringSlice(tfList)
-}
-
-func flattenOutputArtifacts(apiObjects []types.OutputArtifact) []string {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []*string
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, apiObject.Name)
-	}
-
-	return aws.ToStringSlice(tfList)
+	return tfList
 }
 
 func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map[string]interface{} {
