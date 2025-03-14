@@ -326,6 +326,14 @@ lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
+modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
+	@echo "make: Checking for modern Go code..."
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
+
+modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
+	@echo "make: Fixing checks for modern Go code..."
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
+
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
 		echo "make: $(GO_VER) not found" ; \
@@ -888,6 +896,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	lint-fix \
 	lint \
 	misspell \
+	modern-check \
+	modern-fix \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \

@@ -110,7 +110,7 @@ func resourceEBSSnapshot() *schema.Resource {
 	}
 }
 
-func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -129,7 +129,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateSnapshot(ctx, &input)
 		},
 		errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
@@ -141,7 +141,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId))
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			waiter := ec2.NewSnapshotCompletedWaiter(conn)
 			return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
 				SnapshotIds: []string{d.Id()},
@@ -172,7 +172,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEBSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -211,7 +211,7 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -255,12 +255,12 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEBSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
 			SnapshotId: aws.String(d.Id()),
 		})

@@ -61,7 +61,7 @@ func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 	}
 }
 
-func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -88,7 +88,7 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 	return append(diags, resourceNetworkPerformanceMetricSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -118,7 +118,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 	return diags
 }
 
-func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/YakDriver/tfproviderdocs v0.17.0
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.64.6
+	github.com/golangci/golangci-lint v1.64.7
 	github.com/hashicorp/copywrite v0.21.0
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
 	github.com/katbyte/terrafmt v0.5.5
@@ -134,7 +134,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/golangci/dupl v0.0.0-20250304045305-581e38e7914a // indirect
+	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.0 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
 	github.com/golangci/misspell v0.6.0 // indirect

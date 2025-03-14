@@ -38,7 +38,7 @@ func NewBool(v bool) Bool {
 
 // ValidateTypeStringNullableBool provides custom error messaging for TypeString booleans
 // Some arguments require a boolean value or unspecified, empty field.
-func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []error) {
+func ValidateTypeStringNullableBool(v any, k string) (ws []string, es []error) {
 	value, ok := v.(string)
 	if !ok {
 		es = append(es, fmt.Errorf("expected type of %s to be string", k))
