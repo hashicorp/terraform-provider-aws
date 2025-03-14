@@ -76,6 +76,7 @@ jobs:
 
       # Services
       - run: make TEST=./internal/service/apigateway modern-check
+      - run: make TEST=./internal/service/apigatewayv2 modern-check
       - run: make TEST=./internal/service/appmesh modern-check
       - run: make TEST=./internal/service/batch modern-check
       - run: make TEST=./internal/service/dms modern-check
