@@ -42,7 +42,7 @@ func testAccAPIGatewayKeysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "items.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.created_date", resourceName, names.AttrCreatedDate),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.description", resourceName, names.AttrDescription),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.enabled", resourceName, names.AttrEnabled),
@@ -93,7 +93,7 @@ func testAccAPIGatewayKeysDataSource_manyKeys(t *testing.T) {
 			{
 				Config: testAccAPIKeysDataSourceConfig_manyKeys(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "items.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "items.#", "3"),
 				),
 			},
 		},

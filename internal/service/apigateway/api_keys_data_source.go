@@ -33,10 +33,6 @@ type dataSourceAPIKeys struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceAPIKeys) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_api_keys"
-}
-
 func (d *dataSourceAPIKeys) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -91,7 +87,7 @@ func (d *dataSourceAPIKeys) Read(ctx context.Context, request datasource.ReadReq
 	var data dataSourceAPIKeysModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region)
+	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 
 	if response.Diagnostics.HasError() {
 		return
