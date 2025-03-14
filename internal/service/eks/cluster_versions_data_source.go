@@ -33,19 +33,16 @@ type dataSourceClusterVersions struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceClusterVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_eks_cluster_versions"
-}
-
 func (d *dataSourceClusterVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cluster_type": schema.StringAttribute{
 				Optional: true,
 			},
+			"cluster_versions": framework.DataSourceComputedListOfObjectAttribute[customDataSourceClusterVersion](ctx),
 			"cluster_versions_only": schema.ListAttribute{
-				Optional:   true,
 				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
 			},
 			"default_only": schema.BoolAttribute{
 				Optional: true,
@@ -53,11 +50,10 @@ func (d *dataSourceClusterVersions) Schema(ctx context.Context, req datasource.S
 			"include_all": schema.BoolAttribute{
 				Optional: true,
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"version_status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VersionStatus](),
 				Optional:   true,
-				CustomType: fwtypes.StringEnumType[clusterVersionAWSStatus](),
 			},
-			"cluster_versions": framework.DataSourceComputedListOfObjectAttribute[customDataSourceClusterVersion](ctx),
 		},
 	}
 }
@@ -88,11 +84,10 @@ func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.Rea
 		input.ClusterVersions = clVersions
 	}
 
-	if data.Status.String() != "" {
-		input.Status = awstypes.ClusterVersionStatus(data.Status.ValueString())
+	if data.VersionStatus.ValueString() != "" {
+		input.VersionStatus = data.VersionStatus.ValueEnum()
 	}
 
-	// TIP: -- 3. Get information about a resource from AWS
 	out, err := findClusterVersions(ctx, conn, input)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprint(names.EKS, create.ErrActionReading, DSNameClusterVersions, err), err.Error())
@@ -112,7 +107,7 @@ func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.Rea
 }
 
 func findClusterVersions(ctx context.Context, conn *eks.Client, input *eks.DescribeClusterVersionsInput) ([]awstypes.ClusterVersionInformation, error) {
-	output := make([]awstypes.ClusterVersionInformation, 0)
+	out := make([]awstypes.ClusterVersionInformation, 0)
 
 	pages := eks.NewDescribeClusterVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -121,43 +116,29 @@ func findClusterVersions(ctx context.Context, conn *eks.Client, input *eks.Descr
 			return nil, err
 		}
 
-		output = append(output, page.ClusterVersions...)
+		out = append(out, page.ClusterVersions...)
 	}
 
-	return output, nil
-}
-
-type clusterVersionAWSStatus string
-
-// Values returns all known values for ClusterVersionStatus. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (clusterVersionAWSStatus) Values() []clusterVersionAWSStatus {
-	return []clusterVersionAWSStatus{
-		"UNSUPPORTED",
-		"STANDARD_SUPPORT",
-		"EXTENDED_SUPPORT",
-	}
+	return out, nil
 }
 
 type dataSourceClusterVersionsModel struct {
 	ClusterType         types.String                                                    `tfsdk:"cluster_type"`
+	ClusterVersions     fwtypes.ListNestedObjectValueOf[customDataSourceClusterVersion] `tfsdk:"cluster_versions"`
+	ClusterVersionsOnly fwtypes.ListValueOf[types.String]                               `tfsdk:"cluster_versions_only"`
 	DefaultOnly         types.Bool                                                      `tfsdk:"default_only"`
 	IncludeAll          types.Bool                                                      `tfsdk:"include_all"`
-	ClusterVersionsOnly fwtypes.ListValueOf[types.String]                               `tfsdk:"cluster_versions_only"`
-	Status              fwtypes.StringEnum[clusterVersionAWSStatus]                     `tfsdk:"status"`
-	ClusterVersions     fwtypes.ListNestedObjectValueOf[customDataSourceClusterVersion] `tfsdk:"cluster_versions"`
+	VersionStatus       fwtypes.StringEnum[awstypes.VersionStatus]                      `tfsdk:"version_status"`
 }
 
 type customDataSourceClusterVersion struct {
-	ClusterType              types.String                                `tfsdk:"cluster_type"`
-	ClusterVersion           types.String                                `tfsdk:"cluster_version"`
-	DefaultPlatformVersion   types.String                                `tfsdk:"default_platform_version"`
-	EndOfExtendedSupportDate timetypes.RFC3339                           `tfsdk:"end_of_extended_support_date"`
-	EndOfStandardSupportDate timetypes.RFC3339                           `tfsdk:"end_of_standard_support_date"`
-	KubernetesPatchVersion   types.String                                `tfsdk:"kubernetes_patch_version"`
-	ReleaseDate              timetypes.RFC3339                           `tfsdk:"release_date"`
-	DefaultVersion           types.Bool                                  `tfsdk:"default_version"`
-	Status                   fwtypes.StringEnum[clusterVersionAWSStatus] `tfsdk:"status"`
+	ClusterType              types.String                               `tfsdk:"cluster_type"`
+	ClusterVersion           types.String                               `tfsdk:"cluster_version"`
+	DefaultPlatformVersion   types.String                               `tfsdk:"default_platform_version"`
+	DefaultVersion           types.Bool                                 `tfsdk:"default_version"`
+	EndOfExtendedSupportDate timetypes.RFC3339                          `tfsdk:"end_of_extended_support_date"`
+	EndOfStandardSupportDate timetypes.RFC3339                          `tfsdk:"end_of_standard_support_date"`
+	KubernetesPatchVersion   types.String                               `tfsdk:"kubernetes_patch_version"`
+	ReleaseDate              timetypes.RFC3339                          `tfsdk:"release_date"`
+	VersionStatus            fwtypes.StringEnum[awstypes.VersionStatus] `tfsdk:"version_status"`
 }

@@ -73,7 +73,7 @@ func TestAccEKSClusterVersionsDataSource_defaultOnly(t *testing.T) {
 	})
 }
 
-func TestAccEKSClusterVersionsDataSource_status(t *testing.T) {
+func TestAccEKSClusterVersionsDataSource_versionStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_eks_cluster_versions.test"
@@ -84,10 +84,10 @@ func TestAccEKSClusterVersionsDataSource_status(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterVersionsDataSourceConfig_status(),
+				Config: testAccClusterVersionsDataSourceConfig_versionStatus(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "cluster_versions.#", 0),
-					acctest.CheckResourceAttrContains(dataSourceName, "cluster_versions.0.status", "STANDARD_SUPPORT"),
+					acctest.CheckResourceAttrContains(dataSourceName, "cluster_versions.0.version_status", "STANDARD_SUPPORT"),
 				),
 			},
 		},
@@ -95,32 +95,31 @@ func TestAccEKSClusterVersionsDataSource_status(t *testing.T) {
 }
 
 func testAccClusterVersionsDataSourceConfig_basic() string {
-	return acctest.ConfigCompose(`
-data "aws_eks_cluster_versions" "test" {
-}
-`)
+	return `
+data "aws_eks_cluster_versions" "test" {}
+`
 }
 
 func testAccClusterVersionsDataSourceConfig_clusterType() string {
-	return acctest.ConfigCompose(`
+	return `
 data "aws_eks_cluster_versions" "test" {
   cluster_type = "eks"
 }
-`)
+`
 }
 
 func testAccClusterVersionsDataSourceConfig_defaultOnly() string {
-	return acctest.ConfigCompose(`
+	return `
 data "aws_eks_cluster_versions" "test" {
   default_only = true
 }
-`)
+`
 }
 
-func testAccClusterVersionsDataSourceConfig_status() string {
-	return acctest.ConfigCompose(`
+func testAccClusterVersionsDataSourceConfig_versionStatus() string {
+	return `
 data "aws_eks_cluster_versions" "test" {
-  status = "STANDARD_SUPPORT"
+  version_status = "STANDARD_SUPPORT"
 }
-`)
+`
 }
