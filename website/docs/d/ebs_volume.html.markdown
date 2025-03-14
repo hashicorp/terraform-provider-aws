@@ -37,15 +37,15 @@ This data source supports the following arguments:
 several valid keys, for a full reference, check out
 [describe-volumes in the AWS CLI reference][1].
 * `most_recent` - (Optional) If more than one result is returned, use the most
-recent Volume.
+recent volume.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
-* `availability_zone` - AZ where the EBS volume exists.
-* `create_time` - The time stamp when volume creation was initiated.
+* `availability_zone` - Availability zone where the EBS volume exists.
+* `create_time` - Timestamp when volume creation was initiated.
 * `encrypted` - Whether the disk is encrypted.
 * `id` - Volume ID (e.g., vol-59fcb34e).
 * `iops` - Amount of IOPS for the disk.
