@@ -67,38 +67,19 @@ func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	input := &eks.DescribeClusterVersionsInput{}
-
-	if data.ClusterType.String() != "" {
-		input.ClusterType = data.ClusterType.ValueStringPointer()
+	input := eks.DescribeClusterVersionsInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	input.DefaultOnly = data.DefaultOnly.ValueBoolPointer()
-
-	if len(data.ClusterVersionsOnly.Elements()) > 0 && !data.ClusterVersions.IsNull() {
-		clVersions := make([]string, 0, len(data.ClusterVersionsOnly.Elements()))
-		for _, v := range data.ClusterVersionsOnly.Elements() {
-			clVersions = append(clVersions, v.String())
-		}
-
-		input.ClusterVersions = clVersions
-	}
-
-	if data.VersionStatus.ValueString() != "" {
-		input.VersionStatus = data.VersionStatus.ValueEnum()
-	}
-
-	out, err := findClusterVersions(ctx, conn, input)
+	out, err := findClusterVersions(ctx, conn, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprint(names.EKS, create.ErrActionReading, DSNameClusterVersions, err), err.Error())
 		return
 	}
 
-	output := &eks.DescribeClusterVersionsOutput{
-		ClusterVersions: out,
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.ClusterVersions)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
