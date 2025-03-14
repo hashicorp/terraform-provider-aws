@@ -359,8 +359,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.71.0 h1:4EeXWfRdetoYVB9QJXOd0k
 github.com/aws/aws-sdk-go-v2/service/medialive v1.71.0/go.mod h1:LQyji2EWloKipI5Yu/lc2pqIKz8/9T3nDm/2+cbFFo0=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.1 h1:CoCjkzEn/bk5lUB7G4HinZDTZFEv9hzAgsJoowkq0ok=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.1/go.mod h1:gn9Y3Js8XKrjFMN0vOwT2aqVjc0WnIH0qCKsTK5anS8=
-github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.21.1 h1:J8/XiJJwzEb+ZJTQIKKi+vVG2iaz5t38eeV9DbpawGM=
-github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.21.1/go.mod h1:Kg9NU7xep1t/0weKQLLbHDN5LhjkZUDwJ1WA7FwOJ/U=
+github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.22.0 h1:xTJEMO5FZeKQPLfYxiQ7OthUtDMhAqdDrBD+CtwjW/I=
+github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.22.0/go.mod h1:Kg9NU7xep1t/0weKQLLbHDN5LhjkZUDwJ1WA7FwOJ/U=
 github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.35.1 h1:Jl5zDZ+O6B3ip50q5/rRvIYcEdjpNs36/1ukgVd89U8=
 github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.35.1/go.mod h1:uNts8HtL8GevL9H2vDPZ3MyzUw5Gp6GTlC9RpLZPUkk=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.25.1 h1:XlE1PW5qQcIgwP0BGMsl+qg0cf9tznl/6n3gUPhxFNk=
