@@ -189,8 +189,6 @@ func resourceGameServerGroup() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

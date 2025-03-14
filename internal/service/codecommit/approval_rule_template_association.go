@@ -116,10 +116,11 @@ func resourceApprovalRuleTemplateAssociationDelete(ctx context.Context, d *schem
 	}
 
 	log.Printf("[INFO] Deleting CodeCommit Approval Rule Template Association: %s", d.Id())
-	_, err = conn.DisassociateApprovalRuleTemplateFromRepository(ctx, &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
+	input := codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
 		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
 		RepositoryName:           aws.String(repositoryName),
-	})
+	}
+	_, err = conn.DisassociateApprovalRuleTemplateFromRepository(ctx, &input)
 
 	if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) || errs.IsA[*types.RepositoryDoesNotExistException](err) {
 		return diags

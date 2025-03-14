@@ -666,6 +666,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// dsql
+
+				"dsql": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dynamodb
 
 				"dynamodb": schema.StringAttribute{
@@ -1247,6 +1254,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// mediapackagev2
 
 				"mediapackagev2": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mediapackagevod
+
+				"mediapackagevod": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

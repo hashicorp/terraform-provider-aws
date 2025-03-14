@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,12 +61,10 @@ func resourceInternetGateway() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -93,11 +90,11 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
 }
 
-func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
 		return findInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -135,7 +132,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -158,7 +155,7 @@ func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
 }
 
-func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -166,10 +163,7 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		err := detachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete))
 
-		switch {
-		case tfresource.NotFound(err):
-			return diags
-		case err != nil:
+		if err != nil && !tfresource.NotFound(err) {
 			return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
 	}
@@ -179,7 +173,7 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteInternetGateway(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -201,7 +195,7 @@ func attachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 	}
 
 	log.Printf("[INFO] Attaching EC2 Internet Gateway: %#v", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
 		return conn.AttachInternetGateway(ctx, input)
 	}, errCodeInvalidInternetGatewayIDNotFound)
 
@@ -225,7 +219,7 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 	}
 
 	log.Printf("[INFO] Detaching EC2 Internet Gateway: %#v", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
 		return conn.DetachInternetGateway(ctx, input)
 	}, errCodeDependencyViolation)
 

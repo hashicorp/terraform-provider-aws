@@ -132,10 +132,10 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Image Version (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SageMaker Image Version %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Image Version %q still exists", rs.Primary.ID)
 		}
 
 		return nil

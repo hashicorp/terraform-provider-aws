@@ -957,6 +957,12 @@ func resourceDeliveryStream() *schema.Resource {
 								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
 							},
+							"read_from_timestamp": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsRFC3339Time,
+							},
 							"topic_name": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -1446,7 +1452,6 @@ func resourceDeliveryStream() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				destination := destinationType(d.Get(names.AttrDestination).(string))
 				requiredAttribute := map[destinationType]string{
@@ -3494,6 +3499,11 @@ func expandMSKSourceConfiguration(tfMap map[string]interface{}) *types.MSKSource
 		apiObject.MSKClusterARN = aws.String(v)
 	}
 
+	if v, ok := tfMap["read_from_timestamp"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+		apiObject.ReadFromTimestamp = aws.Time(v)
+	}
+
 	if v, ok := tfMap["topic_name"].(string); ok && v != "" {
 		apiObject.TopicName = aws.String(v)
 	}
@@ -3532,6 +3542,10 @@ func flattenMSKSourceDescription(apiObject *types.MSKSourceDescription) map[stri
 
 	if v := apiObject.MSKClusterARN; v != nil {
 		tfMap["msk_cluster_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ReadFromTimestamp; v != nil {
+		tfMap["read_from_timestamp"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.TopicName; v != nil {

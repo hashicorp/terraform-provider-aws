@@ -69,6 +69,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - The origin request policy ARN.
 * `comment` - Comment to describe the origin request policy.
 * `cookiesConfig` - Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
 * `etag` - Current version of the origin request policy.
@@ -94,4 +95,4 @@ This data source exports the following attributes in addition to the arguments a
 
 `items` - List of item names (cookies, headers, or query strings).
 
-<!-- cache-key: cdktf-0.20.8 input-302109f4c0fde1e60aeb00b2aa87f0426e0944c3dc7969f58b1b182e3ccb56a1 -->
+<!-- cache-key: cdktf-0.20.8 input-6634b7fe26a9d88b0252cc369837a358f24b0b60ff2309b6cc17a5f9664a1ec4 -->

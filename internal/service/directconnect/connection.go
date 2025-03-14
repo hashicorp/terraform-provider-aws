@@ -25,7 +25,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -231,8 +230,6 @@ func resourceConnection() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -349,9 +346,10 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func deleteConnection(ctx context.Context, conn *directconnect.Client, connectionID string, waiter func(context.Context, *directconnect.Client, string) (*awstypes.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
-	_, err := conn.DeleteConnection(ctx, &directconnect.DeleteConnectionInput{
+	input := directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
 		return nil

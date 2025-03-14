@@ -44,10 +44,6 @@ type resourceFramework struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework"
-}
-
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -300,8 +296,6 @@ func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyP
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {

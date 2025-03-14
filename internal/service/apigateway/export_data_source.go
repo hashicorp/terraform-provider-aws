@@ -62,7 +62,7 @@ func dataSourceExport() *schema.Resource {
 	}
 }
 
-func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -78,8 +78,8 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Accepts = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	id := apiID + ":" + stageName

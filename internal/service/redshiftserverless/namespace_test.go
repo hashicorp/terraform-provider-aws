@@ -9,9 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
@@ -120,6 +122,36 @@ func TestAccRedshiftServerlessNamespace_user(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "Password123"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessNamespace_userPasswordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_namespace.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceConfig_userPasswordWriteOnly(rName, "Password123", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, resourceName),
+				),
+			},
+			{
+				Config: testAccNamespaceConfig_userPasswordWriteOnly(rName, "Password123updated", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, resourceName),
 				),
 			},
 		},
@@ -342,6 +374,17 @@ resource "aws_redshiftserverless_namespace" "test" {
   admin_user_password = "Password123"
 }
 `, rName)
+}
+
+func testAccNamespaceConfig_userPasswordWriteOnly(rName, password string, passwordVersion int) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name                 = %[1]q
+  admin_username                 = "admin"
+  admin_user_password_wo         = %[2]q
+  admin_user_password_wo_version = %[3]d
+}
+`, rName, password, passwordVersion)
 }
 
 func testAccNamespaceConfig_updated(rName string) string {

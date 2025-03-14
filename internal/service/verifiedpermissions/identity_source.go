@@ -58,10 +58,6 @@ type resourceIdentitySource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceIdentitySource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_identity_source"
-}
-
 func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{

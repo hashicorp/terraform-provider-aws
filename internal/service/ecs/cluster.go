@@ -38,8 +38,6 @@ func resourceCluster() *schema.Resource {
 			StateContext: resourceClusterImport,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -163,7 +161,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -174,12 +172,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 {
-		input.Configuration = expandClusterConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 {
+		input.Configuration = expandClusterConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("setting"); ok {
@@ -212,7 +210,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceClusterRead(ctx, d, meta)...)
 		}
 
@@ -224,14 +222,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	const (
 		timeout = 2 * time.Second
 	)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (any, error) {
 		return findClusterByNameOrARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -254,7 +252,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set(names.AttrName, cluster.ClusterName)
 	if cluster.ServiceConnectDefaults != nil {
-		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
+		if err := d.Set("service_connect_defaults", []any{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
 		}
 	} else {
@@ -269,7 +267,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -278,12 +276,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Cluster: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 {
-			input.Configuration = expandClusterConfiguration(v.([]interface{}))
+		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 {
+			input.Configuration = expandClusterConfiguration(v.([]any))
 		}
 
-		if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("setting"); ok {
@@ -304,7 +302,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -312,7 +310,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsOneOf4[*awstypes.ClusterContainsContainerInstancesException, *awstypes.ClusterContainsServicesException, *awstypes.ClusterContainsTasksException, *awstypes.UpdateInProgressException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsOneOf4[*awstypes.ClusterContainsContainerInstancesException, *awstypes.ClusterContainsServicesException, *awstypes.ClusterContainsTasksException, *awstypes.UpdateInProgressException](ctx, timeout, func() (any, error) {
 		return conn.DeleteCluster(ctx, &ecs.DeleteClusterInput{
 			Cluster: aws.String(d.Id()),
 		})
@@ -329,7 +327,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
@@ -343,7 +341,7 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func retryClusterCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateCluster(ctx, input)
 	}, "Unable to assume the service linked role")
 
@@ -423,7 +421,7 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 }
 
 func statusCluster(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -485,7 +483,7 @@ func expandClusterSettings(tfSet *schema.Set) []awstypes.ClusterSetting {
 	apiObjects := make([]awstypes.ClusterSetting, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.ClusterSetting{
 			Name:  awstypes.ClusterSettingName(tfMap[names.AttrName].(string)),
@@ -498,7 +496,7 @@ func expandClusterSettings(tfSet *schema.Set) []awstypes.ClusterSetting {
 	return apiObjects
 }
 
-func expandClusterServiceConnectDefaultsRequest(tfMap map[string]interface{}) *awstypes.ClusterServiceConnectDefaultsRequest {
+func expandClusterServiceConnectDefaultsRequest(tfMap map[string]any) *awstypes.ClusterServiceConnectDefaultsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -512,12 +510,12 @@ func expandClusterServiceConnectDefaultsRequest(tfMap map[string]interface{}) *a
 	return apiObject
 }
 
-func flattenClusterServiceConnectDefaults(apiObject *awstypes.ClusterServiceConnectDefaults) map[string]interface{} {
+func flattenClusterServiceConnectDefaults(apiObject *awstypes.ClusterServiceConnectDefaults) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Namespace; v != nil {
 		tfMap[names.AttrNamespace] = aws.ToString(v)
@@ -526,15 +524,15 @@ func flattenClusterServiceConnectDefaults(apiObject *awstypes.ClusterServiceConn
 	return tfMap
 }
 
-func flattenClusterSettings(apiObjects []awstypes.ClusterSetting) []interface{} {
+func flattenClusterSettings(apiObjects []awstypes.ClusterSetting) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrName:  string(apiObject.Name),
 			names.AttrValue: aws.ToString(apiObject.Value),
 		}
@@ -545,12 +543,12 @@ func flattenClusterSettings(apiObjects []awstypes.ClusterSetting) []interface{} 
 	return tfList
 }
 
-func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []interface{} {
+func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ExecuteCommandConfiguration != nil {
 		tfMap["execute_command_configuration"] = flattenClusterConfigurationExecuteCommandConfiguration(apiObject.ExecuteCommandConfiguration)
@@ -560,15 +558,15 @@ func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []int
 		tfMap["managed_storage_configuration"] = flattenManagedStorageConfiguration(apiObject.ManagedStorageConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenClusterConfigurationExecuteCommandConfiguration(apiObject *awstypes.ExecuteCommandConfiguration) []interface{} {
+func flattenClusterConfigurationExecuteCommandConfiguration(apiObject *awstypes.ExecuteCommandConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.KmsKeyId != nil {
 		tfMap[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
@@ -580,15 +578,15 @@ func flattenClusterConfigurationExecuteCommandConfiguration(apiObject *awstypes.
 
 	tfMap["logging"] = string(apiObject.Logging)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *awstypes.ExecuteCommandLogConfiguration) []interface{} {
+func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *awstypes.ExecuteCommandLogConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["cloud_watch_encryption_enabled"] = apiObject.CloudWatchEncryptionEnabled
 	tfMap["s3_bucket_encryption_enabled"] = apiObject.S3EncryptionEnabled
@@ -605,15 +603,15 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 		tfMap[names.AttrS3KeyPrefix] = aws.ToString(apiObject.S3KeyPrefix)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenManagedStorageConfiguration(apiObject *awstypes.ManagedStorageConfiguration) []interface{} {
+func flattenManagedStorageConfiguration(apiObject *awstypes.ManagedStorageConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FargateEphemeralStorageKmsKeyId != nil {
 		tfMap["fargate_ephemeral_storage_kms_key_id"] = aws.ToString(apiObject.FargateEphemeralStorageKmsKeyId)
@@ -623,37 +621,37 @@ func flattenManagedStorageConfiguration(apiObject *awstypes.ManagedStorageConfig
 		tfMap[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandClusterConfiguration(tfList []interface{}) *awstypes.ClusterConfiguration {
+func expandClusterConfiguration(tfList []any) *awstypes.ClusterConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return &awstypes.ClusterConfiguration{}
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ClusterConfiguration{}
 
-	if v, ok := tfMap["execute_command_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["execute_command_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ExecuteCommandConfiguration = expandClusterConfigurationExecuteCommandConfiguration(v)
 	}
 
-	if v, ok := tfMap["managed_storage_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["managed_storage_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ManagedStorageConfiguration = expandManagedStorageConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandClusterConfigurationExecuteCommandConfiguration(tfList []interface{}) *awstypes.ExecuteCommandConfiguration {
+func expandClusterConfigurationExecuteCommandConfiguration(tfList []any) *awstypes.ExecuteCommandConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return &awstypes.ExecuteCommandConfiguration{}
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ExecuteCommandConfiguration{}
 
-	if v, ok := tfMap["log_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["log_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LogConfiguration = expandClusterConfigurationExecuteCommandLogConfiguration(v)
 	}
 
@@ -668,12 +666,12 @@ func expandClusterConfigurationExecuteCommandConfiguration(tfList []interface{})
 	return apiObject
 }
 
-func expandClusterConfigurationExecuteCommandLogConfiguration(tfList []interface{}) *awstypes.ExecuteCommandLogConfiguration {
+func expandClusterConfigurationExecuteCommandLogConfiguration(tfList []any) *awstypes.ExecuteCommandLogConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return &awstypes.ExecuteCommandLogConfiguration{}
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ExecuteCommandLogConfiguration{}
 
 	if v, ok := tfMap["cloud_watch_log_group_name"].(string); ok && v != "" {
@@ -699,12 +697,12 @@ func expandClusterConfigurationExecuteCommandLogConfiguration(tfList []interface
 	return apiObject
 }
 
-func expandManagedStorageConfiguration(tfList []interface{}) *awstypes.ManagedStorageConfiguration {
+func expandManagedStorageConfiguration(tfList []any) *awstypes.ManagedStorageConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return &awstypes.ManagedStorageConfiguration{}
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ManagedStorageConfiguration{}
 
 	if v, ok := tfMap["fargate_ephemeral_storage_kms_key_id"].(string); ok && v != "" {

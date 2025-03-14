@@ -60,7 +60,7 @@ func dataSourceBucket() *schema.Resource {
 	}
 }
 
-func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.S3Client(ctx)
@@ -73,7 +73,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
 
-	err := findBucket(ctx, conn, bucket, optFns...)
+	_, err := findBucket(ctx, conn, bucket, optFns...)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", bucket, err)

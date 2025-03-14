@@ -44,7 +44,6 @@ func resourceStream() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				switch streamMode, shardCount := getStreamMode(diff), diff.Get("shard_count").(int); streamMode {
 				case types.StreamModeOnDemand:

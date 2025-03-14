@@ -247,9 +247,10 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetDomain(ctx, &datazone.GetDomainInput{
+			input := datazone.GetDomainInput{
 				Identifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetDomain(ctx, &input)
 
 			if tfdatazone.IsResourceMissing(err) {
 				return nil
@@ -278,9 +279,10 @@ func testAccCheckDomainExists(ctx context.Context, name string, domain *datazone
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := conn.GetDomain(ctx, &datazone.GetDomainInput{
+		input := datazone.GetDomainInput{
 			Identifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetDomain(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameDomain, rs.Primary.ID, err)

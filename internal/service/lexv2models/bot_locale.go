@@ -53,10 +53,6 @@ type resourceBotLocale struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceBotLocale) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_locale"
-}
-
 func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

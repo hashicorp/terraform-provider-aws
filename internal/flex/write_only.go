@@ -4,12 +4,16 @@
 package flex
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 type writeOnlyAttrGetter interface {
+	Get(string) any
+	GetRawConfig() cty.Value
 	GetRawConfigAt(path cty.Path) (cty.Value, diag.Diagnostics)
 	Id() string
 }
@@ -33,6 +37,10 @@ func GetWriteOnlyStringValue(d writeOnlyAttrGetter, path cty.Path) (string, diag
 func GetWriteOnlyValue(d writeOnlyAttrGetter, path cty.Path, attrType cty.Type) (cty.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if d.GetRawConfig().IsNull() {
+		return cty.Value{}, diags
+	}
+
 	valueWO, di := d.GetRawConfigAt(path)
 	if di.HasError() {
 		diags = append(diags, di...)
@@ -44,4 +52,11 @@ func GetWriteOnlyValue(d writeOnlyAttrGetter, path cty.Path, attrType cty.Type) 
 	}
 
 	return valueWO, diags
+}
+
+// HasWriteOnlyValue returns true if the write-only attribute is present in the config.
+func HasWriteOnlyValue(d writeOnlyAttrGetter, attr string) bool {
+	hasAttr := fmt.Sprintf("has_%s", attr)
+
+	return d.Get(hasAttr).(bool)
 }

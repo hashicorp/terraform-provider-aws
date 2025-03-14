@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceTrafficMirrorFilter() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -69,7 +66,7 @@ func resourceTrafficMirrorFilter() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -106,7 +103,7 @@ func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorFilterRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -138,7 +135,7 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -167,14 +164,15 @@ func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorFilterRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Filter: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorFilter(ctx, &ec2.DeleteTrafficMirrorFilterInput{
+	input := ec2.DeleteTrafficMirrorFilterInput{
 		TrafficMirrorFilterId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorFilter(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
 		return diags

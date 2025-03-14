@@ -104,6 +104,7 @@ variable "service_labels" {
     "docdbelastic",
     "drs",
     "ds",
+    "dsql",
     "dynamodb",
     "dynamodbstreams",
     "ebs",

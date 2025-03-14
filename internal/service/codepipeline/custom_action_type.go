@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -178,8 +177,6 @@ func resourceCustomActionType() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 9),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -306,11 +303,12 @@ func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting CodePipeline Custom Action Type: %s", d.Id())
-	_, err = conn.DeleteCustomActionType(ctx, &codepipeline.DeleteCustomActionTypeInput{
+	input := codepipeline.DeleteCustomActionTypeInput{
 		Category: category,
 		Provider: aws.String(provider),
 		Version:  aws.String(version),
-	})
+	}
+	_, err = conn.DeleteCustomActionType(ctx, &input)
 
 	if errs.IsA[*types.ActionNotFoundException](err) {
 		return diags

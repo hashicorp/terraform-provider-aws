@@ -70,6 +70,7 @@ project {
         if (acmCertificateRootDomain != "") {
             text("env.ACM_CERTIFICATE_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
             text("env.AMPLIFY_DOMAIN_NAME", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
         }
 
         val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")

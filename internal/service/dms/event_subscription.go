@@ -91,12 +91,10 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -129,7 +127,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -163,7 +161,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -190,14 +188,15 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscription(ctx, &dms.DeleteEventSubscriptionInput{
+	input := dms.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -258,7 +257,7 @@ func findEventSubscriptions(ctx context.Context, conn *dms.Client, input *dms.De
 }
 
 func statusEventSubscription(ctx context.Context, conn *dms.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

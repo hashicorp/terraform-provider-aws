@@ -38,10 +38,6 @@ type dataSourceImage struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceImage) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_appstream_image"
-}
-
 func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	{
 		resp.Schema = schema.Schema{

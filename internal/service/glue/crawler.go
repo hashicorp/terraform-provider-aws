@@ -47,8 +47,6 @@ func ResourceCrawler() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -96,7 +94,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -429,7 +427,7 @@ func ResourceCrawler() *schema.Resource {
 	}
 }
 
-func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -482,7 +480,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
 }
 
-func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -575,7 +573,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -631,7 +629,7 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
 }
 
-func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -666,10 +664,10 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
 	if classifiers, ok := d.GetOk("classifiers"); ok {
-		crawlerInput.Classifiers = flex.ExpandStringValueList(classifiers.([]interface{}))
+		crawlerInput.Classifiers = flex.ExpandStringValueList(classifiers.([]any))
 	}
 
-	crawlerInput.SchemaChangePolicy = expandSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
+	crawlerInput.SchemaChangePolicy = expandSchemaChangePolicy(d.Get("schema_change_policy").([]any))
 
 	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
@@ -691,15 +689,15 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	}
 
 	if v, ok := d.GetOk("lineage_configuration"); ok {
-		crawlerInput.LineageConfiguration = expandCrawlerLineageConfiguration(v.([]interface{}))
+		crawlerInput.LineageConfiguration = expandCrawlerLineageConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("lake_formation_configuration"); ok {
-		crawlerInput.LakeFormationConfiguration = expandLakeFormationConfiguration(v.([]interface{}))
+		crawlerInput.LakeFormationConfiguration = expandLakeFormationConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("recrawl_policy"); ok {
-		crawlerInput.RecrawlPolicy = expandCrawlerRecrawlPolicy(v.([]interface{}))
+		crawlerInput.RecrawlPolicy = expandCrawlerRecrawlPolicy(v.([]any))
 	}
 
 	return crawlerInput, nil
@@ -723,10 +721,10 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	}
 
 	if classifiers, ok := d.GetOk("classifiers"); ok {
-		crawlerInput.Classifiers = flex.ExpandStringValueList(classifiers.([]interface{}))
+		crawlerInput.Classifiers = flex.ExpandStringValueList(classifiers.([]any))
 	}
 
-	crawlerInput.SchemaChangePolicy = expandSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
+	crawlerInput.SchemaChangePolicy = expandSchemaChangePolicy(d.Get("schema_change_policy").([]any))
 
 	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
 
@@ -745,28 +743,28 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	}
 
 	if v, ok := d.GetOk("lineage_configuration"); ok {
-		crawlerInput.LineageConfiguration = expandCrawlerLineageConfiguration(v.([]interface{}))
+		crawlerInput.LineageConfiguration = expandCrawlerLineageConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("lake_formation_configuration"); ok {
-		crawlerInput.LakeFormationConfiguration = expandLakeFormationConfiguration(v.([]interface{}))
+		crawlerInput.LakeFormationConfiguration = expandLakeFormationConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("recrawl_policy"); ok {
-		crawlerInput.RecrawlPolicy = expandCrawlerRecrawlPolicy(v.([]interface{}))
+		crawlerInput.RecrawlPolicy = expandCrawlerRecrawlPolicy(v.([]any))
 	}
 
 	return crawlerInput, nil
 }
 
-func expandSchemaChangePolicy(v []interface{}) *awstypes.SchemaChangePolicy {
+func expandSchemaChangePolicy(v []any) *awstypes.SchemaChangePolicy {
 	if len(v) == 0 {
 		return nil
 	}
 
 	schemaPolicy := &awstypes.SchemaChangePolicy{}
 
-	member := v[0].(map[string]interface{})
+	member := v[0].(map[string]any)
 
 	if updateBehavior, ok := member["update_behavior"]; ok && updateBehavior.(string) != "" {
 		schemaPolicy.UpdateBehavior = awstypes.UpdateBehavior(updateBehavior.(string))
@@ -784,54 +782,54 @@ func expandCrawlerTargets(d *schema.ResourceData) *awstypes.CrawlerTargets {
 	log.Print("[DEBUG] Creating crawler target")
 
 	if v, ok := d.GetOk("dynamodb_target"); ok {
-		crawlerTargets.DynamoDBTargets = expandDynamoDBTargets(v.([]interface{}))
+		crawlerTargets.DynamoDBTargets = expandDynamoDBTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("jdbc_target"); ok {
-		crawlerTargets.JdbcTargets = expandJDBCTargets(v.([]interface{}))
+		crawlerTargets.JdbcTargets = expandJDBCTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("s3_target"); ok {
-		crawlerTargets.S3Targets = expandS3Targets(v.([]interface{}))
+		crawlerTargets.S3Targets = expandS3Targets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("catalog_target"); ok {
-		crawlerTargets.CatalogTargets = expandCatalogTargets(v.([]interface{}))
+		crawlerTargets.CatalogTargets = expandCatalogTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("mongodb_target"); ok {
-		crawlerTargets.MongoDBTargets = expandMongoDBTargets(v.([]interface{}))
+		crawlerTargets.MongoDBTargets = expandMongoDBTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("delta_target"); ok {
-		crawlerTargets.DeltaTargets = expandDeltaTargets(v.([]interface{}))
+		crawlerTargets.DeltaTargets = expandDeltaTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("hudi_target"); ok {
-		crawlerTargets.HudiTargets = expandHudiTargets(v.([]interface{}))
+		crawlerTargets.HudiTargets = expandHudiTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("iceberg_target"); ok {
-		crawlerTargets.IcebergTargets = expandIcebergTargets(v.([]interface{}))
+		crawlerTargets.IcebergTargets = expandIcebergTargets(v.([]any))
 	}
 
 	return crawlerTargets
 }
 
-func expandDynamoDBTargets(targets []interface{}) []awstypes.DynamoDBTarget {
+func expandDynamoDBTargets(targets []any) []awstypes.DynamoDBTarget {
 	if len(targets) < 1 {
 		return []awstypes.DynamoDBTarget{}
 	}
 
 	perms := make([]awstypes.DynamoDBTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandDynamoDBTarget(cfg)
 	}
 	return perms
 }
 
-func expandDynamoDBTarget(cfg map[string]interface{}) awstypes.DynamoDBTarget {
+func expandDynamoDBTarget(cfg map[string]any) awstypes.DynamoDBTarget {
 	target := awstypes.DynamoDBTarget{
 		Path:    aws.String(cfg[names.AttrPath].(string)),
 		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
@@ -844,20 +842,20 @@ func expandDynamoDBTarget(cfg map[string]interface{}) awstypes.DynamoDBTarget {
 	return target
 }
 
-func expandS3Targets(targets []interface{}) []awstypes.S3Target {
+func expandS3Targets(targets []any) []awstypes.S3Target {
 	if len(targets) < 1 {
 		return []awstypes.S3Target{}
 	}
 
 	perms := make([]awstypes.S3Target, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandS3Target(cfg)
 	}
 	return perms
 }
 
-func expandS3Target(cfg map[string]interface{}) awstypes.S3Target {
+func expandS3Target(cfg map[string]any) awstypes.S3Target {
 	target := awstypes.S3Target{
 		Path: aws.String(cfg[names.AttrPath].(string)),
 	}
@@ -867,7 +865,7 @@ func expandS3Target(cfg map[string]interface{}) awstypes.S3Target {
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringValueList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := cfg["sample_size"]; ok && v.(int) > 0 {
@@ -885,53 +883,53 @@ func expandS3Target(cfg map[string]interface{}) awstypes.S3Target {
 	return target
 }
 
-func expandJDBCTargets(targets []interface{}) []awstypes.JdbcTarget {
+func expandJDBCTargets(targets []any) []awstypes.JdbcTarget {
 	if len(targets) < 1 {
 		return []awstypes.JdbcTarget{}
 	}
 
 	perms := make([]awstypes.JdbcTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandJDBCTarget(cfg)
 	}
 	return perms
 }
 
-func expandJDBCTarget(cfg map[string]interface{}) awstypes.JdbcTarget {
+func expandJDBCTarget(cfg map[string]any) awstypes.JdbcTarget {
 	target := awstypes.JdbcTarget{
 		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 	}
 
-	if v, ok := cfg["enable_additional_metadata"].([]interface{}); ok {
+	if v, ok := cfg["enable_additional_metadata"].([]any); ok {
 		target.EnableAdditionalMetadata = flex.ExpandStringyValueList[awstypes.JdbcMetadataEntry](v)
 	}
 
-	if v, ok := cfg["exclusions"].([]interface{}); ok {
+	if v, ok := cfg["exclusions"].([]any); ok {
 		target.Exclusions = flex.ExpandStringValueList(v)
 	}
 
 	return target
 }
 
-func expandCatalogTargets(targets []interface{}) []awstypes.CatalogTarget {
+func expandCatalogTargets(targets []any) []awstypes.CatalogTarget {
 	if len(targets) < 1 {
 		return []awstypes.CatalogTarget{}
 	}
 
 	perms := make([]awstypes.CatalogTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandCatalogTarget(cfg)
 	}
 	return perms
 }
 
-func expandCatalogTarget(cfg map[string]interface{}) awstypes.CatalogTarget {
+func expandCatalogTarget(cfg map[string]any) awstypes.CatalogTarget {
 	target := awstypes.CatalogTarget{
 		DatabaseName: aws.String(cfg[names.AttrDatabaseName].(string)),
-		Tables:       flex.ExpandStringValueList(cfg["tables"].([]interface{})),
+		Tables:       flex.ExpandStringValueList(cfg["tables"].([]any)),
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -949,20 +947,20 @@ func expandCatalogTarget(cfg map[string]interface{}) awstypes.CatalogTarget {
 	return target
 }
 
-func expandMongoDBTargets(targets []interface{}) []awstypes.MongoDBTarget {
+func expandMongoDBTargets(targets []any) []awstypes.MongoDBTarget {
 	if len(targets) < 1 {
 		return []awstypes.MongoDBTarget{}
 	}
 
 	perms := make([]awstypes.MongoDBTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandMongoDBTarget(cfg)
 	}
 	return perms
 }
 
-func expandMongoDBTarget(cfg map[string]interface{}) awstypes.MongoDBTarget {
+func expandMongoDBTarget(cfg map[string]any) awstypes.MongoDBTarget {
 	target := awstypes.MongoDBTarget{
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 		Path:           aws.String(cfg[names.AttrPath].(string)),
@@ -972,20 +970,20 @@ func expandMongoDBTarget(cfg map[string]interface{}) awstypes.MongoDBTarget {
 	return target
 }
 
-func expandDeltaTargets(targets []interface{}) []awstypes.DeltaTarget {
+func expandDeltaTargets(targets []any) []awstypes.DeltaTarget {
 	if len(targets) < 1 {
 		return []awstypes.DeltaTarget{}
 	}
 
 	perms := make([]awstypes.DeltaTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandDeltaTarget(cfg)
 	}
 	return perms
 }
 
-func expandDeltaTarget(cfg map[string]interface{}) awstypes.DeltaTarget {
+func expandDeltaTarget(cfg map[string]any) awstypes.DeltaTarget {
 	target := awstypes.DeltaTarget{
 		CreateNativeDeltaTable: aws.Bool(cfg["create_native_delta_table"].(bool)),
 		DeltaTables:            flex.ExpandStringValueSet(cfg["delta_tables"].(*schema.Set)),
@@ -999,27 +997,27 @@ func expandDeltaTarget(cfg map[string]interface{}) awstypes.DeltaTarget {
 	return target
 }
 
-func expandHudiTargets(targets []interface{}) []awstypes.HudiTarget {
+func expandHudiTargets(targets []any) []awstypes.HudiTarget {
 	if len(targets) < 1 {
 		return []awstypes.HudiTarget{}
 	}
 
 	perms := make([]awstypes.HudiTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandHudiTarget(cfg)
 	}
 	return perms
 }
 
-func expandHudiTarget(cfg map[string]interface{}) awstypes.HudiTarget {
+func expandHudiTarget(cfg map[string]any) awstypes.HudiTarget {
 	target := awstypes.HudiTarget{
 		Paths:                 flex.ExpandStringValueSet(cfg["paths"].(*schema.Set)),
 		MaximumTraversalDepth: aws.Int32(int32(cfg["maximum_traversal_depth"].(int))),
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringValueList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -1029,27 +1027,27 @@ func expandHudiTarget(cfg map[string]interface{}) awstypes.HudiTarget {
 	return target
 }
 
-func expandIcebergTargets(targets []interface{}) []awstypes.IcebergTarget {
+func expandIcebergTargets(targets []any) []awstypes.IcebergTarget {
 	if len(targets) < 1 {
 		return []awstypes.IcebergTarget{}
 	}
 
 	perms := make([]awstypes.IcebergTarget, len(targets))
 	for i, rawCfg := range targets {
-		cfg := rawCfg.(map[string]interface{})
+		cfg := rawCfg.(map[string]any)
 		perms[i] = expandIcebergTarget(cfg)
 	}
 	return perms
 }
 
-func expandIcebergTarget(cfg map[string]interface{}) awstypes.IcebergTarget {
+func expandIcebergTarget(cfg map[string]any) awstypes.IcebergTarget {
 	target := awstypes.IcebergTarget{
 		Paths:                 flex.ExpandStringValueSet(cfg["paths"].(*schema.Set)),
 		MaximumTraversalDepth: aws.Int32(int32(cfg["maximum_traversal_depth"].(int))),
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringValueList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -1059,11 +1057,11 @@ func expandIcebergTarget(cfg map[string]interface{}) awstypes.IcebergTarget {
 	return target
 }
 
-func flattenS3Targets(s3Targets []awstypes.S3Target) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenS3Targets(s3Targets []awstypes.S3Target) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, s3Target := range s3Targets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["exclusions"] = flex.FlattenStringValueList(s3Target.Exclusions)
 		attrs[names.AttrPath] = aws.ToString(s3Target.Path)
 		attrs["connection_name"] = aws.ToString(s3Target.ConnectionName)
@@ -1080,11 +1078,11 @@ func flattenS3Targets(s3Targets []awstypes.S3Target) []map[string]interface{} {
 	return result
 }
 
-func flattenCatalogTargets(CatalogTargets []awstypes.CatalogTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenCatalogTargets(CatalogTargets []awstypes.CatalogTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, catalogTarget := range CatalogTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["connection_name"] = aws.ToString(catalogTarget.ConnectionName)
 		attrs["tables"] = flex.FlattenStringValueList(catalogTarget.Tables)
 		attrs[names.AttrDatabaseName] = aws.ToString(catalogTarget.DatabaseName)
@@ -1096,11 +1094,11 @@ func flattenCatalogTargets(CatalogTargets []awstypes.CatalogTarget) []map[string
 	return result
 }
 
-func flattenDynamoDBTargets(dynamodbTargets []awstypes.DynamoDBTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenDynamoDBTargets(dynamodbTargets []awstypes.DynamoDBTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, dynamodbTarget := range dynamodbTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs[names.AttrPath] = aws.ToString(dynamodbTarget.Path)
 		attrs["scan_all"] = aws.ToBool(dynamodbTarget.ScanAll)
 		attrs["scan_rate"] = aws.ToFloat64(dynamodbTarget.ScanRate)
@@ -1110,11 +1108,11 @@ func flattenDynamoDBTargets(dynamodbTargets []awstypes.DynamoDBTarget) []map[str
 	return result
 }
 
-func flattenJDBCTargets(jdbcTargets []awstypes.JdbcTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenJDBCTargets(jdbcTargets []awstypes.JdbcTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, jdbcTarget := range jdbcTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["connection_name"] = aws.ToString(jdbcTarget.ConnectionName)
 		attrs["exclusions"] = flex.FlattenStringValueList(jdbcTarget.Exclusions)
 		attrs["enable_additional_metadata"] = flex.FlattenStringyValueList(jdbcTarget.EnableAdditionalMetadata)
@@ -1125,11 +1123,11 @@ func flattenJDBCTargets(jdbcTargets []awstypes.JdbcTarget) []map[string]interfac
 	return result
 }
 
-func flattenMongoDBTargets(mongoDBTargets []awstypes.MongoDBTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenMongoDBTargets(mongoDBTargets []awstypes.MongoDBTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, mongoDBTarget := range mongoDBTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["connection_name"] = aws.ToString(mongoDBTarget.ConnectionName)
 		attrs[names.AttrPath] = aws.ToString(mongoDBTarget.Path)
 		attrs["scan_all"] = aws.ToBool(mongoDBTarget.ScanAll)
@@ -1139,11 +1137,11 @@ func flattenMongoDBTargets(mongoDBTargets []awstypes.MongoDBTarget) []map[string
 	return result
 }
 
-func flattenDeltaTargets(deltaTargets []awstypes.DeltaTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenDeltaTargets(deltaTargets []awstypes.DeltaTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, deltaTarget := range deltaTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["connection_name"] = aws.ToString(deltaTarget.ConnectionName)
 		attrs["create_native_delta_table"] = aws.ToBool(deltaTarget.CreateNativeDeltaTable)
 		attrs["delta_tables"] = flex.FlattenStringValueSet(deltaTarget.DeltaTables)
@@ -1154,11 +1152,11 @@ func flattenDeltaTargets(deltaTargets []awstypes.DeltaTarget) []map[string]inter
 	return result
 }
 
-func flattenHudiTargets(hudiTargets []awstypes.HudiTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenHudiTargets(hudiTargets []awstypes.HudiTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, hudiTarget := range hudiTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["connection_name"] = aws.ToString(hudiTarget.ConnectionName)
 		attrs["maximum_traversal_depth"] = aws.ToInt32(hudiTarget.MaximumTraversalDepth)
 		attrs["paths"] = flex.FlattenStringValueSet(hudiTarget.Paths)
@@ -1169,11 +1167,11 @@ func flattenHudiTargets(hudiTargets []awstypes.HudiTarget) []map[string]interfac
 	return result
 }
 
-func flattenIcebergTargets(icebergTargets []awstypes.IcebergTarget) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenIcebergTargets(icebergTargets []awstypes.IcebergTarget) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, icebergTarget := range icebergTargets {
-		attrs := make(map[string]interface{})
+		attrs := make(map[string]any)
 		attrs["connection_name"] = aws.ToString(icebergTarget.ConnectionName)
 		attrs["maximum_traversal_depth"] = aws.ToInt32(icebergTarget.MaximumTraversalDepth)
 		attrs["paths"] = flex.FlattenStringValueSet(icebergTarget.Paths)
@@ -1184,21 +1182,21 @@ func flattenIcebergTargets(icebergTargets []awstypes.IcebergTarget) []map[string
 	return result
 }
 
-func flattenCrawlerSchemaChangePolicy(cfg *awstypes.SchemaChangePolicy) []map[string]interface{} {
+func flattenCrawlerSchemaChangePolicy(cfg *awstypes.SchemaChangePolicy) []map[string]any {
 	if cfg == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"delete_behavior": string(cfg.DeleteBehavior),
 		"update_behavior": string(cfg.UpdateBehavior),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandCrawlerLineageConfiguration(cfg []interface{}) *awstypes.LineageConfiguration {
-	m := cfg[0].(map[string]interface{})
+func expandCrawlerLineageConfiguration(cfg []any) *awstypes.LineageConfiguration {
+	m := cfg[0].(map[string]any)
 
 	target := &awstypes.LineageConfiguration{
 		CrawlerLineageSettings: awstypes.CrawlerLineageSettings(m["crawler_lineage_settings"].(string)),
@@ -1206,20 +1204,20 @@ func expandCrawlerLineageConfiguration(cfg []interface{}) *awstypes.LineageConfi
 	return target
 }
 
-func flattenCrawlerLineageConfiguration(cfg *awstypes.LineageConfiguration) []map[string]interface{} {
+func flattenCrawlerLineageConfiguration(cfg *awstypes.LineageConfiguration) []map[string]any {
 	if cfg == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"crawler_lineage_settings": string(cfg.CrawlerLineageSettings),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandLakeFormationConfiguration(cfg []interface{}) *awstypes.LakeFormationConfiguration {
-	m := cfg[0].(map[string]interface{})
+func expandLakeFormationConfiguration(cfg []any) *awstypes.LakeFormationConfiguration {
+	m := cfg[0].(map[string]any)
 
 	target := &awstypes.LakeFormationConfiguration{}
 
@@ -1234,21 +1232,21 @@ func expandLakeFormationConfiguration(cfg []interface{}) *awstypes.LakeFormation
 	return target
 }
 
-func flattenLakeFormationConfiguration(cfg *awstypes.LakeFormationConfiguration) []map[string]interface{} {
+func flattenLakeFormationConfiguration(cfg *awstypes.LakeFormationConfiguration) []map[string]any {
 	if cfg == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrAccountID:              aws.ToString(cfg.AccountId),
 		"use_lake_formation_credentials": aws.ToBool(cfg.UseLakeFormationCredentials),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandCrawlerRecrawlPolicy(cfg []interface{}) *awstypes.RecrawlPolicy {
-	m := cfg[0].(map[string]interface{})
+func expandCrawlerRecrawlPolicy(cfg []any) *awstypes.RecrawlPolicy {
+	m := cfg[0].(map[string]any)
 
 	target := &awstypes.RecrawlPolicy{
 		RecrawlBehavior: awstypes.RecrawlBehavior(m["recrawl_behavior"].(string)),
@@ -1256,14 +1254,14 @@ func expandCrawlerRecrawlPolicy(cfg []interface{}) *awstypes.RecrawlPolicy {
 	return target
 }
 
-func flattenCrawlerRecrawlPolicy(cfg *awstypes.RecrawlPolicy) []map[string]interface{} {
+func flattenCrawlerRecrawlPolicy(cfg *awstypes.RecrawlPolicy) []map[string]any {
 	if cfg == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"recrawl_behavior": string(cfg.RecrawlBehavior),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

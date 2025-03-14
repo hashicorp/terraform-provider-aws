@@ -56,10 +56,6 @@ type vpcEndpointResource struct {
 	framework.WithImportByID
 }
 
-func (*vpcEndpointResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_vpc_endpoint"
-}
-
 func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

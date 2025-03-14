@@ -5,13 +5,14 @@ package nullable
 
 import (
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type testCase struct {
-	val             interface{}
+	val             any
 	f               schema.SchemaValidateFunc
 	expectedErr     *regexp.Regexp
 	expectedWarning *regexp.Regexp
@@ -33,13 +34,7 @@ func runValidationTestCases(t *testing.T, cases []testCase) {
 
 	matchWarning := func(warnings []string, r *regexp.Regexp) bool {
 		// warning must match one provided
-		for _, warning := range warnings {
-			if r.MatchString(warning) {
-				return true
-			}
-		}
-
-		return false
+		return slices.ContainsFunc(warnings, r.MatchString)
 	}
 
 	for i, tc := range cases {

@@ -14,15 +14,19 @@ linters:
   disable-all: true
   enable:
     # !! only add t-z linters here
-    - tenv
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - wastedassign
     - whitespace
+
+linters-settings:
+  usetesting:
+    os-setenv: true
 
 run:
   timeout: 75m
