@@ -1614,6 +1614,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("database_insights_mode") {
 			input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
+			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
