@@ -68,7 +68,7 @@ func resourceStudioLifecycleConfig() *schema.Resource {
 	}
 }
 
-func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -92,7 +92,7 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceStudioLifecycleConfigRead(ctx, d, meta)...)
 }
 
-func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -124,7 +124,7 @@ func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceStudioLifecycleConfigRead(ctx, d, meta)...)
 }
 
-func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

@@ -79,7 +79,7 @@ func resourceHumanTaskUI() *schema.Resource {
 	}
 }
 
-func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &sagemaker.CreateHumanTaskUiInput{
 		HumanTaskUiName: aws.String(name),
 		Tags:            getTagsIn(ctx),
-		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
+		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]any)),
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker AI HumanTaskUi: %#v", input)
@@ -102,7 +102,7 @@ func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceHumanTaskUIRead(ctx, d, meta)...)
 }
 
-func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceHumanTaskUIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHumanTaskUIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -136,7 +136,7 @@ func resourceHumanTaskUIUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceHumanTaskUIRead(ctx, d, meta)...)
 }
 
-func resourceHumanTaskUIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHumanTaskUIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -181,12 +181,12 @@ func findHumanTaskUIByName(ctx context.Context, conn *sagemaker.Client, name str
 	return output, nil
 }
 
-func expandHumanTaskUiUiTemplate(l []interface{}) *awstypes.UiTemplate {
+func expandHumanTaskUiUiTemplate(l []any) *awstypes.UiTemplate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.UiTemplate{
 		Content: aws.String(m[names.AttrContent].(string)),
@@ -195,16 +195,16 @@ func expandHumanTaskUiUiTemplate(l []interface{}) *awstypes.UiTemplate {
 	return config
 }
 
-func flattenHumanTaskUiUiTemplate(config *awstypes.UiTemplateInfo, content string) []map[string]interface{} {
+func flattenHumanTaskUiUiTemplate(config *awstypes.UiTemplateInfo, content string) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"content_sha256":  aws.ToString(config.ContentSha256),
 		names.AttrURL:     aws.ToString(config.Url),
 		names.AttrContent: content,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
