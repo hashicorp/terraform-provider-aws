@@ -73,6 +73,10 @@ func resourceUser() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 100),
 						},
+						"secondary_email": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -432,6 +436,10 @@ func expandUserIdentityInfo(tfList []interface{}) *awstypes.UserIdentityInfo {
 		apiObject.LastName = aws.String(v)
 	}
 
+	if v, ok := tfMap["secondary_email"].(string); ok && v != "" {
+		apiObject.SecondaryEmail = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -481,6 +489,10 @@ func flattenUserIdentityInfo(apiObject *awstypes.UserIdentityInfo) []interface{}
 
 	if v := apiObject.LastName; v != nil {
 		tfMap["last_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecondaryEmail; v != nil {
+		tfMap["secondary_email"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
