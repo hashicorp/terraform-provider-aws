@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Running and Writing Acceptance Tests
 
 Terraform includes an acceptance test harness that does most of the repetitive
@@ -1116,158 +1117,142 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Writing Test Sweepers
 
-Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
+Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`).
 
-```go
-package example
-```
+First, implement the sweeper function.
+If the AWS SDK provides a builtin list paginator for the resource, it should be used:
 
-Next, register the resource into the test sweeper framework:
+=== "Terraform Plugin Framework (Preferred)"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            paginator := example.NewListThingsPaginator(conn, input)
+            for paginator.HasMorePages() {
+                    page, err := paginator.NextPage(ctx)
+
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range page.Things {
+                            sweepResources = append(sweepResources, framework.NewSweepResource(newResourceThing, client,
+                                    framework.NewAttribute(names.AttrID, aws.ToString(v.ThingId))),
+                            )
+                    }
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            paginator := example.NewListThingsPaginator(conn, input)
+            for paginator.HasMorePages() {
+                    page, err := paginator.NextPage(ctx)
+
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range page.Things {
+                            r := ResourceThing()
+                            d := r.Data(nil)
+                            d.SetId(aws.StringValue(v.Id))
+
+                            sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+                    }
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+If no paginator is available, consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md), or implement the sweeper as follows:
+
+=== "Terraform Plugin Framework (Preferred)"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            for {
+                    output, err := conn.ListThings(ctx, &input)
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range output.Things {
+                            sweepResources = append(sweepResources, framework.NewSweepResource(newResourceThing, client,
+                                    framework.NewAttribute(names.AttrID, aws.ToString(v.ThingId))),
+                            )
+                    }
+
+                    if aws.StringValue(output.NextToken) == "" {
+                            break
+                    }
+
+                    input.NextToken = output.NextToken
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            for {
+                    output, err := conn.ListThings(ctx, &input)
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range output.Things {
+                            r := ResourceThing()
+                            d := r.Data(nil)
+                            d.SetId(aws.StringValue(v.Id))
+
+                            sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+                    }
+
+                    if aws.StringValue(output.NextToken) == "" {
+                            break
+                    }
+
+                    input.NextToken = output.NextToken
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+Once the function is implemented, register it inside the exported `RegisterSweepers` function.
+The final argument to the `awsv2.Register` function is a variadic string which can optionally list any dependencies which must be swept first.
 
 ```go
 func RegisterSweepers() {
-  resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
-    Name: "aws_example_thing",
-    F:    sweepThings,
-    // Optionally
-    Dependencies: []string{
-      "aws_other_thing",
-    },
-  })
-}
-```
-
-Then add the actual implementation. Preferably, if a paginated SDK call is available:
-
-```go
-func sweepThings(region string) error {
-  ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-  if err != nil {
-    return fmt.Errorf("getting client: %w", err)
-  }
-
-  conn := client.ExampleConn(ctx)
-  var sweepResources []sweep.Sweepable
-  var errs *multierror.Error
-
-  input := example.ListThingsInput{}
-
-  err = conn.ListThingsPages(ctx, &input, func(page *example.ListThingsOutput, lastPage bool) bool {
-    if page == nil {
-      return !lastPage
-    }
-
-    for _, thing := range page.Things {
-      r := ResourceThing()
-      d := r.Data(nil)
-
-      id := aws.StringValue(thing.Id)
-      d.SetId(id)
-
-      // Perform resource specific pre-sweep setup.
-      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
-      //
-      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
-      // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
-
-      // This "if" is only needed if the pre-sweep setup can produce errors.
-      // Otherwise, do not include it.
-      if err != nil {
-        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        errs = multierror.Append(errs, err)
-        continue
-      }
-
-      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-    }
-
-    return !lastPage
-  })
-
-  if awsv1.SkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-    return nil
-  }
-  if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Things for %s: %w", region, err))
-  }
-
-  return errs.ErrorOrNil()
-}
-```
-
-If no paginated SDK call is available,
-consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md),
-or implement the sweeper as follows:
-
-```go
-func sweepThings(region string) error {
-  ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-  if err != nil {
-    return fmt.Errorf("getting client: %w", err)
-  }
-
-  conn := client.ExampleConn(ctx)
-  var sweepResources []sweep.Sweepable
-  var errs *multierror.Error
-
-  input := example.ListThingsInput{}
-
-  for {
-    output, err := conn.ListThings(ctx, &input)
-    if awsv1.SkipSweepError(err) {
-      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-      return nil
-    }
-    if err != nil {
-      errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
-      return errs.ErrorOrNil()
-    }
-
-    for _, thing := range output.Things {
-      r := ResourceThing()
-      d := r.Data(nil)
-
-      id := aws.StringValue(thing.Id)
-      d.SetId(id)
-
-      // Perform resource specific pre-sweep setup.
-      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
-      //
-      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
-      // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
-
-      // This "if" is only needed if the pre-sweep setup can produce errors.
-      // Otherwise, do not include it.
-      if err != nil {
-        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        errs = multierror.Append(errs, err)
-        continue
-      }
-
-      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-    }
-
-    if aws.StringValue(output.NextToken) == "" {
-      break
-    }
-
-    input.NextToken = output.NextToken
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
-  return errs.ErrorOrNil()
+        awsv2.Register("aws_example_thing", sweepThings,
+                // Optionally, add dependencies
+                "aws_example_other_thing",
+        )
 }
 ```
 
