@@ -277,7 +277,7 @@ func resourceCluster() *schema.Resource {
 			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+				ValidateFunc: func(v any, k string) (ws []string, es []error) {
 					value := v.(string)
 					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
@@ -424,7 +424,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					if val == nil {
 						return ""
 					}
@@ -671,7 +671,7 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
 				return !strings.HasPrefix(d.Get(names.AttrEngine).(string), "aurora")
 			}),
@@ -694,7 +694,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -834,12 +834,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ScalingConfiguration = expandScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 			requiresModifyDbCluster = true
 		}
 
@@ -852,7 +852,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.RestoreDBClusterFromSnapshot(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -868,7 +868,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return diags
 		}
 
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+		tfMap := v.([]any)[0].(map[string]any)
 		input := &rds.RestoreDBClusterFromS3Input{
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
@@ -980,7 +980,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.RestoreDBClusterFromS3(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1005,8 +1005,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		input := &rds.RestoreDBClusterToPointInTimeInput{
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
@@ -1110,13 +1110,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.RestoreType = aws.String(v)
 		}
 
-		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			modifyDbClusterInput.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			modifyDbClusterInput.ScalingConfiguration = expandScalingConfiguration(v.([]any)[0].(map[string]any))
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 			requiresModifyDbCluster = true
 		}
 
@@ -1319,12 +1319,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ReplicationSourceIdentifier = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ScalingConfiguration = expandScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("source_region"); ok {
@@ -1344,7 +1344,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.CreateDBCluster(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -1385,7 +1385,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	dbc, err := findDBClusterByID(ctx, conn, d.Id())
@@ -1465,7 +1465,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// Expose the MasterUserSecret structure as a computed attribute
 	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
 	if dbc.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	} else {
@@ -1484,14 +1484,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	if dbc.ScalingConfigurationInfo != nil {
-		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
+		if err := d.Set("scaling_configuration", []any{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scaling_configuration: %s", err)
 		}
 	} else {
 		d.Set("scaling_configuration", nil)
 	}
 	if dbc.ServerlessV2ScalingConfiguration != nil {
-		if err := d.Set("serverlessv2_scaling_configuration", []interface{}{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
+		if err := d.Set("serverlessv2_scaling_configuration", []any{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
 		}
 	} else {
@@ -1524,7 +1524,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	// There are two ways to enable the HTTP endpoint: new way and old way.
@@ -1732,14 +1732,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("scaling_configuration") {
-			if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ScalingConfiguration = expandScalingConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("serverlessv2_scaling_configuration") {
-			if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -1759,7 +1759,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			timeout = 5 * time.Minute
 		)
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1839,7 +1839,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -1883,14 +1883,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteDBCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 				if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-						func() (interface{}, error) {
+						func() (any, error) {
 							return conn.ModifyDBCluster(ctx, &rds.ModifyDBClusterInput{
 								ApplyImmediately:    aws.Bool(true),
 								DBClusterIdentifier: aws.String(d.Id()),
@@ -1949,7 +1949,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
@@ -1958,7 +1958,7 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	return []*schema.ResourceData{d}, nil
 }
 
-func enableHTTPEndpointProvisioned(ctx context.Context, conn *rds.Client, arn string, o, n interface{}) error {
+func enableHTTPEndpointProvisioned(ctx context.Context, conn *rds.Client, arn string, o, n any) error {
 	if o == nil {
 		return nil
 	}
@@ -2093,7 +2093,7 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 }
 
 func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -2236,7 +2236,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.Client, id string, time
 	return nil, err
 }
 
-func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConfiguration {
+func expandScalingConfiguration(tfMap map[string]any) *types.ScalingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -2270,12 +2270,12 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConf
 	return apiObject
 }
 
-func flattenScalingConfigurationInfo(apiObject *types.ScalingConfigurationInfo) map[string]interface{} {
+func flattenScalingConfigurationInfo(apiObject *types.ScalingConfigurationInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoPause; v != nil {
 		tfMap["auto_pause"] = aws.ToBool(v)
@@ -2308,7 +2308,7 @@ func flattenScalingConfigurationInfo(apiObject *types.ScalingConfigurationInfo) 
 	return tfMap
 }
 
-func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types.ServerlessV2ScalingConfiguration {
+func expandServerlessV2ScalingConfiguration(tfMap map[string]any) *types.ServerlessV2ScalingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -2332,12 +2332,12 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types
 	return apiObject
 }
 
-func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2ScalingConfigurationInfo) map[string]interface{} {
+func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2ScalingConfigurationInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.MaxCapacity; v != nil {
 		tfMap[names.AttrMaxCapacity] = aws.ToFloat64(v)

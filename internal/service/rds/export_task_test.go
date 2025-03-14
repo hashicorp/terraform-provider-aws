@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -153,12 +154,7 @@ func isInDestroyedStatus(s string) bool {
 		tfrds.StatusFailed,
 		tfrds.StatusCanceled,
 	}
-	for _, status := range deletedStatuses {
-		if s == status {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(deletedStatuses, s)
 }
 
 func testAccExportTaskConfigBase(rName string) string {

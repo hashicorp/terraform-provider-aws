@@ -191,7 +191,7 @@ func resourceEBSSnapshotImport() *schema.Resource {
 	}
 }
 
-func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -200,16 +200,16 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImportSnapshotTask),
 	}
 
-	if v, ok := d.GetOk("client_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ClientData = expandClientData(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("client_data"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientData = expandClientData(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("disk_container"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DiskContainer = expandSnapshotDiskContainer(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("disk_container"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DiskContainer = expandSnapshotDiskContainer(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrEncrypted); ok {
@@ -225,7 +225,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.ImportSnapshot(ctx, &input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")
@@ -268,7 +268,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEBSSnapshotImportRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -305,7 +305,7 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandClientData(tfMap map[string]interface{}) *awstypes.ClientData {
+func expandClientData(tfMap map[string]any) *awstypes.ClientData {
 	if tfMap == nil {
 		return nil
 	}
@@ -335,7 +335,7 @@ func expandClientData(tfMap map[string]interface{}) *awstypes.ClientData {
 	return apiObject
 }
 
-func expandSnapshotDiskContainer(tfMap map[string]interface{}) *awstypes.SnapshotDiskContainer {
+func expandSnapshotDiskContainer(tfMap map[string]any) *awstypes.SnapshotDiskContainer {
 	if tfMap == nil {
 		return nil
 	}
@@ -354,14 +354,14 @@ func expandSnapshotDiskContainer(tfMap map[string]interface{}) *awstypes.Snapsho
 		apiObject.Url = aws.String(v)
 	}
 
-	if v, ok := tfMap["user_bucket"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.UserBucket = expandUserBucket(v[0].(map[string]interface{}))
+	if v, ok := tfMap["user_bucket"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UserBucket = expandUserBucket(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandUserBucket(tfMap map[string]interface{}) *awstypes.UserBucket {
+func expandUserBucket(tfMap map[string]any) *awstypes.UserBucket {
 	if tfMap == nil {
 		return nil
 	}
