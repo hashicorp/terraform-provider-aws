@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_lb:  Add `ipam_pools` configuration blocks
+resource/aws_lb:  Add `ipam_pools` configuration block
 ```
 
 ```release-note:enhancement
