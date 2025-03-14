@@ -69,7 +69,7 @@ jobs:
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}    
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: make TEST=./internal/attrmap/... modern-check
       - run: make TEST=./internal/create/... modern-check
       - run: make TEST=./internal/enum/... modern-check
@@ -124,7 +124,7 @@ jobs:
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }} 
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: make TEST=./internal/service/apigateway modern-check
       - run: make TEST=./internal/service/appmesh modern-check
       - run: make TEST=./internal/service/dms modern-check
@@ -157,7 +157,7 @@ jobs:
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }} 
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: make TEST=./internal/service/kms modern-check
       - run: make TEST=./internal/service/lambda/... modern-check
       - run: make TEST=./internal/service/mq modern-check
