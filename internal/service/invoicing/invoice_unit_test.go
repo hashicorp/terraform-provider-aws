@@ -109,9 +109,9 @@ func testAccCheckInvoiceUnitDestroy(ctx context.Context) resource.TestCheckFunc 
 func testAccInvoiceUnitConfig_base(rName string, rDescription string, invoiceReceiver string, linkedAccount string) string {
 	return fmt.Sprintf(`
 resource "aws_invoicing_invoice_unit" "test" {
-  name = %[1]q
-  description = %[2]q
-  invoice_receiver = %[3]q
+  name                     = %[1]q
+  description              = %[2]q
+  invoice_receiver         = %[3]q
   tax_inheritance_disabled = false
   linked_accounts = [
    %[4]q
