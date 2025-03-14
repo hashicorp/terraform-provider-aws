@@ -5,6 +5,7 @@ package athena
 
 // Exports for use in tests only.
 var (
+	FindCapacityReservationByName     = findCapacityReservationByName
 	FindDataCatalogByName             = findDataCatalogByName
 	FindDatabaseByName                = findDatabaseByName
 	FindNamedQueryByID                = findNamedQueryByID
@@ -12,9 +13,10 @@ var (
 	FindWorkGroupByName               = findWorkGroupByName
 	QueryExecutionResult              = queryExecutionResult
 
-	ResourceDataCatalog       = resourceDataCatalog
-	ResourceDatabase          = resourceDatabase
-	ResourceNamedQuery        = resourceNamedQuery
-	ResourcePreparedStatement = resourcePreparedStatement
-	ResourceWorkGroup         = resourceWorkGroup
+	ResourceCapacityReservation = newResourceCapacityReservation
+	ResourceDataCatalog         = resourceDataCatalog
+	ResourceDatabase            = resourceDatabase
+	ResourceNamedQuery          = resourceNamedQuery
+	ResourcePreparedStatement   = resourcePreparedStatement
+	ResourceWorkGroup           = resourceWorkGroup
 )
