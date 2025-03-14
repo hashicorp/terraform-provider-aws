@@ -330,7 +330,7 @@ func DataSourceCatalogTable() *schema.Resource {
 	}
 }
 
-func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -399,7 +399,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []any{flattenTableTargetTable(table.TargetTable)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
