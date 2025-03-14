@@ -75,11 +75,15 @@ jobs:
       - run: make TEST=./version/... modern-check
 
       # Services
+      - run: make TEST=./internal/service/appmesh modern-check
       - run: make TEST=./internal/service/ec2 modern-check
       - run: make TEST=./internal/service/elbv2 modern-check
+      - run: make TEST=./internal/service/iam modern-check
       - run: make TEST=./internal/service/kms modern-check
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/quicksight/... modern-check
+      - run: make TEST=./internal/service/rds/... modern-check
+      - run: make TEST=./internal/service/s3 modern-check
       - run: make TEST=./internal/service/sns modern-check
       - run: make TEST=./internal/service/sts modern-check
       - run: make TEST=./internal/service/wafregional modern-check
