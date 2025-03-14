@@ -40,7 +40,7 @@ func ResourceResourcePolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -54,8 +54,8 @@ func ResourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 		conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -84,7 +84,7 @@ func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.C
 	}
 }
 
-func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 

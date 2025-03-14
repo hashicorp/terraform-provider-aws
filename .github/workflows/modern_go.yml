@@ -76,14 +76,19 @@ jobs:
 
       # Services
       - run: make TEST=./internal/service/apigateway modern-check
+      - run: make TEST=./internal/service/apigatewayv2 modern-check
       - run: make TEST=./internal/service/appmesh modern-check
+      - run: make TEST=./internal/service/batch modern-check
       - run: make TEST=./internal/service/cloudfront modern-check
       - run: make TEST=./internal/service/dms modern-check
       - run: make TEST=./internal/service/ec2 modern-check
+      - run: make TEST=./internal/service/ecs modern-check
       - run: make TEST=./internal/service/elbv2 modern-check
+      - run: make TEST=./internal/service/glue modern-check
       - run: make TEST=./internal/service/iam modern-check
       - run: make TEST=./internal/service/kms modern-check
       - run: make TEST=./internal/service/lambda/... modern-check
+      - run: make TEST=./internal/service/medialive modern-check
       - run: make TEST=./internal/service/mq modern-check
       - run: make TEST=./internal/service/quicksight/... modern-check
       - run: make TEST=./internal/service/rds/... modern-check
