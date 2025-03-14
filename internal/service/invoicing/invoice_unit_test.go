@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInvoceUnit_basic(t *testing.T) {
+func TestAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	invoiceReceiver := os.Getenv("INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
