@@ -1063,7 +1063,7 @@ func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_GlobalClusterIdentifierTakeFinalSnapshot(t *testing.T) {
+func TestAccRDSCluster_GlobalClusterIdentifier_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3189,6 +3189,46 @@ func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "62"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_GlobalClusterIdentifier_performanceInsightsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_GlobalClusterID_performanceInsightsEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"master_password",
+					"enable_global_write_forwarding",
+					"enable_local_write_forwarding",
+				},
+			},
+			{
+				Config: testAccClusterConfig_GlobalClusterID_performanceInsightsEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -6444,6 +6484,32 @@ resource "aws_rds_cluster" "test" {
   performance_insights_retention_period = 62
 }
 `, rName, tfrds.ClusterEngineMySQL)
+}
+
+func testAccClusterConfig_GlobalClusterID_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine = "aurora-postgresql"
+}
+
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = data.aws_rds_engine_version.test.engine
+  engine_version            = data.aws_rds_engine_version.test.version
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier           = %[1]q
+  database_name                = "mydb"
+  master_username              = "tfacctest"
+  master_password              = "avoid-plaintext-passwords"
+  skip_final_snapshot          = true
+  global_cluster_identifier    = aws_rds_global_cluster.test.id
+  engine                       = aws_rds_global_cluster.test.engine
+  engine_version               = aws_rds_global_cluster.test.engine_version
+  performance_insights_enabled = %[2]t
+}
+`, rName, performanceInsightsEnabled)
 }
 
 func testAccClusterConfig_enhancedMonitoring(rName string, monitoringInterval int) string {

@@ -1293,8 +1293,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			// If the cluster is part of a global cluster, defer Performance Insights settings
-			// to the modifyDbClusterInput to prevent them from being reset
-			if _, hasGlobalCluster := d.GetOk("global_cluster_identifier"); hasGlobalCluster {
+			// to the modifyDbClusterInput to prevent them from being reset.
+			if _, ok := d.GetOk("global_cluster_identifier"); ok {
 				modifyDbClusterInput.EnablePerformanceInsights = aws.Bool(v.(bool))
 				requiresModifyDbCluster = true
 			} else {
@@ -1303,7 +1303,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			if _, hasGlobalCluster := d.GetOk("global_cluster_identifier"); hasGlobalCluster {
+			if _, ok := d.GetOk("global_cluster_identifier"); ok {
 				modifyDbClusterInput.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 				requiresModifyDbCluster = true
 			} else {
@@ -1312,7 +1312,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-			if _, hasGlobalCluster := d.GetOk("global_cluster_identifier"); hasGlobalCluster {
+			if _, ok := d.GetOk("global_cluster_identifier"); ok {
 				modifyDbClusterInput.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
 				requiresModifyDbCluster = true
 			} else {
