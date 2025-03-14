@@ -749,8 +749,9 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 	// For legacy-mode reasons, `prefix` may be empty, but should be treated as `nil`
 	prefix := fwflex.EmptyStringAsNull(m.Prefix)
 
-	// The AWS API requires a value for `filter` unless `prefix` is set. If `filter` is set, one and only one of
-	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` must be set.
+	// The AWS API requires a value for `filter` unless `prefix` is set. If `filter` is set, only one of
+	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` can be set,
+	// and an empty `filter` is valid. Setting `filter.prefix` to "" is equivalent to an empty `filter`.
 	// However, the provider historically has allowed `filter` to be null, empty, or have one child value set.
 	// (Setting multiple elements would result in a run-time error)
 	// For null `filter`, send an empty LifecycleRuleFilter
