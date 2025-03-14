@@ -13,6 +13,10 @@ import (
 )
 
 func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_emrcontainers_virtual_cluster.test"
@@ -21,6 +25,10 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 		"kubernetes": {
 			Source:            "hashicorp/kubernetes",
 			VersionConstraint: "~> 2.3",
+		},
+		"time": {
+			Source:            "hashicorp/time",
+			VersionConstraint: "~> 0.13",
 		},
 	}
 

@@ -37,6 +37,10 @@ The following arguments are required:
 
 * `container_provider` - (Required) Configuration block for the container provider associated with your cluster.
 * `name` – (Required) Name of the virtual cluster.
+
+The following arguments are optional:
+
+* `security_configuration_id` - (Optional) The ID of the security configuration.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### container_provider Arguments

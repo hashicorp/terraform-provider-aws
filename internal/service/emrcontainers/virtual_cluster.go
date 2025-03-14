@@ -104,6 +104,15 @@ func resourceVirtualCluster() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
 				),
 			},
+			"security_configuration_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexache.MustCompile(`[0-9a-z]+`), "must contain only alphanumeric characters"),
+				),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -115,9 +124,11 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
+	securityConfigurationId := d.Get("security_configuration_id").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
-		Name: aws.String(name),
-		Tags: getTagsIn(ctx),
+		Name:                    aws.String(name),
+		SecurityConfigurationId: aws.String(securityConfigurationId),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -160,6 +171,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("container_provider", nil)
 	}
 	d.Set(names.AttrName, vc.Name)
+	d.Set("security_configuration_id", vc.SecurityConfigurationId)
 
 	setTagsOut(ctx, vc.Tags)
 
