@@ -78,6 +78,7 @@ jobs:
       - run: make TEST=./internal/service/apigateway modern-check
       - run: make TEST=./internal/service/appmesh modern-check
       - run: make TEST=./internal/service/ec2 modern-check
+      - run: make TEST=./internal/service/elbv2 modern-check
       - run: make TEST=./internal/service/iam modern-check
       - run: make TEST=./internal/service/kms modern-check
       - run: make TEST=./internal/service/mq modern-check
