@@ -500,9 +500,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		plan.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
-	}
-
-	if plan.SecondaryAvailabilityZone.IsUnknown() {
+	} else {
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
 
