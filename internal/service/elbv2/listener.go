@@ -664,7 +664,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Listener attributes like TCP idle timeout are not supported on create.
-	if attributes := listenerAttributes.expand(d, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), lbARN), false); len(attributes) > 0 {
+	if attributes := listenerAttributes.expand(d, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), lbARN)); len(attributes) > 0 {
 		if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -777,7 +777,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChanges(listenerAttributeKeys...) {
-		if attributes := listenerAttributes.expand(d, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), d.Get("load_balancer_arn").(string)), true); len(attributes) > 0 {
+		if attributes := listenerAttributes.expand(d, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), d.Get("load_balancer_arn").(string))); len(attributes) > 0 {
 			if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -967,7 +967,7 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 	},
 })
 
-func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstypes.ProtocolEnum, update bool) []awstypes.ListenerAttribute {
+func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstypes.ProtocolEnum) []awstypes.ListenerAttribute {
 	var apiObjects []awstypes.ListenerAttribute
 
 	for tfAttributeName, attributeInfo := range m {
