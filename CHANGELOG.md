@@ -1,4 +1,10 @@
 ## 5.92.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+
 ## 5.91.0 (March 13, 2025)
 
 NOTES:
