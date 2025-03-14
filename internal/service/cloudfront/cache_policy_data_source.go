@@ -149,7 +149,7 @@ func dataSourceCachePolicy() *schema.Resource {
 		},
 	}
 }
-func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -202,7 +202,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("min_ttl", apiObject.MinTTL)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
-		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
+		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []any{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters_in_cache_key_and_forwarded_to_origin: %s", err)
 		}
 	} else {
