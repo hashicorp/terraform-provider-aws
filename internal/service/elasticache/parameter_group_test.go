@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -447,8 +446,8 @@ func TestAccElastiCacheParameterGroup_namePrefix(t *testing.T) {
 				Config: testAccParameterGroupConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", rName, id.UniqueIDSuffixLength))),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 				),
 			},
 			{
@@ -475,7 +474,8 @@ func TestAccElastiCacheParameterGroup_nameGenerated(t *testing.T) {
 				Config: testAccParameterGroupConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", id.UniqueIdPrefix, id.UniqueIDSuffixLength))),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
