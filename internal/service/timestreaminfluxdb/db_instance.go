@@ -137,9 +137,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				CustomType: fwtypes.StringEnumType[awstypes.DeploymentType](),
 				Optional:   true,
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
 					with a Multi-AZ standby for high availability.`,
 			},
