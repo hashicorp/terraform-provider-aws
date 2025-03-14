@@ -2326,6 +2326,39 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_SnapshotIdentifier_dbClusterInstanceClass(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_rds_cluster.source"
+	snapshotResourceName := "aws_db_cluster_snapshot.test"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_SnapshotID_dbClusterInstanceClass(rName, "db.r6g.xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6g.xlarge"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -5728,6 +5761,32 @@ resource "aws_rds_cluster" "test" {
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_SnapshotID_dbClusterInstanceClass(rName string, dbClusterInstanceClass string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  cluster_identifier        = "%[1]s-source"
+  engine                    = %[2]q
+  db_cluster_instance_class = %[3]q
+  master_password     		  = "barbarbarbar"
+  master_username     		  = "foo"
+  skip_final_snapshot 		  = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  engine                    = %[2]q
+  db_cluster_instance_class = %[3]q
+  skip_final_snapshot 	    = true
+  snapshot_identifier 	    = aws_db_cluster_snapshot.test.id
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, dbClusterInstanceClass)
 }
 
 func testAccClusterConfig_SnapshotID_deletionProtection(rName string, deletionProtection bool) string {
