@@ -396,7 +396,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("ipam_pools"); ok {
-		input.IpamPools = expandIPAMPools(v.([]interface{}))
+		input.IpamPools = expandIPAMPools(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
@@ -529,8 +529,10 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
-	d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools))
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
+	if err := d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ipam_pools: %s", err)
+	}
 	d.Set("load_balancer_type", lb.Type)
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
@@ -659,30 +661,19 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("ipam_pools") {
-		input := &elasticloadbalancingv2.ModifyIpPoolsInput{
+		input := elasticloadbalancingv2.ModifyIpPoolsInput{
 			LoadBalancerArn: aws.String(d.Id()),
 		}
-		ipamPools := expandIPAMPools(d.Get("ipam_pools").([]interface{}))
-		if ipamPools == nil {
+		if ipamPools := expandIPAMPools(d.Get("ipam_pools").([]any)); ipamPools == nil {
 			input.RemoveIpamPools = []awstypes.RemoveIpamPoolEnum{awstypes.RemoveIpamPoolEnumIpv4}
 		} else {
 			input.IpamPools = ipamPools
 		}
-		_, err := conn.ModifyIpPools(ctx, input)
 
-		//this is the code to clean up the ENIs when the previous ipamPool is replaced,
-		//however AWS does not delete the ENI and EIP associated with the previous ipamPool
-		//maybe by design or a bug, so we are not going to use this code
+		_, err := conn.ModifyIpPools(ctx, &input)
 
-		// oldiPamPoolsChange, _ := d.GetChange("`ipam_pools`")
-		// oldiPamPools := expandIPAMPools(oldiPamPoolsChange.([]interface{}))
-
-		// ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
-		// if err := waitForALBNetworkInterfacesToDetach(ctx, ec2conn, d.Id(), *oldiPamPools.Ipv4IpamPoolId); err != nil {
-		// 	log.Printf("[WARN] Failed to cleanup ENIs for ALB (%s): %s", d.Id(), err)
-		// }
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) iPamPools: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Load Balancer (%s) IPAM pools: %s", d.Id(), err)
 		}
 	}
 
@@ -697,10 +688,10 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	ipv4IpamPoolId := ""
+	var ipv4IPAMPoolID string
 	if v, ok := d.GetOk("ipam_pools"); ok {
-		ipamPools := expandIPAMPools(v.([]interface{}))
-		ipv4IpamPoolId = aws.ToString(ipamPools.Ipv4IpamPoolId)
+		ipamPools := expandIPAMPools(v.([]any))
+		ipv4IPAMPoolID = aws.ToString(ipamPools.Ipv4IpamPoolId)
 	}
 
 	log.Printf("[INFO] Deleting ELBv2 Load Balancer: %s", d.Id())
@@ -714,13 +705,14 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := waitForALBNetworkInterfacesToDetach(ctx, ec2conn, d.Id(), ipv4IpamPoolId); err != nil {
-		log.Printf("[WARN] Failed to cleanup ENIs for ALB (%s): %s", d.Id(), err)
+	if err := waitForALBNetworkInterfacesToDetach(ctx, ec2conn, d.Id(), ipv4IPAMPoolID); err != nil {
+		log.Printf("[WARN] Failed to wait for ENIs to disappear for ALB (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForNLBNetworkInterfacesToDetach(ctx, ec2conn, d.Id()); err != nil {
 		log.Printf("[WARN] Failed to wait for ENIs to disappear for NLB (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
@@ -1019,9 +1011,7 @@ func waitLoadBalancerActive(ctx context.Context, conn *elasticloadbalancingv2.Cl
 	return nil, err
 }
 
-// replaced previous ALB ENI cleanup with this function, AWS has changed the way ENIs are attached to ALBs
-// Also it handles eventual consistency check for EIP disassociation IPAM pool deletion
-func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, arn string, ipv4IpamPoolId string) error {
+func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, arn, ipv4IPAMPoolID string) error {
 	name, err := loadBalancerNameFromARN(arn)
 	if err != nil {
 		return err
@@ -1030,26 +1020,35 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 	const (
 		timeout = 5 * time.Minute
 	)
-
 	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
 		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
 		if err != nil {
 			return 0, err
 		}
+
 		for _, v := range networkInterfaces {
 			if v.Attachment == nil {
 				continue
 			}
 
-			if ipv4IpamPoolId != "" {
-				_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
-					return tfec2.FindIPAMPoolAllocationsByResourceId(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IpamPoolId)
-				})
-				if err != nil {
+			if ipv4IPAMPoolID != "" {
+				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+					output, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IPAMPoolID)
+					if err != nil {
+						return nil, err
+					}
+
+					if len(output) == 0 {
+						return nil, &retry.NotFoundError{}
+					}
+
+					return output, nil
+				}); err != nil {
 					return 0, err
 				}
 			}
 		}
+
 		return len(networkInterfaces), nil
 	})
 

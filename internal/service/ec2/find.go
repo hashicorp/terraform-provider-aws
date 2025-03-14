@@ -3938,7 +3938,7 @@ func findIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, a
 	return output, nil
 }
 
-func findIPAMPoolAllocationsByResourceId(ctx context.Context, conn *ec2.Client, resourceId, ipamPoolID string) ([]awstypes.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx context.Context, conn *ec2.Client, ipamPoolID, resourceID string) ([]awstypes.IpamPoolAllocation, error) {
 	input := ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(ipamPoolID),
 	}
@@ -3949,15 +3949,9 @@ func findIPAMPoolAllocationsByResourceId(ctx context.Context, conn *ec2.Client, 
 		return nil, err
 	}
 
-	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
-		return aws.ToString(v.ResourceId) == resourceId
-	})
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
+	return tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
+		return aws.ToString(v.ResourceId) == resourceID
+	}), nil
 }
 
 func findIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {

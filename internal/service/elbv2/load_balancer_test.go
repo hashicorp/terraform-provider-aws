@@ -2377,12 +2377,8 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_basic(rName string) string {
-	return testAccLoadBalancerConfig_subnetCount(rName, 2, 2)
-}
-
-func testAccLoadBalancerConfig_baseIPAMPools() string {
-	return `
+func testAccLoadBalancerConfig_baseIPAMPools(rName string) string {
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -2390,6 +2386,10 @@ resource "aws_vpc_ipam" "test" {
     region_name = data.aws_region.current.name
   }
   tier = "free"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipam_pool" "test_pool" {
@@ -2399,13 +2399,21 @@ resource "aws_vpc_ipam_pool" "test_pool" {
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool"
   aws_service      = "ec2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test_cidr" {
-  ipam_pool_id  = aws_vpc_ipam_pool.test_pool.id
-  netmask_lengt = 30
+  ipam_pool_id   = aws_vpc_ipam_pool.test_pool.id
+  netmask_length = 30
 }
-`
+`, rName)
+}
+
+func testAccLoadBalancerConfig_basic(rName string) string {
+	return testAccLoadBalancerConfig_subnetCount(rName, 2, 2)
 }
 
 func testAccLoadBalancerConfig_subnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
@@ -2519,9 +2527,7 @@ resource "aws_lb" "test2" {
 }
 
 func testAccLoadBalancerConfig_IPAMPools_basic(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2),
-		testAccLoadBalancerConfig_baseIPAMPools(), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -2549,8 +2555,7 @@ resource "aws_lb" "test" {
 }
 
 func testAccLoadBalancerConfig_IPAMPools_modify(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2),
-		testAccLoadBalancerConfig_baseIPAMPools(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test_pool2" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
@@ -2558,6 +2563,10 @@ resource "aws_vpc_ipam_pool" "test_pool2" {
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool 2"
   aws_service      = "ec2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test_cidr2" {
@@ -2592,8 +2601,7 @@ resource "aws_lb" "test" {
 }
 
 func testAccLoadBalancerConfig_IPAMPools_modify_destroyALB(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2),
-		testAccLoadBalancerConfig_baseIPAMPools(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test_pool2" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
@@ -2601,13 +2609,16 @@ resource "aws_vpc_ipam_pool" "test_pool2" {
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool 2"
   aws_service      = "ec2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test_cidr2" {
   ipam_pool_id   = aws_vpc_ipam_pool.test_pool2.id
   netmask_length = 30
 }
-
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -2616,13 +2627,11 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
-
 `, rName))
 }
 
 func testAccLoadBalancerConfig_IPAMPools_unassign(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2),
-		testAccLoadBalancerConfig_baseIPAMPools(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -2646,8 +2655,7 @@ resource "aws_lb" "test" {
 }
 
 func testAccLoadBalancerConfig_IPAMPools_unassign_destroyALB(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2),
-		testAccLoadBalancerConfig_baseIPAMPools(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -2655,7 +2663,6 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
-
 `, rName))
 }
 
