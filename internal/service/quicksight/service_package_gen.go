@@ -73,6 +73,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceRoleMembership,
 			TypeName: "aws_quicksight_role_membership",
 			Name:     "Role Membership",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newTemplateAliasResource,

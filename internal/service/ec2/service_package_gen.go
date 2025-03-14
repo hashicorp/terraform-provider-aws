@@ -150,6 +150,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newNetworkInterfacePermissionResource,
 			TypeName: "aws_network_interface_permission",
 			Name:     "Network Interface Permission",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newVPCBlockPublicAccessExclusionResource,

@@ -21,6 +21,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Factory:  newDataSourceDomain,
 			TypeName: "aws_datazone_domain",
 			Name:     "Domain",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
 		},
 		{
 			Factory:  newDataSourceEnvironmentBlueprint,

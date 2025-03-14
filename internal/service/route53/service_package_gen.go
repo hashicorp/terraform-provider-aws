@@ -63,6 +63,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceRecordsExclusive,
 			TypeName: "aws_route53_records_exclusive",
 			Name:     "Records Exclusive",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
+			},
 		},
 	}
 }
