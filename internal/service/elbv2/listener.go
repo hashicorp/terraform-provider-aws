@@ -971,8 +971,8 @@ func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstyp
 	var apiObjects []awstypes.ListenerAttribute
 
 	for tfAttributeName, attributeInfo := range m {
-		// Skip if an update and the attribute hasn't changed.
-		if update && !d.HasChange(tfAttributeName) {
+		// Skip attributes without change on create or update
+		if !d.HasChange(tfAttributeName) {
 			continue
 		}
 
