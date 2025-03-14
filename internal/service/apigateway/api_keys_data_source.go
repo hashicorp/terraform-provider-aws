@@ -39,7 +39,7 @@ func (d *dataSourceAPIKeys) Schema(ctx context.Context, request datasource.Schem
 			"customer_id": schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"include_values": schema.BoolAttribute{
 				Optional: true,
 			},
