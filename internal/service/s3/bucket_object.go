@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -193,12 +194,12 @@ func resourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
 }
 
-func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -250,7 +251,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if hasBucketObjectContentChanges(d) {
 		return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
@@ -321,7 +322,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -342,7 +343,7 @@ func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
@@ -361,7 +362,7 @@ func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, met
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
@@ -442,7 +443,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		input.Metadata = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Metadata = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
@@ -494,7 +495,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	if hasBucketObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
@@ -508,7 +509,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 }
 
 func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
-	for _, key := range []string{
+	return slices.ContainsFunc([]string{
 		"bucket_key_enabled",
 		"cache_control",
 		"content_base64",
@@ -525,10 +526,5 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"source_hash",
 		names.AttrStorageClass,
 		"website_redirect",
-	} {
-		if d.HasChange(key) {
-			return true
-		}
-	}
-	return false
+	}, d.HasChange)
 }

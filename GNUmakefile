@@ -330,6 +330,10 @@ modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual
 	@echo "make: Checking for modern Go code..."
 	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
 
+modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
+	@echo "make: Fixing checks for modern Go code..."
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
+
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
 		echo "make: $(GO_VER) not found" ; \
@@ -707,7 +711,7 @@ ts: testacc-short ## Alias to testacc-short
 update: ## Update dependencies
 	@echo "make: Updating dependencies..."
 	$(GO_VER) get -u ./...
-	go mod tidy	
+	go mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && go mod tidy
 	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && go mod tidy
 	cd .ci/tools && $(GO_VER) get -u && go mod tidy
@@ -893,6 +897,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	lint \
 	misspell \
 	modern-check \
+	modern-fix \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
