@@ -72,7 +72,7 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	}
 }
 
-func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -89,7 +89,7 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 	d.SetId(catalogID)
 	d.Set(names.AttrCatalogID, d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
-		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
+		if err := d.Set("data_catalog_encryption_settings", []any{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {

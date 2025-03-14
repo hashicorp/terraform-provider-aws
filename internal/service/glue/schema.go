@@ -100,7 +100,7 @@ func ResourceSchema() *schema.Resource {
 	}
 }
 
-func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -180,7 +180,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -235,7 +235,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
