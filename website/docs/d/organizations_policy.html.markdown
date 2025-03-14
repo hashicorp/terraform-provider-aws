@@ -41,4 +41,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content` - The text content of the policy.
 * `description` - The description of the policy.
 * `name` - The friendly name of the policy.
-* `type` - The type of policy values can be `AISERVICES_OPT_OUT_POLICY | BACKUP_POLICY | RESOURCE_CONTROL_POLICY | SERVICE_CONTROL_POLICY | TAG_POLICY`
+* `type` - The type of policy values can be `AISERVICES_OPT_OUT_POLICY | BACKUP_POLICY | CHATBOT_POLICY | DECLARATIVE_POLICY_EC2 | RESOURCE_CONTROL_POLICY | SERVICE_CONTROL_POLICY | TAG_POLICY`
