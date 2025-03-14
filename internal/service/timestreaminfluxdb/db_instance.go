@@ -137,6 +137,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				CustomType: fwtypes.StringEnumType[awstypes.DeploymentType](),
 				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
 					with a Multi-AZ standby for high availability.`,
 			},
@@ -238,9 +241,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"secondary_availability_zone": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
