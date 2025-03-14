@@ -383,12 +383,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					Type:     schema.TypeString,
 					Optional: true,
 				}
+
+				customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
+
 				if !v.IsGlobal {
 					// TODO Replace with a CustomizeDiffFunc that doesn't ForceNew if
 					// region is updated from "" to the provider-configured Region.
 					regionSchema.ForceNew = true
 				}
-				// TODO Validate that Region is in the configured partition.
 
 				if f := r.SchemaFunc; f != nil {
 					r.SchemaFunc = func() map[string]*schema.Schema {
