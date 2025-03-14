@@ -115,7 +115,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 						names.AttrPrefix: schema.StringAttribute{
 							Optional:           true,
 							Computed:           true, // Because of Legacy value handling
-							DeprecationMessage: "Use filter instead",
+							DeprecationMessage: "Use 'filter.prefix' or 'filter.and.prefix' instead",
 							Validators: []validator.String{
 								tfstringvalidator.WarnExactlyOneOf(
 									path.MatchRelative().AtParent().AtName(names.AttrFilter),
