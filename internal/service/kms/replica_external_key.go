@@ -45,8 +45,6 @@ func resourceReplicaExternalKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -119,7 +117,7 @@ func resourceReplicaExternalKey() *schema.Resource {
 	}
 }
 
-func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -207,7 +205,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceReplicaExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -265,7 +263,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -316,7 +314,7 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceReplicaExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 

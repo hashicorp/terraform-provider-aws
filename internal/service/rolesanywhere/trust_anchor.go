@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -134,10 +133,7 @@ func resourceTrustAnchor() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			customizeDiffNotificationSettings,
-		),
+		CustomizeDiff: customizeDiffNotificationSettings,
 	}
 }
 

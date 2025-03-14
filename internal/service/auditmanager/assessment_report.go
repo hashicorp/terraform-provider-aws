@@ -41,10 +41,6 @@ type resourceAssessmentReport struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAssessmentReport) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment_report"
-}
-
 func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

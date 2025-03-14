@@ -13,7 +13,7 @@ import (
 
 // validAssumeRoleDuration validates a string can be parsed as a valid time.Duration
 // and is within a minimum of 15 minutes and maximum of 12 hours
-func validAssumeRoleDuration(v interface{}, k string) (ws []string, errors []error) {
+func validAssumeRoleDuration(v any, k string) (ws []string, errors []error) {
 	duration, err := time.ParseDuration(v.(string))
 
 	if err != nil {

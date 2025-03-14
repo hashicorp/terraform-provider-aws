@@ -38,10 +38,6 @@ type resourceFrameworkShare struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework_share"
-}
-
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

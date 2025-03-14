@@ -52,7 +52,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      SuppressEquivalentTopicSubscriptionDeliveryPolicy,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -73,7 +73,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -109,7 +109,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -120,7 +120,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -174,7 +174,7 @@ func resourceTopicSubscription() *schema.Resource {
 	}
 }
 
-func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -229,11 +229,11 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (any, error) {
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -252,7 +252,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
 
-func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -270,7 +270,7 @@ func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -384,7 +384,7 @@ func findSubscriptionAttributesByARN(ctx context.Context, conn *sns.Client, arn 
 }
 
 func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -543,7 +543,7 @@ func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	hasPolicy := diff.Get("filter_policy").(string) != ""
 	hasScope := !diff.GetRawConfig().GetAttr("filter_policy_scope").IsNull()
 	hadScope := diff.Get("filter_policy_scope").(string) != ""

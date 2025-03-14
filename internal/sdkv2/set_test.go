@@ -26,7 +26,7 @@ func TestStringCaseInsensitiveSetFunc(t *testing.T) {
 func TestSimpleSchemaSetFuncNil(t *testing.T) {
 	t.Parallel()
 
-	var v interface{}
+	var v any
 	f := SimpleSchemaSetFunc("key1", "key3", "key4")
 
 	if got, want := f(v), 0; got != want {
@@ -37,19 +37,19 @@ func TestSimpleSchemaSetFuncNil(t *testing.T) {
 func TestSimpleSchemaSetFunc(t *testing.T) {
 	t.Parallel()
 
-	v1 := map[string]interface{}{
+	v1 := map[string]any{
 		"key1": "value1",
 		"key2": "value2",
 		"key3": 3,
 		"key4": true,
 	}
-	v2 := map[string]interface{}{
+	v2 := map[string]any{
 		"key1": "value1",
 		"key2": "value2-new",
 		"key3": 3,
 		"key4": true,
 	}
-	v3 := map[string]interface{}{
+	v3 := map[string]any{
 		"key1": "value1",
 		"key2": "value2",
 		"key3": 4,

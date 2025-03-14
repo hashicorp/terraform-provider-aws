@@ -43,10 +43,6 @@ type resourceEnvironmentBlueprintConfiguration struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment_blueprint_configuration"
-}
-
 func (r *resourceEnvironmentBlueprintConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

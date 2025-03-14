@@ -50,10 +50,6 @@ type iamPolicyAssignmentResource struct {
 	framework.WithImportByID
 }
 
-func (r *iamPolicyAssignmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_iam_policy_assignment"
-}
-
 func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -167,7 +163,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 	plan.AssignmentID = flex.StringToFramework(ctx, out.AssignmentId)
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 	if err != nil {
@@ -312,7 +308,7 @@ func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, req resource.D
 	}
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 	if err != nil {

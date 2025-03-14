@@ -32,11 +32,12 @@ func dataSourceEBSEncryptionByDefault() *schema.Resource {
 		},
 	}
 }
-func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	res, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+	input := ec2.GetEbsEncryptionByDefaultInput{}
+	res, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading default EBS encryption toggle: %s", err)
 	}

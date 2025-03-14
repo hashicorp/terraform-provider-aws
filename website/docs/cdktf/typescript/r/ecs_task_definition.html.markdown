@@ -300,6 +300,9 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cpu` - (Optional) Number of cpu units used by the task. If the `requiresCompatibilities` is `FARGATE` this field is required.
+* `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
+
+    **Note:** Fault injection only works with tasks using the `awsvpc` or `host` network modes. Fault injection isn't available on Windows.
 * `executionRoleArn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `inferenceAccelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipcMode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
@@ -431,4 +434,4 @@ Using `terraform import`, import ECS Task Definitions using their ARNs. For exam
 % terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-153332ff5446243fdd9c8653d58b4f49ca2b46d04ccd98e913cf20787414b12a -->
+<!-- cache-key: cdktf-0.20.8 input-206a873aeabb1f91d578bc364e5bd2da24feaf63deaf59c5db7ff2ac6bb31148 -->

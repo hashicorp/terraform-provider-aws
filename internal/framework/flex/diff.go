@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 type Results struct {
@@ -37,8 +38,8 @@ func (r *Results) IgnoredFieldNames() []string {
 	return r.ignoredFieldNames
 }
 
-// Calculate compares the plan and state values and returns whether there are changes
-func Calculate(ctx context.Context, plan, state any, options ...ChangeOption) (*Results, diag.Diagnostics) {
+// Diff compares the plan and state values and returns whether there are changes
+func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Results, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	opts := NewChangeOptions(options...)
 
@@ -56,24 +57,20 @@ func Calculate(ctx context.Context, plan, state any, options ...ChangeOption) (*
 	}
 
 	var hasChanges bool
-	for i := 0; i < planValue.NumField(); i++ {
-		fieldName := planType.Field(i).Name
+	for field := range tfreflect.ExportedStructFields(planValue.Type()) {
+		fieldName := field.Name
 
 		if shouldSkipField(fieldName, opts.IgnoredFields) {
 			ignoredFields = append(ignoredFields, fieldName)
 			continue
 		}
 
-		if !fieldExistsInState(stateType, fieldName) {
+		if !implementsAttrValue(planValue.FieldByIndex(field.Index)) || !implementsAttrValue(stateValue.FieldByIndex(field.Index)) {
 			continue
 		}
 
-		if !implementsAttrValue(planValue.FieldByName(fieldName)) || !implementsAttrValue(stateValue.FieldByName(fieldName)) {
-			continue
-		}
-
-		planFieldValue := planValue.FieldByName(fieldName).Interface().(attr.Value)
-		stateFieldValue := stateValue.FieldByName(fieldName).Interface().(attr.Value)
+		planFieldValue := planValue.FieldByIndex(field.Index).Interface().(attr.Value)
+		stateFieldValue := stateValue.FieldByIndex(field.Index).Interface().(attr.Value)
 
 		if !planFieldValue.Type(ctx).Equal(stateFieldValue.Type(ctx)) {
 			continue
@@ -103,13 +100,8 @@ func shouldSkipField(fieldName string, ignoredFieldNames []string) bool {
 	return slices.Contains(skippedFields(), fieldName) || slices.Contains(ignoredFieldNames, fieldName)
 }
 
-func fieldExistsInState(stateType reflect.Type, fieldName string) bool {
-	_, exists := stateType.FieldByName(fieldName)
-	return exists
-}
-
 func implementsAttrValue(field reflect.Value) bool {
-	return field.Type().Implements(reflect.TypeOf((*attr.Value)(nil)).Elem())
+	return field.Type().Implements(reflect.TypeFor[attr.Value]())
 }
 
 func skippedFields() []string {

@@ -168,11 +168,12 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration Response: %s", d.Id())
-	_, err := conn.DeleteIntegrationResponse(ctx, &apigatewayv2.DeleteIntegrationResponseInput{
+	input := apigatewayv2.DeleteIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegrationResponse(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

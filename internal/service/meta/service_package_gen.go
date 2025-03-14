@@ -19,11 +19,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "ARN",
 		},
 		{
-			Factory:  newBillingServiceAccountDataSource,
-			TypeName: "aws_billing_service_account",
-			Name:     "Billing Service Account",
-		},
-		{
 			Factory:  newDefaultTagsDataSource,
 			TypeName: "aws_default_tags",
 			Name:     "Default Tags",

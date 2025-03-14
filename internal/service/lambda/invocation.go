@@ -33,6 +33,15 @@ func resourceInvocation() *schema.Resource {
 		UpdateWithoutTimeout: resourceInvocationUpdate,
 		DeleteWithoutTimeout: resourceInvocationDelete,
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceInvocationConfigV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: invocationStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"function_name": {
 				Type:     schema.TypeString,

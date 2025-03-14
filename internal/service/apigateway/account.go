@@ -39,10 +39,6 @@ type resourceAccount struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAccount) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_account"
-}
-
 func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -170,7 +166,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return

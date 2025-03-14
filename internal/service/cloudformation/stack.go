@@ -135,7 +135,6 @@ func resourceStack() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			customdiff.ComputedIf("outputs", stackHasActualChanges),
 		),
 	}
@@ -351,10 +350,11 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Deleting CloudFormation Stack: %s", d.Id())
 	requestToken := id.UniqueId()
-	_, err := conn.DeleteStack(ctx, &cloudformation.DeleteStackInput{
+	input := cloudformation.DeleteStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStack(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeValidationError) {
 		return diags

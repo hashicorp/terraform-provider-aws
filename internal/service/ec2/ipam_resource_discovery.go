@@ -84,14 +84,13 @@ func resourceIPAMResourceDiscovery() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			// user must define authn region within `operating_regions {}`
-			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() == "" { // Create.
 					currentRegion := meta.(*conns.AWSClient).Region(ctx)
 
 					for _, v := range diff.Get("operating_regions").(*schema.Set).List() {
-						if v.(map[string]interface{})["region_name"].(string) == currentRegion {
+						if v.(map[string]any)["region_name"].(string) == currentRegion {
 							return nil
 						}
 					}
@@ -103,7 +102,7 @@ func resourceIPAMResourceDiscovery() *schema.Resource {
 	}
 }
 
-func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -132,7 +131,7 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
 }
 
-func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -162,7 +161,7 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -212,14 +211,15 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
 }
 
-func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery: %s", d.Id())
-	_, err := conn.DeleteIpamResourceDiscovery(ctx, &ec2.DeleteIpamResourceDiscoveryInput{
+	input := ec2.DeleteIpamResourceDiscoveryInput{
 		IpamResourceDiscoveryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIpamResourceDiscovery(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 		return diags
@@ -236,46 +236,46 @@ func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenIPAMResourceDiscoveryOperatingRegions(operatingRegions []awstypes.IpamOperatingRegion) []interface{} {
-	regions := []interface{}{}
+func flattenIPAMResourceDiscoveryOperatingRegions(operatingRegions []awstypes.IpamOperatingRegion) []any {
+	regions := []any{}
 	for _, operatingRegion := range operatingRegions {
 		regions = append(regions, flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion))
 	}
 	return regions
 }
 
-func flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion awstypes.IpamOperatingRegion) map[string]interface{} {
-	region := make(map[string]interface{})
+func flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion awstypes.IpamOperatingRegion) map[string]any {
+	region := make(map[string]any)
 	region["region_name"] = aws.ToString(operatingRegion.RegionName)
 	return region
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []awstypes.AddIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegions(operatingRegions []any) []awstypes.AddIpamOperatingRegion {
 	regionUpdates := make([]awstypes.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
+		region := regionRaw.(map[string]any)
 		regionUpdates = append(regionUpdates, expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) awstypes.AddIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(operatingRegion map[string]any) awstypes.AddIpamOperatingRegion {
 	regionUpdate := awstypes.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []awstypes.RemoveIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegions(operatingRegions []any) []awstypes.RemoveIpamOperatingRegion {
 	regionUpdates := make([]awstypes.RemoveIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
+		region := regionRaw.(map[string]any)
 		regionUpdates = append(regionUpdates, expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) awstypes.RemoveIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]any) awstypes.RemoveIpamOperatingRegion {
 	regionUpdate := awstypes.RemoveIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}

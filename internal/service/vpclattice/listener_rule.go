@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,6 +29,7 @@ import (
 
 // @SDKResource("aws_vpclattice_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
@@ -238,10 +238,6 @@ func ResourceListenerRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
@@ -374,11 +370,12 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	ruleId := d.Get("rule_id").(string)
 
 	log.Printf("[INFO] Deleting VpcLattice Listening Rule: %s", d.Id())
-	_, err := conn.DeleteRule(ctx, &vpclattice.DeleteRuleInput{
+	input := vpclattice.DeleteRuleInput{
 		ListenerIdentifier: aws.String(listenerId),
 		RuleIdentifier:     aws.String(ruleId),
 		ServiceIdentifier:  aws.String(serviceId),
-	})
+	}
+	_, err := conn.DeleteRule(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

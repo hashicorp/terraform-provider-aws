@@ -21,6 +21,10 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOriginRequestPolicyRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -162,7 +166,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(originRequestPolicyID)
-
+	d.Set(names.AttrARN, originRequestPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {

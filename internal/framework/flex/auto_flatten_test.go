@@ -1033,7 +1033,7 @@ func TestFlattenBool(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]autoFlexTestCases{
-		"Bool to bool": {
+		"bool to Bool": {
 			"true": {
 				Source: awsSingleBoolValue{
 					Field1: true,
@@ -1066,7 +1066,7 @@ func TestFlattenBool(t *testing.T) {
 			},
 		},
 
-		"*bool to String": {
+		"*bool to Bool": {
 			"true": {
 				Source: awsSingleBoolPointer{
 					Field1: aws.Bool(true),
@@ -1114,7 +1114,7 @@ func TestFlattenBool(t *testing.T) {
 			},
 		},
 
-		"legacy *bool to String": {
+		"legacy *bool to Bool": {
 			"true": {
 				Source: awsSingleBoolPointer{
 					Field1: aws.Bool(true),
@@ -1598,7 +1598,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1614,7 +1614,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1633,7 +1633,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1649,7 +1649,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -1665,7 +1665,7 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 				Target: &tfSingleFloat32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
@@ -2110,7 +2110,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2126,7 +2126,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2145,7 +2145,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2161,7 +2161,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -2177,7 +2177,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+					DiagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -4313,7 +4313,7 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 			Target:     &tfSingleStringFieldIgnore{},
 			WantTarget: &tfSingleStringFieldIgnore{},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				infoFlattening(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				infoConverting(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				traceSkipIgnoredTargetField(reflect.TypeFor[awsSingleStringValue](), "Field1", reflect.TypeFor[*tfSingleStringFieldIgnore](), "Field1"),
 			},
@@ -4325,14 +4325,14 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 			Target:     &tfSingleStringFieldIgnore{},
 			WantTarget: &tfSingleStringFieldIgnore{},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				traceSkipIgnoredTargetField(reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringFieldIgnore](), "Field1"),
 			},
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenInterfaceToStringTypable(t *testing.T) {
@@ -4523,9 +4523,6 @@ func TestFlattenInterface(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfListNestedObject[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"nil interface Source and non-Flattener list Target": {
@@ -4613,9 +4610,6 @@ func TestFlattenInterface(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfSetNestedObject[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 
@@ -4680,13 +4674,7 @@ func TestFlattenInterface(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
 				traceFlatteningNestedObjectCollection("Field1", reflect.TypeFor[[]awsInterfaceInterface](), 2, "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[0]", reflect.TypeFor[*tfInterfaceFlexer]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[1]", reflect.TypeFor[*tfInterfaceFlexer]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 
@@ -4751,13 +4739,7 @@ func TestFlattenInterface(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
 				traceFlatteningNestedObjectCollection("Field1", reflect.TypeFor[[]awsInterfaceInterface](), 2, "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[0]", reflect.TypeFor[*tfInterfaceFlexer]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[1]", reflect.TypeFor[*tfInterfaceFlexer]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"nil interface Source and nested object Target": {
@@ -4793,9 +4775,6 @@ func TestFlattenInterface(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfObjectValue[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceFlexer]]()),
-				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 	}
@@ -4820,9 +4799,6 @@ func TestFlattenFlattener(t *testing.T) {
 				infoFlattening(reflect.TypeFor[awsExpander](), reflect.TypeFor[*tfFlexer]()),
 				infoConverting(reflect.TypeFor[awsExpander](), reflect.TypeFor[*tfFlexer]()),
 				infoTargetImplementsFlexFlattener("", reflect.TypeFor[awsExpander](), "", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[*types.String]()), // TODO: fix path
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()),  // TODO: fix path
 			},
 		},
 		"top level incompatible struct Target": {
@@ -4859,9 +4835,6 @@ func TestFlattenFlattener(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSingleStruct](), "Field1", reflect.TypeFor[*tfExpanderListNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"nil *struct Source and null list Target": {
@@ -4899,9 +4872,6 @@ func TestFlattenFlattener(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSingleStruct](), "Field1", reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"single *struct Source and single list Target": {
@@ -4924,9 +4894,6 @@ func TestFlattenFlattener(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSinglePtr](), "Field1", reflect.TypeFor[*tfExpanderListNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[*awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"single *struct Source and single set Target": {
@@ -4949,9 +4916,6 @@ func TestFlattenFlattener(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSinglePtr](), "Field1", reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[*awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"nil *struct Source and null set Target": {
@@ -5015,13 +4979,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
 				traceFlatteningNestedObjectCollection("Field1", reflect.TypeFor[[]awsExpander](), 2, "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"empty *struct list Source and empty list Target": {
@@ -5069,13 +5027,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
 				traceFlatteningNestedObjectCollection("Field1", reflect.TypeFor[[]*awsExpander](), 2, "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"empty struct list Source and empty set Target": {
@@ -5123,13 +5075,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
 				traceFlatteningNestedObjectCollection("Field1", reflect.TypeFor[[]awsExpander](), 2, "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"empty *struct list Source and empty set Target": {
@@ -5177,13 +5123,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
 				traceFlatteningNestedObjectCollection("Field1", reflect.TypeFor[[]*awsExpander](), 2, "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"struct Source and object value Target": {
@@ -5204,9 +5144,6 @@ func TestFlattenFlattener(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSingleStruct](), "Field1", reflect.TypeFor[*tfExpanderObjectValue]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 		"*struct Source and object value Target": {
@@ -5227,9 +5164,6 @@ func TestFlattenFlattener(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSinglePtr](), "Field1", reflect.TypeFor[*tfExpanderObjectValue]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[*awsExpander](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfFlexer]]()),
 				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
-				// StringValueToFramework in testFlexTFFlexer.Flatten()
-				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
-				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
 			},
 		},
 	}
@@ -5372,7 +5306,58 @@ func TestFlattenStructSetOfStringEnum(t *testing.T) {
 	}
 }
 
-func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
+func TestFlattenEmbeddedStruct(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"exported": {
+			Source: &awsEmbeddedStruct{
+				Field1: "a",
+				Field2: "b",
+			},
+			Target: &tfExportedEmbeddedStruct{},
+			WantTarget: &tfExportedEmbeddedStruct{
+				TFExportedStruct: TFExportedStruct{
+					Field1: types.StringValue("a"),
+				},
+				Field2: types.StringValue("b"),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsEmbeddedStruct](), reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				infoConverting(reflect.TypeFor[awsEmbeddedStruct](), reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsEmbeddedStruct](), "Field1", reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+				traceMatchedFields("Field2", reflect.TypeFor[awsEmbeddedStruct](), "Field2", reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field2", reflect.TypeFor[string](), "Field2", reflect.TypeFor[types.String]()),
+			},
+		},
+		"unexported": {
+			Source: &awsEmbeddedStruct{
+				Field1: "a",
+				Field2: "b",
+			},
+			Target: &tfUnexportedEmbeddedStruct{},
+			WantTarget: &tfUnexportedEmbeddedStruct{
+				tfSingleStringField: tfSingleStringField{
+					Field1: types.StringValue("a"),
+				},
+				Field2: types.StringValue("b"),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsEmbeddedStruct](), reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				infoConverting(reflect.TypeFor[awsEmbeddedStruct](), reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsEmbeddedStruct](), "Field1", reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+				traceMatchedFields("Field2", reflect.TypeFor[awsEmbeddedStruct](), "Field2", reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field2", reflect.TypeFor[string](), "Field2", reflect.TypeFor[types.String]()),
+			},
+		},
+	}
+	// cmp.Diff cannot handle an unexported field
+	runAutoFlattenTestCases(t, testCases, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
+}
+
+func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, opts ...cmp.Option) {
 	t.Helper()
 
 	for testName, testCase := range testCases {
@@ -5402,7 +5387,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 
 			if !diags.HasError() {
 				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
-				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
+				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, append(opts, cmpopts.SortSlices(less))...); diff != "" {
 					if !testCase.WantDiff {
 						t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 					}

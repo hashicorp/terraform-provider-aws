@@ -136,26 +136,26 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandAnalysisSourceEntity(tfList []interface{}) *awstypes.AnalysisSourceEntity {
+func ExpandAnalysisSourceEntity(tfList []any) *awstypes.AnalysisSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AnalysisSourceEntity{}
 
-	if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SourceTemplate = expandAnalysisSourceTemplate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["source_template"].([]any); ok && len(v) > 0 {
+		apiObject.SourceTemplate = expandAnalysisSourceTemplate(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *awstypes.AnalysisSourceTemplate {
+func expandAnalysisSourceTemplate(tfMap map[string]any) *awstypes.AnalysisSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -165,56 +165,56 @@ func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *awstypes.Analys
 	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
-	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_set_references"].([]any); ok && len(v) > 0 {
 		apiObject.DataSetReferences = expandDataSetReferences(v)
 	}
 
 	return apiObject
 }
 
-func ExpandAnalysisDefinition(tfList []interface{}) *awstypes.AnalysisDefinition {
+func ExpandAnalysisDefinition(tfList []any) *awstypes.AnalysisDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AnalysisDefinition{}
 
-	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["analysis_defaults"].([]any); ok && len(v) > 0 {
 		apiObject.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
 	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.CalculatedFields = expandCalculatedFields(v.List())
 	}
-	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_configurations"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnConfigurations = expandColumnConfigurations(v)
 	}
-	if v, ok := tfMap["data_set_identifiers_declarations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_set_identifiers_declarations"].([]any); ok && len(v) > 0 {
 		apiObject.DataSetIdentifierDeclarations = expandDataSetIdentifierDeclarations(v)
 	}
-	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_groups"].([]any); ok && len(v) > 0 {
 		apiObject.FilterGroups = expandFilterGroups(v)
 	}
 	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
-	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sheets"].([]any); ok && len(v) > 0 {
 		apiObject.Sheets = expandSheetDefinitions(v)
 	}
 
 	return apiObject
 }
 
-func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []interface{} {
+func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AnalysisDefaults != nil {
 		tfMap["analysis_defaults"] = flattenAnalysisDefaults(apiObject.AnalysisDefaults)
@@ -238,5 +238,5 @@ func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []interfa
 		tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

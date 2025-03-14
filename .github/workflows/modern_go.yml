@@ -1,0 +1,86 @@
+name: Modern Go Check
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - "**/*.go"
+      - .github/workflows/modern_go.yml
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+jobs:
+  copywrite:
+    name: Check for modern Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version-file: go.mod
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: make TEST=./internal/acctest/... modern-check
+      - run: make TEST=./internal/attrmap/... modern-check
+      - run: make TEST=./internal/conns/... modern-check
+      - run: make TEST=./internal/create/... modern-check
+      - run: make TEST=./internal/enum/... modern-check
+      - run: make TEST=./internal/envvar/... modern-check
+      - run: make TEST=./internal/errs/... modern-check
+      - run: make TEST=./internal/experimental/... modern-check
+      - run: make TEST=./internal/flex/... modern-check
+      - run: make TEST=./internal/framework/... modern-check
+      - run: make TEST=./internal/function/... modern-check
+      - run: make TEST=./internal/generate/... modern-check
+      - run: make TEST=./internal/io/... modern-check
+      - run: make TEST=./internal/json/... modern-check
+      - run: make TEST=./internal/logging/... modern-check
+      - run: make TEST=./internal/maps/... modern-check
+      - run: make TEST=./internal/namevaluesfilters/... modern-check
+      - run: make TEST=./internal/provider/... modern-check
+      - run: make TEST=./internal/reflect/... modern-check
+      - run: make TEST=./internal/retry/... modern-check
+      - run: make TEST=./internal/sdkv2/... modern-check
+      - run: make TEST=./internal/semver/... modern-check
+      - run: make TEST=./internal/slices/... modern-check
+      - run: make TEST=./internal/sweep/... modern-check
+      - run: make TEST=./internal/tags/... modern-check
+      - run: make TEST=./internal/tfresource/... modern-check
+      - run: make TEST=./internal/types/... modern-check
+      - run: make TEST=./internal/vault/... modern-check
+      - run: make TEST=./internal/verify/... modern-check
+      - run: make TEST=./internal/yaml/... modern-check
+      - run: make TEST=./names/... modern-check
+      - run: make TEST=./version/... modern-check
+
+      # Services
+      - run: make TEST=./internal/service/ec2 modern-check
+      - run: make TEST=./internal/service/kms modern-check
+      - run: make TEST=./internal/service/mq modern-check
+      - run: make TEST=./internal/service/quicksight/... modern-check
+      - run: make TEST=./internal/service/rds/... modern-check
+      - run: make TEST=./internal/service/sns modern-check
+      - run: make TEST=./internal/service/sts modern-check
+      - run: make TEST=./internal/service/wafregional modern-check
+      - run: make TEST=./internal/service/wafv2 modern-check

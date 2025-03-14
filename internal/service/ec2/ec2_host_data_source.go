@@ -91,11 +91,11 @@ func dataSourceHost() *schema.Resource {
 	}
 }
 
-func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeHostsInput{
+	input := ec2.DescribeHostsInput{
 		Filter: newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 	}
 
@@ -108,7 +108,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filter = nil
 	}
 
-	host, err := findHost(ctx, conn, input)
+	host, err := findHost(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))

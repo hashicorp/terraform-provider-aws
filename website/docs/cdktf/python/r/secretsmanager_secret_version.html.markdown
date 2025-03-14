@@ -14,6 +14,8 @@ Provides a resource to manage AWS Secrets Manager secret version including its s
 
 ~> **NOTE:** If the `AWSCURRENT` staging label is present on this version during resource deletion, that label cannot be removed and will be skipped to prevent errors when fully deleting the secret. That label will leave this secret version active even after the resource is deleted from Terraform unless the secret itself is deleted. Move the `AWSCURRENT` staging label before or after deleting this resource from Terraform to fully trigger version deprecation if necessary.
 
+-> **Note:** Write-Only argument `secret_string_wo` is available to use in place of `secret_string`. Write-Only argumentss are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Simple String Value
@@ -92,8 +94,10 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `secret_string` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secret_binary` is not set.
-* `secret_binary` - (Optional) Specifies binary data that you want to encrypt and store in this version of the secret. This is required if `secret_string` is not set. Needs to be encoded to base64.
+* `secret_string` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secret_binary` or `secret_string_wo` is not set.
+* `secret_string_wo` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secret_binary` or `secret_string` is not set.
+* `secret_string_wo_version`  - (Optional) Used together with `secret_string_wo` to trigger an update. Increment this value when an update to `secret_string_wo` is required.
+* `secret_binary` - (Optional) Specifies binary data that you want to encrypt and store in this version of the secret. This is required if `secret_string` or `secret_string_wo` is not set. Needs to be encoded to base64.
 * `version_stages` - (Optional) Specifies a list of staging labels that are attached to this version of the secret. A staging label must be unique to a single version of the secret. If you specify a staging label that's already associated with a different version of the same secret then that staging label is automatically removed from the other version and attached to this version. If you do not specify a value, then AWS Secrets Manager automatically moves the staging label `AWSCURRENT` to this new version on creation.
 
 ~> **NOTE:** If `version_stages` is configured, you must include the `AWSCURRENT` staging label if this secret version is the only version or if the label is currently present on this secret version, otherwise Terraform will show a perpetual difference.
@@ -131,4 +135,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_version` using the s
 % terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5c6bef052ca1ac5532b5d2f27ef3e3ecee610c7ccc1c059c28a37372c9855304 -->
+<!-- cache-key: cdktf-0.20.8 input-3042295b11e371d9a6470bffda49277f8913d6c4b71b15964cc40d7ec8390b7e -->

@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -103,13 +103,7 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading WAF GeoMatchSet (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "geomatchset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, geoMatchSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("geo_match_constraint", flattenGeoMatchConstraint(geoMatchSet.GeoMatchConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting geo_match_constraint: %s", err)
 	}
@@ -226,7 +220,7 @@ func diffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSet
 		constraint := od.(map[string]interface{})
 
 		if idx, contains := sliceContainsMap(newT, constraint); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 
@@ -251,4 +245,9 @@ func diffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSet
 		})
 	}
 	return updates
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func geoMatchSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "geomatchset/"+id)
 }
