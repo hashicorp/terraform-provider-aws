@@ -937,7 +937,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 						VersionConstraint: providerVersion_5_86_0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -963,7 +963,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1183,7 +1183,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 						VersionConstraint: providerVersion_5_86_0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1209,7 +1209,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),

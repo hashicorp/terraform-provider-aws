@@ -1357,7 +1357,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_nonCurrentVersio
 						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1383,7 +1383,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_nonCurrentVersio
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1645,7 +1645,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1671,7 +1671,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
