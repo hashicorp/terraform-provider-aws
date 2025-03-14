@@ -110,7 +110,7 @@ func resourcePolicy() *schema.Resource {
 			"delay_after_policy_creation": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  3,
+				Default:  0,
 			},
 		},
 
