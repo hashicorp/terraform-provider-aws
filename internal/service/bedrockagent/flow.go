@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/bedrock/document"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -1107,7 +1108,7 @@ type promptFlowNodeSourceConfigurationMemberInlineModel struct {
 	ModelID                      types.String                                             `tfsdk:"model_id"`
 	TemplateConfiguration        fwtypes.ObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
 	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]          `tfsdk:"template_type"`
-	AdditionalModelRequestFields types.Object                                             `tfsdk:"additional_model_request_fields"` // TODO: how do i handle document.Interface?
+	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                   `tfsdk:"additional_model_request_fields"`
 	InferenceConfiguration       fwtypes.ObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
 }
 
@@ -1534,7 +1535,7 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags dia
 }
 
 type toolInputSchemaMemberJsonModel struct {
-	Value types.Object `tfsdk:"value"` // TODO: how do i handle document.Interface?
+	Value fwtypes.SmithyJSON[document.Interface] `tfsdk:"value"`
 }
 
 // Tagged union
