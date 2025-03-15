@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 
-	// "github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -125,15 +124,37 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional: true,
 			},
 			"definition": schema.ObjectAttribute{
-				// ElementType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
 				CustomType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
 				Optional:   true,
+				// Validators: []validator.Object{
+				// 	objectvalidator.ExactlyOneOf(
+				// 		path.MatchRelative().AtName("connections").AtAnyListIndex().AtName("configuration").AtName("conditional"),
+				// 		path.MatchRelative().AtName("connections").AtAnyListIndex().AtName("configuration").AtName("data"),
+				// 	),
+				// },
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
+			// "definition": schema.SingleNestedBlock{
+			// 	CustomType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
+			// 	Validators: []validator.Object{},
+			// 	Blocks: map[string]schema.Block{
+			// 		"connections": schema.ListNestedBlock{
+			// 			CustomType:   nil,
+			// 			Validators:   []validator.List{},
+			// 			NestedObject: schema.NestedBlockObject{},
+			// 		},
+			// 		"nodes": schema.ListNestedBlock{
+			// 			CustomType:   nil,
+			// 			Validators:   []validator.List{},
+			// 			NestedObject: schema.NestedBlockObject{},
+			// 		},
+			// 	},
+			// 	Attributes: map[string]schema.Attribute{},
+			// },
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -1083,11 +1104,62 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 }
 
 type promptFlowNodeSourceConfigurationMemberInlineModel struct {
-	ModelID                      types.String                                       `tfsdk:"model_id"`
-	TemplateConfiguration        fwtypes.ObjectValueOf[templateConfigurationModel]  `tfsdk:"template_configuration"`
-	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]    `tfsdk:"template_type"`
-	AdditionalModelRequestFields types.Object                                       `tfsdk:"additional_model_request_fields"` // TODO: how do i handle document.Interface?
-	InferenceConfiguration       fwtypes.ObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_configuration"`
+	ModelID                      types.String                                             `tfsdk:"model_id"`
+	TemplateConfiguration        fwtypes.ObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
+	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]          `tfsdk:"template_type"`
+	AdditionalModelRequestFields types.Object                                             `tfsdk:"additional_model_request_fields"` // TODO: how do i handle document.Interface?
+	InferenceConfiguration       fwtypes.ObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
+}
+
+// Tagged union
+type promptInferenceConfigurationModel struct {
+	Text fwtypes.ObjectValueOf[promptInferenceConfigurationMemberText] `tfsdk:"text"`
+}
+
+func (m *promptInferenceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.PromptInferenceConfigurationMemberText:
+		var model promptInferenceConfigurationMemberText
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m promptInferenceConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Text.IsNull():
+		promptInferenceConfigurationText, d := m.Text.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PromptInferenceConfigurationMemberText
+		diags.Append(flex.Expand(ctx, promptInferenceConfigurationText, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type promptInferenceConfigurationMemberText struct {
+	MaxTokens     types.Int32          `tfsdk:"max_tokens"`
+	StopSequences fwtypes.ListOfString `tfsdk:"stop_sequences"`
+	Temperature   types.Float32        `tfsdk:"temperature"`
+	TopP          types.Float32        `tfsdk:"top_p"`
 }
 
 // Tagged union
