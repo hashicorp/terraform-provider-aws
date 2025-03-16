@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -117,45 +118,96 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"execution_role_arn": schema.StringAttribute{
-				// CustomType: fwtypes.ARNType,
 				Required: true,
 			},
 			"customer_encryption_key_arn": schema.StringAttribute{
-				// CustomType: fwtypes.ARNType,
 				Optional: true,
-			},
-			"definition": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
-				Optional:   true,
-				// Validators: []validator.Object{
-				// 	objectvalidator.ExactlyOneOf(
-				// 		path.MatchRelative().AtName("connections").AtAnyListIndex().AtName("configuration").AtName("conditional"),
-				// 		path.MatchRelative().AtName("connections").AtAnyListIndex().AtName("configuration").AtName("data"),
-				// 	),
-				// },
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			// "definition": schema.SingleNestedBlock{
-			// 	CustomType: fwtypes.NewObjectTypeOf[flowDefinitionModel](ctx),
-			// 	Validators: []validator.Object{},
-			// 	Blocks: map[string]schema.Block{
-			// 		"connections": schema.ListNestedBlock{
-			// 			CustomType:   nil,
-			// 			Validators:   []validator.List{},
-			// 			NestedObject: schema.NestedBlockObject{},
-			// 		},
-			// 		"nodes": schema.ListNestedBlock{
-			// 			CustomType:   nil,
-			// 			Validators:   []validator.List{},
-			// 			NestedObject: schema.NestedBlockObject{},
-			// 		},
-			// 	},
-			// 	Attributes: map[string]schema.Attribute{},
-			// },
+			"definition": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[flowDefinitionModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"connections": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionModel](ctx),
+							Validators: []validator.List{},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"name": schema.StringAttribute{
+										Required: true,
+									},
+									"source": schema.StringAttribute{
+										Required: true,
+									},
+									"target": schema.StringAttribute{
+										Required: true,
+									},
+									"type": schema.StringAttribute{
+										// CustomType: fwtypes.StringEnumType[awstypes.FlowConnectionType](),
+										// TODO: could this be computed by us instead?
+										Required: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"data": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionConfigurationMemberDataModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("data"),
+															path.MatchRelative().AtParent().AtName("conditional"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"source_output": schema.StringAttribute{
+																Required: true,
+															},
+															"target_input": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+												"conditional": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionConfigurationMemberConditionalModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"condition": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"nodes": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeModel](ctx),
+						},
+					},
+				},
+			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -545,14 +597,14 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceFlowModel struct {
-	ARN                      types.String                               `tfsdk:"arn"`
-	ID                       types.String                               `tfsdk:"id"`
-	Name                     types.String                               `tfsdk:"name"`
-	ExecutionRoleARN         types.String                               `tfsdk:"execution_role_arn"`
-	CustomerEncryptionKeyARN types.String                               `tfsdk:"customer_encryption_key_arn"`
-	Definition               fwtypes.ObjectValueOf[flowDefinitionModel] `tfsdk:"definition"`
-	Description              types.String                               `tfsdk:"description"`
-	Timeouts                 timeouts.Value                             `tfsdk:"timeouts"`
+	ARN                      types.String                                         `tfsdk:"arn"`
+	ID                       types.String                                         `tfsdk:"id"`
+	Name                     types.String                                         `tfsdk:"name"`
+	ExecutionRoleARN         types.String                                         `tfsdk:"execution_role_arn"`
+	CustomerEncryptionKeyARN types.String                                         `tfsdk:"customer_encryption_key_arn"`
+	Definition               fwtypes.ListNestedObjectValueOf[flowDefinitionModel] `tfsdk:"definition"`
+	Description              types.String                                         `tfsdk:"description"`
+	Timeouts                 timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
 type flowDefinitionModel struct {
@@ -561,17 +613,17 @@ type flowDefinitionModel struct {
 }
 
 type flowConnectionModel struct {
-	Name          types.String                                            `tfsdk:"name"`
-	Source        types.String                                            `tfsdk:"source"`
-	Target        types.String                                            `tfsdk:"target"`
-	Type          fwtypes.StringEnum[awstypes.FlowConnectionType]         `tfsdk:"type"`
-	Configuration fwtypes.ObjectValueOf[flowConnectionConfigurationModel] `tfsdk:"configuration"`
+	Name          types.String                                                      `tfsdk:"name"`
+	Source        types.String                                                      `tfsdk:"source"`
+	Target        types.String                                                      `tfsdk:"target"`
+	Type          fwtypes.StringEnum[awstypes.FlowConnectionType]                   `tfsdk:"type"`
+	Configuration fwtypes.ListNestedObjectValueOf[flowConnectionConfigurationModel] `tfsdk:"configuration"`
 }
 
 // Tagged union
 type flowConnectionConfigurationModel struct {
-	Data        fwtypes.ObjectValueOf[flowConnectionConfigurationMemberDataModel]        `tfsdk:"data"`
-	Conditional fwtypes.ObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
+	Data        fwtypes.ListNestedObjectValueOf[flowConnectionConfigurationMemberDataModel]        `tfsdk:"data"`
+	Conditional fwtypes.ListNestedObjectValueOf[flowConnectionConfigurationMemberConditionalModel] `tfsdk:"conditional"`
 }
 
 type flowConnectionConfigurationMemberConditionalModel struct {
@@ -593,7 +645,7 @@ func (m *flowConnectionConfigurationModel) Flatten(ctx context.Context, v any) (
 			return diags
 		}
 
-		m.Data = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Data = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowConnectionConfigurationMemberConditional:
@@ -604,7 +656,7 @@ func (m *flowConnectionConfigurationModel) Flatten(ctx context.Context, v any) (
 			return diags
 		}
 
-		m.Conditional = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Conditional = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
