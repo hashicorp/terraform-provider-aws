@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS DSQL Cluster.
 
+~> **NOTE:** This service is still in Preview, specific Preview [Service Terms](https://aws.amazon.com/service-terms/) and conditions apply.
+
 ## Example Usage
 
 ### Basic Usage
@@ -19,7 +21,7 @@ resource "aws_dsql_cluster" "example" {
   deletion_protection_enabled = true
 
   tags = {
-    Name = "Test"
+    Name = "TestCluster"
   }
 }
 ```
