@@ -145,6 +145,12 @@ func resourceCluster() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
+									names.AttrPriority: {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										ForceNew: true,
+										Default:  -1,
+									},
 									"weighted_capacity": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -174,6 +180,34 @@ func resourceCluster() *schema.Resource {
 													Required:         true,
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+												},
+												"capacity_reservation_options": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MinItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"capacity_reservation_preference": {
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationPreference](),
+															},
+															"capacity_reservation_resource_group_arn": {
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Required:         true,
+																ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+															},
+															"usage_strategy": {
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationUsageStrategy](),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -2117,6 +2151,7 @@ func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecifi
 		tfMap["ebs_config"] = flattenEBSConfig(apiObject.EbsBlockDevices)
 		tfMap[names.AttrInstanceType] = aws.ToString(apiObject.InstanceType)
 		tfMap["weighted_capacity"] = int(aws.ToInt32(apiObject.WeightedCapacity))
+		tfMap[names.AttrPriority] = float64(aws.ToFloat64(apiObject.Priority))
 
 		tfList = append(tfList, tfMap)
 	}
@@ -2145,7 +2180,22 @@ func flattenOnDemandProvisioningSpecification(apiObject *awstypes.OnDemandProvis
 	tfMap := map[string]any{
 		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-		"allocation_strategy": strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1),
+		"allocation_strategy":          strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1),
+		"capacity_reservation_options": flattenCapacityReservationOptions(apiObject.CapacityReservationOptions),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenCapacityReservationOptions(apiObject *awstypes.OnDemandCapacityReservationOptions) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"capacity_reservation_preference":         apiObject.CapacityReservationPreference,
+		"capacity_reservation_resource_group_arn": apiObject.CapacityReservationResourceGroupArn,
+		"usage_strategy":                          apiObject.UsageStrategy,
 	}
 
 	return []any{tfMap}
@@ -2225,6 +2275,10 @@ func expandInstanceTypeConfigs(tfList []any) []awstypes.InstanceTypeConfig {
 			apiObject.EbsConfiguration = expandEBSConfiguration(v.List())
 		}
 
+		if v, ok := tfMap[names.AttrPriority].(float64); ok && v != -1 {
+			apiObject.Priority = aws.Float64(v)
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
@@ -2235,8 +2289,13 @@ func expandLaunchSpecification(tfMap map[string]any) *awstypes.InstanceFleetProv
 	apiObject := &awstypes.InstanceFleetProvisioningSpecifications{}
 
 	if v := tfMap["on_demand_specification"].([]any); len(v) > 0 {
+		tfMap := v[0].(map[string]any)
 		apiObject.OnDemandSpecification = &awstypes.OnDemandProvisioningSpecification{
-			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(v[0].(map[string]any)["allocation_strategy"].(string)),
+			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(tfMap["allocation_strategy"].(string)),
+		}
+
+		if vv := tfMap["capacity_reservation_options"].([]any); len(vv) > 0 {
+			apiObject.OnDemandSpecification.CapacityReservationOptions = expandCapacityReservationOptions(vv[0].(map[string]any))
 		}
 	}
 
@@ -2254,6 +2313,23 @@ func expandLaunchSpecification(tfMap map[string]any) *awstypes.InstanceFleetProv
 		}
 
 		apiObject.SpotSpecification = spotProvisioning
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationOptions(tfMap map[string]any) *awstypes.OnDemandCapacityReservationOptions {
+	apiObject := &awstypes.OnDemandCapacityReservationOptions{}
+
+	if v, ok := tfMap["capacity_reservation_preference"].(string); ok {
+		apiObject.CapacityReservationPreference = awstypes.OnDemandCapacityReservationPreference(v)
+	}
+	if v, ok := tfMap["capacity_reservation_resource_group_arn"].(string); ok {
+		apiObject.CapacityReservationResourceGroupArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["usage_strategy"].(string); ok {
+		apiObject.UsageStrategy = awstypes.OnDemandCapacityReservationUsageStrategy(v)
 	}
 
 	return apiObject
@@ -2293,6 +2369,9 @@ func resourceInstanceTypeHashConfig(v any) int {
 	}
 	if v, ok := m["weighted_capacity"]; ok && v.(int) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m[names.AttrPriority]; ok && v.(float64) > 0 {
+		buf.WriteString(fmt.Sprintf("%.6f-", v.(float64)))
 	}
 	if v, ok := m["bid_price_as_percentage_of_on_demand_price"]; ok && v.(float64) != 0 {
 		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))

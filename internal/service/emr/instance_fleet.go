@@ -128,6 +128,12 @@ func resourceInstanceFleet() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						names.AttrPriority: {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							ForceNew: true,
+							Default:  -1,
+						},
 						"weighted_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -157,6 +163,34 @@ func resourceInstanceFleet() *schema.Resource {
 										Required:         true,
 										ForceNew:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+									},
+									"capacity_reservation_options": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MinItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"capacity_reservation_preference": {
+													Type:             schema.TypeString,
+													ForceNew:         true,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationPreference](),
+												},
+												"capacity_reservation_resource_group_arn": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Required: true,
+													// ValidateDiagFunc: validation.IsUUID(),
+												},
+												"usage_strategy": {
+													Type:             schema.TypeString,
+													ForceNew:         true,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationUsageStrategy](),
+												},
+											},
+										},
 									},
 								},
 							},

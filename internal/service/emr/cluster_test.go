@@ -1669,6 +1669,42 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 	})
 }
 
+func TestAccEMRCluster_InstanceFleetMasterOnlyWithReservation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster awstypes.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_instanceFleetsMasterOnlyWithReservation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.0.instance_type_configs.0.priority", "1.42"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_instance_fleet.0.launch_specifications.0.on_demand_specification.0.capacity_reservation_options.0.capacity_reservation_resource_group_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
 func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster awstypes.Cluster
@@ -4136,6 +4172,109 @@ resource "aws_emr_cluster" "test" {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
     name = "runif"
     args = ["instance.isMaster=true", "echo running on master node"]
+  }
+}
+`, rName))
+}
+
+func testAccClusterConfig_baseVPCWithCapacityReservation(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		fmt.Sprintf(`
+# Hard to test "future" capacity reservations.
+# For fleets, EMR supports both open and targeted.
+resource "aws_ec2_capacity_reservation" "test1" {
+  instance_type           = "m4.xlarge"
+  instance_platform       = "Linux/UNIX"
+  availability_zone       = aws_subnet.test.availability_zone
+  instance_match_criteria = "targeted"
+  instance_count          = 1
+}
+
+resource "aws_ec2_capacity_reservation" "test2" {
+  instance_type           = "m4.2xlarge"
+  instance_platform       = "Linux/UNIX"
+  availability_zone       = aws_subnet.test.availability_zone
+  instance_match_criteria = "targeted"
+  instance_count          = 1
+}
+
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+
+  configuration {
+    type = "AWS::EC2::CapacityReservationPool"
+  }
+
+  configuration {
+    parameters {
+      name   = "allowed-resource-types"
+      values = ["AWS::EC2::CapacityReservation"]
+    }
+    type = "AWS::ResourceGroups::Generic"
+  }
+}
+
+resource "aws_resourcegroups_resource" "test1" {
+  group_arn    = aws_resourcegroups_group.test.arn
+  resource_arn = aws_ec2_capacity_reservation.test1.arn
+}
+
+resource "aws_resourcegroups_resource" "test2" {
+  group_arn    = aws_resourcegroups_group.test.arn
+  resource_arn = aws_ec2_capacity_reservation.test2.arn
+}
+`, rName))
+}
+
+func testAccClusterConfig_instanceFleetsMasterOnlyWithReservation(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPCWithCapacityReservation(rName),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  name          = %[1]q
+  release_label = "emr-5.30.1"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
+
+  master_instance_fleet {
+    instance_type_configs {
+      instance_type = "m4.xlarge"
+      priority      = 1.42
+    }
+
+    instance_type_configs {
+      instance_type = "m4.2xlarge"
+      priority      = 1
+    }
+
+    launch_specifications {
+      on_demand_specification {
+        allocation_strategy = "prioritized"
+        capacity_reservation_options {
+          capacity_reservation_resource_group_arn = aws_resourcegroups_group.test.arn
+        }
+      }
+    }
+
+    target_on_demand_capacity = 1
+  }
+  service_role = aws_iam_role.emr_service.arn
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
   }
 }
 `, rName))
