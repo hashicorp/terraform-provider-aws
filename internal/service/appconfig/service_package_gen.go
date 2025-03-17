@@ -89,7 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDeploymentStrategy,
+			Factory:  resourceDeploymentStrategy,
 			TypeName: "aws_appconfig_deployment_strategy",
 			Name:     "Deployment Strategy",
 			Tags: &types.ServicePackageResourceTags{
