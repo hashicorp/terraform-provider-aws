@@ -346,6 +346,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
 						if v, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = v.(string)
+
+							// As data sources have no CustomizeDiff functionality we validate the Region here.
+							if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), overrideRegion); err != nil {
+								return ctx, sdkdiag.AppendFromErr(diags, err)
+							}
 						}
 					}
 

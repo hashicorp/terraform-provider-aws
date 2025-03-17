@@ -16,10 +16,17 @@ import (
 // the top-level `region` attribute is in the configured AWS partition.
 func verifyRegionInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region := v.(string)
-		if got, want := names.PartitionForRegion(region).ID(), meta.(*conns.AWSClient).Partition(ctx); got != want {
-			return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
+		if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), v.(string)); err != nil {
+			return err
 		}
+	}
+
+	return nil
+}
+
+func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region string) error {
+	if got, want := names.PartitionForRegion(region).ID(), c.Partition(ctx); got != want {
+		return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
 	}
 
 	return nil
