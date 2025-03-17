@@ -10,7 +10,6 @@ var (
 	DetachNetworkInterface                                         = detachNetworkInterface
 	FindImageByID                                                  = findImageByID
 	FindInstanceByID                                               = findInstanceByID
-	FindIPAMPoolAllocationsForVPC                                  = findIPAMPoolAllocationsForVPC
 	FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID               = findIPAMPoolAllocationsByIPAMPoolIDAndResourceID
 	FindNetworkInterfaces                                          = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription

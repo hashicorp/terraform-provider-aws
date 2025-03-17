@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -139,7 +140,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
-					acctest.CheckVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
+					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -199,7 +200,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
-					acctest.CheckVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
+					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -256,6 +257,30 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx context.Context, nIPAMPool, nVPC string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rsIPAMPool, ok := s.RootModule().Resources[nIPAMPool]
+		if !ok {
+			return fmt.Errorf("Not found: %s", nIPAMPool)
+		}
+		rsVPC, ok := s.RootModule().Resources[nVPC]
+		if !ok {
+			return fmt.Errorf("Not found: %s", nVPC)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		const (
+			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+			return tfec2.FindIPAMPoolAllocationsForVPC(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
+		})
+
+		return err
 	}
 }
 
