@@ -73,7 +73,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 									"date": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+										ValidateFunc: func(v any, k string) (ws []string, errors []error) {
 											value := v.(string)
 
 											_, err := time.Parse("2006-01-02", value)
@@ -128,7 +128,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -162,7 +162,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -197,7 +197,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -228,7 +228,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -285,12 +285,12 @@ func findBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3c
 	return output, nil
 }
 
-func expandAbortIncompleteMultipartUpload(tfList []interface{}) *types.AbortIncompleteMultipartUpload {
+func expandAbortIncompleteMultipartUpload(tfList []any) *types.AbortIncompleteMultipartUpload {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -305,12 +305,12 @@ func expandAbortIncompleteMultipartUpload(tfList []interface{}) *types.AbortInco
 	return apiObject
 }
 
-func expandLifecycleExpiration(tfList []interface{}) *types.LifecycleExpiration {
+func expandLifecycleExpiration(tfList []any) *types.LifecycleExpiration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -337,11 +337,11 @@ func expandLifecycleExpiration(tfList []interface{}) *types.LifecycleExpiration 
 	return apiObject
 }
 
-func expandLifecycleRules(ctx context.Context, tfList []interface{}) []types.LifecycleRule {
+func expandLifecycleRules(ctx context.Context, tfList []any) []types.LifecycleRule {
 	var apiObjects []types.LifecycleRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -359,22 +359,22 @@ func expandLifecycleRules(ctx context.Context, tfList []interface{}) []types.Lif
 	return apiObjects
 }
 
-func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *types.LifecycleRule {
+func expandLifecycleRule(ctx context.Context, tfMap map[string]any) *types.LifecycleRule {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
 	apiObject := &types.LifecycleRule{}
 
-	if v, ok := tfMap["abort_incomplete_multipart_upload"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["abort_incomplete_multipart_upload"].([]any); ok && len(v) > 0 {
 		apiObject.AbortIncompleteMultipartUpload = expandAbortIncompleteMultipartUpload(v)
 	}
 
-	if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["expiration"].([]any); ok && len(v) > 0 {
 		apiObject.Expiration = expandLifecycleExpiration(v)
 	}
 
-	if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]any); ok && len(v) > 0 {
 		apiObject.Filter = expandLifecycleRuleFilter(ctx, v)
 	}
 
@@ -397,12 +397,12 @@ func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types.LifecycleRuleFilter {
+func expandLifecycleRuleFilter(ctx context.Context, tfList []any) *types.LifecycleRuleFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -414,7 +414,7 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types
 		apiObject.Prefix = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
 			apiObject.Tag = &tagsS3(tftags.New(ctx, v))[0]
@@ -430,24 +430,24 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types
 	return apiObject
 }
 
-func flattenAbortIncompleteMultipartUpload(apiObject *types.AbortIncompleteMultipartUpload) []interface{} {
+func flattenAbortIncompleteMultipartUpload(apiObject *types.AbortIncompleteMultipartUpload) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"days_after_initiation": apiObject.DaysAfterInitiation,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLifecycleExpiration(apiObject *types.LifecycleExpiration) []interface{} {
+func flattenLifecycleExpiration(apiObject *types.LifecycleExpiration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"days":                         apiObject.Days,
 		"expired_object_delete_marker": apiObject.ExpiredObjectDeleteMarker,
 	}
@@ -456,11 +456,11 @@ func flattenLifecycleExpiration(apiObject *types.LifecycleExpiration) []interfac
 		tfMap["date"] = aws.ToTime(v).Format("2006-01-02")
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule) []interface{} {
-	var tfMaps []interface{}
+func flattenLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule) []any {
+	var tfMaps []any
 
 	for _, apiObject := range apiObjects {
 		tfMaps = append(tfMaps, flattenLifecycleRule(ctx, apiObject))
@@ -469,8 +469,8 @@ func flattenLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule
 	return tfMaps
 }
 
-func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) map[string]any {
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 
@@ -493,12 +493,12 @@ func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) ma
 	return tfMap
 }
 
-func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleRuleFilter) []interface{} {
+func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleRuleFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.And != nil {
 		if v := apiObject.And.Prefix; v != nil {
@@ -518,5 +518,5 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
