@@ -6,6 +6,7 @@ package shield
 import (
 	"context"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"slices"
 )
 
 // @SDKResource("aws_shield_protection_health_check_association", name="Protection Health Check Association")
