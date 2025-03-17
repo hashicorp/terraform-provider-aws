@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validLogGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 512 {
@@ -29,7 +29,7 @@ func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validLogGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 483 {
@@ -49,7 +49,7 @@ func validLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func validLogMetricFilterName(v interface{}, k string) (ws []string, errors []error) {
+func validLogMetricFilterName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 512 {
@@ -68,7 +68,7 @@ func validLogMetricFilterName(v interface{}, k string) (ws []string, errors []er
 	return
 }
 
-func validLogMetricFilterTransformationName(v interface{}, k string) (ws []string, errors []error) {
+func validLogMetricFilterTransformationName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 255 {
@@ -88,7 +88,7 @@ func validLogMetricFilterTransformationName(v interface{}, k string) (ws []strin
 	return
 }
 
-func validLogStreamName(v interface{}, k string) (ws []string, errors []error) { // nosemgrep:ci.logs-in-func-name
+func validLogStreamName(v any, k string) (ws []string, errors []error) { // nosemgrep:ci.logs-in-func-name
 	value := v.(string)
 	if regexache.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
