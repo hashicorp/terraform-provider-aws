@@ -109,7 +109,7 @@ func ResourceDeployment() *schema.Resource {
 	}
 }
 
-func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 30 * time.Minute // AWS SDK for Go v1 compatibility.
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (any, error) {
 		return conn.StartDeployment(ctx, input)
 	})
 
@@ -147,7 +147,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -202,7 +202,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -210,7 +210,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentDelete(ctx context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func resourceDeploymentDelete(ctx context.Context, _ *schema.ResourceData, _ any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	log.Printf("[WARN] Cannot destroy AppConfig Deployment. Terraform will remove this resource from the state file, however this resource remains.")
 	return diags

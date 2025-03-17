@@ -77,7 +77,7 @@ const (
 	DSNameEnvironment = "Environment Data Source"
 )
 
-func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -120,12 +120,12 @@ func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appco
 	return res, nil
 }
 
-func flattenEnvironmentMonitors(monitors []awstypes.Monitor) []interface{} {
+func flattenEnvironmentMonitors(monitors []awstypes.Monitor) []any {
 	if len(monitors) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, monitor := range monitors {
 		tfList = append(tfList, flattenEnvironmentMonitor(monitor))
@@ -134,8 +134,8 @@ func flattenEnvironmentMonitors(monitors []awstypes.Monitor) []interface{} {
 	return tfList
 }
 
-func flattenEnvironmentMonitor(monitor awstypes.Monitor) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEnvironmentMonitor(monitor awstypes.Monitor) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := monitor.AlarmArn; v != nil {
 		tfMap["alarm_arn"] = aws.ToString(v)

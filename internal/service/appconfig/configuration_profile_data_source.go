@@ -89,7 +89,7 @@ const (
 	DSNameConfigurationProfile = "Configuration Profile Data Source"
 )
 
-func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
