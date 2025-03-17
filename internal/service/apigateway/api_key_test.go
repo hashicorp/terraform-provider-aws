@@ -21,14 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAPIGatewayAPIKey_basic(t *testing.T) {
+func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -71,13 +71,13 @@ func testAccAPIGatewayAPIKey_basic(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKey_customerID(t *testing.T) {
+func TestAccAPIGatewayAPIKey_customerID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,13 +107,13 @@ func testAccAPIGatewayAPIKey_customerID(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKey_description(t *testing.T) {
+func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -143,13 +143,13 @@ func testAccAPIGatewayAPIKey_description(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKey_enabled(t *testing.T) {
+func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -179,13 +179,13 @@ func testAccAPIGatewayAPIKey_enabled(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKey_value(t *testing.T) {
+func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -207,13 +207,13 @@ func testAccAPIGatewayAPIKey_value(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKey_disappears(t *testing.T) {
+func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
