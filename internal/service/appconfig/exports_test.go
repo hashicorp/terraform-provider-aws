@@ -5,8 +5,10 @@ package appconfig
 
 // Exports for use in tests only.
 var (
-	ResourceApplication   = resourceApplication
-	ResourceEnvironmentFW = newResourceEnvironment
+	ResourceApplication          = resourceApplication
+	ResourceConfigurationProfile = resourceConfigurationProfile
+	ResourceEnvironmentFW        = newResourceEnvironment
 
-	FindApplicationByID = findApplicationByID
+	FindApplicationByID                  = findApplicationByID
+	FindConfigurationProfileByTwoPartKey = findConfigurationProfileByTwoPartKey
 )

@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfigurationProfile,
+			Factory:  resourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
 			Name:     "Configuration Profile",
 			Tags: &types.ServicePackageResourceTags{
