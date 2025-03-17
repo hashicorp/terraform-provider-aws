@@ -13,13 +13,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAPIKeysDataSource_basic(t *testing.T) {
+func TestAccAPIGatewayAPIKeysDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_api_key.test"
 	dataSourceName := "data.aws_api_gateway_api_keys.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -28,27 +28,27 @@ func testAccAPIKeysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "items.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.created_date", resourceName, names.AttrCreatedDate),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.description", resourceName, names.AttrDescription),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.enabled", resourceName, names.AttrEnabled),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.id", resourceName, names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.last_updated_date", resourceName, names.AttrLastUpdatedDate),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.0.name", resourceName, names.AttrName),
-					resource.TestCheckNoResourceAttr(dataSourceName, "items.0.value"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "items.#", 1),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.created_date", resourceName, names.AttrCreatedDate),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.description", resourceName, names.AttrDescription),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.enabled", resourceName, names.AttrEnabled),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.id", resourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.last_updated_date", resourceName, names.AttrLastUpdatedDate),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.name", resourceName, names.AttrName),
+					resource.TestCheckNoResourceAttr(dataSourceName, "items.*.value"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAPIKeysDataSource_includeValues(t *testing.T) {
+func TestAccAPIGatewayAPIKeysDataSource_includeValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
+	resourceName := "aws_api_gateway_api_key.test"
 	dataSourceName := "data.aws_api_gateway_api_keys.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,29 +57,33 @@ func testAccAPIKeysDataSource_includeValues(t *testing.T) {
 			{
 				Config: testAccAPIKeysDataSourceConfig_includeValues(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "items.0.value"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "items.#", 1),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.id", resourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.name", resourceName, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "items.*.value", resourceName, names.AttrValue),
 				),
 			},
 		},
 	})
 }
 
-func testAccAPIKeysDataSource_manyKeys(t *testing.T) {
+func TestAccAPIGatewayAPIKeysDataSource_manyKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	dataSourceName := "data.aws_api_gateway_api_keys.test"
+	keyCount := 3
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeysDataSourceConfig_manyKeys(rName, 3),
+				Config: testAccAPIKeysDataSourceConfig_manyKeys(rName, keyCount),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "items.#", "3"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "items.#", keyCount),
 				),
 			},
 		},
