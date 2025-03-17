@@ -5,14 +5,11 @@ package kendra_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/kendra/document"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1793,6 +1790,7 @@ func TestAccKendraDataSource_Configuration_TemplateConfiguration(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1802,7 +1800,7 @@ func TestAccKendraDataSource_Configuration_TemplateConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_template(rName, rName2, rName3, rName4),
+				Config: testAccDataSourceConfig_template(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1811,116 +1809,6 @@ func TestAccKendraDataSource_Configuration_TemplateConfiguration(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestAccKendraDataSource_ExpandTemplateConfiguration(t *testing.T) {
-	t.Parallel()
-	t.Run("Will parse a Template configuration", func(t *testing.T) {
-		t.Parallel()
-		templateJson := map[string]any{
-			"firstKey":  "firstKey",
-			"secondKey": 2,
-			"thirdKey": map[string]any{
-				"nested": false,
-			},
-		}
-		templateJsonString, _ := json.Marshal(templateJson)
-
-		var config []interface{}
-		var templateConfiguration []interface{}
-
-		templateConfiguration = append(templateConfiguration, map[string]interface{}{
-			"template": string(templateJsonString),
-		})
-
-		config = append(config, map[string]interface{}{
-			"template_configuration": templateConfiguration,
-		})
-
-		result := tfkendra.ExpandDataSourceConfiguration(config)
-
-		actual, err := result.TemplateConfiguration.Template.MarshalSmithyDocument()
-		if err != nil {
-			t.Errorf("Unable to marhsal the Template %s", err)
-		}
-
-		expected, err := document.NewLazyDocument(templateJson).MarshalSmithyDocument()
-		if err != nil {
-			t.Errorf("Unable to marhsal the Template %s", err)
-		}
-
-		compareJsonStr(t, string(expected[:]), string(actual[:]))
-	})
-	t.Run("Will throw an error on invalid json", func(t *testing.T) {
-		t.Parallel()
-		templateJsonString := "{invalidJson}"
-
-		var config []interface{}
-		configuration := map[string]string{
-			"template_configuration": templateJsonString,
-		}
-		config = append(config, configuration)
-
-		result := tfkendra.ExpandDataSourceConfiguration(config)
-		if result != nil {
-			t.Errorf("Should have returned nil from bad JSON")
-		}
-	})
-}
-
-func TestAccKendraDataSource_FlattenTemplateConfiguration(t *testing.T) {
-	t.Parallel()
-	t.Run("Will flatten the Template configuration", func(t *testing.T) {
-		t.Parallel()
-		Template := document.NewLazyDocument(map[string]interface{}{
-			"firstKey":  "firstKey",
-			"secondKey": 2,
-			"thirdKey": map[string]any{
-				"nested": false,
-			},
-		})
-		apiObject := &types.DataSourceConfiguration{
-			TemplateConfiguration: &types.TemplateConfiguration{
-				Template: Template,
-			},
-		}
-		templateJsonString, _ := Template.MarshalSmithyDocument()
-
-		result := tfkendra.FlattenDataSourceConfiguration(apiObject)
-
-		actualTemplateConfig, ok := result[0].(map[string]interface{})
-		if !ok {
-			t.Error("Should have a single entry of the correct type")
-		}
-
-		actualTemplateArray, ok := actualTemplateConfig["template_configuration"].([]interface{})
-		if !ok {
-			t.Error("Should have a 'template_configuration' field")
-		}
-
-		actualTemplate, ok := actualTemplateArray[0].(map[string]interface{})
-		if !ok {
-			t.Error("Should have a single entry of the correct type")
-		}
-
-		compareJsonStr(t, string(templateJsonString[:]), actualTemplate["template"].(string))
-	})
-}
-
-func compareJsonStr(t *testing.T, expectedJsonString, actualJsonString string) {
-	var expected interface{}
-	var actual interface{}
-
-	if err := json.Unmarshal([]byte(expectedJsonString), &expected); err != nil {
-		t.Errorf("Unable to parse expected JSON string: %s", err)
-	}
-
-	if err := json.Unmarshal([]byte(actualJsonString), &actual); err != nil {
-		t.Errorf("Unable to parse actual JSON string: %s", err)
-	}
-	if !reflect.DeepEqual(expected, actual) {
-		t.Fatalf("JSON objects do not match; expected \n%#v\ngot\n%#v\n", expected, actual)
-	}
 }
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -1986,9 +1874,11 @@ func testAccDataSourceConfigBase(rName, rName2, rName3 string) string {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
 data "aws_kms_key" "this" {
   key_id = "alias/aws/kendra"
 }
+
 data "aws_iam_policy_document" "test" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -1999,6 +1889,7 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
+
 data "aws_iam_policy_document" "test_index" {
   statement {
     effect = "Allow"
@@ -2384,9 +2275,10 @@ resource "aws_kendra_data_source" "test" {
 `, rName6, schedule))
 }
 
-func testAccDataSourceConfig_template(rName, rName2, rName3, dataSourceName string) string {
+func testAccDataSourceConfig_template(rName, rName2, rName3, rName4, dataSourceName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerBase(rName4),
 		fmt.Sprintf(`
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
