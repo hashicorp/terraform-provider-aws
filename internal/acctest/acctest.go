@@ -2001,10 +2001,6 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.Tes
 			return fmt.Errorf("not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no VPC ID is set")
-		}
-
 		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
@@ -2016,6 +2012,30 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.Tes
 		*v = *output
 
 		return nil
+	}
+}
+
+func CheckVPCIPAMPoolAllocationDeleted(ctx context.Context, nIPAMPool, nVPC string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rsIPAMPool, ok := s.RootModule().Resources[nIPAMPool]
+		if !ok {
+			return fmt.Errorf("not found: %s", nIPAMPool)
+		}
+		rsVPC, ok := s.RootModule().Resources[nVPC]
+		if !ok {
+			return fmt.Errorf("not found: %s", nVPC)
+		}
+
+		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		const (
+			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+			return tfec2.FindIPAMPoolAllocationsForVPC(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
+		})
+
+		return err
 	}
 }
 
