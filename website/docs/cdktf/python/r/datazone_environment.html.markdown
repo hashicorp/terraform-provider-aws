@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
+* `account_identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `domain_identifier` - (Required) The ID of the domain where the environment exists.
 * `name` - (Required) The name of the environment.
 * `profile_identifier` - (Required) The ID of the profile with which the environment is created.
