@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,7 +40,7 @@ func resourceCustomActionType() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,15 +57,15 @@ func resourceCustomActionType() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -82,7 +81,7 @@ func resourceCustomActionType() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.ActionConfigurationPropertyType](),
@@ -132,11 +131,11 @@ func resourceCustomActionType() *schema.Resource {
 					},
 				},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -171,15 +170,13 @@ func resourceCustomActionType() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 9),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -188,8 +185,8 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	category := d.Get("category").(string)
-	provider := d.Get("provider_name").(string)
-	version := d.Get("version").(string)
+	provider := d.Get(names.AttrProviderName).(string)
+	version := d.Get(names.AttrVersion).(string)
 	id := CustomActionTypeCreateResourceID(category, provider, version)
 	input := &codepipeline.CreateCustomActionTypeInput{
 		Category: types.ActionCategory(category),
@@ -247,13 +244,13 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codepipeline",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("actiontype:%s/%s/%s/%s", types.ActionOwnerCustom, category, provider, version),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("category", actionType.Id.Category)
 	if err := d.Set("configuration_property", flattenActionConfigurationProperties(d, actionType.ActionConfigurationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration_property: %s", err)
@@ -272,8 +269,8 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("output_artifact_details", nil)
 	}
-	d.Set("owner", actionType.Id.Owner)
-	d.Set("provider_name", actionType.Id.Provider)
+	d.Set(names.AttrOwner, actionType.Id.Owner)
+	d.Set(names.AttrProviderName, actionType.Id.Provider)
 	if actionType.Settings != nil &&
 		// Service can return empty ({}) Settings.
 		(actionType.Settings.EntityUrlTemplate != nil || actionType.Settings.ExecutionUrlTemplate != nil || actionType.Settings.RevisionUrlTemplate != nil || actionType.Settings.ThirdPartyConfigurationUrl != nil) {
@@ -283,7 +280,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("settings", nil)
 	}
-	d.Set("version", actionType.Id.Version)
+	d.Set(names.AttrVersion, actionType.Id.Version)
 
 	return diags
 }
@@ -306,11 +303,12 @@ func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting CodePipeline Custom Action Type: %s", d.Id())
-	_, err = conn.DeleteCustomActionType(ctx, &codepipeline.DeleteCustomActionTypeInput{
+	input := codepipeline.DeleteCustomActionTypeInput{
 		Category: category,
 		Provider: aws.String(provider),
 		Version:  aws.String(version),
-	})
+	}
+	_, err = conn.DeleteCustomActionType(ctx, &input)
 
 	if errs.IsA[*types.ActionNotFoundException](err) {
 		return diags
@@ -359,11 +357,11 @@ func findActionType(ctx context.Context, conn *codepipeline.Client, input *codep
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*types.ActionType]) ([]*types.ActionType, error) {
-	var output []*types.ActionType
+func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*types.ActionType]) ([]types.ActionType, error) {
+	var output []types.ActionType
 
 	pages := codepipeline.NewListActionTypesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -374,8 +372,7 @@ func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *code
 		}
 
 		for _, v := range page.ActionTypes {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -391,15 +388,15 @@ func expandActionConfigurationProperty(tfMap map[string]interface{}) *types.Acti
 
 	apiObject := &types.ActionConfigurationProperty{}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(bool); ok {
+	if v, ok := tfMap[names.AttrKey].(bool); ok {
 		apiObject.Key = v
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -415,7 +412,7 @@ func expandActionConfigurationProperty(tfMap map[string]interface{}) *types.Acti
 		apiObject.Secret = v
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.ActionConfigurationPropertyType(v)
 	}
 
@@ -494,26 +491,26 @@ func expandActionTypeSettings(tfMap map[string]interface{}) *types.ActionTypeSet
 
 func flattenActionConfigurationProperty(d *schema.ResourceData, i int, apiObject types.ActionConfigurationProperty) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"key":       apiObject.Key,
-		"queryable": apiObject.Queryable,
-		"required":  apiObject.Required,
-		"secret":    apiObject.Secret,
+		names.AttrKey: apiObject.Key,
+		"queryable":   apiObject.Queryable,
+		"required":    apiObject.Required,
+		"secret":      apiObject.Secret,
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	} else {
 		// The AWS API does not return Type.
 		key := fmt.Sprintf("configuration_property.%d.type", i)
-		tfMap["type"] = d.Get(key).(string)
+		tfMap[names.AttrType] = d.Get(key).(string)
 	}
 
 	return tfMap

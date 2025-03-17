@@ -8,14 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -26,16 +25,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/mapstructure"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_inspector2_enabler")
+// @SDKResource("aws_inspector2_enabler", name="Enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,
@@ -76,7 +75,7 @@ func ResourceEnabler() *schema.Resource {
 				if l := len(accountIDs); l > 1 {
 					client := meta.(*conns.AWSClient)
 
-					if slices.Contains(accountIDs, client.AccountID) {
+					if slices.Contains(accountIDs, client.AccountID(ctx)) {
 						return fmt.Errorf(`"account_ids" can contain either the administrator account or one or more member accounts. Contains %v`, accountIDs)
 					}
 				}
@@ -86,11 +85,7 @@ func ResourceEnabler() *schema.Resource {
 	}
 }
 
-type resourceGetter interface {
-	Get(key string) any
-}
-
-func getAccountIDs(d resourceGetter) []string {
+func getAccountIDs(d sdkv2.ResourceDiffer) []string {
 	return flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
 }
 
@@ -129,11 +124,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return nil
 		}
 
-		var errs *multierror.Error
-		for _, acct := range out.FailedAccounts {
-			errs = multierror.Append(errs, newFailedAccountError(acct))
-		}
-		err = failedAccountsError(*errs)
+		err = errors.Join(tfslices.ApplyToAll(out.FailedAccounts, newFailedAccountError)...)
 
 		if tfslices.All(out.FailedAccounts, func(acct types.FailedAccount) bool {
 			switch acct.ErrorCode {
@@ -172,11 +163,16 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		for _, resourceType := range typeEnable {
 			delete(resourceStatuses, resourceType)
 		}
+		for resourceType, typeStatus := range resourceStatuses {
+			if typeStatus == types.StatusDisabled {
+				delete(resourceStatuses, resourceType)
+			}
+		}
 		if len(resourceStatuses) > 0 {
 			disableAccountIDs = append(disableAccountIDs, acctID)
 			in := &inspector2.DisableInput{
 				AccountIds:    []string{acctID},
-				ResourceTypes: maps.Keys(resourceStatuses),
+				ResourceTypes: tfmaps.Keys(resourceStatuses),
 			}
 
 			_, err := conn.Disable(ctx, in)
@@ -187,7 +183,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if len(disableAccountIDs) > 0 {
-		if _, err := waitEnabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := waitDisabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
 		}
 	}
@@ -222,7 +218,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	accountStatuses := maps.Values(s)
+	accountStatuses := tfmaps.Values(s)
 	accountStatus := accountStatuses[0]
 	var resourceTypes []types.ResourceScanType
 	for k, a := range accountStatus.ResourceStatuses {
@@ -248,7 +244,8 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
 	var typeDisable []types.ResourceScanType
 	if d.HasChange("resource_types") {
-		for _, v := range types.ResourceScanType("").Values() {
+		o, _ := d.GetChange("resource_types")
+		for _, v := range flex.ExpandStringyValueSet[types.ResourceScanType](o.(*schema.Set)) {
 			if !slices.Contains(typeEnable, v) {
 				typeDisable = append(typeDisable, v)
 			}
@@ -325,9 +322,9 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := client.Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
-	admin := slices.Contains(accountIDs, client.AccountID)
+	admin := slices.Contains(accountIDs, client.AccountID(ctx))
 	members := tfslices.Filter(accountIDs, func(s string) bool {
-		return s != client.AccountID
+		return s != client.AccountID(ctx)
 	})
 	if len(members) > 0 {
 		// Catch legacy case mixing admin account and member accounts
@@ -343,7 +340,7 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 			return diags
 		}
 	} else if admin {
-		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID})...)
+		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID(ctx)})...)
 	}
 
 	return diags
@@ -351,9 +348,28 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.ResourceData, accountIDs []string) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	s, err := AccountStatuses(ctx, conn, accountIDs)
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+	}
+
+	var resourceTypes []types.ResourceScanType
+	for _, st := range s {
+		for k, a := range st.ResourceStatuses {
+			if a != types.StatusDisabled && !slices.Contains(resourceTypes, k) {
+				resourceTypes = append(resourceTypes, k)
+			}
+		}
+	}
+
+	if len(resourceTypes) == 0 {
+		return diags
+	}
+
 	in := &inspector2.DisableInput{
 		AccountIds:    accountIDs,
-		ResourceTypes: types.ResourceScanType("").Values(),
+		ResourceTypes: resourceTypes,
 	}
 
 	out, err := conn.Disable(ctx, in)
@@ -364,11 +380,14 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
 	}
 
+	var errs []error
 	for _, acct := range out.FailedAccounts {
 		if acct.ErrorCode != types.ErrorCodeAccessDenied {
-			err = multierror.Append(err, newFailedAccountError(acct))
+			errs = append(errs, newFailedAccountError(acct))
 		}
 	}
+	err = errors.Join(errs...)
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
@@ -378,13 +397,6 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 	}
 
 	return diags
-}
-
-type failedAccountsError multierror.Error
-
-func (e failedAccountsError) Error() string {
-	m := multierror.Error(e)
-	return m.Error()
 }
 
 type failedAccountError struct {
@@ -462,20 +474,20 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+		if tfslices.All(tfmaps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 
-		if tfslices.Any(maps.Values(st), func(v AccountResourceStatus) bool {
+		if tfslices.Any(tfmaps.Values(st), func(v AccountResourceStatus) bool {
 			if slices.Contains(pendingStates, v.Status) {
 				return true
 			}
-			if tfslices.Any(maps.Values(v.ResourceStatuses), func(v types.Status) bool {
+			if tfslices.Any(tfmaps.Values(v.ResourceStatuses), func(v types.Status) bool {
 				return slices.Contains(pendingStates, v)
 			}) {
 				return true
 			}
-			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
+			if v.Status == types.StatusEnabled && tfslices.All(tfmaps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
 				return true
 			}
 			return false
@@ -499,7 +511,7 @@ func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountI
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+		if tfslices.All(tfmaps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 
@@ -527,6 +539,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 		return nil, err
 	}
 
+	var errs []error
 	results := make(map[string]AccountResourceStatus, len(out.Accounts))
 	for _, a := range out.Accounts {
 		if a.AccountId == nil || a.State == nil {
@@ -539,7 +552,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 		var m map[string]*types.State
 		e := mapstructure.Decode(a.ResourceState, &m)
 		if e != nil {
-			err = multierror.Append(err, e)
+			errs = append(errs, e)
 			continue
 		}
 		for k, v := range m {
@@ -550,6 +563,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 		}
 		results[aws.ToString(a.AccountId)] = status
 	}
+	err = errors.Join(errs...)
 
 	if err != nil {
 		return results, err
@@ -563,9 +577,9 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 }
 
 func enablerID(accountIDs []string, types []types.ResourceScanType) string {
-	sort.Strings(accountIDs)
+	slices.Sort(accountIDs)
 	t := enum.Slice(types...)
-	sort.Strings(t)
+	slices.Sort(t)
 	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(t, ":"))
 }
 

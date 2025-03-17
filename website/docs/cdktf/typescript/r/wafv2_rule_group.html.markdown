@@ -327,6 +327,7 @@ This resource supports the following arguments:
 * `customResponseBody` - (Optional) Defines custom response bodies that can be referenced by `customResponse` actions. See [Custom Response Body](#custom-response-body) below for details.
 * `description` - (Optional) A friendly description of the rule group.
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
+* `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -513,6 +514,9 @@ The `rateBasedStatement` block supports the following arguments:
 
 * `aggregateKeyType` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `CUSTOM_KEYS`, `FORWARDED_IP` or `IP`. Default: `IP`.
 * `customKey` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [`customKey`](#custom_key-block) below for details.
+* `evaluationWindowSec` - (Optional) The amount of time, in seconds, that AWS WAF should include in its request counts, looking back from the current time. Valid values are `60`, `120`, `300`, and `600`. Defaults to `300` (5 minutes).
+
+  **NOTE:** This setting doesn't determine how often AWS WAF checks the rate, but how far back it looks each time it checks. AWS WAF checks the rate about every 10 seconds.
 * `forwardedIpConfig` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregateKeyType` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
 * `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
 * `scopeDownStatement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details. If `aggregateKeyType` is set to `CONSTANT`, this block is required.
@@ -562,6 +566,7 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqliMatchStatement` block supports the following arguments:
 
 * `fieldToMatch` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `sensitivityLevel` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
 * `textTransformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -583,13 +588,16 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `fieldToMatch` block supports the following arguments:
 
-~> **NOTE:** Only one of `allQueryArguments`, `body`, `cookies`, `headers`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, or `uriPath` can be specified.
+~> **NOTE:** Only one of `allQueryArguments`, `body`, `cookies`, `headerOrder`, `headers`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, or `uriPath` can be specified.
 An empty configuration block `{}` should be used when specifying `allQueryArguments`, `body`, `method`, or `queryString` attributes.
 
 * `allQueryArguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
+* `headerOrder` - (Optional) Inspect the request headers. See [Header Order](#header-order) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
+* `ja3Fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3Fingerprint`](#ja3_fingerprint-block) below for details.
+* `ja4Fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja4Fingerprint`](#ja3_fingerprint-block) below for details.
 * `jsonBody` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `queryString` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -618,6 +626,14 @@ The `ipSetForwardedIpConfig` block supports the following arguments:
 * `headerName` - (Required) - The name of the HTTP header to use for the IP address.
 * `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
 
+### Header Order
+
+Inspect a string containing the list of the request's header names, ordered as they appear in the web request that AWS WAF receives for inspection. AWS WAF generates the string and then uses that as the field to match component in its inspection. AWS WAF separates the header names in the string using colons and no added spaces, for example `host:user-agent:accept:authorization:referer`.
+
+The `headerOrder` block supports the following arguments:
+
+* `oversizeHandling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+
 ### Headers
 
 Inspect the request headers.
@@ -630,6 +646,18 @@ The `headers` block supports the following arguments:
     * `excludedHeaders` - An array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
 * `matchScope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
 * `oversizeHandling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+
+### `ja3Fingerprint` Block
+
+The `ja3Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) The match status to assign to the web request if the request doesn't have a JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### `ja4Fingerprint` Block
+
+The `ja4Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) The match status to assign to the web request if the request doesn't have a JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### JSON Body
 
@@ -713,6 +741,8 @@ The `customKey` block supports the following arguments:
 * `httpMethod` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `httpMethod`](#ratelimit-http_method-block) below for details.
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
 * `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
+* `ja3Fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
+* `ja4Fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
 * `labelNamespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `labelNamespace`](#ratelimit-label_namespace-block) below for details.
 * `queryArgument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `queryArgument`](#ratelimit-query_argument-block) below for details.
 * `queryString` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `queryString`](#ratelimit-query_string-block) below for details.
@@ -753,6 +783,22 @@ The `header` block supports the following arguments:
 Use the request's originating IP address as an aggregate key. Each distinct IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the IP address by specifying `IP` in your rate-based statement's `aggregateKeyType`.
 
 The `ip` block is configured as an empty block `{}`.
+
+### RateLimit `ja3Fingerprint` Block
+
+Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+
+The `ja3Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### RateLimit `ja4Fingerprint` Block
+
+Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+
+The `ja4Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### RateLimit `labelNamespace` Block
 
@@ -819,4 +865,4 @@ Using `terraform import`, import WAFv2 Rule Group using `ID/name/scope`. For exa
 % terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5ad818d569e90a291b2931bc9f839421af7a5d4bbec442c14b320a69e106236c -->
+<!-- cache-key: cdktf-0.20.8 input-a50d54772ae56512590c28e71c2356aa1728f90aa1c1efae53567684bd111df7 -->

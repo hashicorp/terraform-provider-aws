@@ -74,11 +74,10 @@ func resourceDeploymentGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"alarms": {
 							Type:     schema.TypeSet,
-							MaxItems: 10,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -95,7 +94,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +104,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -154,7 +153,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.GreenFleetProvisioningAction](),
@@ -168,7 +167,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.InstanceAction](),
@@ -230,16 +229,16 @@ func resourceDeploymentGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -256,16 +255,16 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -281,12 +280,12 @@ func resourceDeploymentGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
 						},
-						"service_name": {
+						names.AttrServiceName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -305,7 +304,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -317,7 +316,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -355,7 +354,7 @@ func resourceDeploymentGroup() *schema.Resource {
 										MaxItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.NoZeroValues,
@@ -391,16 +390,16 @@ func resourceDeploymentGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.TagFilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -413,13 +412,18 @@ func resourceDeploymentGroup() *schema.Resource {
 				Default:          types.OutdatedInstancesStrategyUpdate,
 				ValidateDiagFunc: enum.Validate[types.OutdatedInstancesStrategy](),
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"termination_hook_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"trigger_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -446,8 +450,6 @@ func resourceDeploymentGroup() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -457,7 +459,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
-	serviceRoleArn := d.Get("service_role_arn").(string)
+	serviceRoleArn := d.Get(names.AttrServiceRoleARN).(string)
 	input := &codedeploy.CreateDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
@@ -513,6 +515,10 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OutdatedInstancesStrategy = types.OutdatedInstancesStrategy(v.(string))
 	}
 
+	if v, ok := d.GetOk("termination_hook_enabled"); ok {
+		input.TerminationHookEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("trigger_configuration"); ok {
 		input.TriggerConfigurations = expandTriggerConfigs(v.(*schema.Set).List())
 	}
@@ -566,13 +572,13 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	groupName := aws.ToString(group.DeploymentGroupName)
 	d.Set("app_name", appName)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("auto_rollback_configuration", flattenAutoRollbackConfiguration(group.AutoRollbackConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_rollback_configuration: %s", err)
 	}
@@ -605,7 +611,8 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
 	}
 	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
-	d.Set("service_role_arn", group.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, group.ServiceRoleArn)
+	d.Set("termination_hook_enabled", group.TerminationHookEnabled)
 	if err := d.Set("trigger_configuration", flattenTriggerConfigs(group.TriggerConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
@@ -617,14 +624,10 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		// required fields
-		applicationName := d.Get("app_name").(string)
-		serviceRoleArn := d.Get("service_role_arn").(string)
-
-		input := codedeploy.UpdateDeploymentGroupInput{
-			ApplicationName: aws.String(applicationName),
-			ServiceRoleArn:  aws.String(serviceRoleArn),
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &codedeploy.UpdateDeploymentGroupInput{
+			ApplicationName: aws.String(d.Get("app_name").(string)),
+			ServiceRoleArn:  aws.String(d.Get(names.AttrServiceRoleARN).(string)),
 		}
 
 		if d.HasChange("deployment_group_name") {
@@ -709,32 +712,30 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 
-		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
-
-		var err error
-		err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-			_, err = conn.UpdateDeploymentGroup(ctx, &input)
-
-			if errs.IsA[*types.InvalidRoleException](err) {
-				return retry.RetryableError(err)
-			}
-
-			if errs.IsAErrorMessageContains[*types.InvalidTriggerConfigException](err, "Topic ARN") {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateDeploymentGroup(ctx, &input)
+		if d.HasChange("termination_hook_enabled") {
+			_, n := d.GetChange("termination_hook_enabled")
+			input.TerminationHookEnabled = aws.Bool(n.(bool))
 		}
+
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+			func() (interface{}, error) {
+				return conn.UpdateDeploymentGroup(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if errs.IsA[*types.InvalidRoleException](err) {
+					return true, err
+				}
+
+				if errs.IsAErrorMessageContains[*types.InvalidTriggerConfigException](err, "Topic ARN") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy deployment group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -746,10 +747,11 @@ func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeDeploy Deployment Group: %s", d.Id())
-	_, err := conn.DeleteDeploymentGroup(ctx, &codedeploy.DeleteDeploymentGroupInput{
+	input := codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
-	})
+	}
+	_, err := conn.DeleteDeploymentGroup(ctx, &input)
 
 	if errs.IsA[*types.DeploymentGroupDoesNotExistException](err) {
 		return diags
@@ -794,13 +796,13 @@ func expandTagFilters(configured []interface{}) []types.TagFilter {
 		var filter types.TagFilter
 		m := raw.(map[string]interface{})
 
-		if v, ok := m["key"]; ok {
+		if v, ok := m[names.AttrKey]; ok {
 			filter.Key = aws.String(v.(string))
 		}
-		if v, ok := m["type"]; ok {
+		if v, ok := m[names.AttrType]; ok {
 			filter.Type = types.TagFilterType(v.(string))
 		}
-		if v, ok := m["value"]; ok {
+		if v, ok := m[names.AttrValue]; ok {
 			filter.Value = aws.String(v.(string))
 		}
 
@@ -816,9 +818,9 @@ func expandEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
 		var filter types.EC2TagFilter
 		m := raw.(map[string]interface{})
 
-		filter.Key = aws.String(m["key"].(string))
-		filter.Type = types.EC2TagFilterType(m["type"].(string))
-		filter.Value = aws.String(m["value"].(string))
+		filter.Key = aws.String(m[names.AttrKey].(string))
+		filter.Type = types.EC2TagFilterType(m[names.AttrType].(string))
+		filter.Value = aws.String(m[names.AttrValue].(string))
 
 		filters = append(filters, filter)
 	}
@@ -857,7 +859,7 @@ func expandAutoRollbackConfiguration(configured []interface{}) *types.AutoRollba
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
-		result.Enabled = config["enabled"].(bool)
+		result.Enabled = config[names.AttrEnabled].(bool)
 		result.Events = flex.ExpandStringyValueSet[types.AutoRollbackEvent](config["events"].(*schema.Set))
 	} else { // delete the configuration
 		result.Enabled = false
@@ -872,10 +874,10 @@ func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguratio
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
-		names := flex.ExpandStringSet(config["alarms"].(*schema.Set))
-		alarms := make([]types.Alarm, 0, len(names))
+		n := flex.ExpandStringSet(config["alarms"].(*schema.Set))
+		alarms := make([]types.Alarm, 0, len(n))
 
-		for _, name := range names {
+		for _, name := range n {
 			alarm := types.Alarm{
 				Name: name,
 			}
@@ -883,7 +885,7 @@ func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguratio
 		}
 
 		result.Alarms = alarms
-		result.Enabled = config["enabled"].(bool)
+		result.Enabled = config[names.AttrEnabled].(bool)
 		result.IgnorePollAlarmFailure = config["ignore_poll_alarm_failure"].(bool)
 	} else { // delete the configuration
 		result.Alarms = make([]types.Alarm, 0)
@@ -905,8 +907,8 @@ func expandECSServices(l []interface{}) []types.ECSService {
 		m := mRaw.(map[string]interface{})
 
 		ecsService := types.ECSService{
-			ClusterName: aws.String(m["cluster_name"].(string)),
-			ServiceName: aws.String(m["service_name"].(string)),
+			ClusterName: aws.String(m[names.AttrClusterName].(string)),
+			ServiceName: aws.String(m[names.AttrServiceName].(string)),
 		}
 
 		ecsServices = append(ecsServices, ecsService)
@@ -926,7 +928,7 @@ func expandELBInfos(l []interface{}) []types.ELBInfo {
 		m := mRaw.(map[string]interface{})
 
 		elbInfo := types.ELBInfo{
-			Name: aws.String(m["name"].(string)),
+			Name: aws.String(m[names.AttrName].(string)),
 		}
 
 		elbInfos = append(elbInfos, elbInfo)
@@ -946,7 +948,7 @@ func expandTargetGroupInfos(l []interface{}) []types.TargetGroupInfo {
 		m := mRaw.(map[string]interface{})
 
 		targetGroupInfo := types.TargetGroupInfo{
-			Name: aws.String(m["name"].(string)),
+			Name: aws.String(m[names.AttrName].(string)),
 		}
 
 		targetGroupInfos = append(targetGroupInfos, targetGroupInfo)
@@ -1064,7 +1066,7 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 			m := a[0].(map[string]interface{})
 
 			greenFleetProvisioningOption := &types.GreenFleetProvisioningOption{}
-			if v, ok := m["action"]; ok {
+			if v, ok := m[names.AttrAction]; ok {
 				greenFleetProvisioningOption.Action = types.GreenFleetProvisioningAction(v.(string))
 			}
 			blueGreenDeploymentConfig.GreenFleetProvisioningOption = greenFleetProvisioningOption
@@ -1078,7 +1080,7 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 			m := a[0].(map[string]interface{})
 
 			blueInstanceTerminationOption := &types.BlueInstanceTerminationOption{}
-			if v, ok := m["action"]; ok {
+			if v, ok := m[names.AttrAction]; ok {
 				blueInstanceTerminationOption.Action = types.InstanceAction(v.(string))
 			}
 			if v, ok := m["termination_wait_time_in_minutes"]; ok {
@@ -1096,13 +1098,13 @@ func flattenEC2TagFilters(list []types.EC2TagFilter) []map[string]interface{} {
 	for _, tf := range list {
 		l := make(map[string]interface{})
 		if v := tf.Key; aws.ToString(v) != "" {
-			l["key"] = aws.ToString(v)
+			l[names.AttrKey] = aws.ToString(v)
 		}
 		if v := tf.Value; aws.ToString(v) != "" {
-			l["value"] = aws.ToString(v)
+			l[names.AttrValue] = aws.ToString(v)
 		}
 		if v := tf.Type; v != "" {
-			l["type"] = string(v)
+			l[names.AttrType] = string(v)
 		}
 		result = append(result, l)
 	}
@@ -1114,13 +1116,13 @@ func flattenTagFilters(list []types.TagFilter) []map[string]string {
 	for _, tf := range list {
 		l := make(map[string]string)
 		if v := tf.Key; aws.ToString(v) != "" {
-			l["key"] = aws.ToString(v)
+			l[names.AttrKey] = aws.ToString(v)
 		}
 		if v := tf.Value; aws.ToString(v) != "" {
-			l["value"] = aws.ToString(v)
+			l[names.AttrValue] = aws.ToString(v)
 		}
 		if v := tf.Type; string(v) != "" {
-			l["type"] = string(v)
+			l[names.AttrType] = string(v)
 		}
 		result = append(result, l)
 	}
@@ -1167,7 +1169,7 @@ func flattenAutoRollbackConfiguration(config *types.AutoRollbackConfiguration) [
 	// otherwise empty configurations will be created
 	if config != nil && (config.Enabled || len(config.Events) > 0) {
 		item := make(map[string]interface{})
-		item["enabled"] = config.Enabled
+		item[names.AttrEnabled] = config.Enabled
 		item["events"] = config.Events
 		result = append(result, item)
 	}
@@ -1181,14 +1183,14 @@ func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]in
 	// only create configurations that are enabled or temporarily disabled (retaining alarms)
 	// otherwise empty configurations will be created
 	if config != nil && (config.Enabled || len(config.Alarms) > 0) {
-		names := make([]*string, 0, len(config.Alarms))
+		n := make([]*string, 0, len(config.Alarms))
 		for _, alarm := range config.Alarms {
-			names = append(names, alarm.Name)
+			n = append(n, alarm.Name)
 		}
 
 		item := make(map[string]interface{})
-		item["alarms"] = flex.FlattenStringSet(names)
-		item["enabled"] = config.Enabled
+		item["alarms"] = flex.FlattenStringSet(n)
+		item[names.AttrEnabled] = config.Enabled
 		item["ignore_poll_alarm_failure"] = config.IgnorePollAlarmFailure
 
 		result = append(result, item)
@@ -1202,8 +1204,8 @@ func flattenECSServices(ecsServices []types.ECSService) []interface{} {
 
 	for _, ecsService := range ecsServices {
 		m := map[string]interface{}{
-			"cluster_name": aws.ToString(ecsService.ClusterName),
-			"service_name": aws.ToString(ecsService.ServiceName),
+			names.AttrClusterName: aws.ToString(ecsService.ClusterName),
+			names.AttrServiceName: aws.ToString(ecsService.ServiceName),
 		}
 
 		l = append(l, m)
@@ -1217,7 +1219,7 @@ func flattenELBInfos(elbInfos []types.ELBInfo) []interface{} {
 
 	for _, elbInfo := range elbInfos {
 		m := map[string]interface{}{
-			"name": aws.ToString(elbInfo.Name),
+			names.AttrName: aws.ToString(elbInfo.Name),
 		}
 
 		l = append(l, m)
@@ -1231,7 +1233,7 @@ func flattenTargetGroupInfos(targetGroupInfos []types.TargetGroupInfo) []interfa
 
 	for _, targetGroupInfo := range targetGroupInfos {
 		m := map[string]interface{}{
-			"name": aws.ToString(targetGroupInfo.Name),
+			names.AttrName: aws.ToString(targetGroupInfo.Name),
 		}
 
 		l = append(l, m)
@@ -1326,7 +1328,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		greenFleetProvisioningOption := make(map[string]interface{})
 
 		if v := string(config.GreenFleetProvisioningOption.Action); v != "" {
-			greenFleetProvisioningOption["action"] = v
+			greenFleetProvisioningOption[names.AttrAction] = v
 		}
 
 		m["green_fleet_provisioning_option"] = append(b, greenFleetProvisioningOption)
@@ -1337,7 +1339,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		blueInstanceTerminationOption := make(map[string]interface{})
 
 		if v := string(config.TerminateBlueInstancesOnDeploymentSuccess.Action); v != "" {
-			blueInstanceTerminationOption["action"] = v
+			blueInstanceTerminationOption[names.AttrAction] = v
 		}
 		if v := config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes; v != 0 {
 			blueInstanceTerminationOption["termination_wait_time_in_minutes"] = v

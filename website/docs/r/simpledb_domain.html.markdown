@@ -8,7 +8,9 @@ description: |-
 
 # Resource: aws_simpledb_domain
 
-Provides a SimpleDB domain resource
+Provides a SimpleDB domain resource.
+
+!> **WARNING:** The `aws_simpledb_domain` resource has been deprecated and will be removed in a future version. Use Amazon DynamoDB instead.
 
 ## Example Usage
 

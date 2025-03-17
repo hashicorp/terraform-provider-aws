@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_workspaces_bundle: Return the first matching bundle when searching by `name`. This fixes a regression introduced in [v5.72.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5720-october-15-2024) causing `multiple WorkSpaces Bundles matched; use additional constraints to reduce matches to a single WorkSpaces Bundle` errors
+```

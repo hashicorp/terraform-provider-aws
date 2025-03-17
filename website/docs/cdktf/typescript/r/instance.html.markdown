@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
     const awsInstanceThis = new Instance(this, "this_1", {
       ami: Token.asString(thisVar.id),
       instanceMarketOptions: {
+        marketType: "spot",
         spotOptions: {
           maxPrice: Token.asString(0.0031),
         },
@@ -223,7 +224,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Host resource group or Licence Manager registered AMI example
+### Host resource group or License Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
 
@@ -244,7 +245,7 @@ class MyConvertedCode extends TerraformStack {
     new Instance(this, "this", {
       ami: "ami-0dcc1e21636832c5d",
       hostResourceGroupArn:
-        "arn:aws:resource-groups:us-west-2:012345678901:group/win-testhost",
+        "arn:aws:resource-groups:us-west-2:123456789012:group/win-testhost",
       instanceType: "m5.large",
       tenancy: "host",
     });
@@ -252,6 +253,18 @@ class MyConvertedCode extends TerraformStack {
 }
 
 ```
+
+## Tag Guide
+
+These are the five types of tags you might encounter relative to an `aws_instance`:
+
+1. **Instance tags**: Applied to instances but not to `ebsBlockDevice` and `rootBlockDevice` volumes.
+2. **Default tags**: Applied to the instance and to `ebsBlockDevice` and `rootBlockDevice` volumes.
+3. **Volume tags**: Applied during creation to `ebsBlockDevice` and `rootBlockDevice` volumes.
+4. **Root block device tags**: Applied only to the `rootBlockDevice` volume. These conflict with `volumeTags`.
+5. **EBS block device tags**: Applied only to the specific `ebsBlockDevice` volume you configure them for and cannot be updated. These conflict with `volumeTags`.
+
+Do not use `volumeTags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
 
 ## Argument Reference
 
@@ -273,6 +286,7 @@ This resource supports the following arguments:
 * `disableApiTermination` - (Optional) If true, enables [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination).
 * `ebsBlockDevice` - (Optional) One or more configuration blocks with additional EBS block devices to attach to the instance. Block device configurations only apply on resource creation. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details on attributes and drift detection. When accessing this as an attribute reference, it is a set of objects.
 * `ebsOptimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized. Note that if this is not set on an instance type that is optimized by default then this will show as disabled but if the instance type is optimized by default then there is no need to set this and there is no effect to disabling it. See the [EBS Optimized section](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html) of the AWS User Guide for more information.
+* `enablePrimaryIpv6` - (Optional) Whether to assign a primary IPv6 Global Unicast Address (GUA) to the instance when launched in a dual-stack or IPv6-only subnet. A primary IPv6 address ensures a consistent IPv6 address for the instance and is automatically assigned by AWS to the ENI. Once enabled, the first IPv6 GUA becomes the primary IPv6 address and cannot be disabled. The primary IPv6 address remains until the instance is terminated or the ENI is detached. Disabling `enablePrimaryIpv6` after it has been enabled forces recreation of the instance.
 * `enclaveOptions` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `ephemeralBlockDevice` - (Optional) One or more configuration blocks to customize Ephemeral (also known as "Instance Store") volumes on the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a set of objects.
 * `getPasswordData` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `passwordData` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
@@ -305,9 +319,9 @@ This resource supports the following arguments:
 * `subnetId` - (Optional) VPC Subnet ID to launch in.
 * `tags` - (Optional) Map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of `dedicated` runs on single-tenant hardware. The `host` tenancy is not supported for the import-instance command. Valid values are `default`, `dedicated`, and `host`.
-* `userData` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `userDataBase64` instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `userDataReplaceOnChange` is set then updates to this field will trigger a destroy and recreate.
-* `userDataBase64` - (Optional) Can be used instead of `userData` to pass base64-encoded binary data directly. Use this instead of `userData` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `userDataReplaceOnChange` is set then updates to this field will trigger a destroy and recreate.
-* `userDataReplaceOnChange` - (Optional) When used in combination with `userData` or `userDataBase64` will trigger a destroy and recreate when set to `true`. Defaults to `false` if not set.
+* `userData` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `userDataBase64` instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `userDataReplaceOnChange` is set then updates to this field will trigger a destroy and recreate of the EC2 instance.
+* `userDataBase64` - (Optional) Can be used instead of `userData` to pass base64-encoded binary data directly. Use this instead of `userData` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `userDataReplaceOnChange` is set then updates to this field will trigger a destroy and recreate of the EC2 instance.
+* `userDataReplaceOnChange` - (Optional) When used in combination with `userData` or `userDataBase64` will trigger a destroy and recreate of the EC2 instance when set to `true`. Defaults to `false` if not set.
 * `volumeTags` - (Optional) Map of tags to assign, at instance-creation time, to root and EBS volumes.
 
 ~> **NOTE:** Do not use `volumeTags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
@@ -420,7 +434,7 @@ The `maintenanceOptions` block supports the following:
 
 The `instanceMarketOptions` block supports the following:
 
-* `marketType` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`.
+* `marketType` - (Optional) Type of market for the instance. Valid values are `spot` and `capacity-block`. Defaults to `spot`. Required if `spotOptions` is specified.
 * `spotOptions` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -432,7 +446,7 @@ The `metadataOptions` block supports the following:
 * `httpEndpoint` - (Optional) Whether the metadata service is available. Valid values include `enabled` or `disabled`. Defaults to `enabled`.
 * `httpProtocolIpv6` - (Optional) Whether the IPv6 endpoint for the instance metadata service is enabled. Defaults to `disabled`.
 * `httpPutResponseHopLimit` - (Optional) Desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Valid values are integer from `1` to `64`. Defaults to `1`.
-* `httpTokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`. Defaults to `optional`.
+* `httpTokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`.
 * `instanceMetadataTags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Valid values include `enabled` or `disabled`. Defaults to `disabled`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
@@ -486,6 +500,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the instance.
 * `capacityReservationSpecification` - Capacity reservation specification of the instance.
+* `id` - ID of the instance.
 * `instanceState` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `outpostArn` - ARN of the Outpost the instance is assigned to.
 * `passwordData` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `getPasswordData` is true. Note that this encrypted value will be stored in the state file, as with all exported attributes. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
@@ -498,11 +513,13 @@ This resource exports the following attributes in addition to the arguments abov
 For `ebsBlockDevice`, in addition to the arguments above, the following attribute is exported:
 
 * `volumeId` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.ebs_block_device.2.volume_id`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `rootBlockDevice`, in addition to the arguments above, the following attributes are exported:
 
 * `volumeId` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
 * `deviceName` - Device name, e.g., `/dev/sdh` or `xvdh`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `instanceMarketOptions`, in addition to the arguments above, the following attributes are exported:
 
@@ -514,6 +531,7 @@ For `instanceMarketOptions`, in addition to the arguments above, the following a
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `read` - (Default `15m`)
 * `update` - (Default `10m`)
 * `delete` - (Default `20m`)
 
@@ -545,4 +563,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bc21ff879c5753aa1178d8dc97410b19bac08580623819a9f72bec8dedbdf25a -->
+<!-- cache-key: cdktf-0.20.8 input-f6c29d358b407884c57121534e0bbe199c167e8b8e1305320fd95b457524bde6 -->

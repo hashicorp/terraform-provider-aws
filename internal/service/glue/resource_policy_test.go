@@ -8,15 +8,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccResourcePolicy_basic(t *testing.T) {
@@ -24,7 +26,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,14 +50,14 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "TRUE"),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", acctest.CtTrueCaps),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", acctest.CtTrueCaps),
 				),
 			},
 			{
@@ -65,15 +67,15 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enable_hybrid"},
 			},
 			{
-				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "FALSE"),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", acctest.CtFalseCaps),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "FALSE"),
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", acctest.CtFalseCaps),
 				),
 			},
 			{
-				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "TRUE"),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", acctest.CtTrueCaps),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", acctest.CtTrueCaps),
 				),
 			},
 		},
@@ -85,7 +87,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +109,7 @@ func testAccResourcePolicy_update(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +140,7 @@ func testAccResourcePolicy_ignoreEquivalent(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,16 +169,16 @@ func testAccResourcePolicy(ctx context.Context, n string, action string) resourc
 			return fmt.Errorf("No policy id set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		policy, err := conn.GetResourcePolicyWithContext(ctx, &glue.GetResourcePolicyInput{})
+		policy, err := conn.GetResourcePolicy(ctx, &glue.GetResourcePolicyInput{})
 		if err != nil {
 			return fmt.Errorf("Get resource policy error: %v", err)
 		}
 
-		actualPolicyText := aws.StringValue(policy.PolicyInJson)
+		actualPolicyText := aws.ToString(policy.PolicyInJson)
 
-		expectedPolicy := CreateTablePolicy(action)
+		expectedPolicy := CreateTablePolicy(ctx, action)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
@@ -192,12 +194,12 @@ func testAccResourcePolicy(ctx context.Context, n string, action string) resourc
 
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		policy, err := conn.GetResourcePolicyWithContext(ctx, &glue.GetResourcePolicyInput{})
+		policy, err := conn.GetResourcePolicy(ctx, &glue.GetResourcePolicyInput{})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "Policy not found") {
+			if errs.IsAErrorMessageContains[*awstypes.EntityNotFoundException](err, "Policy not found") {
 				return nil
 			}
 			return err
@@ -210,7 +212,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func CreateTablePolicy(action string) string {
+func CreateTablePolicy(ctx context.Context, action string) string {
 	return fmt.Sprintf(`{
   "Version" : "2012-10-17",
   "Statement" : [
@@ -225,7 +227,7 @@ func CreateTablePolicy(action string) string {
       "Resource" : "arn:%s:glue:%s:%s:*"
     }
   ]
-}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID())
+}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx))
 }
 
 func testAccResourcePolicyConfig_required(action string) string {

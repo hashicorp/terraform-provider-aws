@@ -130,7 +130,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `database_name` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.

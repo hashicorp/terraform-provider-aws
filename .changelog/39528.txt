@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_opensearchserverless_lifecycle_policy: Fix "Provider produced inconsistent result after apply" error on update due to `policy_version` computed attribute changing
+```
+```release-note:bug
+resource/aws_opensearchserverless_security_policy: Fix "Provider produced inconsistent result after apply" error on update due to `policy_version` computed attribute changing
+```

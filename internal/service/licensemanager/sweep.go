@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -27,7 +27,7 @@ func sweepLicenseConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.LicenseManagerConn(ctx)
+	conn := client.LicenseManagerClient(ctx)
 	input := &licensemanager.ListLicenseConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -37,9 +37,9 @@ func sweepLicenseConfigurations(region string) error {
 		}
 
 		for _, v := range page.LicenseConfigurations {
-			r := ResourceLicenseConfiguration()
+			r := resourceLicenseConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.LicenseConfigurationArn))
+			d.SetId(aws.ToString(v.LicenseConfigurationArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -47,7 +47,7 @@ func sweepLicenseConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
 		return nil
 	}

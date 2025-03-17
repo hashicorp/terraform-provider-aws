@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,6 +31,8 @@ import (
 
 // @SDKResource("aws_medialive_channel", name="Channel")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
+// @Testing(importIgnore="start_channel")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -49,7 +52,7 @@ func ResourceChannel() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -83,7 +86,7 @@ func ResourceChannel() *schema.Resource {
 					MinItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"id": {
+							names.AttrID: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -129,11 +132,11 @@ func ResourceChannel() *schema.Resource {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"url": {
+										names.AttrURL: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"username": {
+										names.AttrUsername: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -257,7 +260,7 @@ func ResourceChannel() *schema.Resource {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -277,7 +280,7 @@ func ResourceChannel() *schema.Resource {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
-																			"name": {
+																			names.AttrName: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -290,7 +293,7 @@ func ResourceChannel() *schema.Resource {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"language_code": {
+																			names.AttrLanguageCode: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -361,11 +364,11 @@ func ResourceChannel() *schema.Resource {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"language_code": {
+													names.AttrLanguageCode: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -673,11 +676,11 @@ func ResourceChannel() *schema.Resource {
 						},
 					},
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"role_arn": {
+				names.AttrRoleARN: {
 					Type:             schema.TypeString,
 					Optional:         true,
 					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
@@ -694,7 +697,7 @@ func ResourceChannel() *schema.Resource {
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_zones": {
+							names.AttrAvailabilityZones: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -709,14 +712,14 @@ func ResourceChannel() *schema.Resource {
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"security_group_ids": {
+							names.AttrSecurityGroupIDs: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Computed: true,
 								MaxItems: 5,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"subnet_ids": {
+							names.AttrSubnetIDs: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -728,8 +731,6 @@ func ResourceChannel() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -737,19 +738,19 @@ const (
 	ResNameChannel = "Channel"
 )
 
-func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateChannelInput{
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		RequestId: aws.String(id.UniqueId()),
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
-		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
+	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]any)) > 0 {
+		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]any))
 	}
 	if v, ok := d.GetOk("channel_class"); ok {
 		in.ChannelClass = types.ChannelClass(v.(string))
@@ -757,32 +758,32 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
 		in.Destinations = expandChannelDestinations(v.(*schema.Set).List())
 	}
-	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
-		in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
+	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]any)) > 0 {
+		in.EncoderSettings = expandChannelEncoderSettings(v.([]any))
 	}
 	if v, ok := d.GetOk("input_attachments"); ok && v.(*schema.Set).Len() > 0 {
 		in.InputAttachments = expandChannelInputAttachments(v.(*schema.Set).List())
 	}
-	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
-		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
+	if v, ok := d.GetOk("input_specification"); ok && len(v.([]any)) > 0 {
+		in.InputSpecification = expandChannelInputSpecification(v.([]any))
 	}
-	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
-		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
+	if v, ok := d.GetOk("maintenance"); ok && len(v.([]any)) > 0 {
+		in.Maintenance = expandChannelMaintenanceCreate(v.([]any))
 	}
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
-		in.Vpc = expandChannelVPC(v.([]interface{}))
+	if v, ok := d.GetOk("vpc"); ok && len(v.([]any)) > 0 {
+		in.Vpc = expandChannelVPC(v.([]any))
 	}
 
 	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Channel.Id))
@@ -793,14 +794,14 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
 		}
 	}
 
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
-func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -817,12 +818,12 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	d.Set("channel_class", out.ChannelClass)
 	d.Set("channel_id", out.Id)
 	d.Set("log_level", out.LogLevel)
-	d.Set("role_arn", out.RoleArn)
+	d.Set(names.AttrRoleARN, out.RoleArn)
 
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
@@ -849,22 +850,22 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_channel") {
 		in := &medialive.UpdateChannelInput{
 			ChannelId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			in.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			in.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("cdi_input_specification") {
-			in.CdiInputSpecification = expandChannelCdiInputSpecification(d.Get("cdi_input_specification").([]interface{}))
+			in.CdiInputSpecification = expandChannelCdiInputSpecification(d.Get("cdi_input_specification").([]any))
 		}
 
 		if d.HasChange("destinations") {
@@ -872,7 +873,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("encoder_settings") {
-			in.EncoderSettings = expandChannelEncoderSettings(d.Get("encoder_settings").([]interface{}))
+			in.EncoderSettings = expandChannelEncoderSettings(d.Get("encoder_settings").([]any))
 		}
 
 		if d.HasChange("input_attachments") {
@@ -880,7 +881,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("input_specification") {
-			in.InputSpecification = expandChannelInputSpecification(d.Get("input_specification").([]interface{}))
+			in.InputSpecification = expandChannelInputSpecification(d.Get("input_specification").([]any))
 		}
 
 		if d.HasChange("log_level") {
@@ -888,11 +889,11 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("maintenance") {
-			in.Maintenance = expandChannelMaintenanceUpdate(d.Get("maintenance").([]interface{}))
+			in.Maintenance = expandChannelMaintenanceUpdate(d.Get("maintenance").([]any))
 		}
 
-		if d.HasChange("role_arn") {
-			in.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		channel, err := FindChannelByID(ctx, conn, d.Id())
@@ -919,7 +920,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get(names.AttrName).(string), err)
 		}
 	}
 
@@ -949,7 +950,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
-func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -957,6 +958,10 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
 	channel, err := FindChannelByID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return diags
+	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
@@ -972,12 +977,11 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ChannelId: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
+	if err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
@@ -1109,7 +1113,7 @@ func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func statusChannel(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindChannelByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1128,15 +1132,15 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 		ChannelId: aws.String(id),
 	}
 	out, err := conn.DescribeChannel(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -1156,10 +1160,10 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	return out, nil
 }
 
-func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment {
+func expandChannelInputAttachments(tfList []any) []types.InputAttachment {
 	var attachments []types.InputAttachment
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1171,10 +1175,10 @@ func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment
 		if v, ok := m["input_id"].(string); ok {
 			a.InputId = aws.String(v)
 		}
-		if v, ok := m["input_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["input_settings"].([]any); ok && len(v) > 0 {
 			a.InputSettings = expandInputAttachmentInputSettings(v)
 		}
-		if v, ok := m["automatic_input_failover_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["automatic_input_failover_settings"].([]any); ok && len(v) > 0 {
 			a.AutomaticInputFailoverSettings = expandInputAttachmentAutomaticInputFailoverSettings(v)
 		}
 
@@ -1184,18 +1188,18 @@ func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment
 	return attachments
 }
 
-func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettings {
+func expandInputAttachmentInputSettings(tfList []any) *types.InputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.InputSettings
-	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_selector"].([]any); ok && len(v) > 0 {
 		out.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
 	}
-	if v, ok := m["caption_selector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["caption_selector"].([]any); ok && len(v) > 0 {
 		out.CaptionSelectors = expandInputAttachmentInputSettingsCaptionSelectors(v)
 	}
 	if v, ok := m["deblock_filter"].(string); ok && v != "" {
@@ -1210,7 +1214,7 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["input_filter"].(string); ok && v != "" {
 		out.InputFilter = types.InputFilter(v)
 	}
-	if v, ok := m["network_input_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["network_input_settings"].([]any); ok && len(v) > 0 {
 		out.NetworkInputSettings = expandInputAttachmentInputSettingsNetworkInputSettings(v)
 	}
 	if v, ok := m["scte35_pid"].(int); ok && v != 0 {
@@ -1226,19 +1230,19 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	return &out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []types.AudioSelector {
+func expandInputAttachmentInputSettingsAudioSelectors(tfList []any) []types.AudioSelector {
 	var as []types.AudioSelector
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var a types.AudioSelector
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			a.Name = aws.String(v)
 		}
-		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["selector_settings"].([]any); ok && len(v) > 0 {
 			a.SelectorSettings = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(v)
 		}
 
@@ -1248,57 +1252,57 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 	return as
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(tfList []interface{}) *types.AudioSelectorSettings {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(tfList []any) *types.AudioSelectorSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioSelectorSettings
-	if v, ok := m["audio_hls_rendition_selection"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_hls_rendition_selection"].([]any); ok && len(v) > 0 {
 		out.AudioHlsRenditionSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(v)
 	}
-	if v, ok := m["audio_language_selection"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_language_selection"].([]any); ok && len(v) > 0 {
 		out.AudioLanguageSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(v)
 	}
-	if v, ok := m["audio_pid_selection"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_pid_selection"].([]any); ok && len(v) > 0 {
 		out.AudioPidSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(v)
 	}
-	if v, ok := m["audio_track_selection"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_track_selection"].([]any); ok && len(v) > 0 {
 		out.AudioTrackSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(v)
 	}
 
 	return &out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(tfList []interface{}) *types.AudioHlsRenditionSelection {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(tfList []any) *types.AudioHlsRenditionSelection {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioHlsRenditionSelection
 	if v, ok := m["group_id"].(string); ok && len(v) > 0 {
 		out.GroupId = aws.String(v)
 	}
-	if v, ok := m["name"].(string); ok && len(v) > 0 {
+	if v, ok := m[names.AttrName].(string); ok && len(v) > 0 {
 		out.Name = aws.String(v)
 	}
 
 	return &out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(tfList []interface{}) *types.AudioLanguageSelection {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(tfList []any) *types.AudioLanguageSelection {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioLanguageSelection
-	if v, ok := m["language_code"].(string); ok && len(v) > 0 {
+	if v, ok := m[names.AttrLanguageCode].(string); ok && len(v) > 0 {
 		out.LanguageCode = aws.String(v)
 	}
 	if v, ok := m["language_selection_policy"].(string); ok && len(v) > 0 {
@@ -1308,12 +1312,12 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLangua
 	return &out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(tfList []interface{}) *types.AudioPidSelection {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(tfList []any) *types.AudioPidSelection {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioPidSelection
 	if v, ok := m["pid"].(int); ok && v != 0 {
@@ -1323,32 +1327,32 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSel
 	return &out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(tfList []interface{}) *types.AudioTrackSelection {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(tfList []any) *types.AudioTrackSelection {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioTrackSelection
 	if v, ok := m["tracks"].(*schema.Set); ok && v.Len() > 0 {
 		out.Tracks = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(v.List())
 	}
-	if v, ok := m["dolby_e_decode"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dolby_e_decode"].([]any); ok && len(v) > 0 {
 		out.DolbyEDecode = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(v)
 	}
 
 	return &out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []interface{}) []types.AudioTrack {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []any) []types.AudioTrack {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var out []types.AudioTrack
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1364,12 +1368,12 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackS
 	return out
 }
 
-func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(tfList []interface{}) *types.AudioDolbyEDecode {
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(tfList []any) *types.AudioDolbyEDecode {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioDolbyEDecode
 	if v, ok := m["program_selection"].(string); ok && v != "" {
@@ -1379,26 +1383,26 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackS
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []types.CaptionSelector {
+func expandInputAttachmentInputSettingsCaptionSelectors(tfList []any) []types.CaptionSelector {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var out []types.CaptionSelector
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var o types.CaptionSelector
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			o.Name = aws.String(v)
 		}
-		if v, ok := m["language_code"].(string); ok && v != "" {
+		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
 			o.LanguageCode = aws.String(v)
 		}
-		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["selector_settings"].([]any); ok && len(v) > 0 {
 			o.SelectorSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(v)
 		}
 
@@ -1408,45 +1412,45 @@ func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []
 	return out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(tfList []interface{}) *types.CaptionSelectorSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(tfList []any) *types.CaptionSelectorSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.CaptionSelectorSettings
-	if v, ok := m["ancillary_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ancillary_source_settings"].([]any); ok && len(v) > 0 {
 		out.AncillarySourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(v)
 	}
-	if v, ok := m["arib_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["arib_source_settings"].([]any); ok && len(v) > 0 {
 		out.AribSourceSettings = &types.AribSourceSettings{} // no exported fields
 	}
-	if v, ok := m["dvb_sub_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dvb_sub_source_settings"].([]any); ok && len(v) > 0 {
 		out.DvbSubSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(v)
 	}
-	if v, ok := m["embedded_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["embedded_source_settings"].([]any); ok && len(v) > 0 {
 		out.EmbeddedSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(v)
 	}
-	if v, ok := m["scte20_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["scte20_source_settings"].([]any); ok && len(v) > 0 {
 		out.Scte20SourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(v)
 	}
-	if v, ok := m["scte27_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["scte27_source_settings"].([]any); ok && len(v) > 0 {
 		out.Scte27SourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(v)
 	}
-	if v, ok := m["teletext_source_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["teletext_source_settings"].([]any); ok && len(v) > 0 {
 		out.TeletextSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(v)
 	}
 
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(tfList []interface{}) *types.AncillarySourceSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(tfList []any) *types.AncillarySourceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AncillarySourceSettings
 	if v, ok := m["source_ancillary_channel_number"].(int); ok && v != 0 {
@@ -1456,12 +1460,12 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillary
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(tfList []interface{}) *types.DvbSubSourceSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(tfList []any) *types.DvbSubSourceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.DvbSubSourceSettings
 	if v, ok := m["ocr_language"].(string); ok && v != "" {
@@ -1474,12 +1478,12 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSou
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(tfList []interface{}) *types.EmbeddedSourceSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(tfList []any) *types.EmbeddedSourceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.EmbeddedSourceSettings
 	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
@@ -1495,12 +1499,12 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedS
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(tfList []interface{}) *types.Scte20SourceSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(tfList []any) *types.Scte20SourceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Scte20SourceSettings
 	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
@@ -1513,12 +1517,12 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20Sou
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(tfList []interface{}) *types.Scte27SourceSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(tfList []any) *types.Scte27SourceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Scte27SourceSettings
 	if v, ok := m["ocr_language"].(string); ok && v != "" {
@@ -1531,15 +1535,15 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27Sou
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(tfList []interface{}) *types.TeletextSourceSettings {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(tfList []any) *types.TeletextSourceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.TeletextSourceSettings
-	if v, ok := m["output_rectangle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["output_rectangle"].([]any); ok && len(v) > 0 {
 		out.OutputRectangle = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(v)
 	}
 	if v, ok := m["page_number"].(string); ok && v != "" {
@@ -1549,12 +1553,12 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextS
 	return &out
 }
 
-func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(tfList []interface{}) *types.CaptionRectangle {
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(tfList []any) *types.CaptionRectangle {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.CaptionRectangle
 	if v, ok := m["height"].(float32); ok && v != 0.0 {
@@ -1573,15 +1577,15 @@ func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextS
 	return &out
 }
 
-func expandInputAttachmentInputSettingsNetworkInputSettings(tfList []interface{}) *types.NetworkInputSettings {
+func expandInputAttachmentInputSettingsNetworkInputSettings(tfList []any) *types.NetworkInputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.NetworkInputSettings
-	if v, ok := m["hls_input_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_input_settings"].([]any); ok && len(v) > 0 {
 		out.HlsInputSettings = expandNetworkInputSettingsHLSInputSettings(v)
 	}
 	if v, ok := m["server_validation"].(string); ok && v != "" {
@@ -1591,12 +1595,12 @@ func expandInputAttachmentInputSettingsNetworkInputSettings(tfList []interface{}
 	return &out
 }
 
-func expandNetworkInputSettingsHLSInputSettings(tfList []interface{}) *types.HlsInputSettings {
+func expandNetworkInputSettingsHLSInputSettings(tfList []any) *types.HlsInputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsInputSettings
 	if v, ok := m["bandwidth"].(int); ok && v != 0 {
@@ -1618,12 +1622,12 @@ func expandNetworkInputSettingsHLSInputSettings(tfList []interface{}) *types.Hls
 	return &out
 }
 
-func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *types.AutomaticInputFailoverSettings {
+func expandInputAttachmentAutomaticInputFailoverSettings(tfList []any) *types.AutomaticInputFailoverSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AutomaticInputFailoverSettings
 	if v, ok := m["secondary_input_id"].(string); ok && v != "" {
@@ -1642,20 +1646,20 @@ func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *
 	return &out
 }
 
-func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []interface{}) []types.FailoverCondition {
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []any) []types.FailoverCondition {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var out []types.FailoverCondition
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var o types.FailoverCondition
-		if v, ok := m["failover_condition_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["failover_condition_settings"].([]any); ok && len(v) > 0 {
 			o.FailoverConditionSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(v)
 		}
 
@@ -1665,33 +1669,33 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfLis
 	return out
 }
 
-func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(tfList []interface{}) *types.FailoverConditionSettings {
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(tfList []any) *types.FailoverConditionSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.FailoverConditionSettings
-	if v, ok := m["audio_silence_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_silence_settings"].([]any); ok && len(v) > 0 {
 		out.AudioSilenceSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(v)
 	}
-	if v, ok := m["input_loss_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["input_loss_settings"].([]any); ok && len(v) > 0 {
 		out.InputLossSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(v)
 	}
-	if v, ok := m["video_black_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["video_black_settings"].([]any); ok && len(v) > 0 {
 		out.VideoBlackSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(v)
 	}
 
 	return &out
 }
 
-func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(tfList []interface{}) *types.AudioSilenceFailoverSettings {
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(tfList []any) *types.AudioSilenceFailoverSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioSilenceFailoverSettings
 	if v, ok := m["audio_selector_name"].(string); ok && v != "" {
@@ -1704,12 +1708,12 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailov
 	return &out
 }
 
-func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(tfList []interface{}) *types.InputLossFailoverSettings {
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(tfList []any) *types.InputLossFailoverSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.InputLossFailoverSettings
 	if v, ok := m["input_loss_threshold_msec"].(int); ok && v != 0 {
@@ -1719,12 +1723,12 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailov
 	return &out
 }
 
-func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(tfList []interface{}) *types.VideoBlackFailoverSettings {
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(tfList []any) *types.VideoBlackFailoverSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.VideoBlackFailoverSettings
 	if v, ok := m["black_detect_threshold"].(float32); ok && v != 0.0 {
@@ -1737,15 +1741,15 @@ func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailov
 	return &out
 }
 
-func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{} {
+func flattenChannelInputAttachments(tfList []types.InputAttachment) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, item := range tfList {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"input_id":                          aws.ToString(item.InputId),
 			"input_attachment_name":             aws.ToString(item.InputAttachmentName),
 			"input_settings":                    flattenInputAttachmentsInputSettings(item.InputSettings),
@@ -1758,12 +1762,12 @@ func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{
 	return out
 }
 
-func flattenInputAttachmentsInputSettings(in *types.InputSettings) []interface{} {
+func flattenInputAttachmentsInputSettings(in *types.InputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_selector":            flattenInputAttachmentsInputSettingsAudioSelectors(in.AudioSelectors),
 		"caption_selector":          flattenInputAttachmentsInputSettingsCaptionSelectors(in.CaptionSelectors),
 		"deblock_filter":            string(in.DeblockFilter),
@@ -1776,19 +1780,19 @@ func flattenInputAttachmentsInputSettings(in *types.InputSettings) []interface{}
 		"source_end_behavior":       string(in.SourceEndBehavior),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSelector) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSelector) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, v := range tfList {
-		m := map[string]interface{}{
-			"name":              aws.ToString(v.Name),
+		m := map[string]any{
+			names.AttrName:      aws.ToString(v.Name),
 			"selector_settings": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
@@ -1798,93 +1802,93 @@ func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSele
 	return out
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(in *types.AudioSelectorSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(in *types.AudioSelectorSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_hls_rendition_selection": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in.AudioHlsRenditionSelection),
 		"audio_language_selection":      flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in.AudioLanguageSelection),
 		"audio_pid_selection":           flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in.AudioPidSelection),
 		"audio_track_selection":         flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in.AudioTrackSelection),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in *types.AudioHlsRenditionSelection) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in *types.AudioHlsRenditionSelection) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"group_id": aws.ToString(in.GroupId),
-		"name":     aws.ToString(in.Name),
+	m := map[string]any{
+		"group_id":     aws.ToString(in.GroupId),
+		names.AttrName: aws.ToString(in.Name),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in *types.AudioLanguageSelection) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in *types.AudioLanguageSelection) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"language_code":             aws.ToString(in.LanguageCode),
+	m := map[string]any{
+		names.AttrLanguageCode:      aws.ToString(in.LanguageCode),
 		"language_selection_policy": string(in.LanguageSelectionPolicy),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in *types.AudioPidSelection) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in *types.AudioPidSelection) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"pid": int(aws.ToInt32(in.Pid)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in *types.AudioTrackSelection) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in *types.AudioTrackSelection) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"dolby_e_decode": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in.DolbyEDecode),
 		"tracks":         flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(in.Tracks),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in *types.AudioDolbyEDecode) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in *types.AudioDolbyEDecode) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"program_selection": string(in.ProgramSelection),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []types.AudioTrack) []interface{} {
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []types.AudioTrack) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, v := range tfList {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"track": int(aws.ToInt32(v.Track)),
 		}
 
@@ -1894,18 +1898,18 @@ func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrac
 	return out
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.CaptionSelector) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.CaptionSelector) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, v := range tfList {
-		m := map[string]interface{}{
-			"name":              aws.ToString(v.Name),
-			"language_code":     aws.ToString(v.LanguageCode),
-			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
+		m := map[string]any{
+			names.AttrName:         aws.ToString(v.Name),
+			names.AttrLanguageCode: aws.ToString(v.LanguageCode),
+			"selector_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
 		out = append(out, m)
@@ -1914,14 +1918,14 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 	return out
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(in *types.CaptionSelectorSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(in *types.CaptionSelectorSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"ancillary_source_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in.AncillarySourceSettings),
-		"arib_source_settings":      []interface{}{}, // attribute has no exported fields
+		"arib_source_settings":      []any{}, // attribute has no exported fields
 		"dvb_sub_source_settings":   flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in.DvbSubSourceSettings),
 		"embedded_source_settings":  flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in.EmbeddedSourceSettings),
 		"scte20_source_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in.Scte20SourceSettings),
@@ -1929,121 +1933,121 @@ func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(in *ty
 		"teletext_source_settings":  flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in.TeletextSourceSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in *types.AncillarySourceSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in *types.AncillarySourceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"source_ancillary_channel_number": int(aws.ToInt32(in.SourceAncillaryChannelNumber)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in *types.DvbSubSourceSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in *types.DvbSubSourceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"ocr_language": string(in.OcrLanguage),
 		"pid":          int(aws.ToInt32(in.Pid)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in *types.EmbeddedSourceSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in *types.EmbeddedSourceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"convert_608_to_708":        string(in.Convert608To708),
 		"scte20_detection":          string(in.Scte20Detection),
 		"source_608_channel_number": int(aws.ToInt32(in.Source608ChannelNumber)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in *types.Scte20SourceSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in *types.Scte20SourceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"convert_608_to_708":        string(in.Convert608To708),
 		"source_608_channel_number": int(aws.ToInt32(in.Source608ChannelNumber)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(in *types.Scte27SourceSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(in *types.Scte27SourceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"ocr_language": string(in.OcrLanguage),
 		"pid":          int(aws.ToInt32(in.Pid)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in *types.TeletextSourceSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in *types.TeletextSourceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"output_rectangle": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in.OutputRectangle),
 		"page_number":      aws.ToString(in.PageNumber),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in *types.CaptionRectangle) []interface{} {
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in *types.CaptionRectangle) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"height":      float32(aws.ToFloat64(in.Height)),
 		"left_offset": float32(aws.ToFloat64(in.LeftOffset)),
 		"top_offset":  float32(aws.ToFloat64(in.TopOffset)),
 		"width":       float32(aws.ToFloat64(in.Width)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentsInputSettingsNetworkInputSettings(in *types.NetworkInputSettings) []interface{} {
+func flattenInputAttachmentsInputSettingsNetworkInputSettings(in *types.NetworkInputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"hls_input_settings": flattenNetworkInputSettingsHLSInputSettings(in.HlsInputSettings),
 		"server_validation":  string(in.ServerValidation),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNetworkInputSettingsHLSInputSettings(in *types.HlsInputSettings) []interface{} {
+func flattenNetworkInputSettingsHLSInputSettings(in *types.HlsInputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bandwidth":       int(aws.ToInt32(in.Bandwidth)),
 		"buffer_segments": int(aws.ToInt32(in.BufferSegments)),
 		"retries":         int(aws.ToInt32(in.Retries)),
@@ -2051,33 +2055,33 @@ func flattenNetworkInputSettingsHLSInputSettings(in *types.HlsInputSettings) []i
 		"scte35_source":   string(in.Scte35Source),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInputFailoverSettings) []interface{} {
+func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInputFailoverSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"secondary_input_id":    aws.ToString(in.SecondaryInputId),
 		"error_clear_time_msec": int(aws.ToInt32(in.ErrorClearTimeMsec)),
 		"failover_condition":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
 		"input_preference":      string(in.InputPreference),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []types.FailoverCondition) []interface{} {
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []types.FailoverCondition) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, item := range tfList {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"failover_condition_settings": flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(item.FailoverConditionSettings),
 		}
 
@@ -2086,63 +2090,63 @@ func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfLi
 	return out
 }
 
-func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(in *types.FailoverConditionSettings) []interface{} {
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(in *types.FailoverConditionSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_silence_settings": flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in.AudioSilenceSettings),
 		"input_loss_settings":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in.InputLossSettings),
 		"video_black_settings":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in.VideoBlackSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in *types.AudioSilenceFailoverSettings) []interface{} {
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in *types.AudioSilenceFailoverSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_selector_name":          aws.ToString(in.AudioSelectorName),
 		"audio_silence_threshold_msec": int(aws.ToInt32(in.AudioSilenceThresholdMsec)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in *types.InputLossFailoverSettings) []interface{} {
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in *types.InputLossFailoverSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"input_loss_threshold_msec": int(aws.ToInt32(in.InputLossThresholdMsec)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in *types.VideoBlackFailoverSettings) []interface{} {
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in *types.VideoBlackFailoverSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"black_detect_threshold":     float32(aws.ToFloat64(in.BlackDetectThreshold)),
 		"video_black_threshold_msec": int(aws.ToInt32(in.VideoBlackThresholdMsec)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpecification {
+func expandChannelCdiInputSpecification(tfList []any) *types.CdiInputSpecification {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	spec := &types.CdiInputSpecification{}
 	if v, ok := m["resolution"].(string); ok && v != "" {
@@ -2152,38 +2156,38 @@ func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpe
 	return spec
 }
 
-func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification) []interface{} {
+func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"resolution": string(apiObject.Resolution),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
+func expandChannelDestinations(tfList []any) []types.OutputDestination {
 	if tfList == nil {
 		return nil
 	}
 
 	var destinations []types.OutputDestination
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var d types.OutputDestination
-		if v, ok := m["id"].(string); ok {
+		if v, ok := m[names.AttrID].(string); ok {
 			d.Id = aws.String(v)
 		}
 		if v, ok := m["media_package_settings"].(*schema.Set); ok && v.Len() > 0 {
 			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v.List())
 		}
-		if v, ok := m["multiplex_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["multiplex_settings"].([]any); ok && len(v) > 0 {
 			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)
 		}
 		if v, ok := m["settings"].(*schema.Set); ok && v.Len() > 0 {
@@ -2196,14 +2200,14 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 	return destinations
 }
 
-func expandChannelDestinationsMediaPackageSettings(tfList []interface{}) []types.MediaPackageOutputDestinationSettings {
+func expandChannelDestinationsMediaPackageSettings(tfList []any) []types.MediaPackageOutputDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
 	var settings []types.MediaPackageOutputDestinationSettings
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -2219,11 +2223,11 @@ func expandChannelDestinationsMediaPackageSettings(tfList []interface{}) []types
 	return settings
 }
 
-func expandChannelDestinationsMultiplexSettings(tfList []interface{}) *types.MultiplexProgramChannelDestinationSettings {
+func expandChannelDestinationsMultiplexSettings(tfList []any) *types.MultiplexProgramChannelDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	settings := &types.MultiplexProgramChannelDestinationSettings{}
 	if v, ok := m["multiplex_id"].(string); ok && v != "" {
@@ -2236,14 +2240,14 @@ func expandChannelDestinationsMultiplexSettings(tfList []interface{}) *types.Mul
 	return settings
 }
 
-func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDestinationSettings {
+func expandChannelDestinationsSettings(tfList []any) []types.OutputDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
 	var settings []types.OutputDestinationSettings
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -2255,10 +2259,10 @@ func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDesti
 		if v, ok := m["stream_name"].(string); ok {
 			s.StreamName = aws.String(v)
 		}
-		if v, ok := m["url"].(string); ok {
+		if v, ok := m[names.AttrURL].(string); ok {
 			s.Url = aws.String(v)
 		}
-		if v, ok := m["username"].(string); ok {
+		if v, ok := m[names.AttrUsername].(string); ok {
 			s.Username = aws.String(v)
 		}
 
@@ -2268,15 +2272,15 @@ func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDesti
 	return settings
 }
 
-func flattenChannelDestinations(apiObject []types.OutputDestination) []interface{} {
+func flattenChannelDestinations(apiObject []types.OutputDestination) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	for _, v := range apiObject {
-		m := map[string]interface{}{
-			"id":                     aws.ToString(v.Id),
+		m := map[string]any{
+			names.AttrID:             aws.ToString(v.Id),
 			"media_package_settings": flattenChannelDestinationsMediaPackageSettings(v.MediaPackageSettings),
 			"multiplex_settings":     flattenChannelDestinationsMultiplexSettings(v.MultiplexSettings),
 			"settings":               flattenChannelDestinationsSettings(v.Settings),
@@ -2288,14 +2292,14 @@ func flattenChannelDestinations(apiObject []types.OutputDestination) []interface
 	return tfList
 }
 
-func flattenChannelDestinationsMediaPackageSettings(apiObject []types.MediaPackageOutputDestinationSettings) []interface{} {
+func flattenChannelDestinationsMediaPackageSettings(apiObject []types.MediaPackageOutputDestinationSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	for _, v := range apiObject {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"channel_id": aws.ToString(v.ChannelId),
 		}
 
@@ -2305,31 +2309,31 @@ func flattenChannelDestinationsMediaPackageSettings(apiObject []types.MediaPacka
 	return tfList
 }
 
-func flattenChannelDestinationsMultiplexSettings(apiObject *types.MultiplexProgramChannelDestinationSettings) []interface{} {
+func flattenChannelDestinationsMultiplexSettings(apiObject *types.MultiplexProgramChannelDestinationSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"multiplex_id": aws.ToString(apiObject.MultiplexId),
 		"program_name": aws.ToString(apiObject.ProgramName),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSettings) []interface{} {
+func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	for _, v := range apiObject {
-		m := map[string]interface{}{
-			"password_param": aws.ToString(v.PasswordParam),
-			"stream_name":    aws.ToString(v.StreamName),
-			"url":            aws.ToString(v.Url),
-			"username":       aws.ToString(v.Username),
+		m := map[string]any{
+			"password_param":   aws.ToString(v.PasswordParam),
+			"stream_name":      aws.ToString(v.StreamName),
+			names.AttrURL:      aws.ToString(v.Url),
+			names.AttrUsername: aws.ToString(v.Username),
 		}
 
 		tfList = append(tfList, m)
@@ -2338,11 +2342,11 @@ func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSetti
 	return tfList
 }
 
-func expandChannelInputSpecification(tfList []interface{}) *types.InputSpecification {
+func expandChannelInputSpecification(tfList []any) *types.InputSpecification {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	spec := &types.InputSpecification{}
 	if v, ok := m["codec"].(string); ok && v != "" {
@@ -2358,25 +2362,25 @@ func expandChannelInputSpecification(tfList []interface{}) *types.InputSpecifica
 	return spec
 }
 
-func flattenChannelInputSpecification(apiObject *types.InputSpecification) []interface{} {
+func flattenChannelInputSpecification(apiObject *types.InputSpecification) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"codec":            string(apiObject.Codec),
 		"maximum_bitrate":  string(apiObject.MaximumBitrate),
 		"input_resolution": string(apiObject.Resolution),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandChannelMaintenanceCreate(tfList []interface{}) *types.MaintenanceCreateSettings {
+func expandChannelMaintenanceCreate(tfList []any) *types.MaintenanceCreateSettings {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	settings := &types.MaintenanceCreateSettings{}
 	if v, ok := m["maintenance_day"].(string); ok && v != "" {
@@ -2389,11 +2393,11 @@ func expandChannelMaintenanceCreate(tfList []interface{}) *types.MaintenanceCrea
 	return settings
 }
 
-func expandChannelMaintenanceUpdate(tfList []interface{}) *types.MaintenanceUpdateSettings {
+func expandChannelMaintenanceUpdate(tfList []any) *types.MaintenanceUpdateSettings {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	settings := &types.MaintenanceUpdateSettings{}
 	if v, ok := m["maintenance_day"].(string); ok && v != "" {
@@ -2411,30 +2415,30 @@ func expandChannelMaintenanceUpdate(tfList []interface{}) *types.MaintenanceUpda
 	return settings
 }
 
-func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) []interface{} {
+func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"maintenance_day":        string(apiObject.MaintenanceDay),
 		"maintenance_start_time": aws.ToString(apiObject.MaintenanceStartTime),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
+func expandChannelVPC(tfList []any) *types.VpcOutputSettings {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		settings.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 	if v, ok := m["public_address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
@@ -2444,18 +2448,18 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	return settings
 }
 
-func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interface{} {
+func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
-		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
-		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		"subnet_ids":            flex.FlattenStringValueSet(apiObject.SubnetIds),
+	m := map[string]any{
+		names.AttrAvailabilityZones: flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids":     flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		names.AttrSecurityGroupIDs:  flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		names.AttrSubnetIDs:         flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

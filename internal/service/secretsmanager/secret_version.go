@@ -5,7 +5,6 @@ package secretsmanager
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -22,7 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -39,12 +41,19 @@ func resourceSecretVersion() *schema.Resource {
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("has_secret_string_wo", false)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"has_secret_string_wo": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"secret_id": {
@@ -57,7 +66,7 @@ func resourceSecretVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"secret_string"},
+				ConflictsWith: []string{"secret_string", "secret_string_wo"},
 				ValidateFunc:  verify.ValidBase64String,
 			},
 			"secret_string": {
@@ -65,7 +74,21 @@ func resourceSecretVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"secret_binary"},
+				ConflictsWith: []string{"secret_binary", "secret_string_wo"},
+			},
+			"secret_string_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_binary", "secret_string"},
+				RequiredWith:  []string{"secret_string_wo_version"},
+			},
+			"secret_string_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"secret_string_wo"},
 			},
 			"version_id": {
 				Type:     schema.TypeString,
@@ -93,13 +116,24 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("secret_binary"); ok {
 		var err error
-		input.SecretBinary, err = base64.StdEncoding.DecodeString(v.(string))
-
+		input.SecretBinary, err = itypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-	} else if v, ok := d.GetOk("secret_string"); ok {
+	}
+
+	if v, ok := d.GetOk("secret_string"); ok {
 		input.SecretString = aws.String(v.(string))
+	}
+
+	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if secretStringWO != "" {
+		input.SecretString = aws.String(secretStringWO)
 	}
 
 	if v, ok := d.GetOk("version_stages"); ok && v.(*schema.Set).Len() > 0 {
@@ -147,12 +181,29 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ARN)
-	d.Set("secret_binary", verify.Base64Encode(output.SecretBinary))
+	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
 	d.Set("version_stages", output.VersionStages)
+
+	// unset secret_string if the value is configured as write-only
+	hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if secretStringWO != "" {
+		hasWriteOnly = true
+	}
+
+	if hasWriteOnly {
+		d.Set("has_secret_string_wo", true)
+		d.Set("secret_string", nil)
+	}
 
 	return diags
 }
@@ -271,8 +322,8 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			_, err := conn.UpdateSecretVersionStage(ctx, input)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) ||
-				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
-				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 				return diags
 			}
 
@@ -326,8 +377,8 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	output, err := conn.GetSecretValue(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
-		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
-		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

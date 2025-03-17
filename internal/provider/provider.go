@@ -8,22 +8,26 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,6 +35,8 @@ import (
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(ctx context.Context) (*schema.Provider, error) {
+	log.Printf("Initializing Terraform AWS Provider...")
+
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
@@ -64,10 +70,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"tags": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tags to default across all resources",
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},
@@ -111,16 +118,18 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"keys": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tag keys to ignore across all resources.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag keys to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 						"key_prefixes": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tag key prefixes to ignore across all resources.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag key prefixes to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 					},
 				},
@@ -232,6 +241,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
+			"token_bucket_rate_limiter_capacity": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The capacity of the AWS SDK's token bucket rate limiter.",
+			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -251,7 +265,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		ResourcesMap:   make(map[string]*schema.Resource),
 	}
 
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		return configure(ctx, provider, d)
 	}
 
@@ -263,7 +277,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageMap[servicePackageName] = sp
 
 		for _, v := range sp.SDKDataSources(ctx) {
-			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
@@ -279,18 +292,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
-					ctx = v.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := interceptorItems{}
-
 			if v.Tags != nil {
 				schema := r.SchemaMap()
 
@@ -307,28 +309,32 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				}
 
 				interceptors = append(interceptors, interceptorItem{
-					when: Before | After,
-					why:  Read,
-					interceptor: tagsDataSourceInterceptor{
-						tags: v.Tags,
-					},
+					when:        Before | After,
+					why:         Read,
+					interceptor: newTagsDataSourceInterceptor(v.Tags),
 				})
 			}
 
-			ds := &wrappedDataSource{
-				bootstrapContext: bootstrapContext,
-				interceptors:     interceptors,
-			}
+			opts := wrappedDataSourceOptions{
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+					var diags diag.Diagnostics
 
-			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = ds.Read(v)
-			}
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if v, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+						ctx = v.RegisterLogger(ctx)
+					}
 
+					return ctx, diags
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
+			wrapDataSource(r, opts)
 			provider.DataSourcesMap[typeName] = r
 		}
 
 		for _, v := range sp.SDKResources(ctx) {
-			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
@@ -356,18 +362,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
-					ctx = v.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
+			var customizeDiffFuncs []schema.CustomizeDiffFunc
 			interceptors := interceptorItems{}
-
 			if v.Tags != nil {
 				schema := r.SchemaMap()
 
@@ -392,48 +388,32 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					continue
 				}
 
+				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
 				interceptors = append(interceptors, interceptorItem{
-					when: Before | After | Finally,
-					why:  Create | Read | Update,
-					interceptor: tagsResourceInterceptor{
-						tags:       v.Tags,
-						updateFunc: tagsUpdateFunc,
-						readFunc:   tagsReadFunc,
-					},
+					when:        Before | After | Finally,
+					why:         Create | Read | Update,
+					interceptor: newTagsResourceInterceptor(v.Tags),
 				})
 			}
 
-			rs := &wrappedResource{
-				bootstrapContext: bootstrapContext,
-				interceptors:     interceptors,
-			}
+			opts := wrappedResourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+					var diags diag.Diagnostics
 
-			if v := r.CreateWithoutTimeout; v != nil {
-				r.CreateWithoutTimeout = rs.Create(v)
-			}
-			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = rs.Read(v)
-			}
-			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = rs.Update(v)
-			}
-			if v := r.DeleteWithoutTimeout; v != nil {
-				r.DeleteWithoutTimeout = rs.Delete(v)
-			}
-			if v := r.Importer; v != nil {
-				if v := v.StateContext; v != nil {
-					r.Importer.StateContext = rs.State(v)
-				}
-			}
-			if v := r.CustomizeDiff; v != nil {
-				r.CustomizeDiff = rs.CustomizeDiff(v)
-			}
-			for _, stateUpgrader := range r.StateUpgraders {
-				if v := stateUpgrader.Upgrade; v != nil {
-					stateUpgrader.Upgrade = rs.StateUpgrade(v)
-				}
-			}
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+						ctx = v.RegisterLogger(ctx)
+					}
 
+					return ctx, diags
+				},
+				customizeDiffFuncs: customizeDiffFuncs,
+				interceptors:       interceptors,
+				typeName:           typeName,
+			}
+			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
 		}
 	}
@@ -445,14 +425,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	var meta *conns.AWSClient
+	var c *conns.AWSClient
 	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		meta = v
+		c = v
 	} else {
-		meta = new(conns.AWSClient)
+		c = new(conns.AWSClient)
 	}
-	meta.ServicePackages = servicePackageMap
-	provider.SetMeta(meta)
+	c.SetServicePackages(ctx, servicePackageMap)
+	provider.SetMeta(c)
 
 	return provider, nil
 }
@@ -486,6 +466,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
+		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
@@ -506,37 +487,60 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRole = expandAssumeRole(ctx, v.([]interface{})[0].(map[string]interface{}))
-		tflog.Info(ctx, "assume_role configuration set", map[string]any{
-			"tf_aws.assume_role.role_arn":        config.AssumeRole.RoleARN,
-			"tf_aws.assume_role.session_name":    config.AssumeRole.SessionName,
-			"tf_aws.assume_role.external_id":     config.AssumeRole.ExternalID,
-			"tf_aws.assume_role.source_identity": config.AssumeRole.SourceIdentity,
-		})
+	if v, ok := d.GetOk("assume_role"); ok {
+		path := cty.GetAttrPath("assume_role")
+		v := v.([]any)
+		if len(v) == 1 {
+			if v[0] == nil {
+				diags = append(diags,
+					errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+				)
+			} else {
+				l := v[0].(map[string]any)
+				if s, ok := l["role_arn"]; !ok || s == "" {
+					diags = append(diags,
+						errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+					)
+				} else {
+					ar, dg := expandAssumeRoles(ctx, path, v)
+					diags = append(diags, dg...)
+					if dg.HasError() {
+						return nil, diags
+					}
+					config.AssumeRole = ar
+				}
+			}
+		} else if len(v) > 1 {
+			ar, dg := expandAssumeRoles(ctx, path, v)
+			diags = append(diags, dg...)
+			if dg.HasError() {
+				return nil, diags
+			}
+			config.AssumeRole = ar
+		}
 	}
 
-	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
 		tflog.Info(ctx, "assume_role_with_web_identity configuration set", map[string]any{
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
 		})
 	}
 
-	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("default_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]any)[0].(map[string]any))
+	} else {
+		config.DefaultTagsConfig = expandDefaultTags(ctx, nil)
 	}
 
-	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
-		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
-
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
-		}
-
-		config.Endpoints = endpoints
+	v := d.Get("endpoints")
+	endpoints, dx := expandEndpoints(ctx, v.(*schema.Set).List())
+	diags = append(diags, dx...)
+	if diags.HasError() {
+		return nil, diags
 	}
+	config.Endpoints = endpoints
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
 		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
@@ -557,23 +561,25 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.NoProxy = v
 	}
 
-	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]any)[0].(map[string]any))
+	} else {
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
 		config.MaxRetries = v.(int)
 	}
 
-	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
-		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]any)) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
-		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]any)) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
 		if v {
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {
@@ -581,27 +587,26 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	var meta *conns.AWSClient
+	var c *conns.AWSClient
 	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		meta = v
+		c = v
 	} else {
-		meta = new(conns.AWSClient)
+		c = new(conns.AWSClient)
 	}
-	meta, ds := config.ConfigureProvider(ctx, meta)
+	c, ds := config.ConfigureProvider(ctx, c)
 	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	return meta, diags
+	return c, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
@@ -636,7 +641,7 @@ func assumeRoleSchema() *schema.Schema {
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Optional:     true, // For historical reasons, we allow an empty `assume_role` block
 					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
@@ -699,7 +704,7 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Optional:     true, // For historical reasons, we allow an empty `assume_role_with_web_identity` block
 					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
@@ -725,75 +730,77 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 	}
 }
 
-func endpointsSchema() *schema.Schema {
-	endpointsAttributes := make(map[string]*schema.Schema)
+func expandAssumeRoles(ctx context.Context, path cty.Path, tfList []any) (result []awsbase.AssumeRole, diags diag.Diagnostics) {
+	result = make([]awsbase.AssumeRole, len(tfList))
 
-	for _, serviceKey := range names.Aliases() {
-		endpointsAttributes[serviceKey] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Use this to override the default service endpoint URL",
+	for i, v := range tfList {
+		path := path.IndexInt(i)
+		if ar, ok := v.(map[string]any); ok {
+			x, d := expandAssumeRole(ctx, path, ar)
+			diags = append(diags, d...)
+			if d.HasError() {
+				return result, diags
+			}
+			result[i] = x
+			tflog.Info(ctx, "assume_role configuration set", map[string]any{
+				"tf_aws.assume_role.index":           i,
+				"tf_aws.assume_role.role_arn":        result[i].RoleARN,
+				"tf_aws.assume_role.session_name":    result[i].SessionName,
+				"tf_aws.assume_role.external_id":     result[i].ExternalID,
+				"tf_aws.assume_role.source_identity": result[i].SourceIdentity,
+			})
+		} else {
+			return result, append(diags, errs.NewAttributeRequiredError(path, "role_arn"))
 		}
 	}
 
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: endpointsAttributes,
-		},
-	}
+	return result, diags
 }
 
-func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRole {
-	if tfMap == nil {
-		return nil
+func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (result awsbase.AssumeRole, diags diag.Diagnostics) {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		result.RoleARN = v
+	} else {
+		return result, append(diags, errs.NewAttributeRequiredError(path, "role_arn"))
 	}
-
-	assumeRole := awsbase.AssumeRole{}
 
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+		result.Duration = duration
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
-		assumeRole.ExternalID = v
+		result.ExternalID = v
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
-		assumeRole.Policy = v
+		result.Policy = v
 	}
 
 	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
-		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
-		assumeRole.RoleARN = v
+		result.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["session_name"].(string); ok && v != "" {
-		assumeRole.SessionName = v
+		result.SessionName = v
 	}
 
 	if v, ok := tfMap["source_identity"].(string); ok && v != "" {
-		assumeRole.SourceIdentity = v
+		result.SourceIdentity = v
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		assumeRole.Tags = flex.ExpandStringValueMap(v)
+	if v, ok := tfMap["tags"].(map[string]any); ok && len(v) > 0 {
+		result.Tags = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
-		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
+		result.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
-	return &assumeRole
+	return result, diags
 }
 
-func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
 	if tfMap == nil {
 		return nil
 	}
@@ -832,88 +839,94 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 	return &assumeRole
 }
 
-func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
-	if tfMap == nil {
-		return nil
+func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {
+	tags := make(map[string]any)
+	for _, ev := range os.Environ() {
+		k, v, _ := strings.Cut(ev, "=")
+		if before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix); ok && before == "" {
+			tags[tk] = v
+		}
 	}
 
-	defaultConfig := &tftags.DefaultConfig{}
-
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		defaultConfig.Tags = tftags.New(ctx, v)
+	if cfgTags, ok := tfMap["tags"].(map[string]any); ok {
+		maps.Copy(tags, cfgTags)
 	}
 
-	return defaultConfig
+	if len(tags) > 0 {
+		return &tftags.DefaultConfig{
+			Tags: tftags.New(ctx, tags),
+		}
+	}
+
+	return nil
 }
 
-func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
-	if tfMap == nil {
+func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreConfig {
+	var keys, keyPrefixes []any
+
+	if tfMap != nil {
+		if v, ok := tfMap["keys"].(*schema.Set); ok {
+			keys = v.List()
+		}
+		if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
+			keyPrefixes = v.List()
+		}
+	}
+
+	if v := os.Getenv(tftags.IgnoreTagsKeysEnvVar); v != "" {
+		for _, k := range strings.Split(v, ",") {
+			if trimmed := strings.TrimSpace(k); trimmed != "" {
+				keys = append(keys, trimmed)
+			}
+		}
+	}
+
+	if v := os.Getenv(tftags.IgnoreTagsKeyPrefixesEnvVar); v != "" {
+		for _, kp := range strings.Split(v, ",") {
+			if trimmed := strings.TrimSpace(kp); trimmed != "" {
+				keyPrefixes = append(keyPrefixes, trimmed)
+			}
+		}
+	}
+
+	// To preseve behavior prior to supporting environment variables:
+	//
+	// - Return nil when no keys or prefixes are set
+	// - For a non-nil return, `keys` or `key_prefixes` should be
+	//   nil if empty (versus a zero-value `KeyValueTags` struct)
+	if len(keys) == 0 && len(keyPrefixes) == 0 {
 		return nil
 	}
 
 	ignoreConfig := &tftags.IgnoreConfig{}
-
-	if v, ok := tfMap["keys"].(*schema.Set); ok {
-		ignoreConfig.Keys = tftags.New(ctx, v.List())
+	if len(keys) > 0 {
+		ignoreConfig.Keys = tftags.New(ctx, keys)
 	}
-
-	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
-		ignoreConfig.KeyPrefixes = tftags.New(ctx, v.List())
+	if len(keyPrefixes) > 0 {
+		ignoreConfig.KeyPrefixes = tftags.New(ctx, keyPrefixes)
 	}
 
 	return ignoreConfig
 }
 
-func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, error) {
-	if len(tfList) == 0 {
-		return nil, nil
+func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
+	return errs.NewWarningDiagnostic(
+		"Deprecated Environment Variable",
+		fmt.Sprintf(`The environment variable "%s" is deprecated. Use environment variable "%s" instead.`, envvar, replacement),
+	)
+}
+
+func ConflictingEndpointsWarningDiag(elementPath cty.Path, attrs ...string) diag.Diagnostic {
+	attrPaths := make([]string, len(attrs))
+	for i, attr := range attrs {
+		path := elementPath.GetAttr(attr)
+		attrPaths[i] = `"` + errs.PathString(path) + `"`
 	}
-
-	endpoints := make(map[string]string)
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		for _, alias := range names.Aliases() {
-			pkg, err := names.ProviderPackageForAlias(alias)
-
-			if err != nil {
-				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
-			}
-
-			if endpoints[pkg] == "" {
-				if v := tfMap[alias].(string); v != "" {
-					endpoints[pkg] = v
-				}
-			}
-		}
-	}
-
-	for _, pkg := range names.ProviderPackages() {
-		if endpoints[pkg] != "" {
-			continue
-		}
-
-		envVar := names.TfAwsEnvVar(pkg)
-		if envVar != "" {
-			if v := os.Getenv(envVar); v != "" {
-				endpoints[pkg] = v
-				continue
-			}
-		}
-
-		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
-			if v := os.Getenv(deprecatedEnvVar); v != "" {
-				// TODO: Make this a Warning Diagnostic
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
-				endpoints[pkg] = v
-			}
-		}
-	}
-
-	return endpoints, nil
+	return errs.NewAttributeWarningDiagnostic(
+		elementPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Only one of the following attributes should be set: %s"+
+			"\n\nThis will be an error in a future release.",
+			strings.Join(attrPaths, ", ")),
+	)
 }

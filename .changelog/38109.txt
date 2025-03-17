@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Change `volume_configuration.managed_ebs_volume.throughput` from `TypeString` to `TypeInt`
+```

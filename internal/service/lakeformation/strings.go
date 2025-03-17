@@ -5,21 +5,19 @@ package lakeformation
 
 import (
 	"reflect"
-	"sort"
-
-	"github.com/aws/aws-sdk-go/aws"
+	"slices"
 )
 
-func StringSlicesEqualIgnoreOrder(s1, s2 []*string) bool {
+func StringSlicesEqualIgnoreOrder(s1, s2 []string) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
 
-	v1 := aws.StringValueSlice(s1)
-	v2 := aws.StringValueSlice(s2)
+	v1 := s1
+	v2 := s2
 
-	sort.Strings(v1)
-	sort.Strings(v2)
+	slices.Sort(v1)
+	slices.Sort(v2)
 
 	return reflect.DeepEqual(v1, v2)
 }

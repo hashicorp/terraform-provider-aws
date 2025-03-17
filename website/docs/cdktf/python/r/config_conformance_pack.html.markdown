@@ -86,7 +86,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **Note:** If both `template_body` and `template_s3_uri` are specified, AWS Config uses the `template_s3_uri` and ignores the `template_body`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the conformance pack. Must begin with a letter and contain from 1 to 256 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Maximum length of 63.
@@ -133,4 +133,4 @@ Using `terraform import`, import Config Conformance Packs using the `name`. For 
 % terraform import aws_config_conformance_pack.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-86a608716b92b915769aca6b0e5f24ca5b42bf4f52fb91a1566b43fe79868c79 -->
+<!-- cache-key: cdktf-0.20.8 input-9b0defdfe60abc1e0da0ee2106060d9b4d8ba9d395e95cb7bfeb8edd7770d0c5 -->

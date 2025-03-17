@@ -43,10 +43,11 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Required) A friendly name of the IP set.
+* `name` - (Optional, Forces new resource) A friendly name of the IP set. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the IP set.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
-* `ip_address_version` - (Required) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.
+* `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
+* `ip_address_version` - (Required, Forces new resource) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.
 * `addresses` - (Required) Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses. All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation. WAF supports all IPv4 and IPv6 CIDR ranges except for `/0`.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -83,4 +84,4 @@ Using `terraform import`, import WAFv2 IP Sets using `ID/name/scope`. For exampl
 % terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b479c9f718a616c5596b789c7ff158e99147f52c44de441fab9ea4c4e4b4ab65 -->
+<!-- cache-key: cdktf-0.20.8 input-77aadcbf40e914d19b69224578cd61b8e38b5741b69d7de66851afe95d9506ae -->

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("aws_s3_directory_buckets", name="Directory Buckets")
 func newDirectoryBucketsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &directoryBucketsDataSource{}
 
@@ -29,14 +29,10 @@ type directoryBucketsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *directoryBucketsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_s3_directory_buckets"
-}
-
 func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arns": schema.ListAttribute{
+			names.AttrARNs: schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -51,9 +47,7 @@ func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.
 
 func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data directoryBucketsDataSourceModel
-
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -78,10 +72,10 @@ func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasourc
 	}
 
 	data.ARNs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(buckets, func(v string) string {
-		return d.RegionalARN("s3express", fmt.Sprintf("bucket/%s", v))
+		return d.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", v))
 	}))
 	data.Buckets = flex.FlattenFrameworkStringValueList(ctx, buckets)
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

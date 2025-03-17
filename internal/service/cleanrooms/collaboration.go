@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cleanrooms_collaboration")
+// @SDKResource("aws_cleanrooms_collaboration", name="Collaboration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,
@@ -50,7 +50,7 @@ func ResourceCollaboration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,17 +109,17 @@ func ResourceCollaboration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"display_name": {
+						names.AttrDisplayName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -148,7 +148,6 @@ func ResourceCollaboration() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -173,7 +172,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
 	}
 	input.QueryLogStatus = queryLogStatus
 
@@ -187,11 +186,11 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateCollaboration(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Collaboration == nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.Collaboration.Id))
 
@@ -220,7 +219,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, collaboration.Name)
 	d.Set(names.AttrDescription, collaboration.Description)
 	d.Set("creator_display_name", collaboration.CreatorDisplayName)
-	d.Set("create_time", collaboration.CreateTime.String())
+	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
 	d.Set("update_time", collaboration.UpdateTime.String())
 	d.Set("query_log_status", collaboration.QueryLogStatus)
 	if err := d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata)); err != nil {
@@ -246,7 +245,7 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cleanrooms.UpdateCollaborationInput{
 			CollaborationIdentifier: aws.String(d.Id()),
 		}
@@ -274,9 +273,10 @@ func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
-	_, err := conn.DeleteCollaboration(ctx, &cleanrooms.DeleteCollaborationInput{
+	input := cleanrooms.DeleteCollaborationInput{
 		CollaborationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCollaboration(ctx, &input)
 
 	if errs.IsA[*types.AccessDeniedException](err) {
 		return diags
@@ -379,9 +379,9 @@ func expandMembers(data []interface{}) *[]types.MemberSpecification {
 	for _, member := range data {
 		memberMap := member.(map[string]interface{})
 		member := &types.MemberSpecification{
-			AccountId:       aws.String(memberMap["account_id"].(string)),
+			AccountId:       aws.String(memberMap[names.AttrAccountID].(string)),
 			MemberAbilities: expandMemberAbilities(memberMap["member_abilities"].([]interface{})),
-			DisplayName:     aws.String(memberMap["display_name"].(string)),
+			DisplayName:     aws.String(memberMap[names.AttrDisplayName].(string)),
 		}
 		members = append(members, *member)
 	}
@@ -405,9 +405,9 @@ func flattenMembers(members []types.MemberSummary, ownerAccount *string) []inter
 	for _, member := range members {
 		if aws.ToString(member.AccountId) != aws.ToString(ownerAccount) {
 			memberMap := map[string]interface{}{}
-			memberMap["status"] = member.Status
-			memberMap["account_id"] = member.AccountId
-			memberMap["display_name"] = member.DisplayName
+			memberMap[names.AttrStatus] = member.Status
+			memberMap[names.AttrAccountID] = member.AccountId
+			memberMap[names.AttrDisplayName] = member.DisplayName
 			memberMap["member_abilities"] = flattenMemberAbilities(member.Abilities)
 			flattenedMembers = append(flattenedMembers, memberMap)
 		}

@@ -7,9 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
-// @Tags
-func ResourceOpenIDConnectProvider() *schema.Resource {
+// @Tags(identifierAttribute="arn", resourceType="OIDCProvider")
+// @Testing(name="OpenIDConnectProvider")
+func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenIDConnectProviderCreate,
 		ReadWithoutTimeout:   resourceOpenIDConnectProviderRead,
@@ -38,14 +38,13 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"client_id_list": {
 				Type:     schema.TypeSet,
 				Required: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(1, 255),
@@ -55,13 +54,14 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"thumbprint_list": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(40, 40),
 				},
 			},
-			"url": {
+			names.AttrURL: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -69,43 +69,45 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				DiffSuppressFunc: suppressOpenIDURL,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateOpenIDConnectProviderInput{
-		ClientIDList:   flex.ExpandStringSet(d.Get("client_id_list").(*schema.Set)),
-		Tags:           getTagsIn(ctx),
-		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
-		Url:            aws.String(d.Get("url").(string)),
+		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
+		Tags:         getTagsIn(ctx),
+		Url:          aws.String(d.Get(names.AttrURL).(string)),
 	}
 
-	output, err := conn.CreateOpenIDConnectProviderWithContext(ctx, input)
+	if v, ok := d.GetOk("thumbprint_list"); ok {
+		input.ThumbprintList = flex.ExpandStringValueList(v.([]any))
+	}
+
+	output, err := conn.CreateOpenIDConnectProvider(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	partition := meta.(*conns.AWSClient).Partition(ctx)
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateOpenIDConnectProviderWithContext(ctx, input)
+		output, err = conn.CreateOpenIDConnectProvider(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM OIDC Provider: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.OpenIDConnectProviderArn))
+	d.SetId(aws.ToString(output.OpenIDConnectProviderArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := openIDConnectProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 		}
 
@@ -117,11 +119,11 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 }
 
-func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	output, err := FindOpenIDConnectProviderByARN(ctx, conn, d.Id())
+	output, err := findOpenIDConnectProviderByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
@@ -133,61 +135,86 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading IAM OIDC Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("client_id_list", aws.StringValueSlice(output.ClientIDList))
-	d.Set("thumbprint_list", aws.StringValueSlice(output.ThumbprintList))
-	d.Set("url", output.Url)
+	d.Set(names.AttrARN, d.Id())
+	d.Set("client_id_list", output.ClientIDList)
+	d.Set("thumbprint_list", output.ThumbprintList)
+	d.Set(names.AttrURL, output.Url)
 
 	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("thumbprint_list") {
-		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
-			OpenIDConnectProviderArn: aws.String(d.Id()),
-			ThumbprintList:           flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
-		}
+		if v := d.Get("thumbprint_list").([]any); len(v) > 0 {
+			// Issues with an update to clear the thumbprint_list:
+			// - A cleared thumbprint_list will have a length of 0, and not enter this block.
+			// - Setting it to empty triggers an API error (the API requires either no thumbprints at
+			//   **creation** or at least one thumbprint on update).
+			// - Removing the thumbprint_list attribute entirely doesn’t work because it won’t register as
+			//   a change (no diff is detected).
+			// See https://github.com/hashicorp/terraform-provider-aws/issues/40509
+			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+				ThumbprintList:           flex.ExpandStringValueList(v),
+			}
 
-		_, err := conn.UpdateOpenIDConnectProviderThumbprintWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			if _, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange("client_id_list") {
+		o, n := d.GetChange("client_id_list")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		err := openIDConnectProviderUpdateTags(ctx, conn, d.Id(), o, n)
+		for _, v := range ns.Difference(os).List() {
+			v := v.(string)
+			input := &iam.AddClientIDToOpenIDConnectProviderInput{
+				ClientID:                 aws.String(v),
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+			}
 
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
+			_, err := conn.AddClientIDToOpenIDConnectProvider(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding IAM OIDC Provider (%s) client ID (%s): %s", d.Id(), v, err)
+			}
 		}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM OIDC Provider (%s): %s", d.Id(), err)
+		for _, v := range os.Difference(ns).List() {
+			v := v.(string)
+			input := &iam.RemoveClientIDFromOpenIDConnectProviderInput{
+				ClientID:                 aws.String(v),
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+			}
+
+			_, err := conn.RemoveClientIDFromOpenIDConnectProvider(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "removing IAM OIDC Provider (%s) client ID (%s): %s", d.Id(), v, err)
+			}
 		}
 	}
 
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 }
 
-func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[INFO] Deleting IAM OIDC Provider: %s", d.Id())
-	_, err := conn.DeleteOpenIDConnectProviderWithContext(ctx, &iam.DeleteOpenIDConnectProviderInput{
+	_, err := conn.DeleteOpenIDConnectProvider(ctx, &iam.DeleteOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
 	}
 
@@ -198,14 +225,14 @@ func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindOpenIDConnectProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
+func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
 	input := &iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(arn),
 	}
 
-	output, err := conn.GetOpenIDConnectProviderWithContext(ctx, input)
+	output, err := conn.GetOpenIDConnectProvider(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -220,4 +247,15 @@ func FindOpenIDConnectProviderByARN(ctx context.Context, conn *iam.IAM, arn stri
 	}
 
 	return output, nil
+}
+
+func openIDConnectProviderTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListOpenIDConnectProviderTags(ctx, &iam.ListOpenIDConnectProviderTagsInput{
+		OpenIDConnectProviderArn: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }

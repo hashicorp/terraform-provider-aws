@@ -7,13 +7,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,16 +23,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
-	AssumeRole                     *awsbase.AssumeRole
+	AssumeRole                     []awsbase.AssumeRole
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
-	EC2MetadataServiceEnableState  imds_sdkv2.ClientEnableState
+	EC2MetadataServiceEnableState  imds.ClientEnableState
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
@@ -44,7 +46,7 @@ type Config struct {
 	NoProxy                        string
 	Profile                        string
 	Region                         string
-	RetryMode                      aws_sdkv2.RetryMode
+	RetryMode                      aws.RetryMode
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
@@ -57,6 +59,7 @@ type Config struct {
 	SuppressDebugLog               bool
 	TerraformVersion               string
 	Token                          string
+	TokenBucketRateLimiterCapacity int
 	UseDualStackEndpoint           bool
 	UseFIPSEndpoint                bool
 }
@@ -67,40 +70,49 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	ctx, logger := logging.NewTfLogger(ctx)
 
+	const (
+		maxBackoff = 300 * time.Second // AWS SDK for Go v1 DefaultRetryerMaxRetryDelay: https://github.com/aws/aws-sdk-go/blob/9f6e3bb9f523aef97fa1cd5c5f8ba8ecf212e44e/aws/client/default_retryer.go#L48-L49.
+	)
 	awsbaseConfig := awsbase.Config{
-		AccessKey:                     c.AccessKey,
-		AllowedAccountIds:             c.AllowedAccountIds,
-		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
-		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
-		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
-		CallerName:                    "Terraform AWS Provider",
-		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
-		ForbiddenAccountIds:           c.ForbiddenAccountIds,
-		IamEndpoint:                   c.Endpoints[names.IAM],
-		Insecure:                      c.Insecure,
-		HTTPClient:                    client.HTTPClient(),
-		HTTPProxy:                     c.HTTPProxy,
-		HTTPSProxy:                    c.HTTPSProxy,
-		HTTPProxyMode:                 awsbase.HTTPProxyModeLegacy,
-		Logger:                        logger,
-		MaxRetries:                    c.MaxRetries,
-		NoProxy:                       c.NoProxy,
-		Profile:                       c.Profile,
-		Region:                        c.Region,
-		RetryMode:                     c.RetryMode,
-		SecretKey:                     c.SecretKey,
-		SkipCredsValidation:           c.SkipCredsValidation,
-		SkipRequestingAccountId:       c.SkipRequestingAccountId,
-		SsoEndpoint:                   c.Endpoints[names.SSO],
-		StsEndpoint:                   c.Endpoints[names.STS],
-		SuppressDebugLog:              c.SuppressDebugLog,
-		Token:                         c.Token,
-		UseDualStackEndpoint:          c.UseDualStackEndpoint,
-		UseFIPSEndpoint:               c.UseFIPSEndpoint,
-	}
-
-	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
-		awsbaseConfig.AssumeRole = c.AssumeRole
+		AccessKey:         c.AccessKey,
+		AllowedAccountIds: c.AllowedAccountIds,
+		APNInfo: &awsbase.APNInfo{
+			PartnerName: "HashiCorp",
+			Products: []awsbase.UserAgentProduct{
+				{Name: "Terraform", Version: c.TerraformVersion, Comment: "+https://www.terraform.io"},
+				{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
+			},
+		},
+		AssumeRole:                     c.AssumeRole,
+		AssumeRoleWithWebIdentity:      c.AssumeRoleWithWebIdentity,
+		Backoff:                        &v1CompatibleBackoff{maxRetryDelay: maxBackoff},
+		CallerDocumentationURL:         "https://registry.terraform.io/providers/hashicorp/aws",
+		CallerName:                     "Terraform AWS Provider",
+		EC2MetadataServiceEnableState:  c.EC2MetadataServiceEnableState,
+		ForbiddenAccountIds:            c.ForbiddenAccountIds,
+		IamEndpoint:                    c.Endpoints[names.IAM],
+		Insecure:                       c.Insecure,
+		HTTPClient:                     client.HTTPClient(ctx),
+		HTTPProxy:                      c.HTTPProxy,
+		HTTPSProxy:                     c.HTTPSProxy,
+		HTTPProxyMode:                  awsbase.HTTPProxyModeLegacy,
+		Logger:                         logger,
+		MaxBackoff:                     maxBackoff,
+		MaxRetries:                     c.MaxRetries,
+		NoProxy:                        c.NoProxy,
+		Profile:                        c.Profile,
+		Region:                         c.Region,
+		RetryMode:                      c.RetryMode,
+		SecretKey:                      c.SecretKey,
+		SkipCredsValidation:            c.SkipCredsValidation,
+		SkipRequestingAccountId:        c.SkipRequestingAccountId,
+		SsoEndpoint:                    c.Endpoints[names.SSO],
+		StsEndpoint:                    c.Endpoints[names.STS],
+		SuppressDebugLog:               c.SuppressDebugLog,
+		Token:                          c.Token,
+		TokenBucketRateLimiterCapacity: c.TokenBucketRateLimiterCapacity,
+		UseDualStackEndpoint:           c.UseDualStackEndpoint,
+		UseFIPSEndpoint:                c.UseFIPSEndpoint,
 	}
 
 	if c.CustomCABundle != "" {
@@ -134,7 +146,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  d.Summary(),
 			Detail:   d.Detail(),
 		})
@@ -154,11 +166,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -169,16 +181,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	accountID, partitionID, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
 	}
 
-	if accountID == "" {
+	if accountID == "" && !awsbaseConfig.SkipRequestingAccountId {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
 			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
@@ -186,29 +198,25 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
 	if err != nil {
-		return nil, sdkdiag.AppendErrorf(diags, err.Error())
+		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
-	DNSSuffix := "amazonaws.com"
-	if p, ok := endpoints_sdkv1.PartitionForRegion(endpoints_sdkv1.DefaultPartitions(), c.Region); ok {
-		DNSSuffix = p.DNSSuffix()
+	for _, partition := range endpoints.DefaultPartitions() {
+		if partition.ID() == partitionID {
+			client.partition = partition
+		}
 	}
 
-	client.AccountID = accountID
-	client.DefaultTagsConfig = c.DefaultTagsConfig
-	client.DNSSuffix = DNSSuffix
-	client.IgnoreTagsConfig = c.IgnoreTagsConfig
-	client.Partition = partition
-	client.Region = c.Region
-	client.ReverseDNSPrefix = names.ReverseDNS(DNSSuffix)
-	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.Session = sess
-	client.TerraformVersion = c.TerraformVersion
+	client.accountID = accountID
+	client.defaultTagsConfig = c.DefaultTagsConfig
+	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.region = c.Region
+	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
+	client.session = session
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
 	client.clients = make(map[string]any, 0)
-	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
@@ -218,7 +226,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	return client, diags
 }
 
-func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
+func baseSeverityToSDKSeverity(s basediag.Severity) diag.Severity {
 	switch s {
 	case basediag.SeverityWarning:
 		return diag.Warning

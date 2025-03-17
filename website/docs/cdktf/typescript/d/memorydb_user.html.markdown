@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_user"
 description: |-
@@ -48,9 +48,9 @@ This data source exports the following attributes in addition to the arguments a
 * `accessString` - Access permissions string used for this user.
 * `arn` - ARN of the user.
 * `authenticationMode` - Denotes the user's authentication properties.
-    * `passwordCount` - The number of passwords belonging to the user.
-    * `type` - Whether the user requires a password to authenticate.
-* `minimumEngineVersion` - The minimum engine version supported for the user.
-* `tags` - Map of tags assigned to the subnet group.
+    * `passwordCount` - Number of passwords belonging to the user if `type` is set to `password`.
+    * `type` - Type of authentication configured.
+* `minimumEngineVersion` - Minimum engine version supported for the user.
+* `tags` - Map of tags assigned to the user.
 
-<!-- cache-key: cdktf-0.20.1 input-c6f19bc84dfa577edf03fcc5ca3f615821c417f424a780c64de232dacc41af5a -->
+<!-- cache-key: cdktf-0.20.8 input-f1d8066d63d40b01ad504eef7f9a373b8dd197da76bdab1fde6e4713d309ee09 -->

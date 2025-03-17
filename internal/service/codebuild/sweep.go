@@ -4,156 +4,117 @@
 package codebuild
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_codebuild_report_group", &resource.Sweeper{
-		Name: "aws_codebuild_report_group",
-		F:    sweepReportGroups,
-	})
-
-	resource.AddTestSweepers("aws_codebuild_project", &resource.Sweeper{
-		Name: "aws_codebuild_project",
-		F:    sweepProjects,
-	})
-
-	resource.AddTestSweepers("aws_codebuild_source_credential", &resource.Sweeper{
-		Name: "aws_codebuild_source_credential",
-		F:    sweepSourceCredentials,
-	})
+	awsv2.Register("aws_codebuild_report_group", sweepReportGroups)
+	awsv2.Register("aws_codebuild_project", sweepProjects)
+	awsv2.Register("aws_codebuild_source_credential", sweepSourceCredentials)
+	awsv2.Register("aws_codebuild_fleet", sweepFleets)
 }
 
-func sweepReportGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.CodeBuildConn(ctx)
+func sweepReportGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CodeBuildClient(ctx)
+	var input codebuild.ListReportGroupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &codebuild.ListReportGroupsInput{}
-	err = conn.ListReportGroupsPagesWithContext(ctx, input, func(page *codebuild.ListReportGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := codebuild.NewListReportGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, arn := range page.ReportGroups {
-			id := aws.StringValue(arn)
-			r := ResourceReportGroup()
+		for _, v := range page.ReportGroups {
+			r := resourceReportGroup()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(v)
 			d.Set("delete_reports", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeBuild Report Group sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error retrieving CodeBuild ReportGroups: %w", err)
-	}
-
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping CodeBuild ReportGroups: %w", err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepProjects(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.CodeBuildConn(ctx)
+func sweepProjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CodeBuildClient(ctx)
+	var input codebuild.ListProjectsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &codebuild.ListProjectsInput{}
-	err = conn.ListProjectsPagesWithContext(ctx, input, func(page *codebuild.ListProjectsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := codebuild.NewListProjectsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, arn := range page.Projects {
-			id := aws.StringValue(arn)
-			r := ResourceProject()
+		for _, v := range page.Projects {
+			r := resourceProject()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeBuild Project sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error retrieving CodeBuild Projects: %w", err)
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping CodeBuild Projects: %w", err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepSourceCredentials(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.CodeBuildConn(ctx)
-	var sweeperErrs *multierror.Error
+func sweepSourceCredentials(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CodeBuildClient(ctx)
+	var input codebuild.ListSourceCredentialsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &codebuild.ListSourceCredentialsInput{}
-	creds, err := conn.ListSourceCredentialsWithContext(ctx, input)
+	output, err := conn.ListSourceCredentials(ctx, &input)
 
-	for _, cred := range creds.SourceCredentialsInfos {
-		id := aws.StringValue(cred.Arn)
-		r := ResourceSourceCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.SourceCredentialsInfos {
+		id := aws.ToString(v.Arn)
+		r := resourceSourceCredential()
 		d := r.Data(nil)
 		d.SetId(id)
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeBuild Source Credential sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild Source Credentials: %w", err))
+	return sweepResources, nil
+}
+
+func sweepFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CodeBuildClient(ctx)
+	var input codebuild.ListFleetsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := codebuild.NewListFleetsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Fleets {
+			r := resourceFleet()
+			d := r.Data(nil)
+			d.SetId(v)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CodeBuild Source Credentials: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }

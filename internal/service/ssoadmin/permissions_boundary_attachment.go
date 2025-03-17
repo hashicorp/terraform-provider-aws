@@ -22,9 +22,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_permissions_boundary_attachment")
+// @SDKResource("aws_ssoadmin_permissions_boundary_attachment", name="Permissions Boundary Attachment")
 func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,
@@ -67,13 +68,13 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/",

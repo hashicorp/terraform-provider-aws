@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,21 +39,21 @@ func resourceVPCConnector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnets": {
+			names.AttrSubnets: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -73,8 +72,6 @@ func resourceVPCConnector() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -85,8 +82,8 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get("vpc_connector_name").(string)
 	input := &apprunner.CreateVpcConnectorInput{
-		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(d.Get("subnets").(*schema.Set)),
+		SecurityGroups:   flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(d.Get(names.AttrSubnets).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 		VpcConnectorName: aws.String(name),
 	}
@@ -123,10 +120,10 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vpcConnector.VpcConnectorArn)
-	d.Set("security_groups", vpcConnector.SecurityGroups)
-	d.Set("status", vpcConnector.Status)
-	d.Set("subnets", vpcConnector.Subnets)
+	d.Set(names.AttrARN, vpcConnector.VpcConnectorArn)
+	d.Set(names.AttrSecurityGroups, vpcConnector.SecurityGroups)
+	d.Set(names.AttrStatus, vpcConnector.Status)
+	d.Set(names.AttrSubnets, vpcConnector.Subnets)
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
 
@@ -144,9 +141,10 @@ func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
-	_, err := conn.DeleteVpcConnector(ctx, &apprunner.DeleteVpcConnectorInput{
+	input := apprunner.DeleteVpcConnectorInput{
 		VpcConnectorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcConnector(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

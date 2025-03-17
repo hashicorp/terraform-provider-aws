@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 )
 
 func readPartitionID(id string) (string, string, string, []string, error) {
@@ -29,7 +29,7 @@ func readPartitionIndexID(id string) (string, string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
 
-func createPartitionID(catalogID, dbName, tableName string, values []interface{}) string {
+func createPartitionID(catalogID, dbName, tableName string, values []any) string {
 	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyPartition(values))
 }
 
@@ -37,7 +37,7 @@ func createPartitionIndexID(catalogID, dbName, tableName, indexName string) stri
 	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, indexName)
 }
 
-func stringifyPartition(partValues []interface{}) string {
+func stringifyPartition(partValues []any) string {
 	var b bytes.Buffer
 	for _, val := range partValues {
 		b.WriteString(fmt.Sprintf("%s#", val.(string)))
@@ -47,14 +47,14 @@ func stringifyPartition(partValues []interface{}) string {
 	return vals
 }
 
-func createRegistryID(id string) *glue.RegistryId {
-	return &glue.RegistryId{
+func createRegistryID(id string) *awstypes.RegistryId {
+	return &awstypes.RegistryId{
 		RegistryArn: aws.String(id),
 	}
 }
 
-func createSchemaID(id string) *glue.SchemaId {
-	return &glue.SchemaId{
+func createSchemaID(id string) *awstypes.SchemaId {
+	return &awstypes.SchemaId{
 		SchemaArn: aws.String(id),
 	}
 }

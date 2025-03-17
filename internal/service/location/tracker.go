@@ -8,16 +8,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,26 +34,26 @@ func ResourceTracker() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"position_filtering": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      locationservice.PositionFilteringTimeBased,
-				ValidateFunc: validation.StringInSlice(locationservice.PositionFiltering_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.PositionFiltering("TimeBased"),
+				ValidateDiagFunc: enum.Validate[awstypes.PositionFiltering](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -70,35 +71,34 @@ func ResourceTracker() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.CreateTrackerInput{
+	input := &location.CreateTrackerInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("position_filtering"); ok {
-		input.PositionFiltering = aws.String(v.(string))
+		input.PositionFiltering = awstypes.PositionFiltering(v.(string))
 	}
 
 	if v, ok := d.GetOk("tracker_name"); ok {
 		input.TrackerName = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateTrackerWithContext(ctx, input)
+	output, err := conn.CreateTracker(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Location Service Tracker: %s", err)
@@ -108,22 +108,22 @@ func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating Location Service Tracker: empty result")
 	}
 
-	d.SetId(aws.StringValue(output.TrackerName))
+	d.SetId(aws.ToString(output.TrackerName))
 
 	return append(diags, resourceTrackerRead(ctx, d, meta)...)
 }
 
 func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DescribeTrackerInput{
+	input := &location.DescribeTrackerInput{
 		TrackerName: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeTrackerWithContext(ctx, input)
+	output, err := conn.DescribeTracker(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Location Service Tracker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -137,38 +137,38 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Map (%s): empty response", d.Id())
 	}
 
-	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
-	d.Set("description", output.Description)
-	d.Set("kms_key_id", output.KmsKeyId)
+	d.Set(names.AttrCreateTime, aws.ToTime(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
 
 	setTagsOut(ctx, output.Tags)
 
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	return diags
 }
 
 func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	if d.HasChanges("description", "position_filtering") {
-		input := &locationservice.UpdateTrackerInput{
+	if d.HasChanges(names.AttrDescription, "position_filtering") {
+		input := &location.UpdateTrackerInput{
 			TrackerName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("position_filtering"); ok {
-			input.PositionFiltering = aws.String(v.(string))
+			input.PositionFiltering = awstypes.PositionFiltering(v.(string))
 		}
 
-		_, err := conn.UpdateTrackerWithContext(ctx, input)
+		_, err := conn.UpdateTracker(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Location Service Tracker (%s): %s", d.Id(), err)
@@ -180,15 +180,15 @@ func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTrackerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DeleteTrackerInput{
+	input := &location.DeleteTrackerInput{
 		TrackerName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteTrackerWithContext(ctx, input)
+	_, err := conn.DeleteTracker(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 

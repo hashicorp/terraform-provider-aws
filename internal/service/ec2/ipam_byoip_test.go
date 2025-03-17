@@ -7,12 +7,16 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Due to the nature of byoip cidrs, we have each possible test represented as a single test with
@@ -47,13 +51,13 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 
 	resourceName := "aws_vpc.test"
 	assocName := "aws_vpc_ipv6_cidr_block_association.test"
-	var vpc ec2.Vpc
-	var associationIPv6 ec2.VpcIpv6CidrBlockAssociation
+	var vpc awstypes.Vpc
+	var associationIPv6 awstypes.VpcIpv6CidrBlockAssociation
 	netmaskLength := 56
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +65,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 				Config: testAccIPAMBYOIPConfig_ipv4IPv6DefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "ipv6_netmask_length"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexache.MustCompile(`^vpc-cidr-assoc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -78,7 +82,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 				Config: testAccIPAMBYOIPConfig_ipv6ExplicitNetmask(p, m, s, netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", strconv.Itoa(netmaskLength)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexache.MustCompile(`^vpc-cidr-assoc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -96,7 +100,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &vpc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexache.MustCompile(`^vpc-cidr-assoc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ipv6CidrVPC),
 				),
@@ -170,6 +174,16 @@ func testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t *testing.T, ipv6CidrVPC strin
 		}
 		t.Log("Skipping step: Environment variable IPAM_BYOIP_IPV6_EXPLICIT_CIDR_VPC or IPAM_BYOIP_IPV6_EXPLICIT_CIDR_ASSOCIATE must be set.")
 		return true, nil
+	}
+}
+
+func testAccCheckVPCAssociationIPv6CIDRPrefix(association *awstypes.VpcIpv6CidrBlockAssociation, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.ToString(association.Ipv6CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.ToString(association.Ipv6CidrBlock))
+		}
+
+		return nil
 	}
 }
 

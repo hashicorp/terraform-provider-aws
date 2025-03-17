@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_option_group: Add `skip_destroy` argument
+```
+
+```release-note:enhancement
+resource/aws_db_parameter_group: Add `skip_destroy` argument
+```

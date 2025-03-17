@@ -58,12 +58,12 @@ func updateTags(ctx context.Context, conn *kafka.Client, identifier string, oldT
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Kafka)
 	if len(removedTags) > 0 {
-		input := &kafka.UntagResourceInput{
+		input := kafka.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -73,12 +73,12 @@ func updateTags(ctx context.Context, conn *kafka.Client, identifier string, oldT
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Kafka)
 	if len(updatedTags) > 0 {
-		input := &kafka.TagResourceInput{
+		input := kafka.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

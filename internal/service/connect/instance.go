@@ -12,21 +12,40 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_connect_instance")
-func ResourceInstance() *schema.Resource {
+var (
+	instanceAttributeMap = map[string]awstypes.InstanceAttributeType{
+		"auto_resolve_best_voices_enabled": awstypes.InstanceAttributeTypeAutoResolveBestVoices,
+		"contact_flow_logs_enabled":        awstypes.InstanceAttributeTypeContactflowLogs,
+		"contact_lens_enabled":             awstypes.InstanceAttributeTypeContactLens,
+		"early_media_enabled":              awstypes.InstanceAttributeTypeEarlyMedia,
+		"inbound_calls_enabled":            awstypes.InstanceAttributeTypeInboundCalls,
+		"multi_party_conference_enabled":   awstypes.InstanceAttributeTypeMultiPartyConference,
+		"outbound_calls_enabled":           awstypes.InstanceAttributeTypeOutboundCalls,
+		// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
+		//"use_custom_tts_voices_enabled": awstypes.InstanceAttributeTypeUseCustomTtsVoices,
+	}
+)
+
+// @SDKResource("aws_connect_instance", name="Instance")
+// @Tags(identifierAttribute="arn")
+func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
 		ReadWithoutTimeout:   resourceInstanceRead,
@@ -43,7 +62,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +81,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  true, //verified default result from ListInstanceAttributes()
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,10 +98,10 @@ func ResourceInstance() *schema.Resource {
 				Default:  true, //verified default result from ListInstanceAttributes()
 			},
 			"identity_management_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(connect.DirectoryType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
 			},
 			"inbound_calls_enabled": {
 				Type:     schema.TypeBool,
@@ -108,11 +127,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,20 +141,22 @@ func ResourceInstance() *schema.Resource {
 			// 	Optional: true,
 			// 	Default:  false, //verified default result from ListInstanceAttributes()
 			// },
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	input := &connect.CreateInstanceInput{
 		ClientToken:            aws.String(id.UniqueId()),
-		IdentityManagementType: aws.String(d.Get("identity_management_type").(string)),
+		IdentityManagementType: awstypes.DirectoryType(d.Get("identity_management_type").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("directory_id"); ok {
@@ -146,22 +167,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.InstanceAlias = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateInstanceWithContext(ctx, input)
+	output, err := conn.CreateInstance(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Instance: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	if _, err := waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Connect Instance (%s) create: %s", d.Id(), err)
 	}
 
-	for attributeType, key := range InstanceAttributeMapping() {
-		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+	if err := createInstanceAttributes(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
@@ -169,10 +188,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instance, err := FindInstanceByID(ctx, conn, d.Id())
+	instance, err := findInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
@@ -184,71 +202,48 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(instance.Id))
-	d.Set("arn", instance.Arn)
+	d.Set(names.AttrARN, instance.Arn)
 	if instance.CreatedTime != nil {
-		d.Set("created_time", instance.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, instance.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set("identity_management_type", instance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", instance.InboundCallsEnabled)
 	d.Set("instance_alias", instance.InstanceAlias)
 	d.Set("outbound_calls_enabled", instance.OutboundCallsEnabled)
-	d.Set("service_role", instance.ServiceRole)
-	d.Set("status", instance.InstanceStatus)
+	d.Set(names.AttrServiceRole, instance.ServiceRole)
+	d.Set(names.AttrStatus, instance.InstanceStatus)
 
-	for attributeType, key := range InstanceAttributeMapping() {
-		input := &connect.DescribeInstanceAttributeInput{
-			AttributeType: aws.String(attributeType),
-			InstanceId:    aws.String(d.Id()),
-		}
-
-		output, err := conn.DescribeInstanceAttributeWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s) attribute (%s): %s", d.Id(), attributeType, err)
-		}
-
-		v, err := strconv.ParseBool(aws.StringValue(output.Attribute.Value))
-
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		d.Set(key, v)
+	if err := readInstanceAttributes(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	setTagsOut(ctx, instance.Tags)
 
 	return diags
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	for attributeType, key := range InstanceAttributeMapping() {
-		if !d.HasChange(key) {
-			continue
-		}
-
-		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+	if err := updateInstanceAttributes(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return diags
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
-	_, err := conn.DeleteInstanceWithContext(ctx, &connect.DeleteInstanceInput{
+	input := connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstance(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -263,16 +258,59 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func updateInstanceAttribute(ctx context.Context, conn *connect.Connect, instanceID, attributeType, value string) error {
+func createInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
+	for key, attributeType := range instanceAttributeMap {
+		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func readInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
+	for key, attributeType := range instanceAttributeMap {
+		attribute, err := findInstanceAttributeByTwoPartKey(ctx, conn, d.Id(), attributeType)
+
+		if err != nil {
+			return fmt.Errorf("reading Connect Instance (%s) attribute (%s): %w", d.Id(), attributeType, err)
+		}
+
+		v, err := strconv.ParseBool(aws.ToString(attribute.Value))
+		if err != nil {
+			return err
+		}
+
+		d.Set(key, v)
+	}
+
+	return nil
+}
+
+func updateInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
+	for key, attributeType := range instanceAttributeMap {
+		if !d.HasChange(key) {
+			continue
+		}
+
+		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func updateInstanceAttribute(ctx context.Context, conn *connect.Client, instanceID string, attributeType awstypes.InstanceAttributeType, value string) error {
 	input := &connect.UpdateInstanceAttributeInput{
-		AttributeType: aws.String(attributeType),
+		AttributeType: attributeType,
 		InstanceId:    aws.String(instanceID),
 		Value:         aws.String(value),
 	}
 
-	_, err := conn.UpdateInstanceAttributeWithContext(ctx, input)
+	_, err := conn.UpdateInstanceAttribute(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
+	if errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil
 	}
 
@@ -283,14 +321,18 @@ func updateInstanceAttribute(ctx context.Context, conn *connect.Connect, instanc
 	return nil
 }
 
-func FindInstanceByID(ctx context.Context, conn *connect.Connect, id string) (*connect.Instance, error) {
+func findInstanceByID(ctx context.Context, conn *connect.Client, id string) (*awstypes.Instance, error) {
 	input := &connect.DescribeInstanceInput{
 		InstanceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeInstanceWithContext(ctx, input)
+	return findInstance(ctx, conn, input)
+}
 
-	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+func findInstance(ctx context.Context, conn *connect.Client, input *connect.DescribeInstanceInput) (*awstypes.Instance, error) {
+	output, err := conn.DescribeInstance(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -308,9 +350,39 @@ func FindInstanceByID(ctx context.Context, conn *connect.Connect, id string) (*c
 	return output.Instance, nil
 }
 
-func statusInstance(ctx context.Context, conn *connect.Connect, id string) retry.StateRefreshFunc {
+func findInstanceAttributeByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID string, attributeType awstypes.InstanceAttributeType) (*awstypes.Attribute, error) {
+	input := &connect.DescribeInstanceAttributeInput{
+		AttributeType: attributeType,
+		InstanceId:    aws.String(instanceID),
+	}
+
+	return findInstanceAttribute(ctx, conn, input)
+}
+
+func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *connect.DescribeInstanceAttributeInput) (*awstypes.Attribute, error) {
+	output, err := conn.DescribeInstanceAttribute(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Attribute == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attribute, nil
+}
+
+func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceByID(ctx, conn, id)
+		output, err := findInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -320,33 +392,34 @@ func statusInstance(ctx context.Context, conn *connect.Connect, id string) retry
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.InstanceStatus), nil
+		return output, string(output.InstanceStatus), nil
 	}
 }
 
-func waitInstanceCreated(ctx context.Context, conn *connect.Connect, id string, timeout time.Duration) (*connect.Instance, error) {
+func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.InstanceStatusCreationInProgress},
-		Target:  []string{connect.InstanceStatusActive},
+		Pending: enum.Slice(awstypes.InstanceStatusCreationInProgress),
+		Target:  enum.Slice(awstypes.InstanceStatusActive),
 		Refresh: statusInstance(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*connect.Instance); ok {
-		if output.StatusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason.Message)))
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if statusReason := output.StatusReason; statusReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, id string, timeout time.Duration) (*connect.Instance, error) {
+func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.InstanceStatusActive},
+		Pending: enum.Slice(awstypes.InstanceStatusActive),
 		Target:  []string{},
 		Refresh: statusInstance(ctx, conn, id),
 		Timeout: timeout,
@@ -354,7 +427,11 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*connect.Instance); ok {
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if statusReason := output.StatusReason; statusReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+		}
+
 		return output, err
 	}
 

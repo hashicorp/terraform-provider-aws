@@ -5,18 +5,16 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +25,7 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +35,7 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.0", "SEND"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
@@ -54,7 +52,7 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.0", "REJECT"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
@@ -71,7 +69,7 @@ func TestAccSESV2ConfigurationSetEventDestination_cloudWatchDestination(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,6 +106,35 @@ func TestAccSESV2ConfigurationSetEventDestination_cloudWatchDestination(t *testi
 	})
 }
 
+func TestAccSESV2ConfigurationSetEventDestination_eventBridgeDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set_event_destination.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetEventDestinationConfig_eventBridgeDestination(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.event_bridge_destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.event_bridge_destination.0.event_bus_arn", "data.aws_cloudwatch_event_bus.default", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSESV2ConfigurationSetEventDestination_kinesisFirehoseDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -115,7 +142,7 @@ func TestAccSESV2ConfigurationSetEventDestination_kinesisFirehoseDestination(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,8 +152,8 @@ func TestAccSESV2ConfigurationSetEventDestination_kinesisFirehoseDestination(t *
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.kinesis_firehose_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test1", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.iam_role_arn", "aws_iam_role.delivery_stream", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test1", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.iam_role_arn", "aws_iam_role.delivery_stream", names.AttrARN),
 				),
 			},
 			{
@@ -140,8 +167,8 @@ func TestAccSESV2ConfigurationSetEventDestination_kinesisFirehoseDestination(t *
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.kinesis_firehose_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test2", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.iam_role_arn", "aws_iam_role.delivery_stream", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.iam_role_arn", "aws_iam_role.delivery_stream", names.AttrARN),
 				),
 			},
 		},
@@ -155,7 +182,7 @@ func TestAccSESV2ConfigurationSetEventDestination_pinpointDestination(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -165,7 +192,7 @@ func TestAccSESV2ConfigurationSetEventDestination_pinpointDestination(t *testing
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.pinpoint_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.pinpoint_destination.0.application_arn", "aws_pinpoint_app.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.pinpoint_destination.0.application_arn", "aws_pinpoint_app.test1", names.AttrARN),
 				),
 			},
 			{
@@ -179,7 +206,7 @@ func TestAccSESV2ConfigurationSetEventDestination_pinpointDestination(t *testing
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.pinpoint_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.pinpoint_destination.0.application_arn", "aws_pinpoint_app.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.pinpoint_destination.0.application_arn", "aws_pinpoint_app.test2", names.AttrARN),
 				),
 			},
 		},
@@ -193,7 +220,7 @@ func TestAccSESV2ConfigurationSetEventDestination_snsDestination(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,7 +230,7 @@ func TestAccSESV2ConfigurationSetEventDestination_snsDestination(t *testing.T) {
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.sns_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.sns_destination.0.topic_arn", "aws_sns_topic.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.sns_destination.0.topic_arn", "aws_sns_topic.test1", names.AttrARN),
 				),
 			},
 			{
@@ -217,7 +244,7 @@ func TestAccSESV2ConfigurationSetEventDestination_snsDestination(t *testing.T) {
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.sns_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.sns_destination.0.topic_arn", "aws_sns_topic.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.sns_destination.0.topic_arn", "aws_sns_topic.test2", names.AttrARN),
 				),
 			},
 		},
@@ -231,7 +258,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -256,42 +283,35 @@ func testAccCheckConfigurationSetEventDestinationDestroy(ctx context.Context) re
 				continue
 			}
 
-			_, err := tfsesv2.FindConfigurationSetEventDestinationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfsesv2.FindConfigurationSetEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.Attributes["event_destination_name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.NotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameConfigurationSetEventDestination, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Configuration Set Event Destination %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConfigurationSetEventDestinationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckConfigurationSetEventDestinationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSetEventDestination, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSetEventDestination, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
-		_, err := tfsesv2.FindConfigurationSetEventDestinationByID(ctx, conn, rs.Primary.ID)
+		_, err := tfsesv2.FindConfigurationSetEventDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["configuration_set_name"], rs.Primary.Attributes["event_destination_name"])
 
-		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSetEventDestination, rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -343,6 +363,31 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   }
 }
 `, rName, dimension)
+}
+
+func testAccConfigurationSetEventDestinationConfig_eventBridgeDestination(rName string) string {
+	return fmt.Sprintf(`
+data "aws_cloudwatch_event_bus" "default" {
+  name = "default"
+}
+
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+}
+
+resource "aws_sesv2_configuration_set_event_destination" "test" {
+  configuration_set_name = aws_sesv2_configuration_set.test.configuration_set_name
+  event_destination_name = %[1]q
+
+  event_destination {
+    event_bridge_destination {
+      event_bus_arn = data.aws_cloudwatch_event_bus.default.arn
+    }
+
+    matching_event_types = ["SEND"]
+  }
+}
+`, rName)
 }
 
 func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestinationBase(rName string) string {

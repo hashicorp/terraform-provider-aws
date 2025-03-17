@@ -38,7 +38,7 @@ func TestAccKendraDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,13 +46,13 @@ func TestAccKendraDataSource_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.DataSourceStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeCustom)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.DataSourceStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeCustom)),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccKendraDataSource_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +110,7 @@ func TestAccKendraDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestAccKendraDataSource_name(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
 				),
 			},
 			{
@@ -130,7 +130,7 @@ func TestAccKendraDataSource_name(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName5),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName5),
 				),
 			},
 		},
@@ -153,7 +153,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -161,14 +161,14 @@ func TestAccKendraDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.DataSourceStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeCustom)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.DataSourceStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeCustom)),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
 			},
@@ -181,14 +181,14 @@ func TestAccKendraDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.DataSourceStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeCustom)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.DataSourceStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeCustom)),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
 			},
@@ -212,7 +212,7 @@ func TestAccKendraDataSource_languageCode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +220,7 @@ func TestAccKendraDataSource_languageCode(t *testing.T) {
 				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, originalLanguageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "language_code", originalLanguageCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, originalLanguageCode),
 				),
 			},
 			{
@@ -232,7 +232,7 @@ func TestAccKendraDataSource_languageCode(t *testing.T) {
 				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, updatedLanguageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "language_code", updatedLanguageCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, updatedLanguageCode),
 				),
 			},
 		},
@@ -256,7 +256,7 @@ func TestAccKendraDataSource_roleARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,8 +264,8 @@ func TestAccKendraDataSource_roleARN(t *testing.T) {
 				Config: testAccDataSourceConfig_roleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -277,8 +277,8 @@ func TestAccKendraDataSource_roleARN(t *testing.T) {
 				Config: testAccDataSourceConfig_roleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source2", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source2", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -303,7 +303,7 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -311,8 +311,8 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, originalSchedule),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule", originalSchedule),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, originalSchedule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -324,8 +324,8 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, updatedSchedule),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule", updatedSchedule),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, updatedSchedule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -346,16 +346,16 @@ func TestAccKendraDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, "key1", "value1"),
+				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -364,20 +364,20 @@ func TestAccKendraDataSource_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_tags2(rName, rName2, rName3, rName4, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDataSourceConfig_tags2(rName, rName2, rName3, rName4, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, "key2", "value2"),
+				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -398,7 +398,7 @@ func TestAccKendraDataSource_typeCustomCustomizeDiff(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -436,7 +436,7 @@ func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -446,9 +446,9 @@ func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source2", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source2", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -462,9 +462,9 @@ func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test2", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source2", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test2", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source2", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -487,7 +487,7 @@ func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -499,9 +499,9 @@ func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.0.key_path", fmt.Sprintf("s3://%s/path-1", rName4)),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -517,9 +517,9 @@ func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.0.key_path", fmt.Sprintf("s3://%s/path-2", rName4)),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -544,7 +544,7 @@ func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -554,11 +554,11 @@ func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.documents_metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.documents_metadata_configuration.0.s3_prefix", originalS3Prefix),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -572,11 +572,11 @@ func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.documents_metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.documents_metadata_configuration.0.s3_prefix", updatedS3Prefix),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -599,7 +599,7 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -609,15 +609,15 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.*", "example"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.*", "hello"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.*", "world"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -631,7 +631,7 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.*", "example2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.*", "foo"),
@@ -641,8 +641,8 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.*", "world2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.*", "baz"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -664,7 +664,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -682,8 +682,8 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.*", "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -706,8 +706,8 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.*", "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.*", "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_faq"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -732,7 +732,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -745,8 +745,8 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *test
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.web_crawler_mode", originalWebCrawlerMode),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -763,8 +763,8 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *test
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.web_crawler_mode", updatedWebCrawlerMode),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -796,7 +796,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -808,13 +808,13 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.*", map[string]string{
-						"host": originalHost1,
-						"port": strconv.Itoa(originalPort1),
+						"host":         originalHost1,
+						names.AttrPort: strconv.Itoa(originalPort1),
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -830,18 +830,18 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.1.credentials", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.1.credentials", "aws_secretsmanager_secret.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.*", map[string]string{
-						"host": updatedHost1,
-						"port": strconv.Itoa(updatedPort1),
+						"host":         updatedHost1,
+						names.AttrPort: strconv.Itoa(updatedPort1),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.*", map[string]string{
-						"host": host2,
-						"port": strconv.Itoa(port2),
+						"host":         host2,
+						names.AttrPort: strconv.Itoa(port2),
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -865,7 +865,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -877,9 +877,9 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -895,9 +895,9 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test2", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -921,7 +921,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -932,7 +932,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", strconv.Itoa(originalCrawlDepth)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -947,7 +947,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", strconv.Itoa(updatedCrawlDepth)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -971,7 +971,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -982,7 +982,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_links_per_page", strconv.Itoa(originalMaxLinksPerPage)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -997,7 +997,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_links_per_page", strconv.Itoa(updatedMaxLinksPerPage)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -1021,7 +1021,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1032,7 +1032,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_urls_per_minute_crawl_rate", strconv.Itoa(originalMaxUrlsPerMinuteCrawlRate)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -1047,7 +1047,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_urls_per_minute_crawl_rate", strconv.Itoa(updatedMaxUrlsPerMinuteCrawlRate)),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -1074,7 +1074,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredenti
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1086,11 +1086,11 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredenti
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.*", map[string]string{
-						"host": originalHost1,
-						"port": strconv.Itoa(originalPort1),
+						"host":         originalHost1,
+						names.AttrPort: strconv.Itoa(originalPort1),
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -1105,13 +1105,13 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredenti
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.0.credentials", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.0.credentials", "aws_secretsmanager_secret.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.*", map[string]string{
-						"host": originalHost1,
-						"port": strconv.Itoa(originalPort1),
+						"host":         originalHost1,
+						names.AttrPort: strconv.Itoa(originalPort1),
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -1140,7 +1140,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1152,11 +1152,11 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.*", map[string]string{
-						"host": originalHost1,
-						"port": strconv.Itoa(originalPort1),
+						"host":         originalHost1,
+						names.AttrPort: strconv.Itoa(originalPort1),
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -1172,11 +1172,11 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.*", map[string]string{
-						"host": updatedHost1,
-						"port": strconv.Itoa(updatedPort1),
+						"host":         updatedHost1,
+						names.AttrPort: strconv.Itoa(updatedPort1),
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -1198,7 +1198,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatte
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1212,7 +1212,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatte
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_exclusion_patterns.*", "example"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_inclusion_patterns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_inclusion_patterns.*", "hello"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -1232,7 +1232,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatte
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_inclusion_patterns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_inclusion_patterns.*", "hello2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_inclusion_patterns.*", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -1254,7 +1254,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1268,7 +1268,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.*", "https://registry.terraform.io/sitemap.xml"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 			{
@@ -1287,7 +1287,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.*", "https://registry.terraform.io/sitemap.xml"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.*", "https://www.terraform.io/sitemap.xml"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeWebcrawler)),
 				),
 			},
 		},
@@ -1310,7 +1310,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1320,12 +1320,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key":  "_document_title",
@@ -1335,11 +1335,11 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_category",
-						"target.0.target_document_attribute_value_deletion":       "false",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtFalse,
 						"target.0.target_document_attribute_value.#":              "1",
 						"target.0.target_document_attribute_value.0.string_value": "bar",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -1353,12 +1353,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key":  "_document_title",
@@ -1368,12 +1368,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_category",
-						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtTrue,
 						"target.0.target_document_attribute_value.#":              "1",
 						"target.0.target_document_attribute_value.0.string_value": "bar2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key": "_created_at",
@@ -1383,11 +1383,11 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_authors",
-						"target.0.target_document_attribute_value_deletion":              "false",
+						"target.0.target_document_attribute_value_deletion":              acctest.CtFalse,
 						"target.0.target_document_attribute_value.#":                     "1",
 						"target.0.target_document_attribute_value.0.string_list_value.#": "2",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -1401,12 +1401,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key":  "_document_title",
@@ -1416,12 +1416,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_category",
-						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtTrue,
 						"target.0.target_document_attribute_value.#":              "1",
 						"target.0.target_document_attribute_value.0.string_value": "bar2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key": "_created_at",
@@ -1431,12 +1431,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_authors",
-						"target.0.target_document_attribute_value_deletion":              "false",
+						"target.0.target_document_attribute_value_deletion":              acctest.CtFalse,
 						"target.0.target_document_attribute_value.#":                     "1",
 						"target.0.target_document_attribute_value.0.string_list_value.#": "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "true",
+						"document_content_deletion": acctest.CtTrue,
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key": "_excerpt_page_number",
@@ -1446,11 +1446,11 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_document_title",
-						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtTrue,
 						"target.0.target_document_attribute_value.#":              "1",
 						"target.0.target_document_attribute_value.0.string_value": "baz",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -1484,7 +1484,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1494,26 +1494,26 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", originalOperator),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_document_title"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.string_value", originalStringValue),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -1527,26 +1527,26 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", updatedOperator),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_document_title"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.pre_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.string_value", updatedStringValue),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -1575,7 +1575,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1585,19 +1585,19 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -1611,19 +1611,19 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -1652,7 +1652,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1662,19 +1662,19 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -1688,19 +1688,19 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -1729,7 +1729,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1739,19 +1739,19 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 			{
@@ -1765,19 +1765,19 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_data_source", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test2", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -2230,7 +2230,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[3]q
   role          = aws_iam_role.test_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_iam_role" "test_extraction_hook" {
@@ -3560,7 +3560,7 @@ resource "aws_lambda_function" "test2" {
   function_name = %[1]q
   role          = aws_iam_role.test_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_kendra_data_source" "test" {

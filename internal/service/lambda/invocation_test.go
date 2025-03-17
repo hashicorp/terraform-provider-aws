@@ -9,14 +9,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaInvocation_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -55,7 +56,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccLambdaInvocation_triggers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -139,7 +140,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -161,6 +162,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ssmParamResourceName := "aws_ssm_parameter.result_key1"
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
@@ -171,26 +173,30 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_dependency(rName, resourceName),
 					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, acctest.CtValue1),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_dependency(rName, resourceName),
 					testAccInvocationConfig_invocation(inputJSON2, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON2),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, "valueB"),
 				),
 			},
 		},
@@ -210,7 +216,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyUpdateInput(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -257,7 +263,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -277,7 +283,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCRUDDestroyResult(ctx, resourceName, ssmParameterName, destroyJSON, t),
+					testAccCheckCRUDDestroyResult(ctx, resourceName, ssmParameterName, destroyJSON),
 				),
 			},
 		},
@@ -299,7 +305,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -330,7 +336,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
+	fName := "lambda_invocation"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
@@ -342,7 +348,7 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -359,20 +365,116 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	})
 }
 
+// Tests the state upgrader coming from a version < v5.1.0 where the default values
+// from the arguments added in 5.1.0 are not yet present.
+//
+// This causes unintentional invocations and/or issues processing input which is
+// valid type for CREATE_ONLY lifecycle_scope.
+//
+// https://github.com/hashicorp/terraform-provider-aws/issues/40954
+// https://github.com/hashicorp/terraform-provider-aws/issues/31786
+func TestAccLambdaInvocation_UpgradeState_Pre_v5_1_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.65.0",
+					},
+				},
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
+// Tests the state upgrader in cases where the default values from the arguments added
+// in v5.1.0 are already present
+func TestAccLambdaInvocation_UpgradeState_v5_83_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.83.0",
+					},
+				},
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
 // testAccCheckCRUDDestroyResult verifies that when CRUD lifecycle is active that a destroyed resource
 // triggers the lambda.
 //
 // Because a destroy implies the resource will be removed from the state we need another way to check
 // how the lambda was invoked. The JSON used to invoke the lambda is stored in an SSM Parameter.
 // We will read it out, compare with the expected result and clean up the SSM parameter.
-func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, expectedResult string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, expectedResult string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if ok {
 			return fmt.Errorf("Still found resource in state: %s", name)
 		}
-		conn := acctest.ProviderMeta(t).SSMConn(ctx)
-		res, err := conn.GetParameterWithContext(ctx, &ssm.GetParameterInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		res, err := conn.GetParameter(ctx, &ssm.GetParameterInput{
 			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),
 		})
@@ -393,8 +495,27 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 	}
 }
 
-func removeSSMParameter(ctx context.Context, conn *ssm.SSM, name string) error {
-	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
+func testAccCheckInvocationResultUpdatedSSMParam(name, expectedValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("SSM parameter %s not created", name)
+		}
+
+		value, ok := rs.Primary.Attributes[names.AttrValue]
+		if !ok {
+			return fmt.Errorf("SSM parameter attribute 'value' is empty, expected: %s", expectedValue)
+		}
+
+		if value != expectedValue {
+			return fmt.Errorf("%s: Attribute 'value' expected %s, got %s", name, expectedValue, value)
+		}
+		return nil
+	}
+}
+
+func removeSSMParameter(ctx context.Context, conn *ssm.Client, name string) error {
+	_, err := conn.DeleteParameter(ctx, &ssm.DeleteParameterInput{
 		Name: aws.String(name),
 	})
 	return err
@@ -466,7 +587,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.test.arn
   handler       = "%[1]s.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs18.x"
 
   environment {
     variables = {
@@ -552,4 +673,14 @@ resource "aws_lambda_invocation" "test" {
   })
 }
 `)
+}
+
+func testAccInvocationConfig_dependency(rName, resourceName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "result_key1" {
+  name  = "/tf-test/CRUD/%[1]s/key1"
+  type  = "String"
+  value = try(jsondecode(%[2]s.result).key1, "")
+}
+`, rName, resourceName)
 }

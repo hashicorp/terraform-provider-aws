@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,13 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Policy Template")
+// @FrameworkResource("aws_verifiedpermissions_policy_template", name="Policy Template")
 func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyTemplate{}
 
@@ -44,25 +44,21 @@ type resourcePolicyTemplate struct {
 	framework.WithImportByID
 }
 
-func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_policy_template"
-}
-
 // Schema returns the schema for this resource.
 func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+			names.AttrCreatedDate: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -95,7 +91,7 @@ func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := &verifiedpermissions.CreatePolicyTemplateInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -114,9 +110,9 @@ func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.Cr
 	}
 
 	state := plan
-	state.ID = flex.StringValueToFramework(ctx, fmt.Sprintf("%s:%s", aws.ToString(output.PolicyStoreId), aws.ToString(output.PolicyTemplateId)))
+	state.ID = fwflex.StringValueToFramework(ctx, fmt.Sprintf("%s:%s", aws.ToString(output.PolicyStoreId), aws.ToString(output.PolicyTemplateId)))
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -159,7 +155,7 @@ func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -186,7 +182,7 @@ func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.Up
 
 	if !plan.Description.Equal(state.Description) || !plan.Statement.Equal(state.Statement) {
 		input := &verifiedpermissions.UpdatePolicyTemplateInput{}
-		response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
 
 		if response.Diagnostics.HasError() {
 			return
@@ -202,7 +198,7 @@ func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		response.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -219,12 +215,12 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	}
 
 	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	input := &verifiedpermissions.DeletePolicyTemplateInput{
-		PolicyStoreId:    aws.String(state.PolicyStoreID.ValueString()),
-		PolicyTemplateId: aws.String(state.PolicyTemplateID.ValueString()),
+		PolicyStoreId:    state.PolicyStoreID.ValueStringPointer(),
+		PolicyTemplateId: state.PolicyTemplateID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePolicyTemplate(ctx, input)
@@ -243,7 +239,7 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 }
 
 type resourcePolicyTemplateData struct {
-	CreatedDate      fwtypes.Timestamp `tfsdk:"created_date"`
+	CreatedDate      timetypes.RFC3339 `tfsdk:"created_date"`
 	Description      types.String      `tfsdk:"description"`
 	ID               types.String      `tfsdk:"id"`
 	PolicyStoreID    types.String      `tfsdk:"policy_store_id"`

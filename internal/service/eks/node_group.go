@@ -45,8 +45,6 @@ func resourceNodeGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
@@ -61,7 +59,7 @@ func resourceNodeGroup() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.AMITypes](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +70,7 @@ func resourceNodeGroup() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.CapacityTypes](),
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,13 +98,13 @@ func resourceNodeGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -114,7 +112,7 @@ func resourceNodeGroup() *schema.Resource {
 							ConflictsWith: []string{"launch_template.0.name"},
 							ValidateFunc:  verify.ValidLaunchTemplateID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -122,7 +120,7 @@ func resourceNodeGroup() *schema.Resource {
 							ConflictsWith: []string{"launch_template.0.id"},
 							ValidateFunc:  verify.ValidLaunchTemplateName,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -145,6 +143,21 @@ func resourceNodeGroup() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
 				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+			},
+			"node_repair_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
@@ -178,7 +191,7 @@ func resourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -188,7 +201,7 @@ func resourceNodeGroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -226,11 +239,11 @@ func resourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -245,12 +258,12 @@ func resourceNodeGroup() *schema.Resource {
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 63),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 63),
@@ -291,7 +304,7 @@ func resourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -305,7 +318,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	input := &eks.CreateNodegroupInput{
@@ -313,7 +326,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
-		Subnets:            flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		Subnets:            flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -337,8 +350,12 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Labels = flex.ExpandStringValueMap(v)
 	}
 
-	if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
+	if v := d.Get(names.AttrLaunchTemplate).([]interface{}); len(v) > 0 {
 		input.LaunchTemplate = expandLaunchTemplateSpecification(v)
+	}
+
+	if v, ok := d.GetOk("node_repair_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.NodeRepairConfig = expandNodeRepairConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("release_version"); ok {
@@ -361,7 +378,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.UpdateConfig = expandNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -403,45 +420,52 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("ami_type", nodeGroup.AmiType)
-	d.Set("arn", nodeGroup.NodegroupArn)
+	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
-	d.Set("cluster_name", nodeGroup.ClusterName)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
+	if nodeGroup.NodeRepairConfig != nil {
+		if err := d.Set("node_repair_config", []interface{}{flattenNodeRepairConfig(nodeGroup.NodeRepairConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_repair_config: %s", err)
+		}
+	} else {
+		d.Set("node_repair_config", nil)
+	}
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
-	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set(names.AttrResources, flattenNodegroupResources(nodeGroup.Resources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenNodegroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
-	d.Set("status", nodeGroup.Status)
-	d.Set("subnet_ids", nodeGroup.Subnets)
+	d.Set(names.AttrStatus, nodeGroup.Status)
+	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
 	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting taint: %s", err)
 	}
 	if nodeGroup.UpdateConfig != nil {
-		if err := d.Set("update_config", []interface{}{flattenNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+		if err := d.Set("update_config", []interface{}{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting update_config: %s", err)
 		}
 	} else {
 		d.Set("update_config", nil)
 	}
-	d.Set("version", nodeGroup.Version)
+	d.Set(names.AttrVersion, nodeGroup.Version)
 
 	setTagsOut(ctx, nodeGroup.Tags)
 
@@ -459,7 +483,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// Do any version update first.
-	if d.HasChanges("launch_template", "release_version", "version") {
+	if d.HasChanges(names.AttrLaunchTemplate, "release_version", names.AttrVersion) {
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
@@ -467,7 +491,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			NodegroupName:      aws.String(nodeGroupName),
 		}
 
-		if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
+		if v := d.Get(names.AttrLaunchTemplate).([]interface{}); len(v) > 0 {
 			input.LaunchTemplate = expandLaunchTemplateSpecification(v)
 
 			// When returning Launch Template information, the API returns all
@@ -491,7 +515,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.ReleaseVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("version"); ok && d.HasChange("version") {
+		if v, ok := d.GetOk(names.AttrVersion); ok && d.HasChange(names.AttrVersion) {
 			input.Version = aws.String(v.(string))
 		}
 
@@ -508,7 +532,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint", "update_config") {
+	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
@@ -518,6 +542,12 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
 			Taints:             expandUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
+		}
+
+		if d.HasChange("node_repair_config") {
+			if v, ok := d.GetOk("node_repair_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.NodeRepairConfig = expandNodeRepairConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("scaling_config") {
@@ -745,28 +775,28 @@ func issuesError(apiObjects []types.Issue) error {
 	return errors.Join(errs...)
 }
 
-func expandLaunchTemplateSpecification(l []interface{}) *types.LaunchTemplateSpecification {
-	if len(l) == 0 || l[0] == nil {
+func expandLaunchTemplateSpecification(tfList []interface{}) *types.LaunchTemplateSpecification {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	config := &types.LaunchTemplateSpecification{}
+	apiObject := &types.LaunchTemplateSpecification{}
 
-	if v, ok := m["id"].(string); ok && v != "" {
-		config.Id = aws.String(v)
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := m["name"].(string); ok && v != "" {
-		config.Name = aws.String(v)
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := m["version"].(string); ok && v != "" {
-		config.Version = aws.String(v)
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
 func expandNodegroupScalingConfig(tfMap map[string]interface{}) *types.NodegroupScalingConfig {
@@ -791,38 +821,37 @@ func expandNodegroupScalingConfig(tfMap map[string]interface{}) *types.Nodegroup
 	return apiObject
 }
 
-func expandTaints(l []interface{}) []types.Taint {
-	if len(l) == 0 {
+func expandTaints(tfList []interface{}) []types.Taint {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var taints []types.Taint
+	var apiObjects []types.Taint
 
-	for _, raw := range l {
-		t, ok := raw.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		taint := types.Taint{}
+		apiObject := types.Taint{}
 
-		if k, ok := t["key"].(string); ok {
-			taint.Key = aws.String(k)
+		if v, ok := tfMap["effect"].(string); ok {
+			apiObject.Effect = types.TaintEffect(v)
 		}
 
-		if v, ok := t["value"].(string); ok {
-			taint.Value = aws.String(v)
+		if v, ok := tfMap[names.AttrKey].(string); ok {
+			apiObject.Key = aws.String(v)
 		}
 
-		if e, ok := t["effect"].(string); ok {
-			taint.Effect = types.TaintEffect(e)
+		if v, ok := tfMap[names.AttrValue].(string); ok {
+			apiObject.Value = aws.String(v)
 		}
 
-		taints = append(taints, taint)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return taints
+	return apiObjects
 }
 
 func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *types.UpdateTaintsPayload {
@@ -877,24 +906,24 @@ func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *types.
 	return updateTaintsPayload
 }
 
-func expandRemoteAccessConfig(l []interface{}) *types.RemoteAccessConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandRemoteAccessConfig(tfList []interface{}) *types.RemoteAccessConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	config := &types.RemoteAccessConfig{}
+	apiObject := &types.RemoteAccessConfig{}
 
-	if v, ok := m["ec2_ssh_key"].(string); ok && v != "" {
-		config.Ec2SshKey = aws.String(v)
+	if v, ok := tfMap["ec2_ssh_key"].(string); ok && v != "" {
+		apiObject.Ec2SshKey = aws.String(v)
 	}
 
-	if v, ok := m["source_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.SourceSecurityGroups = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap["source_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SourceSecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	return config
+	return apiObject
 }
 
 func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *types.NodegroupUpdateConfig {
@@ -910,6 +939,20 @@ func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *types.NodegroupU
 
 	if v, ok := tfMap["max_unavailable_percentage"].(int); ok && v != 0 {
 		apiObject.MaxUnavailablePercentage = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandNodeRepairConfig(tfMap map[string]interface{}) *types.NodeRepairConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.NodeRepairConfig{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
 	}
 
 	return apiObject
@@ -940,60 +983,60 @@ func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap i
 	return updateLabelsPayload
 }
 
-func flattenAutoScalingGroups(autoScalingGroups []types.AutoScalingGroup) []map[string]interface{} {
-	if len(autoScalingGroups) == 0 {
-		return []map[string]interface{}{}
+func flattenAutoScalingGroups(apiObjects []types.AutoScalingGroup) []interface{} {
+	if len(apiObjects) == 0 {
+		return []interface{}{}
 	}
 
-	l := make([]map[string]interface{}, 0, len(autoScalingGroups))
+	tfList := make([]interface{}, 0, len(apiObjects))
 
-	for _, autoScalingGroup := range autoScalingGroups {
-		m := map[string]interface{}{
-			"name": aws.ToString(autoScalingGroup.Name),
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrName: aws.ToString(apiObject.Name),
 		}
 
-		l = append(l, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return l
+	return tfList
 }
 
-func flattenLaunchTemplateSpecification(config *types.LaunchTemplateSpecification) []map[string]interface{} {
-	if config == nil {
+func flattenLaunchTemplateSpecification(apiObject *types.LaunchTemplateSpecification) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-	if v := config.Id; v != nil {
-		m["id"] = aws.ToString(v)
+	if v := apiObject.Id; v != nil {
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
-	if v := config.Name; v != nil {
-		m["name"] = aws.ToString(v)
+	if v := apiObject.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
-	if v := config.Version; v != nil {
-		m["version"] = aws.ToString(v)
+	if v := apiObject.Version; v != nil {
+		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
 
-	return []map[string]interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenNodeGroupResources(resources *types.NodegroupResources) []map[string]interface{} {
-	if resources == nil {
-		return []map[string]interface{}{}
+func flattenNodegroupResources(apiObject *types.NodegroupResources) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"autoscaling_groups":              flattenAutoScalingGroups(resources.AutoScalingGroups),
-		"remote_access_security_group_id": aws.ToString(resources.RemoteAccessSecurityGroup),
+	tfMap := map[string]interface{}{
+		"autoscaling_groups":              flattenAutoScalingGroups(apiObject.AutoScalingGroups),
+		"remote_access_security_group_id": aws.ToString(apiObject.RemoteAccessSecurityGroup),
 	}
 
-	return []map[string]interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenNodeGroupScalingConfig(apiObject *types.NodegroupScalingConfig) map[string]interface{} {
+func flattenNodegroupScalingConfig(apiObject *types.NodegroupScalingConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1015,7 +1058,21 @@ func flattenNodeGroupScalingConfig(apiObject *types.NodegroupScalingConfig) map[
 	return tfMap
 }
 
-func flattenNodeGroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[string]interface{} {
+func flattenNodeRepairConfig(apiObject *types.NodeRepairConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
+func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1033,33 +1090,35 @@ func flattenNodeGroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 	return tfMap
 }
 
-func flattenRemoteAccessConfig(config *types.RemoteAccessConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenRemoteAccessConfig(apiObject *types.RemoteAccessConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"ec2_ssh_key":               aws.ToString(config.Ec2SshKey),
-		"source_security_group_ids": config.SourceSecurityGroups,
+	tfMap := map[string]interface{}{
+		"ec2_ssh_key":               aws.ToString(apiObject.Ec2SshKey),
+		"source_security_group_ids": apiObject.SourceSecurityGroups,
 	}
 
-	return []map[string]interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenTaints(taints []types.Taint) []interface{} {
-	if len(taints) == 0 {
+func flattenTaints(apiObjects []types.Taint) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var results []interface{}
+	var tfList []interface{}
 
-	for _, taint := range taints {
-		t := make(map[string]interface{})
-		t["key"] = aws.ToString(taint.Key)
-		t["value"] = aws.ToString(taint.Value)
-		t["effect"] = taint.Effect
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
 
-		results = append(results, t)
+		tfMap["effect"] = apiObject.Effect
+		tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+		tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
+
+		tfList = append(tfList, tfMap)
 	}
-	return results
+
+	return tfList
 }

@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
 func ResourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -48,7 +49,7 @@ func ResourceInput() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +80,7 @@ func ResourceInput() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -114,11 +115,11 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -134,18 +135,18 @@ func ResourceInput() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -157,13 +158,13 @@ func ResourceInput() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 2,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -174,8 +175,6 @@ func ResourceInput() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -185,16 +184,16 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(id.UniqueId()),
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Tags:      getTagsIn(ctx),
-		Type:      types.InputType(d.Get("type").(string)),
+		Type:      types.InputType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
@@ -205,15 +204,15 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.InputDevices = inputDevices(v.(*schema.Set).List()).expandToDeviceSettings()
 	}
 
-	if v, ok := d.GetOk("input_security_groups"); ok && len(v.([]interface{})) > 0 {
-		in.InputSecurityGroups = flex.ExpandStringValueList(d.Get("input_security_groups").([]interface{}))
+	if v, ok := d.GetOk("input_security_groups"); ok && len(v.([]any)) > 0 {
+		in.InputSecurityGroups = flex.ExpandStringValueList(d.Get("input_security_groups").([]any))
 	}
 
 	if v, ok := d.GetOk("media_connect_flows"); ok && v.(*schema.Set).Len() > 0 {
 		in.MediaConnectFlows = expandMediaConnectFlows(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
 
@@ -221,13 +220,13 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.Sources = expandSources(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
-		in.Vpc = expandVPC(v.([]interface{}))
+	if v, ok := d.GetOk("vpc"); ok && len(v.([]any)) > 0 {
+		in.Vpc = expandVPC(v.([]any))
 	}
 
 	// IAM propagation
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -240,11 +239,11 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get(names.AttrName).(string), err)
 	}
 
 	if outputRaw == nil || outputRaw.(*medialive.CreateInputOutput).Input == nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*medialive.CreateInputOutput).Input.Id))
@@ -256,7 +255,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
-func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -273,28 +272,28 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("attached_channels", out.AttachedChannels)
 	d.Set("media_connect_flows", flattenMediaConnectFlows(out.MediaConnectFlows))
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("input_class", out.InputClass)
 	d.Set("input_devices", flattenInputDevices(out.InputDevices))
 	d.Set("input_partner_ids", out.InputPartnerIds)
 	d.Set("input_security_groups", out.SecurityGroups)
 	d.Set("input_source_type", out.InputSourceType)
-	d.Set("role_arn", out.RoleArn)
+	d.Set(names.AttrRoleARN, out.RoleArn)
 	d.Set("sources", flattenSources(out.Sources))
-	d.Set("type", out.Type)
+	d.Set(names.AttrType, out.Type)
 
 	return diags
 }
 
-func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &medialive.UpdateInputInput{
 			InputId: aws.String(d.Id()),
 		}
@@ -311,12 +310,12 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.MediaConnectFlows = expandMediaConnectFlows(d.Get("media_connect_flows").(*schema.Set).List())
 		}
 
-		if d.HasChange("name") {
-			in.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			in.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			in.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("sources") {
@@ -324,7 +323,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {
@@ -350,7 +349,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
-func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -432,7 +431,7 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindInputByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -470,12 +469,12 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	return out, nil
 }
 
-func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]interface{} {
+func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]any {
 	if apiObject == (types.MediaConnectFlow{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.FlowArn; v != nil {
 		m["flow_arn"] = aws.ToString(v)
@@ -483,12 +482,12 @@ func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]interf
 
 	return m
 }
-func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{} {
+func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.MediaConnectFlow{}) {
@@ -501,26 +500,26 @@ func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{}
 	return l
 }
 
-func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]interface{} {
+func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]any {
 	if apiObject == (types.InputDeviceSettings{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
-		m["id"] = aws.ToString(v)
+		m[names.AttrID] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenInputDevices(apiObjects []types.InputDeviceSettings) []interface{} {
+func flattenInputDevices(apiObjects []types.InputDeviceSettings) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputDeviceSettings{}) {
@@ -533,31 +532,31 @@ func flattenInputDevices(apiObjects []types.InputDeviceSettings) []interface{} {
 	return l
 }
 
-func flattenSource(apiObject types.InputSource) map[string]interface{} {
+func flattenSource(apiObject types.InputSource) map[string]any {
 	if apiObject == (types.InputSource{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Url; v != nil {
-		m["url"] = aws.ToString(v)
+		m[names.AttrURL] = aws.ToString(v)
 	}
 	if v := apiObject.PasswordParam; v != nil {
 		m["password_param"] = aws.ToString(v)
 	}
 	if v := apiObject.Username; v != nil {
-		m["username"] = aws.ToString(v)
+		m[names.AttrUsername] = aws.ToString(v)
 	}
 	return m
 }
 
-func flattenSources(apiObjects []types.InputSource) []interface{} {
+func flattenSources(apiObjects []types.InputSource) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputSource{}) {
@@ -570,7 +569,7 @@ func flattenSources(apiObjects []types.InputSource) []interface{} {
 	return l
 }
 
-func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
+func expandDestinations(tfList []any) []types.InputDestinationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -578,7 +577,7 @@ func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	var s []types.InputDestinationRequest
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -593,7 +592,7 @@ func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	return s
 }
 
-type inputDevices []interface{}
+type inputDevices []any
 
 func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
 	if len(i) == 0 {
@@ -603,14 +602,14 @@ func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
 	var s []types.InputDeviceSettings
 
 	for _, v := range i {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
 		var id types.InputDeviceSettings
-		if val, ok := m["id"]; ok {
+		if val, ok := m[names.AttrID]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
 		}
@@ -626,14 +625,14 @@ func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
 	var s []types.InputDeviceRequest
 
 	for _, v := range i {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
 		var id types.InputDeviceRequest
-		if val, ok := m["id"]; ok {
+		if val, ok := m[names.AttrID]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
 		}
@@ -641,7 +640,7 @@ func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
 	return s
 }
 
-func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowRequest {
+func expandMediaConnectFlows(tfList []any) []types.MediaConnectFlowRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -649,7 +648,7 @@ func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowReque
 	var s []types.MediaConnectFlowRequest
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -664,7 +663,7 @@ func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowReque
 	return s
 }
 
-func expandSources(tfList []interface{}) []types.InputSourceRequest {
+func expandSources(tfList []any) []types.InputSourceRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -672,7 +671,7 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 	var s []types.InputSourceRequest
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -682,10 +681,10 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 		if val, ok := m["password_param"]; ok {
 			id.PasswordParam = aws.String(val.(string))
 		}
-		if val, ok := m["url"]; ok {
+		if val, ok := m[names.AttrURL]; ok {
 			id.Url = aws.String(val.(string))
 		}
-		if val, ok := m["username"]; ok {
+		if val, ok := m[names.AttrUsername]; ok {
 			id.Username = aws.String(val.(string))
 		}
 		s = append(s, id)
@@ -693,19 +692,19 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 	return s
 }
 
-func expandVPC(tfList []interface{}) *types.InputVpcRequest {
+func expandVPC(tfList []any) *types.InputVpcRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var s types.InputVpcRequest
-	vpc := tfList[0].(map[string]interface{})
+	vpc := tfList[0].(map[string]any)
 
-	if val, ok := vpc["subnet_ids"]; ok {
-		s.SubnetIds = flex.ExpandStringValueList(val.([]interface{}))
+	if val, ok := vpc[names.AttrSubnetIDs]; ok {
+		s.SubnetIds = flex.ExpandStringValueList(val.([]any))
 	}
-	if val, ok := vpc["security_group_ids"]; ok {
-		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]interface{}))
+	if val, ok := vpc[names.AttrSecurityGroupIDs]; ok {
+		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]any))
 	}
 
 	return &s

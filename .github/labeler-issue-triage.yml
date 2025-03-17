@@ -15,12 +15,12 @@ bug:
   #   doesn't support update
   #   Invalid address to set
   - "(\\[Bug\\]:|doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
-crash:
-  - 'panic:'
 sweeper:
   - 'sweeper'
 skaff:
   - 'skaff'
+function:
+  - 'provider::aws::'
 #
 # AWS Per-Service Labeling
 #
@@ -67,6 +67,8 @@ service/applicationcostprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationcostprofiler_'
 service/applicationinsights:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationinsights_'
+service/applicationsignals:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationsignals_'
 service/appmesh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appmesh_'
 service/apprunner:
@@ -89,8 +91,14 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bcmdataexports:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bcmdataexports_'
 service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
+service/bedrockagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/billing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -99,6 +107,8 @@ service/budgets:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_budgets_'
 service/ce:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ce_'
+service/chatbot:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chatbot_'
 service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
@@ -123,6 +133,8 @@ service/cloudformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudformation_'
 service/cloudfront:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfront_'
+service/cloudfrontkeyvaluestore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfrontkeyvaluestore_'
 service/cloudhsmv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudhsm_v2_'
 service/cloudsearch:
@@ -141,6 +153,8 @@ service/codecatalyst:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
+service/codeconnections:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeconnections_'
 service/codeguruprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeguruprofiler_'
 service/codegurureviewer:
@@ -177,6 +191,8 @@ service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
+service/costoptimizationhub:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_costoptimizationhub_'
 service/cur:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cur_'
 service/customerprofiles:
@@ -189,6 +205,8 @@ service/datapipeline:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datapipeline_'
 service/datasync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datasync_'
+service/datazone:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datazone_'
 service/dax:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dax_'
 service/deploy:
@@ -215,6 +233,8 @@ service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directory_service_'
+service/dsql:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dsql_'
 service/dynamodb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dynamodb_'
 service/dynamodbstreams:
@@ -317,6 +337,8 @@ service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
 service/internetmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
+service/invoicing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_invoicing_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:
@@ -444,7 +466,7 @@ service/mediatailor:
 service/memorydb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_memorydb_'
 service/meta:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$'
 service/mgh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mgh_'
 service/mgn:
@@ -465,10 +487,14 @@ service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
+service/neptunegraph:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptunegraph_'
 service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
+service/networkmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/oam:
@@ -489,8 +515,12 @@ service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_panorama_'
+service/paymentcryptography:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
+service/pcs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcs_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
@@ -505,6 +535,8 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
+service/pinpointsmsvoicev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoicev2_'
 service/pipes:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
@@ -553,6 +585,8 @@ service/route53:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53domains_'
+service/route53profiles:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53profiles_'
 service/route53recoverycluster:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53recoverycluster_'
 service/route53recoverycontrolconfig:
@@ -569,6 +603,8 @@ service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
+service/s3tables:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:
@@ -629,6 +665,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmquicksetup:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmquicksetup_'
 service/ssmsap:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:
@@ -647,8 +685,12 @@ service/swf:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_swf_'
 service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
+service/taxsettings:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_taxsettings_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
+service/timestreaminfluxdb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_timestreaminfluxdb_'
 service/timestreamquery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_timestreamquery_'
 service/timestreamwrite:

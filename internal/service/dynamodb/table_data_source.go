@@ -4,25 +4,23 @@
 package dynamodb
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dynamodb_table")
-func DataSourceTable() *schema.Resource {
+// @SDKDataSource("aws_dynamodb_table", name="Table")
+// @Tags(identifierAttribute="arn")
+func dataSourceTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableRead,
 		Schema: map[string]*schema.Schema{
@@ -44,12 +42,6 @@ func DataSourceTable() *schema.Resource {
 							Computed: true,
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
-					return create.StringHashcode(buf.String())
 				},
 			},
 			"billing_mode": {
@@ -77,6 +69,22 @@ func DataSourceTable() *schema.Resource {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"on_demand_throughput": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_read_request_units": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"max_write_request_units": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
 						},
 						"projection_type": {
 							Type:     schema.TypeString,
@@ -125,16 +133,26 @@ func DataSourceTable() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
-					return create.StringHashcode(buf.String())
-				},
 			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"on_demand_throughput": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_read_request_units": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_write_request_units": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
@@ -190,7 +208,7 @@ func DataSourceTable() *schema.Resource {
 					},
 				},
 			},
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -237,27 +255,15 @@ func DataSourceTable() *schema.Resource {
 
 func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-
-	result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
-		TableName: aws.String(name),
-	})
-
+	table, err := findTableByName(ctx, conn, name)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Dynamodb Table (%s): %s", name, err)
 	}
 
-	if result == nil || result.Table == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Dynamodb Table (%s): not found", name)
-	}
-
-	table := result.Table
-
-	d.SetId(aws.StringValue(table.TableName))
-
+	d.SetId(aws.ToString(table.TableName))
 	d.Set(names.AttrARN, table.TableArn)
 	d.Set(names.AttrName, table.TableName)
 	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
@@ -265,7 +271,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if table.BillingModeSummary != nil {
 		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
 	} else {
-		d.Set("billing_mode", dynamodb.BillingModeProvisioned)
+		d.Set("billing_mode", awstypes.BillingModeProvisioned)
 	}
 
 	if table.ProvisionedThroughput != nil {
@@ -278,11 +284,11 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	for _, attribute := range table.KeySchema {
-		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
+		if attribute.KeyType == awstypes.KeyTypeHash {
 			d.Set("hash_key", attribute.AttributeName)
 		}
 
-		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+		if attribute.KeyType == awstypes.KeyTypeRange {
 			d.Set("range_key", attribute.AttributeName)
 		}
 	}
@@ -295,6 +301,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting global_secondary_index: %s", err)
 	}
 
+	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting on_demand_throughput: %s", err)
+	}
+
 	if table.StreamSpecification != nil {
 		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
@@ -303,7 +313,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("stream_enabled", false)
 	}
 
-	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set(names.AttrStreamARN, table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
 	if err := d.Set("server_side_encryption", flattenTableServerSideEncryption(table.SSEDescription)); err != nil {
@@ -317,41 +327,34 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", dynamodb.TableClassStandard)
+		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &describeBackupsInput)
+
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
-	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
-		return sdkdiag.AppendErrorf(diags, "describing DynamoDB Table (%s) Continuous Backups: %s", d.Id(), err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
+		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table (%s) Continuous Backups: %s", d.Id(), err)
 	}
 
 	if err := d.Set("point_in_time_recovery", flattenPITR(pitrOut)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 	}
 
-	ttlOut, err := conn.DescribeTimeToLiveWithContext(ctx, &dynamodb.DescribeTimeToLiveInput{
+	describeTTLInput := dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	ttlOut, err := conn.DescribeTimeToLive(ctx, &describeTTLInput)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
 	}
 
 	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
-	}
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
-	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get(names.AttrARN).(string), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

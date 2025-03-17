@@ -9,24 +9,24 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
-func ResourceSubnetGroup() *schema.Resource {
+func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
@@ -38,16 +38,16 @@ func ResourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -57,7 +57,7 @@ func ResourceSubnetGroup() *schema.Resource {
 					validation.StringNotInSlice([]string{"default"}, false),
 				),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -65,46 +65,44 @@ func ResourceSubnetGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
-	subnetIds := make([]*string, subnetIdsSet.Len())
+	subnetIdsSet := d.Get(names.AttrSubnetIDs).(*schema.Set)
+	subnetIds := make([]string, subnetIdsSet.Len())
 	for i, subnetId := range subnetIdsSet.List() {
-		subnetIds[i] = aws.String(subnetId.(string))
+		subnetIds[i] = subnetId.(string)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := redshift.CreateClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(name),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		SubnetIds:              subnetIds,
 		Tags:                   getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Redshift Subnet Group: %s", input)
-	_, err := conn.CreateClusterSubnetGroupWithContext(ctx, &input)
+	log.Printf("[DEBUG] Creating Redshift Subnet Group: %#v", input)
+	_, err := conn.CreateClusterSubnetGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Subnet Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(input.ClusterSubnetGroupName))
+	d.SetId(aws.ToString(input.ClusterSubnetGroupName))
 
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	subnetgroup, err := FindSubnetGroupByName(ctx, conn, d.Id())
+	subnetgroup, err := findSubnetGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Subnet Group (%s) not found, removing from state", d.Id())
@@ -117,16 +115,16 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   redshift.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.Redshift,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", subnetgroup.Description)
-	d.Set("name", d.Id())
-	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, subnetgroup.Description)
+	d.Set(names.AttrName, d.Id())
+	d.Set(names.AttrSubnetIDs, subnetIdsToSlice(subnetgroup.Subnets))
 
 	setTagsOut(ctx, subnetgroup.Tags)
 
@@ -135,28 +133,28 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	if d.HasChanges("subnet_ids", "description") {
-		_, n := d.GetChange("subnet_ids")
+	if d.HasChanges(names.AttrSubnetIDs, names.AttrDescription) {
+		_, n := d.GetChange(names.AttrSubnetIDs)
 		if n == nil {
 			n = new(schema.Set)
 		}
 		ns := n.(*schema.Set)
 
-		var sIds []*string
+		var sIds []string
 		for _, s := range ns.List() {
-			sIds = append(sIds, aws.String(s.(string)))
+			sIds = append(sIds, s.(string))
 		}
 
 		input := &redshift.ModifyClusterSubnetGroupInput{
 			ClusterSubnetGroupName: aws.String(d.Id()),
-			Description:            aws.String(d.Get("description").(string)),
+			Description:            aws.String(d.Get(names.AttrDescription).(string)),
 			SubnetIds:              sIds,
 		}
 
-		log.Printf("[DEBUG] Updating Redshift Subnet Group: %s", input)
-		_, err := conn.ModifyClusterSubnetGroupWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating Redshift Subnet Group: %#v", input)
+		_, err := conn.ModifyClusterSubnetGroup(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Redshift Subnet Group (%s): %s", d.Id(), err)
@@ -168,14 +166,14 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Subnet Group: %s", d.Id())
-	_, err := conn.DeleteClusterSubnetGroupWithContext(ctx, &redshift.DeleteClusterSubnetGroupInput{
+	_, err := conn.DeleteClusterSubnetGroup(ctx, &redshift.DeleteClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.ClusterSubnetGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -186,10 +184,10 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func subnetIdsToSlice(subnetIds []*redshift.Subnet) []string {
+func subnetIdsToSlice(subnetIds []awstypes.Subnet) []string {
 	subnetsSlice := make([]string, 0, len(subnetIds))
 	for _, s := range subnetIds {
-		subnetsSlice = append(subnetsSlice, *s.SubnetIdentifier)
+		subnetsSlice = append(subnetsSlice, aws.ToString(s.SubnetIdentifier))
 	}
 	return subnetsSlice
 }

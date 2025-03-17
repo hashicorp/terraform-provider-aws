@@ -195,7 +195,7 @@ class MyConvertedCode extends TerraformStack {
     new EcsService(this, "example", {
       forceNewDeployment: true,
       triggers: {
-        redeployment: Token.asString(Fn.timestamp()),
+        redeployment: Token.asString(Fn.plantimestamp()),
       },
       name: config.name,
     });
@@ -213,31 +213,35 @@ The following arguments are required:
 The following arguments are optional:
 
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
-* `capacityProviderStrategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacityProviderStrategy` blocks to greater than 0, or vice versa. See below.
+* `availabilityZoneRebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. Defaults to `DISABLED`.
+* `capacityProviderStrategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacityProviderStrategy` blocks to greater than 0, or vice versa. [See below](#capacity_provider_strategy). Conflicts with `launchType`.
 * `cluster` - (Optional) ARN of an ECS cluster.
-* `deploymentCircuitBreaker` - (Optional) Configuration block for deployment circuit breaker. See below.
-* `deploymentController` - (Optional) Configuration block for deployment controller configuration. See below.
+* `deploymentCircuitBreaker` - (Optional) Configuration block for deployment circuit breaker. [See below](#deployment_circuit_breaker).
+* `deploymentController` - (Optional) Configuration block for deployment controller configuration. [See below](#deployment_controller).
 * `deploymentMaximumPercent` - (Optional) Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the `DAEMON` scheduling strategy.
 * `deploymentMinimumHealthyPercent` - (Optional) Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
 * `desiredCount` - (Optional) Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the `DAEMON` scheduling strategy.
-* `enableEcsManagedTags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
-* `enableExecuteCommand` - (Optional) Specifies whether to enable Amazon ECS Exec for the tasks within the service.
+* `enableEcsManagedTags` - (Optional) Whether to enable Amazon ECS managed tags for the tasks within the service.
+* `enableExecuteCommand` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the service.
+* `forceDelete` - (Optional) Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the `REPLICA` scheduling strategy.
 * `forceNewDeployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `orderedPlacementStrategy` and `placementConstraints` updates.
 * `healthCheckGracePeriodSeconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iamRole` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
-* `launchType` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`.
-* `loadBalancer` - (Optional) Configuration block for load balancers. See below.
-* `networkConfiguration` - (Optional) Network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. See below.
-* `orderedPlacementStrategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless `forceNewDeployment` is enabled. The maximum number of `orderedPlacementStrategy` blocks is `5`. See below.
-* `placementConstraints` - (Optional) Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless `forceNewDeployment` is enabled. Maximum number of `placementConstraints` is `10`. See below.
+* `launchType` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`. Conflicts with `capacityProviderStrategy`.
+* `loadBalancer` - (Optional) Configuration block for load balancers. [See below](#load_balancer).
+* `networkConfiguration` - (Optional) Network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. [See below](#network_configuration).
+* `orderedPlacementStrategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless `forceNewDeployment` is enabled. The maximum number of `orderedPlacementStrategy` blocks is `5`. [See below](#ordered_placement_strategy).
+* `placementConstraints` - (Optional) Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless `forceNewDeployment` is enabled. Maximum number of `placementConstraints` is `10`. [See below](#placement_constraints).
 * `platformVersion` - (Optional) Platform version on which to run your service. Only applicable for `launchType` set to `FARGATE`. Defaults to `LATEST`. More information about Fargate platform versions can be found in the [AWS ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
-* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition or the service to the tasks. The valid values are `SERVICE` and `TASK_DEFINITION`.
+* `propagateTags` - (Optional) Whether to propagate the tags from the task definition or the service to the tasks. The valid values are `SERVICE` and `TASK_DEFINITION`.
 * `schedulingStrategy` - (Optional) Scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Tasks using the Fargate launch type or the `CODE_DEPLOY` or `EXTERNAL` deployment controller types don't support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html).
-* `serviceConnectConfiguration` - (Optional) The ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. See below.
-* `serviceRegistries` - (Optional) Service discovery registries for the service. The maximum number of `serviceRegistries` blocks is `1`. See below.
+* `serviceConnectConfiguration` - (Optional) ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. [See below](#service_connect_configuration).
+* `serviceRegistries` - (Optional) Service discovery registries for the service. The maximum number of `serviceRegistries` blocks is `1`. [See below](#service_registries).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taskDefinition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
-* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `timestamp()`. See example above.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
+* `volumeConfiguration` - (Optional) Configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. [See below](#volume_configuration).
+* `vpcLatticeConfigurations` - (Optional) The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. [See below](#vpc_lattice_configurations).
 * `waitForSteadyState` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### alarms
@@ -245,8 +249,38 @@ The following arguments are optional:
 The `alarms` configuration block supports the following:
 
 * `alarmNames` - (Required) One or more CloudWatch alarm names.
-* `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
-* `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+* `enable` - (Required) Whether to use the CloudWatch alarm option in the service deployment process.
+* `rollback` - (Required) Whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+
+### volume_configuration
+
+The `volumeConfiguration` configuration block supports the following:
+
+* `name` - (Required) Name of the volume.
+* `managedEbsVolume` - (Required) Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. [See below](#managed_ebs_volume).
+
+### vpc_lattice_configurations
+
+`vpcLatticeConfigurations` supports the following:
+
+* `roleArn` - (Required) The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+* `targetGroupArn` - (Required) The full ARN of the target group or groups associated with the VPC Lattice configuration.
+* `portName` - (Required) The name of the port for a target group associated with the VPC Lattice configuration.
+
+### managed_ebs_volume
+
+The `managedEbsVolume` configuration block supports the following:
+
+* `roleArn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
+* `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
+* `fileSystemType` - (Optional) Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
+* `iops` - (Optional) Number of I/O operations per second (IOPS).
+* `kmsKeyId` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+* `sizeInGb` - (Optional) Size of the volume in GiB. You must specify either a `sizeInGb` or a `snapshotId`. You can optionally specify a volume size greater than or equal to the snapshot size.
+* `snapshotId` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `sizeInGb` or a `snapshotId`.
+* `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volumeType` - (Optional) Volume type.
+* `tagSpecifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
 ### capacity_provider_strategy
 
@@ -322,51 +356,78 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `serviceConnectConfiguration` supports the following:
 
-* `enabled` - (Required) Specifies whether to use Service Connect with this service.
-* `logConfiguration` - (Optional) The log configuration for the container. See below.
-* `namespace` - (Optional) The namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
-* `service` - (Optional) The list of Service Connect service objects. See below.
+* `enabled` - (Required) Whether to use Service Connect with this service.
+* `logConfiguration` - (Optional) Log configuration for the container. [See below](#log_configuration).
+* `namespace` - (Optional) Namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
+* `service` - (Optional) List of Service Connect service objects. [See below](#service).
 
 ### log_configuration
 
 `logConfiguration` supports the following:
 
-* `logDriver` - (Required) The log driver to use for the container.
-* `options` - (Optional) The configuration options to send to the log driver.
-* `secretOption` - (Optional) The secrets to pass to the log configuration. See below.
+* `logDriver` - (Required) Log driver to use for the container.
+* `options` - (Optional) Configuration options to send to the log driver.
+* `secretOption` - (Optional) Secrets to pass to the log configuration. [See below](#secret_option).
 
 ### secret_option
 
 `secretOption` supports the following:
 
-* `name` - (Required) The name of the secret.
-* `valueFrom` - (Required) The secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+* `name` - (Required) Name of the secret.
+* `valueFrom` - (Required) Secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
 
 ### service
 
 `service` supports the following:
 
-* `clientAlias` - (Optional) The list of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. The maximum number of client aliases that you can have in this list is 1. See below.
-* `discoveryName` - (Optional) The name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
-* `ingressPortOverride` - (Optional) The port number for the Service Connect proxy to listen on.
-* `portName` - (Required) The name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
+* `clientAlias` - (Optional) List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. The maximum number of client aliases that you can have in this list is 1. [See below](#client_alias).
+* `discoveryName` - (Optional) Name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
+* `ingressPortOverride` - (Optional) Port number for the Service Connect proxy to listen on.
+* `portName` - (Required) Name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
+* `timeout` - (Optional) Configuration timeouts for Service Connect
+* `tls` - (Optional) Configuration for enabling Transport Layer Security (TLS)
+
+### timeout
+
+`timeout` supports the following:
+
+* `idleTimeoutSeconds` - (Optional) Amount of time in seconds a connection will stay active while idle. A value of 0 can be set to disable idleTimeout.
+* `perRequestTimeoutSeconds` - (Optional) Amount of time in seconds for the upstream to respond with a complete response per request. A value of 0 can be set to disable perRequestTimeout. Can only be set when appProtocol isn't TCP.
+
+### tls
+
+`tls` supports the following:
+
+* `issuerCertAuthority` - (Required) Details of the certificate authority which will issue the certificate.
+* `kmsKey` - (Optional) KMS key used to encrypt the private key in Secrets Manager.
+* `roleArn` - (Optional) ARN of the IAM Role that's associated with the Service Connect TLS.
+
+### issuer_cert_authority
+
+`issuerCertAuthority` supports the following:
+
+* `awsPcaAuthorityArn` - (Optional) ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
 
 ### client_alias
 
 `clientAlias` supports the following:
 
-* `dnsName` - (Optional) The name that you use in the applications of client tasks to connect to this service.
-* `port` - (Required) The listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+* `dnsName` - (Optional) Name that you use in the applications of client tasks to connect to this service.
+* `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+
+### tag_specifications
+
+`tagSpecifications` supports the following:
+
+* `resourceType` - (Required) The type of volume resource. Valid values, `volume`.
+* `propagateTags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `tags` - (Optional) The tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `cluster` - Amazon Resource Name (ARN) of cluster which the service runs on.
-* `desiredCount` - Number of instances of the task definition.
-* `iamRole` - ARN of IAM role used for ELB.
 * `id` - ARN that identifies the service.
-* `name` - Name of the service.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -409,4 +470,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0c2dba4511f8b41de16532abefaed14f7708fa06b49a3887e0b136935976402d -->
+<!-- cache-key: cdktf-0.20.8 input-2bcd990d1489113643cf2af1249276f0f9e683ffcb02656bfaaff9d5e3d457af -->

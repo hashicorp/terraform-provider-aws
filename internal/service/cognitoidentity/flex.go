@@ -4,13 +4,14 @@
 package cognitoidentity
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cognitoidentity.RoleMapping {
-	values := make(map[string]*cognitoidentity.RoleMapping)
+func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awstypes.RoleMapping {
+	values := make(map[string]awstypes.RoleMapping)
 
 	if len(rms) == 0 {
 		return values
@@ -20,25 +21,25 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cog
 		rm := v.(map[string]interface{})
 		key := rm["identity_provider"].(string)
 
-		roleMapping := &cognitoidentity.RoleMapping{
-			Type: aws.String(rm["type"].(string)),
+		roleMapping := awstypes.RoleMapping{
+			Type: awstypes.RoleMappingType(rm[names.AttrType].(string)),
 		}
 
 		if sv, ok := rm["ambiguous_role_resolution"].(string); ok {
-			roleMapping.AmbiguousRoleResolution = aws.String(sv)
+			roleMapping.AmbiguousRoleResolution = awstypes.AmbiguousRoleResolutionType(sv)
 		}
 
 		if mr, ok := rm["mapping_rule"].([]interface{}); ok && len(mr) > 0 {
-			rct := &cognitoidentity.RulesConfigurationType{}
-			mappingRules := make([]*cognitoidentity.MappingRule, 0)
+			rct := &awstypes.RulesConfigurationType{}
+			mappingRules := make([]awstypes.MappingRule, 0)
 
 			for _, r := range mr {
 				rule := r.(map[string]interface{})
-				mr := &cognitoidentity.MappingRule{
+				mr := awstypes.MappingRule{
 					Claim:     aws.String(rule["claim"].(string)),
-					MatchType: aws.String(rule["match_type"].(string)),
-					RoleARN:   aws.String(rule["role_arn"].(string)),
-					Value:     aws.String(rule["value"].(string)),
+					MatchType: awstypes.MappingRuleMatchType(rule["match_type"].(string)),
+					RoleARN:   aws.String(rule[names.AttrRoleARN].(string)),
+					Value:     aws.String(rule[names.AttrValue].(string)),
 				}
 
 				mappingRules = append(mappingRules, mr)
@@ -54,28 +55,28 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cog
 	return values
 }
 
-func expandIdentityPoolRoles(config map[string]interface{}) map[string]*string {
-	m := map[string]*string{}
+func expandIdentityPoolRoles(config map[string]interface{}) map[string]string {
+	m := map[string]string{}
 	for k, v := range config {
 		s := v.(string)
-		m[k] = &s
+		m[k] = s
 	}
 	return m
 }
 
-func expandIdentityProviders(s *schema.Set) []*cognitoidentity.Provider {
-	ips := make([]*cognitoidentity.Provider, 0)
+func expandIdentityProviders(s *schema.Set) []awstypes.CognitoIdentityProvider {
+	ips := make([]awstypes.CognitoIdentityProvider, 0)
 
 	for _, v := range s.List() {
 		s := v.(map[string]interface{})
 
-		ip := &cognitoidentity.Provider{}
+		ip := awstypes.CognitoIdentityProvider{}
 
-		if sv, ok := s["client_id"].(string); ok {
+		if sv, ok := s[names.AttrClientID].(string); ok {
 			ip.ClientId = aws.String(sv)
 		}
 
-		if sv, ok := s["provider_name"].(string); ok {
+		if sv, ok := s[names.AttrProviderName].(string); ok {
 			ip.ProviderName = aws.String(sv)
 		}
 
@@ -89,16 +90,16 @@ func expandIdentityProviders(s *schema.Set) []*cognitoidentity.Provider {
 	return ips
 }
 
-func expandSupportedLoginProviders(config map[string]interface{}) map[string]*string {
-	m := map[string]*string{}
+func expandSupportedLoginProviders(config map[string]interface{}) map[string]string {
+	m := map[string]string{}
 	for k, v := range config {
 		s := v.(string)
-		m[k] = &s
+		m[k] = s
 	}
 	return m
 }
 
-func flattenIdentityPoolRoleMappingsAttachment(rms map[string]*cognitoidentity.RoleMapping) []map[string]interface{} {
+func flattenIdentityPoolRoleMappingsAttachment(rms map[string]awstypes.RoleMapping) []map[string]interface{} {
 	roleMappings := make([]map[string]interface{}, 0)
 
 	if rms == nil {
@@ -108,16 +109,12 @@ func flattenIdentityPoolRoleMappingsAttachment(rms map[string]*cognitoidentity.R
 	for k, v := range rms {
 		m := make(map[string]interface{})
 
-		if v == nil {
-			return nil
+		if v.Type != "" {
+			m[names.AttrType] = string(v.Type)
 		}
 
-		if v.Type != nil {
-			m["type"] = aws.StringValue(v.Type)
-		}
-
-		if v.AmbiguousRoleResolution != nil {
-			m["ambiguous_role_resolution"] = aws.StringValue(v.AmbiguousRoleResolution)
+		if v.AmbiguousRoleResolution != "" {
+			m["ambiguous_role_resolution"] = string(v.AmbiguousRoleResolution)
 		}
 
 		if v.RulesConfiguration != nil && v.RulesConfiguration.Rules != nil {
@@ -131,15 +128,15 @@ func flattenIdentityPoolRoleMappingsAttachment(rms map[string]*cognitoidentity.R
 	return roleMappings
 }
 
-func flattenIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.MappingRule) []interface{} {
+func flattenIdentityPoolRolesAttachmentMappingRules(d []awstypes.MappingRule) []interface{} {
 	rules := make([]interface{}, 0)
 
 	for _, rule := range d {
 		r := make(map[string]interface{})
-		r["claim"] = aws.StringValue(rule.Claim)
-		r["match_type"] = aws.StringValue(rule.MatchType)
-		r["role_arn"] = aws.StringValue(rule.RoleARN)
-		r["value"] = aws.StringValue(rule.Value)
+		r["claim"] = aws.ToString(rule.Claim)
+		r["match_type"] = string(rule.MatchType)
+		r[names.AttrRoleARN] = aws.ToString(rule.RoleARN)
+		r[names.AttrValue] = aws.ToString(rule.Value)
 
 		rules = append(rules, r)
 	}
@@ -147,26 +144,22 @@ func flattenIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.Mapping
 	return rules
 }
 
-func flattenIdentityProviders(ips []*cognitoidentity.Provider) []map[string]interface{} {
+func flattenIdentityProviders(ips []awstypes.CognitoIdentityProvider) []map[string]interface{} {
 	values := make([]map[string]interface{}, 0)
 
 	for _, v := range ips {
 		ip := make(map[string]interface{})
 
-		if v == nil {
-			return nil
-		}
-
 		if v.ClientId != nil {
-			ip["client_id"] = aws.StringValue(v.ClientId)
+			ip[names.AttrClientID] = aws.ToString(v.ClientId)
 		}
 
 		if v.ProviderName != nil {
-			ip["provider_name"] = aws.StringValue(v.ProviderName)
+			ip[names.AttrProviderName] = aws.ToString(v.ProviderName)
 		}
 
 		if v.ServerSideTokenCheck != nil {
-			ip["server_side_token_check"] = aws.BoolValue(v.ServerSideTokenCheck)
+			ip["server_side_token_check"] = aws.ToBool(v.ServerSideTokenCheck)
 		}
 
 		values = append(values, ip)

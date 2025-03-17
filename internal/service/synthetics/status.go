@@ -6,13 +6,12 @@ package synthetics
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusCanaryState(ctx context.Context, conn *synthetics.Synthetics, name string) retry.StateRefreshFunc {
+func statusCanaryState(ctx context.Context, conn *synthetics.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCanaryByName(ctx, conn, name)
 
@@ -24,6 +23,6 @@ func statusCanaryState(ctx context.Context, conn *synthetics.Synthetics, name st
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.State), nil
+		return output, string(output.Status.State), nil
 	}
 }

@@ -12,15 +12,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_canonical_user_id")
+// @SDKDataSource("aws_canonical_user_id", name="Canonical User ID")
 func dataSourceCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -28,7 +29,7 @@ func dataSourceCanonicalUserID() *schema.Resource {
 	}
 }
 
-func dataSourceCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -43,7 +44,7 @@ func dataSourceCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.ToString(output.Owner.ID))
-	d.Set("display_name", output.Owner.DisplayName)
+	d.Set(names.AttrDisplayName, output.Owner.DisplayName)
 
 	return diags
 }

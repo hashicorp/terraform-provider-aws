@@ -4,11 +4,12 @@ package dynamodb
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// GetTag fetches an individual dynamodb service tag for a resource.
+// findTag fetches an individual dynamodb service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
 // This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier, key string) (*string, error) {
-	listTags, err := listTags(ctx, conn, identifier)
+func findTag(ctx context.Context, conn *dynamodb.Client, identifier, key string, optFns ...func(*dynamodb.Options)) (*string, error) {
+	listTags, err := listTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -41,17 +42,17 @@ func GetTag(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier, key
 // listTags lists dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &dynamodb.ListTagsOfResourceInput{
+func listTags(ctx context.Context, conn *dynamodb.Client, identifier string, optFns ...func(*dynamodb.Options)) (tftags.KeyValueTags, error) {
+	input := dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsOfResourceWithContext(ctx, input)
+	output, err := conn.ListTagsOfResource(ctx, &input, optFns...)
 
 	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -65,7 +66,7 @@ func listTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier st
 // ListTags lists dynamodb service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).DynamoDBConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).DynamoDBClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -81,11 +82,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns dynamodb service tags.
-func Tags(tags tftags.KeyValueTags) []*dynamodb.Tag {
-	result := make([]*dynamodb.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &dynamodb.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -97,11 +98,11 @@ func Tags(tags tftags.KeyValueTags) []*dynamodb.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from dynamodb service tags.
-func KeyValueTags(ctx context.Context, tags []*dynamodb.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -109,7 +110,7 @@ func KeyValueTags(ctx context.Context, tags []*dynamodb.Tag) tftags.KeyValueTags
 
 // getTagsIn returns dynamodb service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*dynamodb.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -120,16 +121,25 @@ func getTagsIn(ctx context.Context) []*dynamodb.Tag {
 }
 
 // setTagsOut sets dynamodb service tags in Context.
-func setTagsOut(ctx context.Context, tags []*dynamodb.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
+// createTags creates dynamodb service tags for new resources.
+func createTags(ctx context.Context, conn *dynamodb.Client, identifier string, tags []awstypes.Tag, optFns ...func(*dynamodb.Options)) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
+}
+
 // updateTags updates dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *dynamodb.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*dynamodb.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,12 +148,12 @@ func updateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DynamoDB)
 	if len(removedTags) > 0 {
-		input := &dynamodb.UntagResourceInput{
+		input := dynamodb.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -153,15 +163,21 @@ func updateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DynamoDB)
 	if len(updatedTags) > 0 {
-		input := &dynamodb.TagResourceInput{
+		input := dynamodb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if len(removedTags) > 0 || len(updatedTags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, identifier, newTags, optFns...); err != nil {
+			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}
 
@@ -171,5 +187,39 @@ func updateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier 
 // UpdateTags updates dynamodb service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).DynamoDBConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).DynamoDBClient(ctx), identifier, oldTags, newTags)
+}
+
+// waitTagsPropagated waits for dynamodb service tags to be propagated.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func waitTagsPropagated(ctx context.Context, conn *dynamodb.Client, id string, tags tftags.KeyValueTags, optFns ...func(*dynamodb.Options)) error {
+	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
+		names.AttrTags: tags,
+	})
+
+	checkFunc := func() (bool, error) {
+		output, err := listTags(ctx, conn, id, optFns...)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
+		}
+
+		return output.Equal(tags), nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 2,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(ctx, 2*time.Minute, checkFunc, opts)
 }

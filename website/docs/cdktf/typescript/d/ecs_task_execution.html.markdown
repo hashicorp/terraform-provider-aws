@@ -56,6 +56,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `capacityProviderStrategy` - (Optional) Set of capacity provider strategies to use for the cluster. See below.
+* `clientToken` - (Optional) An identifier that you provide to ensure the idempotency of the request. It must be unique and is case sensitive. Up to 64 characters are allowed. The valid characters are characters in the range of 33-126, inclusive. For more information, see [Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html).
 * `desiredCount` - (Optional) Number of instantiations of the specified task to place on your cluster. You can specify up to 10 tasks for each call.
 * `enableEcsManagedTags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enableExecuteCommand` - (Optional) Specifies whether to enable Amazon ECS Exec for the tasks within the service.
@@ -90,7 +91,7 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 * `containerOverrides` - (Optional) One or more container overrides that are sent to a task. See below.
 * `cpu` - (Optional) The CPU override for the task.
 * `executionRoleArn` - (Optional) Amazon Resource Name (ARN) of the task execution role override for the task.
-* `inferenceAcceleratorOverrides` - (Optional) Elastic Inference accelerator override for the task. See below.
+* `inferenceAcceleratorOverrides` - (Optional) **DEPRECATED** Elastic Inference accelerator override for the task. See below.
 * `memory` - (Optional) The memory override for the task.
 * `taskRoleArn` - (Optional) Amazon Resource Name (ARN) of the role that containers in this task can assume.
 
@@ -138,4 +139,4 @@ This data source exports the following attributes in addition to the arguments a
 * `taskArns` - A list of the provisioned task ARNs.
 * `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `taskDefinition` attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-43e278c1402adce6a7fc73f884efc857a1ca139e84ad68f7ea78a5f8b607b74c -->
+<!-- cache-key: cdktf-0.20.8 input-04eaaebcee71de70c7c4b510fb4c21b0b4155ad960e6259f6625e1b29064a03c -->

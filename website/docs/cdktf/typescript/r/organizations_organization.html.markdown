@@ -47,7 +47,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `awsServiceAccessPrincipals` - (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have `featureSet` set to `ALL`. Some services do not support enablement via this endpoint, see [warning in aws docs](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnableAWSServiceAccess.html).
-* `enabledPolicyTypes` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `featureSet` set to `ALL`. For additional information about valid policy types (e.g., `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `SERVICE_CONTROL_POLICY`, and `TAG_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
+* `enabledPolicyTypes` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `featureSet` set to `ALL`. For additional information about valid policy types (e.g., `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `RESOURCE_CONTROL_POLICY`, `SERVICE_CONTROL_POLICY`, and `TAG_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
 * `featureSet` - (Optional) Specify "ALL" (default) or "CONSOLIDATED_BILLING".
 
 ## Attribute Reference
@@ -65,6 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `masterAccountArn` - ARN of the master account
 * `masterAccountEmail` - Email address of the master account
 * `masterAccountId` - Identifier of the master account
+* `masterAccountName` - Name of the master account
 * `nonMasterAccounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account
     * `email` - Email of the account
@@ -111,4 +112,4 @@ Using `terraform import`, import the AWS organization using the `id`. For exampl
 % terraform import aws_organizations_organization.my_org o-1234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-94624882d07e9da3b0a6aac6dc0902e40fde096b01acc4c3e884c266bbfd7a56 -->
+<!-- cache-key: cdktf-0.20.8 input-8251075bfb071672ad475734c739ac9b6817c5a88ff44b493b41b8011fd5fe22 -->

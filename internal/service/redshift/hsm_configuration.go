@@ -8,23 +8,23 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
 // @Tags(identifierAttribute="arn")
-func ResourceHSMConfiguration() *schema.Resource {
+func resourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,
 		ReadWithoutTimeout:   resourceHSMConfigurationRead,
@@ -36,11 +36,11 @@ func ResourceHSMConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,18 +74,16 @@ func ResourceHSMConfiguration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	hsmConfigurationID := d.Get("hsm_configuration_identifier").(string)
 	input := &redshift.CreateHsmConfigurationInput{
-		Description:                aws.String(d.Get("description").(string)),
+		Description:                aws.String(d.Get(names.AttrDescription).(string)),
 		HsmConfigurationIdentifier: aws.String(hsmConfigurationID),
 		HsmIpAddress:               aws.String(d.Get("hsm_ip_address").(string)),
 		HsmPartitionName:           aws.String(d.Get("hsm_partition_name").(string)),
@@ -94,22 +92,22 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                       getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateHsmConfigurationWithContext(ctx, input)
+	output, err := conn.CreateHsmConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift HSM Configuration (%s): %s", hsmConfigurationID, err)
 	}
 
-	d.SetId(aws.StringValue(output.HsmConfiguration.HsmConfigurationIdentifier))
+	d.SetId(aws.ToString(output.HsmConfiguration.HsmConfigurationIdentifier))
 
 	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	hsmConfiguration, err := FindHSMConfigurationByID(ctx, conn, d.Id())
+	hsmConfiguration, err := findHSMConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift HSM Configuration (%s) not found, removing from state", d.Id())
@@ -122,17 +120,17 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   redshift.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.Redshift,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("hsmconfiguration:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("hsm_configuration_identifier", hsmConfiguration.HsmConfigurationIdentifier)
 	d.Set("hsm_ip_address", hsmConfiguration.HsmIpAddress)
 	d.Set("hsm_partition_name", hsmConfiguration.HsmPartitionName)
-	d.Set("description", hsmConfiguration.Description)
+	d.Set(names.AttrDescription, hsmConfiguration.Description)
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 
@@ -151,14 +149,14 @@ func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceHSMConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift HSM Configuration: %s", d.Id())
-	_, err := conn.DeleteHsmConfigurationWithContext(ctx, &redshift.DeleteHsmConfigurationInput{
+	_, err := conn.DeleteHsmConfiguration(ctx, &redshift.DeleteHsmConfigurationInput{
 		HsmConfigurationIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmConfigurationNotFoundFault) {
+	if errs.IsA[*awstypes.HsmConfigurationNotFoundFault](err) {
 		return diags
 	}
 

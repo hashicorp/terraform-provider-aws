@@ -8,19 +8,23 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ses_template")
-func ResourceTemplate() *schema.Resource {
+// @SDKResource("aws_ses_template", name="Template")
+func resourceTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTemplateCreate,
 		ReadWithoutTimeout:   resourceTemplateRead,
@@ -32,20 +36,20 @@ func ResourceTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"html": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512000),
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"subject": {
 				Type:     schema.TypeString,
@@ -61,12 +65,11 @@ func ResourceTemplate() *schema.Resource {
 }
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	templateName := d.Get("name").(string)
-
-	template := ses.Template{
-		TemplateName: aws.String(templateName),
+	name := d.Get(names.AttrName).(string)
+	template := &awstypes.Template{
+		TemplateName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("html"); ok {
@@ -81,63 +84,59 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		template.TextPart = aws.String(v.(string))
 	}
 
-	input := ses.CreateTemplateInput{
-		Template: &template,
+	input := &ses.CreateTemplateInput{
+		Template: template,
 	}
 
-	log.Printf("[DEBUG] Creating SES template: %#v", input)
-	_, err := conn.CreateTemplateWithContext(ctx, &input)
+	_, err := conn.CreateTemplate(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating SES template failed: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "creating SES Template (%s): %s", name, err)
 	}
-	d.SetId(templateName)
+
+	d.SetId(name)
 
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
-	input := ses.GetTemplateInput{
-		TemplateName: aws.String(d.Id()),
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
+
+	template, err := findTemplateByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Template (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	log.Printf("[DEBUG] Reading SES template: %#v", input)
-	gto, err := conn.GetTemplateWithContext(ctx, &input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeTemplateDoesNotExistException) {
-			log.Printf("[WARN] SES template %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Reading SES template '%s' failed: %s", aws.StringValue(input.TemplateName), err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading SES Template (%s): %s", d.Id(), err)
 	}
-
-	d.Set("html", gto.Template.HtmlPart)
-	d.Set("name", gto.Template.TemplateName)
-	d.Set("subject", gto.Template.SubjectPart)
-	d.Set("text", gto.Template.TextPart)
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("template/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	d.Set("html", template.HtmlPart)
+	d.Set(names.AttrName, template.TemplateName)
+	d.Set("subject", template.SubjectPart)
+	d.Set("text", template.TextPart)
 
 	return diags
 }
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	templateName := d.Id()
-
-	template := ses.Template{
-		TemplateName: aws.String(templateName),
+	template := &awstypes.Template{
+		TemplateName: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk("html"); ok {
@@ -152,13 +151,14 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		template.TextPart = aws.String(v.(string))
 	}
 
-	input := ses.UpdateTemplateInput{
-		Template: &template,
+	input := &ses.UpdateTemplateInput{
+		Template: template,
 	}
 
-	_, err := conn.UpdateTemplateWithContext(ctx, &input)
+	_, err := conn.UpdateTemplate(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SES template (%s): %s", templateName, err)
+		return sdkdiag.AppendErrorf(diags, "updating SES Template (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
@@ -166,15 +166,45 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
-	input := ses.DeleteTemplateInput{
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
+
+	log.Printf("[DEBUG] Deleting SES Template: %s", d.Id())
+	_, err := conn.DeleteTemplate(ctx, &ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SES Template (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Delete SES template: %#v", input)
-	_, err := conn.DeleteTemplateWithContext(ctx, &input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting SES template '%s' failed: %s", *input.TemplateName, err.Error())
-	}
 	return diags
+}
+
+func findTemplateByName(ctx context.Context, conn *ses.Client, name string) (*awstypes.Template, error) {
+	input := &ses.GetTemplateInput{
+		TemplateName: aws.String(name),
+	}
+
+	return findTemplate(ctx, conn, input)
+}
+
+func findTemplate(ctx context.Context, conn *ses.Client, input *ses.GetTemplateInput) (*awstypes.Template, error) {
+	output, err := conn.GetTemplate(ctx, input)
+
+	if errs.IsA[*awstypes.TemplateDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Template == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Template, nil
 }

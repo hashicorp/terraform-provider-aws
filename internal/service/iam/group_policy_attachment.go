@@ -7,16 +7,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -50,9 +52,9 @@ func resourceGroupPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	group := d.Get("group").(string)
 	policyARN := d.Get("policy_arn").(string)
@@ -67,16 +69,16 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceGroupPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	group := d.Get("group").(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", group, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
 	}, d.IsNewResource())
 
@@ -93,9 +95,9 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if err := detachPolicyFromGroup(ctx, conn, d.Get("group").(string), d.Get("policy_arn").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -104,7 +106,7 @@ func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <group-name>/<policy_arn>", d.Id())
@@ -120,13 +122,14 @@ func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.Resource
 	return []*schema.ResourceData{d}, nil
 }
 
-func attachPolicyToGroup(ctx context.Context, conn *iam.IAM, group, policyARN string) error {
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.AttachGroupPolicyWithContext(ctx, &iam.AttachGroupPolicyInput{
+func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
+	var errConcurrentModificationException *awstypes.ConcurrentModificationException
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+		return conn.AttachGroupPolicy(ctx, &iam.AttachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
 		})
-	}, iam.ErrCodeConcurrentModificationException)
+	}, errConcurrentModificationException.ErrorCode())
 
 	if err != nil {
 		return fmt.Errorf("attaching IAM Policy (%s) to IAM Group (%s): %w", policyARN, group, err)
@@ -135,15 +138,16 @@ func attachPolicyToGroup(ctx context.Context, conn *iam.IAM, group, policyARN st
 	return nil
 }
 
-func detachPolicyFromGroup(ctx context.Context, conn *iam.IAM, group, policyARN string) error {
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.DetachGroupPolicyWithContext(ctx, &iam.DetachGroupPolicyInput{
+func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
+	var errConcurrentModificationException *awstypes.ConcurrentModificationException
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+		return conn.DetachGroupPolicy(ctx, &iam.DetachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
 		})
-	}, iam.ErrCodeConcurrentModificationException)
+	}, errConcurrentModificationException.ErrorCode())
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil
 	}
 
@@ -154,52 +158,49 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.IAM, group, policyARN 
 	return nil
 }
 
-func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, groupName, policyARN string) (*iam.AttachedPolicy, error) {
+func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyARN string) (*awstypes.AttachedPolicy, error) {
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	return findAttachedGroupPolicy(ctx, conn, input, func(v *iam.AttachedPolicy) bool {
-		return aws.StringValue(v.PolicyArn) == policyARN
+	return findAttachedGroupPolicy(ctx, conn, input, func(v awstypes.AttachedPolicy) bool {
+		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAttachedGroupPolicy(ctx context.Context, conn *iam.IAM, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*iam.AttachedPolicy]) (*iam.AttachedPolicy, error) {
+func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
 	output, err := findAttachedGroupPolicies(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedGroupPolicies(ctx context.Context, conn *iam.IAM, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*iam.AttachedPolicy]) ([]*iam.AttachedPolicy, error) {
-	var output []*iam.AttachedPolicy
+func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
+	var output []awstypes.AttachedPolicy
 
-	err := conn.ListAttachedGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := iam.NewListAttachedGroupPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.AttachedPolicies {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.AttachedPolicies {
+			if !reflect.ValueOf(v).IsZero() && filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

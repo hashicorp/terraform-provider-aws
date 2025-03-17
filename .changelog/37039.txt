@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_backup_restore_testing_plan
+```
+
+```release-note:new-resource
+aws_backup_restore_testing_selection
+```

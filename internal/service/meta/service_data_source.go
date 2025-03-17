@@ -8,48 +8,42 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
-func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceService{}
-	d.SetMigratedFromPluginSDK(true)
+// @FrameworkDataSource("aws_service", name="Service")
+func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &serviceDataSource{}
 
 	return d, nil
 }
 
-type dataSourceService struct {
+type serviceDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourceService) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service"
-}
-
-// Schema returns the schema for this data source.
-func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *serviceDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"dns_name": schema.StringAttribute{
+			names.AttrDNSName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -72,13 +66,9 @@ func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaReq
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceServiceData
-
+func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data serviceDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -94,14 +84,14 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 			return
 		}
 
-		data.Region = types.StringValue(serviceParts[n-2])
-		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
-		data.ServiceID = types.StringValue(serviceParts[n-1])
+		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, serviceParts[n-2])
+		data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = fwflex.StringValueToFrameworkLegacy(ctx, serviceParts[n-1])
 	}
 
 	if !data.DNSName.IsNull() {
 		v := data.DNSName.ValueString()
-		serviceParts := slices.Reverse(strings.Split(v, "."))
+		serviceParts := tfslices.Reverse(strings.Split(v, "."))
 		n := len(serviceParts)
 
 		if n < 4 {
@@ -110,13 +100,13 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 			return
 		}
 
-		data.Region = types.StringValue(serviceParts[n-2])
-		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
-		data.ServiceID = types.StringValue(serviceParts[n-1])
+		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, serviceParts[n-2])
+		data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = fwflex.StringValueToFrameworkLegacy(ctx, serviceParts[n-1])
 	}
 
 	if data.Region.IsNull() {
-		data.Region = types.StringValue(d.Meta().Region)
+		data.Region = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Region(ctx))
 	}
 
 	if data.ServiceID.IsNull() {
@@ -126,17 +116,17 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.ReverseDNSPrefix.IsNull() {
-		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
-		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
+		dnsParts := strings.Split(d.Meta().DNSSuffix(ctx), ".")
+		data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, strings.Join(tfslices.Reverse(dnsParts), "."))
 	}
 
 	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.ValueString(), data.Region.ValueString(), data.ServiceID.ValueString())
-	data.ReverseDNSName = types.StringValue(reverseDNSName)
-	data.DNSName = types.StringValue(strings.ToLower(strings.Join(slices.Reverse(strings.Split(reverseDNSName, ".")), ".")))
+	data.ReverseDNSName = fwflex.StringValueToFrameworkLegacy(ctx, reverseDNSName)
+	data.DNSName = fwflex.StringValueToFrameworkLegacy(ctx, strings.ToLower(strings.Join(tfslices.Reverse(strings.Split(reverseDNSName, ".")), ".")))
 
 	data.Supported = types.BoolValue(true)
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.ValueString()); ok {
-		data.Partition = types.StringValue(partition.ID())
+		data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, partition.ID())
 
 		if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
 			data.Supported = types.BoolValue(false)
@@ -145,12 +135,12 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 		data.Partition = types.StringNull()
 	}
 
-	data.ID = types.StringValue(reverseDNSName)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, reverseDNSName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceServiceData struct {
+type serviceDataSourceModel struct {
 	DNSName          types.String `tfsdk:"dns_name"`
 	ID               types.String `tfsdk:"id"`
 	Partition        types.String `tfsdk:"partition"`

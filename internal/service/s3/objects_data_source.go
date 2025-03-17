@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,13 +21,13 @@ import (
 
 const keyRequestPageSize = 1000
 
-// @SDKDataSource("aws_s3_objects")
-func DataSourceObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_objects", name="Objects")
+func dataSourceObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +64,7 @@ func DataSourceObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -84,19 +85,21 @@ func DataSourceObjects() *schema.Resource {
 	}
 }
 
-func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
-	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
+
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
@@ -121,7 +124,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 

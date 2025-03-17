@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_apprunner_auto_scaling_configuration_version: Remove the upper limit on `min_size` and `max_size`
+```

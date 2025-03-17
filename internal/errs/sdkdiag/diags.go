@@ -31,12 +31,16 @@ func severityFilter(s diag.Severity) tfslices.Predicate[diag.Diagnostic] {
 	}
 }
 
+func DiagnosticError(diag diag.Diagnostic) error {
+	return errors.New(DiagnosticString(diag))
+}
+
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
 func DiagnosticsError(diags diag.Diagnostics) error {
 	var errs []error
 
 	for _, d := range Errors(diags) {
-		errs = append(errs, errors.New(DiagnosticString(d)))
+		errs = append(errs, DiagnosticError(d))
 	}
 
 	return errors.Join(errs...)
@@ -52,7 +56,7 @@ func DiagnosticString(d diag.Diagnostic) string {
 		fmt.Fprintf(&buf, "\n\n%s", d.Detail)
 	}
 	if len(d.AttributePath) > 0 {
-		fmt.Fprintf(&buf, "\n%s", pathString(d.AttributePath))
+		fmt.Fprintf(&buf, "\n\nPath: %s", pathString(d.AttributePath))
 	}
 
 	return buf.String()

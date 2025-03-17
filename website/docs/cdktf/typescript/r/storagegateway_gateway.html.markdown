@@ -191,7 +191,7 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** One of `activationKey` or `gatewayIpAddress` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gatewayIpAddress`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `gatewayName` - (Required) Name of the gateway.
 * `gatewayTimezone` - (Required) Time zone for the gateway. The time zone is of the format "GMT", "GMT-hr:mm", or "GMT+hr:mm". For example, `GMT-4:00` indicates the time is 4 hours behind GMT. The time zone is used, for example, for scheduling snapshots and your gateway's maintenance schedule.
@@ -321,4 +321,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-187ed7975b77b44dfe286243ecbc501bccd2e04c4172f96f87a4eb47a54fcf77 -->
+<!-- cache-key: cdktf-0.20.8 input-5866f6ee66ead8eb9860932eee948921b45d71ae074c57ea809c8f514ce41176 -->

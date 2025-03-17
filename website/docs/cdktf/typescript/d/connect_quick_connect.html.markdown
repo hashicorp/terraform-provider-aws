@@ -64,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** `instanceId` and one of either `name` or `quickConnectId` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `quickConnectId` - (Optional) Returns information on a specific Quick Connect by Quick Connect id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
@@ -102,4 +102,4 @@ A `userConfig` block contains the following arguments:
 * `contactFlowId` - Identifier of the contact flow.
 * `userId` - Identifier for the user.
 
-<!-- cache-key: cdktf-0.20.1 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->
+<!-- cache-key: cdktf-0.20.8 input-1e2e1b2ceb151f2cb7fda8fbd589ffdc0902ba5adbb006078987f7d294a8e289 -->

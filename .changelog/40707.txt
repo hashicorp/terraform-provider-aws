@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_apigatewayv2_api: Don't overwrite the configured values of `description`, `name` or `version` if they are not present in the OpenAPI definition `body`
+```
