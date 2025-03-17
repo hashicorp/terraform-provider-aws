@@ -42,7 +42,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			},
 		},
 		{
-			Factory:  DataSourceConfigurationProfiles,
+			Factory:  dataSourceConfigurationProfiles,
 			TypeName: "aws_appconfig_configuration_profiles",
 			Name:     "Configuration Profiles",
 		},

@@ -317,8 +317,8 @@ func findConfigurationProfileByTwoPartKey(ctx context.Context, conn *appconfig.C
 
 func findConfigurationProfile(ctx context.Context, conn *appconfig.Client, input *appconfig.GetConfigurationProfileInput) (*appconfig.GetConfigurationProfileOutput, error) {
 	output, err := conn.GetConfigurationProfile(ctx, input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

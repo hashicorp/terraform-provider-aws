@@ -162,8 +162,8 @@ func findApplicationByID(ctx context.Context, conn *appconfig.Client, id string)
 
 func findApplication(ctx context.Context, conn *appconfig.Client, input *appconfig.GetApplicationInput) (*appconfig.GetApplicationOutput, error) {
 	output, err := conn.GetApplication(ctx, input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

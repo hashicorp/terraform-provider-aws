@@ -10,16 +10,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_appconfig_configuration_profiles", name="Configuration Profiles")
-func DataSourceConfigurationProfiles() *schema.Resource {
+func dataSourceConfigurationProfiles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfilesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrApplicationID: {
 				Type:     schema.TypeString,
@@ -34,29 +38,21 @@ func DataSourceConfigurationProfiles() *schema.Resource {
 	}
 }
 
-const (
-	DSNameConfigurationProfiles = "Configuration Profiles Data Source"
-)
-
 func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
-	appId := d.Get(names.AttrApplicationID).(string)
 
-	out, err := findConfigurationProfileSummariesByApplication(ctx, conn, appId)
+	applicationID := d.Get(names.AttrApplicationID).(string)
+	output, err := findConfigurationProfileSummariesByApplication(ctx, conn, applicationID)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfiles, appId, err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profiles: %s", err)
 	}
 
-	d.SetId(appId)
-
-	var configIds []*string
-	for _, v := range out {
-		configIds = append(configIds, v.Id)
-	}
-
-	d.Set("configuration_profile_ids", aws.ToStringSlice(configIds))
+	d.SetId(applicationID)
+	d.Set("configuration_profile_ids", tfslices.ApplyToAll(output, func(v awstypes.ConfigurationProfileSummary) string {
+		return aws.ToString(v.Id)
+	}))
 
 	return diags
 }
@@ -76,4 +72,28 @@ func findConfigurationProfileSummariesByApplication(ctx context.Context, conn *a
 	}
 
 	return outputs, nil
+}
+
+func findConfigurationProfileSummaries(ctx context.Context, conn *appconfig.Client, input *appconfig.ListConfigurationProfilesInput) ([]awstypes.ConfigurationProfileSummary, error) {
+	var output []awstypes.ConfigurationProfileSummary
+
+	pages := appconfig.NewListConfigurationProfilesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Items...)
+	}
+
+	return output, nil
 }
