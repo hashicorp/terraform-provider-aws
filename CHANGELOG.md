@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* provider: Support `aws-marketplace` as a valid account ID in ARNs ([#41867](https://github.com/hashicorp/terraform-provider-aws/issues/41867))
 * resource/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
