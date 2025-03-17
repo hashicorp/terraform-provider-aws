@@ -86,23 +86,6 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"template_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"template": {
-										Type:     schema.TypeString,
-										Required: true,
-										StateFunc: func(v interface{}) string {
-											jsonString, _ := structure.NormalizeJsonString(v)
-											return jsonString
-										},
-									},
-								},
-							},
-						},
 						"s3_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -176,6 +159,23 @@ func ResourceDataSource() *schema.Resource {
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 150),
+										},
+									},
+								},
+							},
+						},
+						"template_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"template": {
+										Type:     schema.TypeString,
+										Required: true,
+										StateFunc: func(v any) string {
+											jsonString, _ := structure.NormalizeJsonString(v)
+											return jsonString
 										},
 									},
 								},
