@@ -766,11 +766,6 @@ func resourceCluster() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
-				"visible_to_all_users": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  true,
-				},
 			}
 		},
 	}
@@ -922,10 +917,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		Name:         aws.String(name),
 		Applications: expandApplications(applications),
 
-		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
-		ServiceRole:       aws.String(d.Get(names.AttrServiceRole).(string)),
-		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		Tags:              getTagsIn(ctx),
+		ReleaseLabel: aws.String(d.Get("release_label").(string)),
+		ServiceRole:  aws.String(d.Get(names.AttrServiceRole).(string)),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_info"); ok {
@@ -1122,7 +1116,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("log_encryption_kms_key_id", cluster.LogEncryptionKmsKeyId)
 	d.Set("log_uri", cluster.LogUri)
 	d.Set("master_public_dns", cluster.MasterPublicDnsName)
-	d.Set("visible_to_all_users", cluster.VisibleToAllUsers)
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
 	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 	d.Set("termination_protection", cluster.TerminationProtected)
@@ -1211,19 +1204,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
-
-	if d.HasChange("visible_to_all_users") {
-		input := &emr.SetVisibleToAllUsersInput{
-			JobFlowIds:        []string{d.Id()},
-			VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		}
-
-		_, err := conn.SetVisibleToAllUsers(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting visibility: %s", d.Id(), err)
-		}
-	}
 
 	if d.HasChange("auto_termination_policy") {
 		_, n := d.GetChange("auto_termination_policy")
