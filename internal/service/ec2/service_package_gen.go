@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  newVPCIPAMsDataSource,
+			Factory:  newIPAMsDataSource,
 			TypeName: "aws_vpc_ipams",
 			Name:     "IPAMs",
 		},
