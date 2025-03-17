@@ -80,6 +80,10 @@ func resourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrState: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
