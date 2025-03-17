@@ -65,7 +65,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApplication,
+			Factory:  resourceApplication,
 			TypeName: "aws_appconfig_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
