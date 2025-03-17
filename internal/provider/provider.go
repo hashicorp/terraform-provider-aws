@@ -292,13 +292,36 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			s := r.SchemaMap()
+
+			if v := v.Region; v != nil && v.IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
+					continue
+				}
+
+				// Inject a top-level "region" attribute.
+				regionSchema := &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				}
+
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
+					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
+				}
+			}
+
 			interceptors := interceptorItems{}
 			if v.Tags != nil {
-				schema := r.SchemaMap()
-
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				if v, ok := schema[names.AttrTags]; ok {
+				if v, ok := s[names.AttrTags]; ok {
 					if !v.Computed {
 						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
