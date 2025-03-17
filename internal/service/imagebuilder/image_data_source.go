@@ -228,7 +228,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("platform", image.Platform)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
-		if err := d.Set("output_resources", []any{flattenOutputResources(image.OutputResources)}); err != nil {
+		if err := d.Set("output_resources", []any{flattenOutputResources(image.OutputResources)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
 			return sdkdiag.AppendErrorf(diags, "setting output_resources: %s", err)
 		}
 	} else {
