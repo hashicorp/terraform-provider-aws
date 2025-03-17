@@ -9,11 +9,9 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -22,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -992,11 +989,8 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb awstypes.LoadBalancer
-	var vpc ec2types.Vpc
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
-	vpcResourceName := "aws_vpc.test"
-	ipamPoolResourceName := "aws_vpc_ipam_pool.test_pool"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1008,19 +1002,9 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 				Config: testAccLoadBalancerConfig_IPAMPools_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
-			},
-			// Work around "Error: waiting for IPAM Pool CIDR (...) delete: unexpected state 'failed-deprovision', wanted target ''. last error: : The CIDR has one or more allocations".
-			{
-				// Delete everything except the IPAM resources.
-				Config: testAccLoadBalancerConfig_baseIPAMPools(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerWaitVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, &vpc),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -2337,26 +2321,6 @@ func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckLoadBalancerWaitVPCIPAMPoolAllocationDeleted(ctx context.Context, nIPAMPool string, vpc *ec2types.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rsIPAMPool, ok := s.RootModule().Resources[nIPAMPool]
-		if !ok {
-			return fmt.Errorf("Not found: %s", nIPAMPool)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		const (
-			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
-		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
-			return tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, rsIPAMPool.Primary.ID, aws.ToString(vpc.VpcId))
-		})
-
-		return err
 	}
 }
 
