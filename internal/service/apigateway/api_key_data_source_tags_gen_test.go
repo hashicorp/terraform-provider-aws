@@ -19,27 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAPIGatewayAPIKeyDataSource_tagsSerial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:                  testAccAPIGatewayAPIKeyDataSource_tags,
-		"NullMap":                        testAccAPIGatewayAPIKeyDataSource_tags_NullMap,
-		"EmptyMap":                       testAccAPIGatewayAPIKeyDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccAPIGatewayAPIKeyDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_ResourceTag,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
-func testAccAPIGatewayAPIKeyDataSource_tags(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,12 +47,12 @@ func testAccAPIGatewayAPIKeyDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKeyDataSource_tags_NullMap(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,12 +71,12 @@ func testAccAPIGatewayAPIKeyDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKeyDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -110,12 +95,12 @@ func testAccAPIGatewayAPIKeyDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayAPIKeyDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		Steps: []resource.TestStep{
@@ -142,12 +127,12 @@ func testAccAPIGatewayAPIKeyDataSource_tags_DefaultTags_nonOverlapping(t *testin
 	})
 }
 
-func testAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		Steps: []resource.TestStep{
@@ -180,12 +165,12 @@ func testAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 	})
 }
 
-func testAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		Steps: []resource.TestStep{
