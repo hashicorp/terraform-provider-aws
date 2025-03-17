@@ -158,5 +158,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
 
+	// tags, err := listTags(ctx, conn, arn)
+
 	return diags
 }
