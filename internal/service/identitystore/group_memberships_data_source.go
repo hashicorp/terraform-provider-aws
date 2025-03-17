@@ -15,17 +15,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Group Memberships")
+// @FrameworkDataSource("aws_identitystore_group_memberships", name="Group Memberships")
 func newGroupMembershipsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &groupMembershipsDataSource{}, nil
 }
 
 type groupMembershipsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*groupMembershipsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_identitystore_group_memberships"
 }
 
 func (d *groupMembershipsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

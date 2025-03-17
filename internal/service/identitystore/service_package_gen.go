@@ -17,9 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newGroupMembershipsDataSource,
+			Factory:  newGroupMembershipsDataSource,
 			TypeName: "aws_identitystore_group_memberships",
-			Name:    "Group Memberships",
+			Name:     "Group Memberships",
 		},
 		{
 			Factory:  newGroupsDataSource,
