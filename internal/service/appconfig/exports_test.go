@@ -7,10 +7,12 @@ package appconfig
 var (
 	ResourceApplication          = resourceApplication
 	ResourceConfigurationProfile = resourceConfigurationProfile
+	ResourceDeployment           = resourceDeployment
 	ResourceDeploymentStrategy   = resourceDeploymentStrategy
 	ResourceEnvironmentFW        = newResourceEnvironment
 
 	FindApplicationByID                  = findApplicationByID
 	FindConfigurationProfileByTwoPartKey = findConfigurationProfileByTwoPartKey
+	FindDeploymentByThreePartKey         = findDeploymentByThreePartKey
 	FindDeploymentStrategyByID           = findDeploymentStrategyByID
 )
