@@ -12,6 +12,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_api_gateway_rest_api: Avoid unnecessary remove and add operations for `vpc_endpoint_ids` ([#41836](https://github.com/hashicorp/terraform-provider-aws/issues/41836))
+* resource/aws_rds_cluster: Ensure that `performance_insights_enabled` takes effect when creating a cluster that is a member of a global cluster ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
+* resource/aws_rds_cluster: Fix `InvalidParameterCombination: To enable the Advanced mode of Database Insights, modify your cluster to enable Performance Insights and set the retention period for Performance Insights to at least 465 days` errors when enabling `database_insights_mode` on existing clusters ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
 * resource/aws_timestreaminfluxdb_db_instance: Set new computed value for `secondary_availability_zone` attribute when changing `deployment_type` ([#41849](https://github.com/hashicorp/terraform-provider-aws/issues/41849))
 
 ## 5.91.0 (March 13, 2025)
