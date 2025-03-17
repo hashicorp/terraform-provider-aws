@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/batch v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.8.1
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.28.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.30.1
@@ -69,11 +69,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.2
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.2
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.52.1
@@ -127,7 +127,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/glue v1.106.2
+	github.com/aws/aws-sdk-go-v2/service/glue v1.107.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.32.1
@@ -154,7 +154,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.70.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.1
