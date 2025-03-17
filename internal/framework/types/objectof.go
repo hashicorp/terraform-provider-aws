@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 var (
@@ -156,13 +157,13 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 
 	val = val.Elem()
 
-	for i := 0; i < typ.NumField(); i++ {
-		val := val.Field(i)
-		if !val.CanInterface() {
+	for field := range tfreflect.StructFields(val.Type()) {
+		fieldVal := val.FieldByIndex(field.Index)
+		if !fieldVal.CanInterface() {
 			continue
 		}
 
-		attrValue, err := NullValueOf(ctx, val.Interface())
+		attrValue, err := NullValueOf(ctx, fieldVal.Interface())
 
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
@@ -173,7 +174,7 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 			continue
 		}
 
-		val.Set(reflect.ValueOf(attrValue))
+		fieldVal.Set(reflect.ValueOf(attrValue))
 	}
 
 	return diags

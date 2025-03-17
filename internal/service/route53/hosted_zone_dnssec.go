@@ -60,6 +60,12 @@ func resourceHostedZoneDNSSEC() *schema.Resource {
 				}, false),
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
@@ -72,12 +78,13 @@ func resourceHostedZoneDNSSECCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(hostedZoneID)
 
+	timeout := d.Timeout(schema.TimeoutCreate)
 	if signingStatus == serveSignatureSigning {
-		if err := hostedZoneDNSSECEnable(ctx, conn, d.Id()); err != nil {
+		if err := hostedZoneDNSSECEnable(ctx, conn, d.Id(), timeout); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	} else {
-		if err := hostedZoneDNSSECDisable(ctx, conn, d.Id()); err != nil {
+		if err := hostedZoneDNSSECDisable(ctx, conn, d.Id(), timeout); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -117,13 +124,14 @@ func resourceHostedZoneDNSSECUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChange("signing_status") {
 		signingStatus := d.Get("signing_status").(string)
+		timeout := d.Timeout(schema.TimeoutUpdate)
 
 		if signingStatus == serveSignatureSigning {
-			if err := hostedZoneDNSSECEnable(ctx, conn, d.Id()); err != nil {
+			if err := hostedZoneDNSSECEnable(ctx, conn, d.Id(), timeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		} else {
-			if err := hostedZoneDNSSECDisable(ctx, conn, d.Id()); err != nil {
+			if err := hostedZoneDNSSECDisable(ctx, conn, d.Id(), timeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -154,7 +162,7 @@ func resourceHostedZoneDNSSECDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone DNSSEC (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -162,7 +170,7 @@ func resourceHostedZoneDNSSECDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZoneID string) error {
+func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZoneID string, waitTimeout time.Duration) error {
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -179,7 +187,7 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 	}
 
 	if output := outputRaw.(*route53.DisableHostedZoneDNSSECOutput); output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), waitTimeout); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) synchronize: %w", hostedZoneID, err)
 		}
 	}
@@ -187,7 +195,7 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 	return nil
 }
 
-func hostedZoneDNSSECEnable(ctx context.Context, conn *route53.Client, hostedZoneID string) error {
+func hostedZoneDNSSECEnable(ctx context.Context, conn *route53.Client, hostedZoneID string, waitTimeout time.Duration) error {
 	input := &route53.EnableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -199,7 +207,7 @@ func hostedZoneDNSSECEnable(ctx context.Context, conn *route53.Client, hostedZon
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), waitTimeout); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) synchronize: %w", hostedZoneID, err)
 		}
 	}

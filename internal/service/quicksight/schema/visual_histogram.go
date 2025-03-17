@@ -111,12 +111,12 @@ func histogramVisualSchema() *schema.Schema {
 	}
 }
 
-func expandHistogramVisual(tfList []interface{}) *awstypes.HistogramVisual {
+func expandHistogramVisual(tfList []any) *awstypes.HistogramVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -126,106 +126,106 @@ func expandHistogramVisual(tfList []interface{}) *awstypes.HistogramVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandHistogramConfiguration(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandHistogramConfiguration(tfList []interface{}) *awstypes.HistogramConfiguration {
+func expandHistogramConfiguration(tfList []any) *awstypes.HistogramConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.HistogramConfiguration{}
 
-	if v, ok := tfMap["bin_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bin_options"].([]any); ok && len(v) > 0 {
 		apiObject.BinOptions = expandHistogramBinOptions(v)
 	}
-	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandHistogramFieldWells(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
-	if v, ok := tfMap["x_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["x_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.XAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["x_axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["x_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.XAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["y_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["y_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.YAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandHistogramFieldWells(tfList []interface{}) *awstypes.HistogramFieldWells {
+func expandHistogramFieldWells(tfList []any) *awstypes.HistogramFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.HistogramFieldWells{}
 
-	if v, ok := tfMap["histogram_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["histogram_aggregated_field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.HistogramAggregatedFieldWells = expandHistogramAggregatedFieldWells(v)
 	}
 
 	return apiObject
 }
 
-func expandHistogramAggregatedFieldWells(tfList []interface{}) *awstypes.HistogramAggregatedFieldWells {
+func expandHistogramAggregatedFieldWells(tfList []any) *awstypes.HistogramAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.HistogramAggregatedFieldWells{}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandHistogramBinOptions(tfList []interface{}) *awstypes.HistogramBinOptions {
+func expandHistogramBinOptions(tfList []any) *awstypes.HistogramBinOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -238,22 +238,22 @@ func expandHistogramBinOptions(tfList []interface{}) *awstypes.HistogramBinOptio
 	if v, ok := tfMap["start_value"].(float64); ok {
 		apiObject.StartValue = aws.Float64(v)
 	}
-	if v, ok := tfMap["bin_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bin_count"].([]any); ok && len(v) > 0 {
 		apiObject.BinCount = expandBinCountOptions(v)
 	}
-	if v, ok := tfMap["bin_width"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bin_width"].([]any); ok && len(v) > 0 {
 		apiObject.BinWidth = expandBinWidthOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandBinCountOptions(tfList []interface{}) *awstypes.BinCountOptions {
+func expandBinCountOptions(tfList []any) *awstypes.BinCountOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -267,12 +267,12 @@ func expandBinCountOptions(tfList []interface{}) *awstypes.BinCountOptions {
 	return apiObject
 }
 
-func expandBinWidthOptions(tfList []interface{}) *awstypes.BinWidthOptions {
+func expandBinWidthOptions(tfList []any) *awstypes.BinWidthOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -289,12 +289,12 @@ func expandBinWidthOptions(tfList []interface{}) *awstypes.BinWidthOptions {
 	return apiObject
 }
 
-func flattenHistogramVisual(apiObject *awstypes.HistogramVisual) []interface{} {
+func flattenHistogramVisual(apiObject *awstypes.HistogramVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 
@@ -311,15 +311,15 @@ func flattenHistogramVisual(apiObject *awstypes.HistogramVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHistogramConfiguration(apiObject *awstypes.HistogramConfiguration) []interface{} {
+func flattenHistogramConfiguration(apiObject *awstypes.HistogramConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BinOptions != nil {
 		tfMap["bin_options"] = flattenHistogramBinOptions(apiObject.BinOptions)
@@ -346,15 +346,15 @@ func flattenHistogramConfiguration(apiObject *awstypes.HistogramConfiguration) [
 		tfMap["y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.YAxisDisplayOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHistogramBinOptions(apiObject *awstypes.HistogramBinOptions) []interface{} {
+func flattenHistogramBinOptions(apiObject *awstypes.HistogramBinOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BinCount != nil {
 		tfMap["bin_count"] = flattenBinCountOptions(apiObject.BinCount)
@@ -367,29 +367,29 @@ func flattenHistogramBinOptions(apiObject *awstypes.HistogramBinOptions) []inter
 		tfMap["start_value"] = aws.ToFloat64(apiObject.StartValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBinCountOptions(apiObject *awstypes.BinCountOptions) []interface{} {
+func flattenBinCountOptions(apiObject *awstypes.BinCountOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Value != nil {
 		tfMap[names.AttrValue] = aws.ToInt32(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBinWidthOptions(apiObject *awstypes.BinWidthOptions) []interface{} {
+func flattenBinWidthOptions(apiObject *awstypes.BinWidthOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BinCountLimit != nil {
 		tfMap["bin_count_limit"] = aws.ToInt64(apiObject.BinCountLimit)
@@ -398,33 +398,33 @@ func flattenBinWidthOptions(apiObject *awstypes.BinWidthOptions) []interface{} {
 		tfMap[names.AttrValue] = aws.ToFloat64(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHistogramFieldWells(apiObject *awstypes.HistogramFieldWells) []interface{} {
+func flattenHistogramFieldWells(apiObject *awstypes.HistogramFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.HistogramAggregatedFieldWells != nil {
 		tfMap["histogram_aggregated_field_wells"] = flattenHistogramAggregatedFieldWells(apiObject.HistogramAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHistogramAggregatedFieldWells(apiObject *awstypes.HistogramAggregatedFieldWells) []interface{} {
+func flattenHistogramAggregatedFieldWells(apiObject *awstypes.HistogramAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Values != nil {
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -84,7 +84,7 @@ func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceDat
 	return normalizedOld == normalizedNew
 }
 
-func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
+func NormalizeJSONOrYAMLString(templateString any) (string, error) {
 	if v, ok := templateString.(string); ok {
 		templateString = strings.ReplaceAll(v, "\r\n", "\n")
 	}
@@ -95,7 +95,7 @@ func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
 	return checkYAMLString(templateString)
 }
 
-func looksLikeJSONString(s interface{}) bool {
+func looksLikeJSONString(s any) bool {
 	return regexache.MustCompile(`^\s*{`).MatchString(s.(string))
 }
 
@@ -114,12 +114,12 @@ func JSONStringsEqual(s1, s2 string) bool {
 }
 
 func JSONBytesEqual(b1, b2 []byte) bool {
-	var o1 interface{}
+	var o1 any
 	if err := json.Unmarshal(b1, &o1); err != nil {
 		return false
 	}
 
-	var o2 interface{}
+	var o2 any
 	if err := json.Unmarshal(b2, &o2); err != nil {
 		return false
 	}
@@ -191,7 +191,7 @@ func PolicyToSet(exist, new string) (string, error) {
 // the Version element is first in the JSON as required by AWS in many places.
 // Version not being first is one reason for this error:
 // MalformedPolicyDocument: The policy failed legacy parsing
-func LegacyPolicyNormalize(policy interface{}) (string, error) {
+func LegacyPolicyNormalize(policy any) (string, error) {
 	if policy == nil || policy.(string) == "" {
 		return "", nil
 	}

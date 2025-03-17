@@ -81,7 +81,7 @@ func resourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
 						return strings.TrimSpace(v)
@@ -96,7 +96,7 @@ func resourceKeyPair() *schema.Resource {
 	}
 }
 
-func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -118,7 +118,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -153,7 +153,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -161,7 +161,7 @@ func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

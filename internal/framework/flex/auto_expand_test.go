@@ -5841,6 +5841,75 @@ func TestExpandTypedExpander(t *testing.T) {
 	runAutoExpandTestCases(t, testCases)
 }
 
+type TFExportedStruct struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+type tfExportedEmbeddedStruct struct {
+	TFExportedStruct
+	Field2 types.String `tfsdk:"field2"`
+}
+
+type tfUnexportedEmbeddedStruct struct {
+	tfSingleStringField
+	Field2 types.String `tfsdk:"field2"`
+}
+
+type awsEmbeddedStruct struct {
+	Field1 string
+	Field2 string
+}
+
+func TestExpandEmbeddedStruct(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"exported": {
+			Source: &tfExportedEmbeddedStruct{
+				TFExportedStruct: TFExportedStruct{
+					Field1: types.StringValue("a"),
+				},
+				Field2: types.StringValue("b"),
+			},
+			Target: &awsEmbeddedStruct{},
+			WantTarget: &awsEmbeddedStruct{
+				Field1: "a",
+				Field2: "b",
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfExportedEmbeddedStruct](), reflect.TypeFor[*awsEmbeddedStruct]()),
+				infoConverting(reflect.TypeFor[tfExportedEmbeddedStruct](), reflect.TypeFor[*awsEmbeddedStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExportedEmbeddedStruct](), "Field1", reflect.TypeFor[*awsEmbeddedStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				traceMatchedFields("Field2", reflect.TypeFor[tfExportedEmbeddedStruct](), "Field2", reflect.TypeFor[*awsEmbeddedStruct]()),
+				infoConvertingWithPath("Field2", reflect.TypeFor[types.String](), "Field2", reflect.TypeFor[string]()),
+			},
+		},
+		"unexported": {
+			Source: &tfUnexportedEmbeddedStruct{
+				tfSingleStringField: tfSingleStringField{
+					Field1: types.StringValue("a"),
+				},
+				Field2: types.StringValue("b"),
+			},
+			Target: &awsEmbeddedStruct{},
+			WantTarget: &awsEmbeddedStruct{
+				Field1: "a",
+				Field2: "b",
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfUnexportedEmbeddedStruct](), reflect.TypeFor[*awsEmbeddedStruct]()),
+				infoConverting(reflect.TypeFor[tfUnexportedEmbeddedStruct](), reflect.TypeFor[*awsEmbeddedStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfUnexportedEmbeddedStruct](), "Field1", reflect.TypeFor[*awsEmbeddedStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				traceMatchedFields("Field2", reflect.TypeFor[tfUnexportedEmbeddedStruct](), "Field2", reflect.TypeFor[*awsEmbeddedStruct]()),
+				infoConvertingWithPath("Field2", reflect.TypeFor[types.String](), "Field2", reflect.TypeFor[string]()),
+			},
+		},
+	}
+	runAutoExpandTestCases(t, testCases)
+}
+
 type autoFlexTestCase struct {
 	Options          []AutoFlexOptionsFunc
 	Source           any

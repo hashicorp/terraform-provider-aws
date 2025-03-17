@@ -43,7 +43,7 @@ func resourceImageBlockPublicAccess() *schema.Resource {
 	}
 }
 
-func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -80,7 +80,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceImageBlockPublicAccessRead(ctx, d, meta)...)
 }
 
-func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

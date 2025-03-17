@@ -27,6 +27,8 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 ~> **NOTE on RDS Clusters and RDS Cluster Role Associations:** Terraform provides both a standalone [RDS Cluster Role Association](rds_cluster_role_association.html) - (an association between an RDS Cluster and a single IAM Role) and an RDS Cluster resource with `iam_roles` attributes. Use one resource or the other to associate IAM Roles and RDS Clusters. Not doing so will cause a conflict of associations and will result in the association being overwritten.
 
+-> **Note:** Write-Only argument `master_password_wo` is available to use in place of `master_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Aurora MySQL 2.x (MySQL 5.7)
@@ -591,4 +593,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-96f33ce0d84119b786baa4f9600f27bc330d3275a5ad65de5365eee90ade5751 -->
+<!-- cache-key: cdktf-0.20.8 input-591add295fda0896fd7d3caa0bdfe9d409a727a307cce12b12246d41c1e755ac -->

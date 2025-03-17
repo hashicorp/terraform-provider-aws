@@ -14,9 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -93,7 +90,7 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
 				"data source":            w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -219,7 +216,7 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
 				"ephemeral resource":     w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -245,12 +242,15 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
+// modifyPlanFunc modifies a Terraform plan.
+type modifyPlanFunc func(context.Context, *conns.AWSClient, resource.ModifyPlanRequest, *resource.ModifyPlanResponse)
+
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext       contextFunc
-	interceptors           resourceInterceptors
-	typeName               string
-	usesTransparentTagging bool
+	bootstrapContext contextFunc
+	interceptors     resourceInterceptors
+	modifyPlanFuncs  []modifyPlanFunc
+	typeName         string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -378,8 +378,8 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 		return
 	}
 
-	if w.opts.usesTransparentTagging {
-		w.setTagsAll(ctx, request, response)
+	for _, f := range w.opts.modifyPlanFuncs {
+		f(ctx, w.meta, request, response)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -394,7 +394,7 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
 				"resource":               w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -424,7 +424,7 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping UpgradeState", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
 				"resource":               w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -442,7 +442,7 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping MoveState", map[string]interface{}{
+			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
 				"resource":               w.opts.typeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
@@ -454,25 +454,4 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	}
 
 	return nil
-}
-
-// setTagsAll is a plan modifier that calculates the new value for the `tags_all` attribute.
-func (w *wrappedResource) setTagsAll(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		return
-	}
-
-	var planTags tftags.Map
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if planTags.IsWhollyKnown() {
-		allTags := w.meta.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(w.meta.IgnoreTagsConfig(ctx))
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
-	} else {
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
-	}
 }

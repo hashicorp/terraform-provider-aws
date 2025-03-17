@@ -36,6 +36,7 @@ const (
 // @Tags
 func resourceStack() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceStackCreate,
 		ReadWithoutTimeout:   resourceStackRead,
 		UpdateWithoutTimeout: resourceStackUpdate,

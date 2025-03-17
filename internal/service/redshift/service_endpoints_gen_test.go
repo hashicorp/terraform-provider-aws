@@ -540,7 +540,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 
