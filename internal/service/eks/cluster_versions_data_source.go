@@ -5,7 +5,6 @@ package eks
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
@@ -75,7 +74,10 @@ func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.Rea
 
 	out, err := findClusterVersions(ctx, conn, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprint(names.EKS, create.ErrActionReading, DSNameClusterVersions, err), err.Error())
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EKS, create.ErrActionReading, DSNameClusterVersions, "", err),
+			err.Error(),
+		)
 		return
 	}
 
