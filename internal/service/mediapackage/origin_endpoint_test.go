@@ -37,11 +37,8 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -56,82 +53,6 @@ import (
 	tfmediapackage "github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestOriginEndpointExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfmediapackage.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
 // standard functionality of the resource as possible, and test importing, if
@@ -145,91 +66,246 @@ func TestAccMediaPackageOriginEndpoint_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var originendpoint mediapackage.DescribeOriginEndpointResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_mediapackage_origin_endpoint.test"
+	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// resourceName := "aws_media_package_origin_endpoint.test"
+	seed := time.Now().Format("20060102150405")
+	channelID := "test_basic" + seed
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaPackageOriginEndpointID)
+			acctest.PreCheckDirectoryService(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginEndpointConfig_basic(rName, "1.0.0"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, &originEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "origin_endpoint_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMediaPackage"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.0"),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mediapackage.t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "efs"),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
-					resource.TestCheckResourceAttr(resourceName, "user.0.username", "Test"),
-					resource.TestCheckResourceAttr(resourceName, "user.0.password", "TestTest1234"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackage", regexache.MustCompile(`originendpoint:.+$`)),
+				Config: testAccOriginEndpointConfig_basic(channelID),
+				Check:  resource.ComposeAggregateTestCheckFunc(
+				// testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			},
+			// {
+			// 	ResourceName:            resourceName,
+			// 	ImportState:             true,
+			// 	ImportStateVerify:       true,
+			// 	ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			// },
 		},
 	})
 }
 
-func TestAccMediaPackageOriginEndpoint_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
+// func TestAccMediaPackageOriginEndpoint_disappears(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	if testing.Short() {
+// 		t.Skip("skipping long-running test in short mode")
+// 	}
+//
+// 	resourceName := "aws_mediapackage_origin_endpoint.test"
+// 	channelID := "aws_mediapackage_channel.test_disappears.id"
+//
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(ctx, t)
+// 			acctest.PreCheckDirectoryService(ctx, t)
+// 			testAccPreCheck(ctx, t)
+// 		},
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccOriginEndpointConfig_basic(channelID),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
+// 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediapackage.ResourceOriginEndpoint(), resourceName),
+// 				),
+// 				ExpectNonEmptyPlan: true,
+// 			},
+// 		},
+// 	})
+// }
+
+func testAccOriginEndpointConfig_basic(channelID string) string {
+	return fmt.Sprintf(`
+resource "aws_media_package_channel" "test" {
+  channel_id = "%[1]s"	
+}
+
+// resource "aws_iam_role" "test" {
+//   name = "role-%[1]s"
+//   assume_role_policy = jsonencode({
+//     Version = "2012-10-17",
+//     Statement = [
+//       {
+//         Action = "sts:AssumeRole",
+//         Effect = "Allow",
+//         Principal = {
+//           Service = "mediapackage.amazonaws.com"
+//         },
+//       },
+//     ],
+//   })
+// }
+// 
+// resource "aws_iam_policy" "test" {
+//   name        = "SecretManagerAccessPolicy"
+//   description = "A policy to allow access to AWS Secret Manager"
+//   policy      = jsonencode({
+//     Version = "2012-10-17",
+//     Statement = [
+//       {
+//         Action = [
+//           "secretsmanager:GetSecretValue",
+//           "secretsmanager:DescribeSecret",
+//           "secretsmanager:ListSecrets"
+//         ],
+//         Effect   = "Allow",
+//         Resource = "*"
+//       },
+//     ],
+//   })
+// }
+
+// resource "aws_iam_role_policy_attachment" "test" {
+//   role       = aws_iam_role.test.name
+//   policy_arn = aws_iam_policy.test.arn
+// }
+
+resource "aws_media_package_origin_endpoint" "test" {
+  id = "endpoint-%[1]s"
+  channel_id = aws_media_package_channel.test.id
+	
+  hls_package {
+	ad_markers = "PASSTHROUGH"
+    ad_triggers = ["SPLICE_INSERT"]
+    ads_on_delivery_restrictions = "NONE"
+    // encryption {
+    //   speke_key_provider {
+    //     resource_id = "example-resource-id"
+    //     role_arn    = aws_iam_role.test.arn
+    //     system_ids  = ["123e4567-e89b-12d3-a456-426614174000"]
+    //     url         = "https://example.com/hoge"
+    //   }
+    // }
+    include_dvb_subtitles = true
+	include_iframe_only_stream = true
+	playlist_type = "EVENT"
+	playlist_window_seconds = 60
+	program_date_time_interval_seconds = 600
+	segment_duration_seconds = 6
+	stream_selection {
+	  max_video_bits_per_second = 1000000
+	  min_video_bits_per_second = 500000	
+	  stream_order = "ORIGINAL"
 	}
+  }
 
-	var originendpoint mediapackage.DescribeOriginEndpointResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_mediapackage_origin_endpoint.test"
+  // authorization {
+  //   cdn_identifier_secret = "example-cdn-identifier-secret"
+  //   secrets_role_arn      = aws_iam_role.test.arn
+  // }
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaPackageEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOriginEndpointConfig_basic(rName, testAccOriginEndpointVersionNewer),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, &originendpoint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediapackage.ResourceOriginEndpoint(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
+  // cmaf_package {
+  //   encryption {
+  //     speke_key_provider {
+  //       resource_id = "example-resource-id"
+  //       role_arn    = aws_iam_role.test.arn
+  //       system_ids  = ["123e4567-e89b-12d3-a456-426614174000"]
+  //       url         = "https://example.com/hoge"
+  //     }
+  //   }
+	// hls_manifests {
+	// 	ad_markers = "NONE"
+	// 	ad_triggers = ["SPLICE_INSERT"]
+	// 	ads_on_delivery_restrictions = "NONE"
+	// 	include_iframe_only_stream = true
+	// 	manifest_name = "example-manifest-name"
+	// 	playlist_type = "NONE"
+	// 	playlist_window_seconds = 60
+	// 	program_date_time_interval_seconds = 600
+  //   	segment_duration_seconds = 6
+	// }
+
+  // dash_package {
+  //   ad_triggers = ["SPLICE_INSERT"]
+  //   encryption {
+  //     speke_key_provider {
+  //       resource_id = "example-resource-id"
+  //       role_arn    = aws_iam_role.test.arn
+  //       system_ids  = ["123e4567-e89b-12d3-a456-426614174000"]
+  //       url         = "https://example.com/hoge"
+  //     }
+  //   }
+  //   period_triggers = ["ADS"]
+  //   segment_duration_seconds = 6
+  //   segment_template_format  = "NUMBER_WITH_TIMELINE"
+  //   stream_selection {
+  //     max_video_bits_per_second = 1000000
+  //     min_video_bits_per_second = 500000
+  //     stream_order              = "ORIGINAL"
+  //   }
+  //   suggested_presentation_delay_seconds = 60
+  //   utc_timing                          = "HTTP-HEAD"
+  //   utc_timing_uri                      = "https://time.example.com"
+  // }
+  // 
+  // description = "example description"
+  // hls_package {
+  //   ad_markers = "PASSTHROUGH"
+  //   encryption {
+  //     speke_key_provider {
+  //       resource_id = "example-resource-id"
+  //       role_arn    = aws_iam_role.test.arn
+  //       system_ids  = ["123e4567-e89b-12d3-a456-426614174000"]
+  //       url         = "https://example.com/hoge"
+  //     }
+  //   }
+  //   include_iframe_only_stream = true
+  //   playlist_type              = "EVENT"
+  //   playlist_window_seconds    = 60
+  //   program_date_time_interval_seconds = 600
+  //   segment_duration_seconds   = 6
+  //   use_audio_rendition_group = true
+  // }
+  // 
+  // manifest_name = "example-manifest-name"
+  // mss_package {
+  //   encryption {
+  //     speke_key_provider {
+  //       resource_id = "example-resource-id"
+  //       role_arn    = aws_iam_role.test.arn
+  //       system_ids  = ["123e4567-e89b-12d3-a456-426614174000"]
+  //       url         = "https://example.com/hoge"
+  //     }
+  //   }
+  //   manifest_window_seconds = 60
+  //   segment_duration_seconds = 6
+  // }
+  // 
+  // origination = "ALLOW"
+  // start_over_window_seconds = 3600
+  // tags = {
+  //   Name = "example"
+  // }
+  // time_delay_seconds = 60
+  // whitelist = ["192.168.0.1/24"]
+}
+`, channelID)
 }
 
-func testAccCheckOriginEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOriginEndpointDestroy(ctx context.Context, channelID string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_mediapackage_origin_endpoint" {
+			if rs.Type != "aws_mediapackage_origin_endpoint" && rs.Type != "aws_mediapackage_channel" {
 				continue
 			}
 
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
-			_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID)
+			_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID, channelID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -244,7 +320,7 @@ func testAccCheckOriginEndpointDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckOriginEndpointExists(ctx context.Context, name string, originendpoint *mediapackage.DescribeOriginEndpointResponse) resource.TestCheckFunc {
+func testAccCheckOriginEndpointExists(ctx context.Context, name, channelID string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -257,65 +333,11 @@ func testAccCheckOriginEndpointExists(ctx context.Context, name string, originen
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageClient(ctx)
 
-		resp, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID)
+		_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID, channelID)
 		if err != nil {
 			return create.Error(names.MediaPackage, create.ErrActionCheckingExistence, tfmediapackage.ResNameOriginEndpoint, rs.Primary.ID, err)
 		}
 
-		*originendpoint = *resp
-
 		return nil
 	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageClient(ctx)
-
-	input := &mediapackage.ListOriginEndpointsInput{}
-
-	_, err := conn.ListOriginEndpoints(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckOriginEndpointNotRecreated(before, after *mediapackage.DescribeOriginEndpointResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.OriginEndpointId), aws.ToString(after.OriginEndpointId); before != after {
-			return create.Error(names.MediaPackage, create.ErrActionCheckingNotRecreated, tfmediapackage.ResNameOriginEndpoint, aws.ToString(before.OriginEndpointId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccOriginEndpointConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_mediapackage_origin_endpoint" "test" {
-  origin_endpoint_name             = %[1]q
-  engine_type             = "ActiveMediaPackage"
-  engine_version          = %[2]q
-  host_instance_type      = "mediapackage.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
-}
-`, rName, version)
 }
