@@ -88,9 +88,9 @@ resource "aws_rds_global_cluster" "test" {
   engine                    = "aurora-postgresql"
 
   tags = {
-    Name  = %[1]q
-    Key1  = "Value1"
-    Key2  = "Value2"
+    Name = %[1]q
+    Key1 = "Value1"
+    Key2 = "Value2"
   }
 }
 
