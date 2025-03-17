@@ -173,7 +173,7 @@ func (r *resourceCapacityReservation) Update(ctx context.Context, req resource.U
 
 	if !plan.TargetDPUs.Equal(state.TargetDPUs) {
 		var input athena.UpdateCapacityReservationInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -199,11 +199,11 @@ func (r *resourceCapacityReservation) Update(ctx context.Context, req resource.U
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// For tag only updates, explicitly copy state values for computed attributes
+		plan.AllocatedDPUs = state.AllocatedDPUs
+		plan.Status = state.Status
 	}
-
-	// For tag only updates, explicitly copy state values for computed attributes
-	plan.AllocatedDPUs = state.AllocatedDPUs
-	plan.Status = state.Status
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
