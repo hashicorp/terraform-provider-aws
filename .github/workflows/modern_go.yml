@@ -80,12 +80,16 @@ jobs:
       # service tests
       - run: make TEST=./internal/service/apigateway modern-check
       - run: make TEST=./internal/service/apigatewayv2 modern-check
+      - run: make TEST=./internal/service/appconfig modern-check
       - run: make TEST=./internal/service/appmesh modern-check
+      - run: make TEST=./internal/service/apprunner modern-check
       - run: make TEST=./internal/service/autoscaling modern-check
+      - run: make TEST=./internal/service/backup modern-check
       - run: make TEST=./internal/service/batch modern-check
       - run: make TEST=./internal/service/cloudfront modern-check
       - run: make TEST=./internal/service/cognitoidp modern-check
       - run: make TEST=./internal/service/dms modern-check
+      - run: make TEST=./internal/service/dynamodb modern-check
       - run: make TEST=./internal/service/ec2 modern-check
       - run: make TEST=./internal/service/ecs modern-check
       - run: make TEST=./internal/service/elasticache modern-check
