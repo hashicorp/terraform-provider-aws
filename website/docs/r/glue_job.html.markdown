@@ -20,7 +20,7 @@ Provides a Glue Job resource.
 resource "aws_glue_job" "example" {
   name         = "example"
   glue_version = "5.0"
-  role_arn = aws_iam_role.example.arn
+  role_arn     = aws_iam_role.example.arn
 
   command {
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
