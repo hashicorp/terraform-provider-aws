@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
         * `eks_info` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
             * `namespace` - The namespace where the EMR Containers cluster is running
     * `type` - The type of the container provider
+* `security_configuration_id` - The ID of the security configuration.
 * `created_at` - Unix epoch time stamp in seconds for when the cluster was created.
 * `state` - Status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
 * `tags` - Key-value mapping of resource tags.
