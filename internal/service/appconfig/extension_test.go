@@ -280,7 +280,7 @@ func testAccCheckExtensionDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_appconfig_environment" {
+			if rs.Type != "aws_appconfig_extension" {
 				continue
 			}
 
@@ -316,7 +316,7 @@ func testAccCheckExtensionExists(ctx context.Context, n string) resource.TestChe
 	}
 }
 
-func testAccExtensionConfigBase(rName string) string {
+func testAccExtensionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -342,7 +342,7 @@ resource "aws_iam_role" "test" {
 
 func testAccExtensionConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name        = %[1]q
@@ -361,7 +361,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_description(rName string, rDescription string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name        = %[1]q
@@ -380,7 +380,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_actionPoint2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
@@ -406,7 +406,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_parameter1(rName string, pName string, pDescription string, pRequired string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
@@ -429,7 +429,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_parameter2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q

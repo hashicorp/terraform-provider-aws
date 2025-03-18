@@ -105,7 +105,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceExtensionAssociation,
+			Factory:  resourceExtensionAssociation,
 			TypeName: "aws_appconfig_extension_association",
 			Name:     "Extension Association",
 		},

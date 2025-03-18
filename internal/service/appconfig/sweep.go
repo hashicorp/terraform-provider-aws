@@ -25,6 +25,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_appconfig_configuration_profile", sweepConfigurationProfiles, "aws_appconfig_extension_association", "aws_appconfig_hosted_configuration_version")
 	awsv2.Register("aws_appconfig_deployment_strategy", sweepDeploymentStrategies)
 	awsv2.Register("aws_appconfig_extension", sweepExtensions, "aws_appconfig_extension_association")
+	awsv2.Register("aws_appconfig_extension_association", sweepExtensionAssociations)
 
 	resource.AddTestSweepers("aws_appconfig_environment", &resource.Sweeper{
 		Name: "aws_appconfig_environment",
@@ -37,11 +38,6 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_appconfig_hosted_configuration_version", &resource.Sweeper{
 		Name: "aws_appconfig_hosted_configuration_version",
 		F:    sweepHostedConfigurationVersions,
-	})
-
-	resource.AddTestSweepers("aws_appconfig_extension_association", &resource.Sweeper{
-		Name: "aws_appconfig_extension_association",
-		F:    sweepExtensionAssociations,
 	})
 }
 
@@ -233,6 +229,31 @@ func sweepExtensions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 	return sweepResources, nil
 }
 
+func sweepExtensionAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppConfigClient(ctx)
+	var input appconfig.ListExtensionAssociationsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := appconfig.NewListExtensionAssociationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			r := resourceExtensionAssociation()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
 func sweepHostedConfigurationVersions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -317,46 +338,4 @@ func sweepHostedConfigurationVersions(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepExtensionAssociations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.AppConfigClient(ctx)
-	input := &appconfig.ListExtensionAssociationsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	pages := appconfig.NewListExtensionAssociationsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AppConfig Extension Association sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing AppConfig Extension Associations (%s): %w", region, err)
-		}
-
-		for _, v := range page.Items {
-			r := ResourceExtensionAssociation()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.Id))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping AppConfig Extension Associations (%s): %w", region, err)
-	}
-
-	return nil
 }
