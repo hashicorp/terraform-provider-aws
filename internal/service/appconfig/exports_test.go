@@ -5,18 +5,20 @@ package appconfig
 
 // Exports for use in tests only.
 var (
-	ResourceApplication          = resourceApplication
-	ResourceConfigurationProfile = resourceConfigurationProfile
-	ResourceDeployment           = resourceDeployment
-	ResourceDeploymentStrategy   = resourceDeploymentStrategy
-	ResourceEnvironmentFW        = newResourceEnvironment
-	ResourceExtension            = resourceExtension
-	ResourceExtensionAssociation = resourceExtensionAssociation
+	ResourceApplication                = resourceApplication
+	ResourceConfigurationProfile       = resourceConfigurationProfile
+	ResourceDeployment                 = resourceDeployment
+	ResourceDeploymentStrategy         = resourceDeploymentStrategy
+	ResourceEnvironmentFW              = newResourceEnvironment
+	ResourceExtension                  = resourceExtension
+	ResourceExtensionAssociation       = resourceExtensionAssociation
+	ResourceHostedConfigurationVersion = resourceHostedConfigurationVersion
 
-	FindApplicationByID                  = findApplicationByID
-	FindConfigurationProfileByTwoPartKey = findConfigurationProfileByTwoPartKey
-	FindDeploymentByThreePartKey         = findDeploymentByThreePartKey
-	FindDeploymentStrategyByID           = findDeploymentStrategyByID
-	FindExtensionByID                    = findExtensionByID
-	FindExtensionAssociationByID         = findExtensionAssociationByID
+	FindApplicationByID                          = findApplicationByID
+	FindConfigurationProfileByTwoPartKey         = findConfigurationProfileByTwoPartKey
+	FindDeploymentByThreePartKey                 = findDeploymentByThreePartKey
+	FindDeploymentStrategyByID                   = findDeploymentStrategyByID
+	FindExtensionByID                            = findExtensionByID
+	FindExtensionAssociationByID                 = findExtensionAssociationByID
+	FindHostedConfigurationVersionByThreePartKey = findHostedConfigurationVersionByThreePartKey
 )

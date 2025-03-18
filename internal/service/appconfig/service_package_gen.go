@@ -110,7 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Extension Association",
 		},
 		{
-			Factory:  ResourceHostedConfigurationVersion,
+			Factory:  resourceHostedConfigurationVersion,
 			TypeName: "aws_appconfig_hosted_configuration_version",
 			Name:     "Hosted Configuration Version",
 		},
