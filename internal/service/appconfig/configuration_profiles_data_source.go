@@ -57,21 +57,12 @@ func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func findConfigurationProfileSummariesByApplication(ctx context.Context, conn *appconfig.Client, applicationId string) ([]awstypes.ConfigurationProfileSummary, error) {
-	var outputs []awstypes.ConfigurationProfileSummary
-	pages := appconfig.NewListConfigurationProfilesPaginator(conn, &appconfig.ListConfigurationProfilesInput{
-		ApplicationId: aws.String(applicationId),
-	})
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		outputs = append(outputs, page.Items...)
+func findConfigurationProfileSummariesByApplication(ctx context.Context, conn *appconfig.Client, applicationID string) ([]awstypes.ConfigurationProfileSummary, error) {
+	input := appconfig.ListConfigurationProfilesInput{
+		ApplicationId: aws.String(applicationID),
 	}
 
-	return outputs, nil
+	return findConfigurationProfileSummaries(ctx, conn, &input)
 }
 
 func findConfigurationProfileSummaries(ctx context.Context, conn *appconfig.Client, input *appconfig.ListConfigurationProfilesInput) ([]awstypes.ConfigurationProfileSummary, error) {
