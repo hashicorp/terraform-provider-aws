@@ -87,9 +87,10 @@ func ResourceDataSource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:       schema.TypeList,
+							Deprecated: "s3_configuration is deprecated. Use template_configuration instead.",
+							Optional:   true,
+							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"access_control_list_configuration": {
