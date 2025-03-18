@@ -65,8 +65,8 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cidr": {
 							Type:         schema.TypeString,
-							Required:     false,
 							ForceNew:     true,
+							Optional:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
 						names.AttrPortRanges: {
@@ -76,10 +76,12 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"from_port": {
 										Type:         schema.TypeInt,
+										Optional:     true,
 										ValidateFunc: validation.IsPortNumberOrZero,
 									},
 									"to_port": {
 										Type:         schema.TypeInt,
+										Optional:     true,
 										ValidateFunc: validation.IsPortNumberOrZero,
 									},
 								},
@@ -151,10 +153,12 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"from_port": {
 										Type:         schema.TypeInt,
+										Optional:     true,
 										ValidateFunc: validation.IsPortNumberOrZero,
 									},
 									"to_port": {
 										Type:         schema.TypeInt,
+										Optional:     true,
 										ValidateFunc: validation.IsPortNumberOrZero,
 									},
 								},
@@ -196,10 +200,12 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"from_port": {
 										Type:         schema.TypeInt,
+										Optional:     true,
 										ValidateFunc: validation.IsPortNumberOrZero,
 									},
 									"to_port": {
 										Type:         schema.TypeInt,
+										Optional:     true,
 										ValidateFunc: validation.IsPortNumberOrZero,
 									},
 								},
@@ -890,7 +896,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	}
 
 	if v, ok := tfMap[names.AttrPortRanges]; ok {
-		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.([]interface{}))
+		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
