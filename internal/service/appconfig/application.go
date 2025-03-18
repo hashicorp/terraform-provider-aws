@@ -56,7 +56,7 @@ func resourceApplication() *schema.Resource {
 	}
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -131,7 +131,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 

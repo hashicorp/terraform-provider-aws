@@ -88,7 +88,7 @@ func resourceTransitGatewayPeering() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTransitGatewayPeeringRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -148,12 +148,12 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceTransitGatewayPeeringRead(ctx, d, meta)
 }
 
-func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -203,7 +203,7 @@ func findTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Cli
 }
 
 func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayPeeringByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -134,7 +134,7 @@ func resourceConfigurationProfile() *schema.Resource {
 	}
 }
 
-func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -178,7 +178,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -215,7 +215,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -260,7 +260,7 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -351,7 +351,7 @@ func expandValidator(tfMap map[string]any) awstypes.Validator {
 	return apiObject
 }
 
-func expandValidators(tfList []interface{}) []awstypes.Validator {
+func expandValidators(tfList []any) []awstypes.Validator {
 	// AppConfig API requires a 0 length slice instead of a nil value
 	// when updating from N apiObjects to 0/nil apiObjects
 	apiObjects := make([]awstypes.Validator, 0)

@@ -66,7 +66,7 @@ const (
 	ResNameServiceNetwork = "Service Network"
 )
 
-func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -91,7 +91,7 @@ func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceServiceNetworkRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -114,7 +114,7 @@ func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceServiceNetworkRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 

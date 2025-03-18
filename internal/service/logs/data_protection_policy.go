@@ -47,7 +47,7 @@ func resourceDataProtectionPolicy() *schema.Resource {
 	}
 }
 
-func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -75,7 +75,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDataProtectionPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 

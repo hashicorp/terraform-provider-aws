@@ -41,7 +41,7 @@ const (
 	DSNameEnvironments = "Environments Data Source"
 )
 
-func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)

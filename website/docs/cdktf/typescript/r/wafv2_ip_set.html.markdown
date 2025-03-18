@@ -46,7 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required, Forces new resource) A friendly name of the IP set.
+* `name` - (Optional, Forces new resource) A friendly name of the IP set. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the IP set.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
 * `ipAddressVersion` - (Required, Forces new resource) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.
@@ -93,4 +94,4 @@ Using `terraform import`, import WAFv2 IP Sets using `ID/name/scope`. For exampl
 % terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5b5edc8dc6155a31f480219df269351abee77e94b08bfc003b8a12a615fde2da -->
+<!-- cache-key: cdktf-0.20.8 input-77aadcbf40e914d19b69224578cd61b8e38b5741b69d7de66851afe95d9506ae -->
