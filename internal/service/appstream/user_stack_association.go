@@ -59,7 +59,7 @@ func ResourceUserStackAssociation() *schema.Resource {
 	}
 }
 
-func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -99,7 +99,7 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserStackAssociationRead(ctx, d, meta)...)
 }
 
-func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -144,7 +144,7 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)

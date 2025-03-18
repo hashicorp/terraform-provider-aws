@@ -93,7 +93,7 @@ func resourceRadiusSettings() *schema.Resource {
 	}
 }
 
-func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRadiusSettingsRead(ctx, d, meta)...)
 }
 
-func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -156,7 +156,7 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -187,7 +187,7 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRadiusSettingsRead(ctx, d, meta)...)
 }
 
-func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -223,7 +223,7 @@ func findRadiusSettingsByID(ctx context.Context, conn *directoryservice.Client, 
 }
 
 func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, directoryID)
 
 		if tfresource.NotFound(err) {

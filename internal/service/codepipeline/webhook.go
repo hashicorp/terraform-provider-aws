@@ -121,7 +121,7 @@ func resourceWebhook() *schema.Resource {
 	}
 }
 
-func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -140,8 +140,8 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		},
 	}
 
-	if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Webhook.AuthenticationConfiguration = expandWebhookAuthConfiguration(authType, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Webhook.AuthenticationConfiguration = expandWebhookAuthConfiguration(authType, v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.PutWebhook(ctx, input)
@@ -155,7 +155,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -190,7 +190,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -208,8 +208,8 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			},
 		}
 
-		if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Webhook.AuthenticationConfiguration = expandWebhookAuthConfiguration(authType, v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Webhook.AuthenticationConfiguration = expandWebhookAuthConfiguration(authType, v.([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.PutWebhook(ctx, input)
@@ -222,7 +222,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -282,10 +282,10 @@ func findWebhooks(ctx context.Context, conn *codepipeline.Client, input *codepip
 	return output, nil
 }
 
-func flattenWebhookFilterRules(filters []types.WebhookFilterRule) []interface{} {
-	results := []interface{}{}
+func flattenWebhookFilterRules(filters []types.WebhookFilterRule) []any {
+	results := []any{}
 	for _, filter := range filters {
-		f := map[string]interface{}{
+		f := map[string]any{
 			"json_path":    aws.ToString(filter.JsonPath),
 			"match_equals": aws.ToString(filter.MatchEquals),
 		}
@@ -295,8 +295,8 @@ func flattenWebhookFilterRules(filters []types.WebhookFilterRule) []interface{} 
 	return results
 }
 
-func flattenWebhookAuthConfiguration(authConfig *types.WebhookAuthConfiguration) []interface{} {
-	conf := map[string]interface{}{}
+func flattenWebhookAuthConfiguration(authConfig *types.WebhookAuthConfiguration) []any {
+	conf := map[string]any{}
 	if authConfig.AllowedIPRange != nil {
 		conf["allowed_ip_range"] = aws.ToString(authConfig.AllowedIPRange)
 	}
@@ -305,7 +305,7 @@ func flattenWebhookAuthConfiguration(authConfig *types.WebhookAuthConfiguration)
 		conf["secret_token"] = aws.ToString(authConfig.SecretToken)
 	}
 
-	var results []interface{}
+	var results []any
 	if len(conf) > 0 {
 		results = append(results, conf)
 	}
@@ -317,7 +317,7 @@ func expandWebhookFilterRules(filters *schema.Set) []types.WebhookFilterRule {
 	var rules []types.WebhookFilterRule
 
 	for _, f := range filters.List() {
-		r := f.(map[string]interface{})
+		r := f.(map[string]any)
 		filter := types.WebhookFilterRule{
 			JsonPath:    aws.String(r["json_path"].(string)),
 			MatchEquals: aws.String(r["match_equals"].(string)),
@@ -329,7 +329,7 @@ func expandWebhookFilterRules(filters *schema.Set) []types.WebhookFilterRule {
 	return rules
 }
 
-func expandWebhookAuthConfiguration(authType types.WebhookAuthenticationType, authConfig map[string]interface{}) *types.WebhookAuthConfiguration {
+func expandWebhookAuthConfiguration(authType types.WebhookAuthenticationType, authConfig map[string]any) *types.WebhookAuthConfiguration {
 	var conf types.WebhookAuthConfiguration
 
 	switch authType {

@@ -484,7 +484,7 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 }
 
 func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

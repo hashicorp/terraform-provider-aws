@@ -304,7 +304,7 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
