@@ -52,6 +52,23 @@ func resourceLoadBalancer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("enable_prefix_ipv6_source_nat", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+				lbCurrent, err := conn.DescribeLoadBalancers(ctx, &elasticloadbalancingv2.DescribeLoadBalancersInput{
+					LoadBalancerArns: []string{diff.Id()},
+				})
+				if tfresource.NotFound(err) || err != nil {
+					return false
+				}
+				if len(lbCurrent.LoadBalancers) == 0 {
+					return false
+				}
+				if lbCurrent.LoadBalancers[0].EnablePrefixForIpv6SourceNat == awstypes.EnablePrefixForIpv6SourceNatEnumOff {
+					return false
+				} else {
+					return true
+				}
+			}),
 			customizeDiffLoadBalancerALB,
 			customizeDiffLoadBalancerNLB,
 			customizeDiffLoadBalancerGWLB,
@@ -181,6 +198,12 @@ func resourceLoadBalancer() *schema.Resource {
 				Optional:         true,
 				Default:          true,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+			},
+			"enable_prefix_ipv6_source_nat": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
 			},
 			"enable_tls_version_and_cipher_suite_headers": {
 				Type:             schema.TypeBool,
@@ -393,6 +416,14 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("enable_prefix_ipv6_source_nat"); ok {
+		if v.(bool) {
+			input.EnablePrefixForIpv6SourceNat = awstypes.EnablePrefixForIpv6SourceNatEnumOn
+		} else {
+			input.EnablePrefixForIpv6SourceNat = awstypes.EnablePrefixForIpv6SourceNatEnumOff
+		}
+	}
+
 	output, err := conn.CreateLoadBalancer(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
@@ -510,6 +541,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
+	d.Set("enable_prefix_ipv6_source_nat", lb.EnablePrefixForIpv6SourceNat == awstypes.EnablePrefixForIpv6SourceNatEnumOn)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
@@ -599,6 +631,32 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) security groups: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("enable_prefix_ipv6_source_nat") {
+		input := &elasticloadbalancingv2.SetSubnetsInput{
+			LoadBalancerArn: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk(names.AttrSubnets); ok {
+			input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
+		} else {
+			input.SubnetMappings = expandSubnetMappings(v.(*schema.Set).List())
+		}
+
+		if v, ok := d.GetOk("enable_prefix_ipv6_source_nat"); ok {
+			if v.(bool) {
+				input.EnablePrefixForIpv6SourceNat = awstypes.EnablePrefixForIpv6SourceNatEnumOn
+			} else {
+				input.EnablePrefixForIpv6SourceNat = awstypes.EnablePrefixForIpv6SourceNatEnumOff
+			}
+		}
+
+		_, err := conn.SetSubnets(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) subnets: %s", d.Id(), err)
 		}
 	}
 
