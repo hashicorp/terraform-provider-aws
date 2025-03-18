@@ -17,8 +17,11 @@ func TestAccIdentityStoreGroupMembershipsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // User Name
+
 	dataSourceName := "data.aws_identitystore_group_memberships.test"
 	groupResourceName := "aws_identitystore_group.test"
+	membershipResourceName := "aws_identitystore_group_membership.test"
+	userResourceName := "aws_identitystore_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -33,6 +36,9 @@ func TestAccIdentityStoreGroupMembershipsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "group_memberships.#", 0),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_memberships.0.group_id", groupResourceName, "group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "group_memberships.0.identity_store_id", groupResourceName, "identity_store_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "group_memberships.0.membership_id", membershipResourceName, "membership_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "group_memberships.0.member_id.user_id", userResourceName, "user_id"),
 				),
 			},
 		},
@@ -61,16 +67,14 @@ resource "aws_identitystore_group" "test" {
 }
 
 resource "aws_identitystore_group_membership" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = aws_identitystore_group.test.identity_store_id
   group_id          = aws_identitystore_group.test.group_id
   member_id         = aws_identitystore_user.test.user_id
 }
 
 data "aws_identitystore_group_memberships" "test" {
-  depends_on = [aws_identitystore_group_membership.test]
-
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  group_id          = aws_identitystore_group.test.group_id
+  identity_store_id = aws_identitystore_group_membership.test.identity_store_id
+  group_id          = aws_identitystore_group_membership.test.group_id
 }
 `, userName, groupName)
 }
