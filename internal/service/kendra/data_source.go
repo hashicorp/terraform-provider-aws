@@ -185,9 +185,10 @@ func ResourceDataSource() *schema.Resource {
 							},
 						},
 						"web_crawler_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:       schema.TypeList,
+							Deprecated: "web_crawler_configuration is deprecated. Use template_configuration instead.",
+							Optional:   true,
+							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_configuration": {
