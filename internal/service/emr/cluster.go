@@ -166,6 +166,34 @@ func resourceCluster() *schema.Resource {
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
 												},
+												"capacity_reservation_options": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MinItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"capacity_reservation_preference": {
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationPreference](),
+															},
+															"capacity_reservation_resource_group_arn": {
+																Type:     schema.TypeString,
+																ForceNew: true,
+																Required: true,
+																// ValidateDiagFunc: validation.IsUUID(),
+															},
+															"usage_strategy": {
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationUsageStrategy](),
+															},
+														},
+													},
+												},
 											},
 										},
 									},
@@ -2243,7 +2271,22 @@ func flattenOnDemandProvisioningSpecification(apiObject *awstypes.OnDemandProvis
 	tfMap := map[string]interface{}{
 		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-		"allocation_strategy": strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1),
+		"allocation_strategy":          strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1),
+		"capacity_reservation_options": flattenCapacityReservationOptions(apiObject.CapacityReservationOptions),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCapacityReservationOptions(apiObject *awstypes.OnDemandCapacityReservationOptions) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"capacity_reservation_preference":         apiObject.CapacityReservationPreference,
+		"capacity_reservation_resource_group_arn": apiObject.CapacityReservationResourceGroupArn,
+		"usage_strategy":                          apiObject.UsageStrategy,
 	}
 
 	return []interface{}{tfMap}
@@ -2334,8 +2377,13 @@ func expandLaunchSpecification(tfMap map[string]interface{}) *awstypes.InstanceF
 	apiObject := &awstypes.InstanceFleetProvisioningSpecifications{}
 
 	if v := tfMap["on_demand_specification"].([]interface{}); len(v) > 0 {
+		tfMap := v[0].(map[string]interface{})
 		apiObject.OnDemandSpecification = &awstypes.OnDemandProvisioningSpecification{
-			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(v[0].(map[string]interface{})["allocation_strategy"].(string)),
+			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(tfMap["allocation_strategy"].(string)),
+		}
+
+		if vv := tfMap["capacity_reservation_options"].([]interface{}); len(vv) > 0 {
+			apiObject.OnDemandSpecification.CapacityReservationOptions = expandCapacityReservationOptions(vv[0].(map[string]interface{}))
 		}
 	}
 
@@ -2353,6 +2401,23 @@ func expandLaunchSpecification(tfMap map[string]interface{}) *awstypes.InstanceF
 		}
 
 		apiObject.SpotSpecification = spotProvisioning
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationOptions(tfMap map[string]interface{}) *awstypes.OnDemandCapacityReservationOptions {
+	apiObject := &awstypes.OnDemandCapacityReservationOptions{}
+
+	if v, ok := tfMap["capacity_reservation_preference"].(string); ok {
+		apiObject.CapacityReservationPreference = awstypes.OnDemandCapacityReservationPreference(v)
+	}
+	if v, ok := tfMap["capacity_reservation_resource_group_arn"].(string); ok {
+		apiObject.CapacityReservationResourceGroupArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["usage_strategy"].(string); ok {
+		apiObject.UsageStrategy = awstypes.OnDemandCapacityReservationUsageStrategy(v)
 	}
 
 	return apiObject
