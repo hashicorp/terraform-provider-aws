@@ -987,6 +987,8 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 }
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing.T) {
+	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
+
 	ctx := acctest.Context(t)
 	var lb awstypes.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1017,6 +1019,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 }
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testing.T) {
+	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
+
 	ctx := acctest.Context(t)
 	var lb awstypes.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1066,6 +1070,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_modify(t *testin
 }
 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_unassign(t *testing.T) {
+	acctest.Skip(t, "failed-deprovision (The CIDR has one or more allocations) errors deleting IPAM pool CIDRs")
+
 	ctx := acctest.Context(t)
 	var lb awstypes.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
