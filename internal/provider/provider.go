@@ -295,10 +295,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			s := r.SchemaMap()
 
 			if v := v.Region; v != nil && v.IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
-					continue
-				}
+				// TODO Temporarily disable.
+				// if _, ok := s[names.AttrRegion]; ok {
+				// 	errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
+				// 	continue
+				// }
 
 				// Inject a top-level "region" attribute.
 				regionSchema := &schema.Schema{
@@ -343,13 +344,15 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						if v, ok := getAttribute(names.AttrRegion); ok {
-							overrideRegion = v.(string)
+					if v := v.Region; v != nil && v.IsOverrideEnabled && getAttribute != nil {
+						if region, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = region.(string)
 
 							// As data sources have no CustomizeDiff functionality we validate the Region here.
-							if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), overrideRegion); err != nil {
-								return ctx, sdkdiag.AppendFromErr(diags, err)
+							if v.IsValidateOverrideInPartition {
+								if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), overrideRegion); err != nil {
+									return ctx, sdkdiag.AppendFromErr(diags, err)
+								}
 							}
 						}
 					}
@@ -401,10 +404,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			s := r.SchemaMap()
 
 			if v := v.Region; v != nil && v.IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
-					continue
-				}
+				// TODO Temporarily disable.
+				// if _, ok := s[names.AttrRegion]; ok {
+				// 	errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
+				// 	continue
+				// }
 
 				// Inject a top-level "region" attribute.
 				regionSchema := &schema.Schema{
@@ -412,7 +416,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					Optional: true,
 				}
 
-				customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
+				if v.IsValidateOverrideInPartition {
+					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
+				}
 
 				if !v.IsGlobal {
 					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionChanges)
@@ -466,9 +472,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						if v, ok := getAttribute(names.AttrRegion); ok {
-							overrideRegion = v.(string)
+					if v := v.Region; v != nil && v.IsOverrideEnabled && getAttribute != nil {
+						if region, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = region.(string)
 						}
 					}
 
