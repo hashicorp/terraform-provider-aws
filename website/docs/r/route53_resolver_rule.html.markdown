@@ -78,6 +78,7 @@ The `target_ip` object supports the following:
 * `ipv6` - (Optional) One IPv6 address that you want to forward DNS queries to.
 * `port` - (Optional) Port at `ip` that you want to forward DNS queries to. Default value is `53`.
 * `protocol` - (Optional) Protocol for the resolver endpoint. Valid values can be found in the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_TargetAddress.html). Default value is `Do53`.
+* `server_name_indication` -  (Optional) The Server Name Indication of the DoH server that you want to forward queries to. This is only used if the `protocol` is `DoH`.
 
 ## Attribute Reference
 
