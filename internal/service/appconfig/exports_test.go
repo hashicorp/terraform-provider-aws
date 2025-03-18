@@ -18,6 +18,7 @@ var (
 	FindConfigurationProfileByTwoPartKey         = findConfigurationProfileByTwoPartKey
 	FindDeploymentByThreePartKey                 = findDeploymentByThreePartKey
 	FindDeploymentStrategyByID                   = findDeploymentStrategyByID
+	FindEnvironmentByTwoPartKey                  = findEnvironmentByTwoPartKey
 	FindExtensionByID                            = findExtensionByID
 	FindExtensionAssociationByID                 = findExtensionAssociationByID
 	FindHostedConfigurationVersionByThreePartKey = findHostedConfigurationVersionByThreePartKey

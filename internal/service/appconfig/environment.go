@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -32,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -298,6 +300,55 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, request resource.
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrApplicationID), parts[1])...)
 }
 
+const environmentResourceIDSeparator = ":"
+
+func environmentCreateResourceID(environmentID, applicationID string) string {
+	parts := []string{environmentID, applicationID}
+	id := strings.Join(parts, environmentResourceIDSeparator)
+
+	return id
+}
+
+func environmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, environmentResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EnvironmentID%[2]sApplicationID", id, environmentResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findEnvironmentByTwoPartKey(ctx context.Context, conn *appconfig.Client, applicationID, environmentID string) (*appconfig.GetEnvironmentOutput, error) {
+	input := appconfig.GetEnvironmentInput{
+		ApplicationId: aws.String(applicationID),
+		EnvironmentId: aws.String(environmentID),
+	}
+
+	return findEnvironment(ctx, conn, &input)
+}
+
+func findEnvironment(ctx context.Context, conn *appconfig.Client, input *appconfig.GetEnvironmentInput) (*appconfig.GetEnvironmentOutput, error) {
+	output, err := conn.GetEnvironment(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 type resourceEnvironmentData struct {
 	ApplicationID types.String `tfsdk:"application_id"`
 	ARN           types.String `tfsdk:"arn"`
@@ -398,8 +449,8 @@ func (d *resourceEnvironmentData) deleteEnvironmentInput() *appconfig.DeleteEnvi
 	}
 }
 
-func environmentARN(ctx context.Context, c *conns.AWSClient, appID, envID string) string {
-	return c.RegionalARN(ctx, "appconfig", fmt.Sprintf("application/%s/environment/%s", appID, envID))
+func environmentARN(ctx context.Context, c *conns.AWSClient, applicationID, environmentID string) string {
+	return c.RegionalARN(ctx, "appconfig", "application/"+applicationID+"/environment/"+environmentID)
 }
 
 func expandMonitors(l []monitorData) []awstypes.Monitor {

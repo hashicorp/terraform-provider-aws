@@ -47,7 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Configuration Profiles",
 		},
 		{
-			Factory:  DataSourceEnvironment,
+			Factory:  dataSourceEnvironment,
 			TypeName: "aws_appconfig_environment",
 			Name:     "Environment",
 			Tags: &types.ServicePackageResourceTags{
