@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Name:     "Policy Store",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -37,7 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Identity Source",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -46,7 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Policy",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Policy Store",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Policy Template",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Schema",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}

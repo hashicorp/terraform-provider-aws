@@ -31,7 +31,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Replication Set",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -40,7 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Response Plan",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}

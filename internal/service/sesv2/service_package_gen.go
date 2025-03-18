@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Account Suppression Attributes",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -44,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -68,7 +68,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -77,7 +77,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Email Identity Mail From Attributes",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -91,7 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Account VDM Attributes",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -103,7 +103,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -112,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Configuration Set Event Destination",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -124,7 +124,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -133,7 +133,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Dedicated IP Assignment",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -145,7 +145,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -157,7 +157,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -166,7 +166,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Email Identity Feedback Attributes",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -175,7 +175,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Email Identity Mail From Attributes",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -184,7 +184,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Email Identity Policy",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}

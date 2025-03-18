@@ -26,7 +26,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -47,7 +47,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Name:     "Attribute Group Associations",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -64,7 +64,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -76,7 +76,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -85,7 +85,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Attribute Group Association",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}

@@ -31,7 +31,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Bot",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -40,7 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Bot Alias",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Intent",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -58,7 +58,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Slot Type",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -72,7 +72,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Bot",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Bot Alias",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -90,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Intent",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -99,7 +99,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Slot Type",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}

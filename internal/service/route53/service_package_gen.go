@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Name:     "Records",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Name:     "Zones",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -47,7 +47,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "CIDR Collection",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "CIDR Location",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Name:     "Records Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -79,7 +79,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Reusable Delegation Set",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -88,7 +88,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Traffic Policy Document",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -97,7 +97,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "Hosted Zone",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
@@ -111,7 +111,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Reusable Delegation Set",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -124,7 +124,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -133,7 +133,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Hosted Zone DNSSEC",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -142,7 +142,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Key Signing Key",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -151,7 +151,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Query Logging Config",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -160,7 +160,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Record",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -169,7 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Traffic Policy",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -178,7 +178,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Traffic Policy Instance",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -187,7 +187,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "VPC Association Authorization",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -200,7 +200,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 		{
@@ -209,7 +209,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Name:     "Zone Association",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsOverrideEnabled: true,
 			},
 		},
 	}
