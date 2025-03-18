@@ -22,6 +22,7 @@ const (
 )
 
 // @SDKDataSource("aws_cloudfront_log_delivery_canonical_user_id", name="Log Delivery Canonical User ID")
+// @Region(validateOverrideInPartition=false)
 func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
