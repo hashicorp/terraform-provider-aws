@@ -2326,9 +2326,7 @@ resource "aws_kendra_data_source" "test" {
         version = "1.0.0"
         syncMode = "FULL_CRAWL"
         type = "WEBCRAWLERV2"
-        repositoryConfigurations = {
-            
-		}
+        repositoryConfigurations = {}
       })
     }
   }
