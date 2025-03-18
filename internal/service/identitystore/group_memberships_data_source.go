@@ -35,12 +35,12 @@ type groupMembershipsDataSource struct {
 func (d *groupMembershipsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"group_id": schema.StringAttribute{
+				Required: true,
+			},
 			"group_memberships": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[groupMembershipModel](ctx),
 				Computed:   true,
-			},
-			"group_id": schema.StringAttribute{
-				Required: true,
 			},
 			"identity_store_id": schema.StringAttribute{
 				Required: true,
@@ -97,16 +97,16 @@ func findGroupMemberships(ctx context.Context, conn *identitystore.Client, input
 }
 
 type groupMembershipsDataSourceModel struct {
-	IdentityStoreID  types.String                                          `tfsdk:"identity_store_id"`
 	GroupID          types.String                                          `tfsdk:"group_id"`
 	GroupMemberships fwtypes.ListNestedObjectValueOf[groupMembershipModel] `tfsdk:"group_memberships"`
+	IdentityStoreID  types.String                                          `tfsdk:"identity_store_id"`
 }
 
 type groupMembershipModel struct {
-	MemberID        fwtypes.ObjectValueOf[memberIDModel] `tfsdk:"member_id"`
-	MembershipID    types.String                         `tfsdk:"membership_id"`
 	GroupID         types.String                         `tfsdk:"group_id"`
 	IdentityStoreID types.String                         `tfsdk:"identity_store_id"`
+	MemberID        fwtypes.ObjectValueOf[memberIDModel] `tfsdk:"member_id"`
+	MembershipID    types.String                         `tfsdk:"membership_id"`
 }
 
 type memberIDModel struct {
