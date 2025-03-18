@@ -5,14 +5,11 @@ package appconfig
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -24,17 +21,10 @@ func RegisterSweepers() {
 	awsv2.Register("aws_appconfig_application", sweepApplications, "aws_appconfig_configuration_profile", "aws_appconfig_environment", "aws_appconfig_extension_association")
 	awsv2.Register("aws_appconfig_configuration_profile", sweepConfigurationProfiles, "aws_appconfig_extension_association", "aws_appconfig_hosted_configuration_version")
 	awsv2.Register("aws_appconfig_deployment_strategy", sweepDeploymentStrategies)
+	awsv2.Register("aws_appconfig_environment", sweepEnvironments, "aws_appconfig_extension_association")
 	awsv2.Register("aws_appconfig_extension", sweepExtensions, "aws_appconfig_extension_association")
 	awsv2.Register("aws_appconfig_extension_association", sweepExtensionAssociations)
 	awsv2.Register("aws_appconfig_hosted_configuration_version", sweepHostedConfigurationVersions)
-
-	resource.AddTestSweepers("aws_appconfig_environment", &resource.Sweeper{
-		Name: "aws_appconfig_environment",
-		F:    sweepEnvironments,
-		Dependencies: []string{
-			"aws_appconfig_extension_association",
-		},
-	})
 }
 
 func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -109,7 +99,6 @@ func sweepDeploymentStrategies(ctx context.Context, client *conns.AWSClient) ([]
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := appconfig.NewListDeploymentStrategiesPaginator(conn, &input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -137,52 +126,35 @@ func sweepDeploymentStrategies(ctx context.Context, client *conns.AWSClient) ([]
 	return sweepResources, nil
 }
 
-func sweepEnvironments(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepEnvironments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AppConfigClient(ctx)
-	input := &appconfig.ListApplicationsInput{}
+	var input appconfig.ListApplicationsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	pages := appconfig.NewListApplicationsPaginator(conn, input)
-
+	pages := appconfig.NewListApplicationsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AppConfig Environment sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil()
-		}
-
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Applications (%s): %w", region, err))
+			return nil, err
 		}
 
 		for _, v := range page.Items {
-			appID := aws.ToString(v.Id)
-			input := &appconfig.ListEnvironmentsInput{
-				ApplicationId: aws.String(appID),
+			applicationID := aws.ToString(v.Id)
+			input := appconfig.ListEnvironmentsInput{
+				ApplicationId: aws.String(applicationID),
 			}
 
-			pages := appconfig.NewListEnvironmentsPaginator(conn, input)
-
+			pages := appconfig.NewListEnvironmentsPaginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
-				if awsv2.SkipSweepError(err) {
-					continue
-				}
-
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Environments (%s): %w", region, err))
+					return nil, err
 				}
 
 				for _, v := range page.Items {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceEnvironment, client,
+					sweepResources = append(sweepResources, framework.NewSweepResource(newEnvironmentResource, client,
 						framework.NewAttribute(names.AttrApplicationID, aws.ToString(v.ApplicationId)),
 						framework.NewAttribute("environment_id", aws.ToString(v.Id)),
 					))
@@ -191,13 +163,7 @@ func sweepEnvironments(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping AppConfig Environments (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepExtensions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

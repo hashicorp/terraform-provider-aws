@@ -9,7 +9,7 @@ var (
 	ResourceConfigurationProfile       = resourceConfigurationProfile
 	ResourceDeployment                 = resourceDeployment
 	ResourceDeploymentStrategy         = resourceDeploymentStrategy
-	ResourceEnvironmentFW              = newResourceEnvironment
+	ResourceEnvironment                = newEnvironmentResource
 	ResourceExtension                  = resourceExtension
 	ResourceExtensionAssociation       = resourceExtensionAssociation
 	ResourceHostedConfigurationVersion = resourceHostedConfigurationVersion
