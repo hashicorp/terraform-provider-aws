@@ -34,8 +34,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_elastictranscoder_pipeline",
 			Name:     "Pipeline",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: true,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -43,8 +44,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_elastictranscoder_preset",
 			Name:     "Preset",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: true,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

@@ -27,8 +27,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_route53domains_delegation_signer_record",
 			Name:     "Delegation Signer Record",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: true,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -39,8 +40,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrDomainName,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: true,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
@@ -60,8 +62,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: true,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
