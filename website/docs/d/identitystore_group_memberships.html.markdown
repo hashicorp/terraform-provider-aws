@@ -45,9 +45,9 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `group_membership` - A list of group membership objects. See [`group_memberships`](#group_memberships) below.
+* `group_memberships` - A list of group membership objects. See [`group_memberships`](#group_memberships) below.
 
-### `group_membership`
+### `group_memberships`
 
 * `group_id` - Group identifier.
 * `identity_store_id` - Identity store identifier.
