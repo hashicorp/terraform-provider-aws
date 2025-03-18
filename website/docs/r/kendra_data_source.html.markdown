@@ -346,7 +346,7 @@ resource "aws_kendra_data_source" "example" {
 
   configuration {
     template_configuration {
-      template  = jsonencode({
+      template = jsonencode({
         connectionConfiguration = {
           repositoryEndpointMetadata = {
             seedUrlConnections = [
@@ -361,9 +361,9 @@ resource "aws_kendra_data_source" "example" {
             "https:\\/\\/registry[.]terraform[.]io\\/providers\\/hashicorp\\/aws\\/latest\\/docs\\/resources\\/kendra_index",
           ]
         }
-        version = "1.0.0"
+        version  = "1.0.0"
         syncMode = "FULL_CRAWL"
-        type = "WEBCRAWLERV2"
+        type     = "WEBCRAWLERV2"
       })
     }
   }
