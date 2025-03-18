@@ -629,7 +629,11 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk(names.AttrConfiguration); ok {
-		input.Configuration = expandDataSourceConfiguration(v.([]any))
+		configuration, err := expandDataSourceConfiguration(v.([]any))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		input.Configuration = configuration
 	}
 
 	if v, ok := d.GetOk("custom_document_enrichment_configuration"); ok {
@@ -761,7 +765,11 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange(names.AttrConfiguration) {
-			input.Configuration = expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]any))
+			configuration, err := expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]any))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			input.Configuration = configuration
 		}
 
 		if d.HasChange("custom_document_enrichment_configuration") {
@@ -929,14 +937,14 @@ func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId stri
 	}
 }
 
-func expandDataSourceConfiguration(tfList []any) *types.DataSourceConfiguration {
+func expandDataSourceConfiguration(tfList []any) (*types.DataSourceConfiguration, error) {
 	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
+		return nil, nil
 	}
 
 	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
-		return nil
+		return nil, nil
 	}
 
 	result := &types.DataSourceConfiguration{}
@@ -952,13 +960,12 @@ func expandDataSourceConfiguration(tfList []any) *types.DataSourceConfiguration 
 	if v, ok := tfMap["template_configuration"].([]any); ok && len(v) > 0 {
 		templateConfiguration, err := expandTemplateConfiguration(v)
 		if err != nil {
-			tfresource.SetLastError(err, nil)
-		} else {
-			result.TemplateConfiguration = templateConfiguration
+			return result, err
 		}
+		result.TemplateConfiguration = templateConfiguration
 	}
 
-	return result
+	return result, nil
 }
 
 // Template Configuration
@@ -972,29 +979,15 @@ func expandTemplateConfiguration(tfList []any) (*types.TemplateConfiguration, er
 		return nil, nil
 	}
 
-	result := &types.TemplateConfiguration{}
-
-	template, err := expandTemplate(tfMap["template"].(string))
-	if err != nil {
-		return nil, err
-	}
-
-	result.Template = template
-
-	return result, nil
-}
-
-func expandTemplate(rawProps string) (document.Interface, error) {
-	var props any
-
-	err := json.Unmarshal([]byte(rawProps), &props)
+	var body any
+	err := json.Unmarshal([]byte(tfMap["template"].(string)), &body)
 	if err != nil {
 		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
-	value := document.NewLazyDocument(props)
-
-	return value, nil
+	return &types.TemplateConfiguration{
+		Template: document.NewLazyDocument(body),
+	}, nil
 }
 
 // S3 Configuration
