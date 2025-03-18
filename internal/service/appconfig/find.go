@@ -14,28 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindExtensionById(ctx context.Context, conn *appconfig.Client, id string) (*appconfig.GetExtensionOutput, error) {
-	in := &appconfig.GetExtensionInput{ExtensionIdentifier: aws.String(id)}
-	out, err := conn.GetExtension(ctx, in)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
 func FindExtensionAssociationById(ctx context.Context, conn *appconfig.Client, id string) (*appconfig.GetExtensionAssociationOutput, error) {
 	in := &appconfig.GetExtensionAssociationInput{ExtensionAssociationId: aws.String(id)}
 	out, err := conn.GetExtensionAssociation(ctx, in)

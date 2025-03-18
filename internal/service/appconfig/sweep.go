@@ -24,6 +24,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_appconfig_application", sweepApplications, "aws_appconfig_configuration_profile", "aws_appconfig_environment", "aws_appconfig_extension_association")
 	awsv2.Register("aws_appconfig_configuration_profile", sweepConfigurationProfiles, "aws_appconfig_extension_association", "aws_appconfig_hosted_configuration_version")
 	awsv2.Register("aws_appconfig_deployment_strategy", sweepDeploymentStrategies)
+	awsv2.Register("aws_appconfig_extension", sweepExtensions, "aws_appconfig_extension_association")
 
 	resource.AddTestSweepers("aws_appconfig_environment", &resource.Sweeper{
 		Name: "aws_appconfig_environment",
@@ -205,6 +206,31 @@ func sweepEnvironments(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepExtensions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppConfigClient(ctx)
+	var input appconfig.ListExtensionsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := appconfig.NewListExtensionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			r := resourceExtension()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepHostedConfigurationVersions(region string) error {

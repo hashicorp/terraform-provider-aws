@@ -97,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceExtension,
+			Factory:  resourceExtension,
 			TypeName: "aws_appconfig_extension",
 			Name:     "Extension",
 			Tags: &types.ServicePackageResourceTags{

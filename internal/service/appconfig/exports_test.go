@@ -10,9 +10,11 @@ var (
 	ResourceDeployment           = resourceDeployment
 	ResourceDeploymentStrategy   = resourceDeploymentStrategy
 	ResourceEnvironmentFW        = newResourceEnvironment
+	ResourceExtension            = resourceExtension
 
 	FindApplicationByID                  = findApplicationByID
 	FindConfigurationProfileByTwoPartKey = findConfigurationProfileByTwoPartKey
 	FindDeploymentByThreePartKey         = findDeploymentByThreePartKey
 	FindDeploymentStrategyByID           = findDeploymentStrategyByID
+	FindExtensionByID                    = findExtensionByID
 )

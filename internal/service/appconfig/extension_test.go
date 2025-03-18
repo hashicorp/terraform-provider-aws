@@ -9,16 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -287,57 +284,35 @@ func testAccCheckExtensionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &appconfig.GetExtensionInput{
-				ExtensionIdentifier: aws.String(rs.Primary.ID),
-			}
+			_, err := tfappconfig.FindExtensionByID(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetExtension(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading AppConfig Extension (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("AppConfig Extension (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("AppConfig Extension %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckExtensionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckExtensionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		in := &appconfig.GetExtensionInput{
-			ExtensionIdentifier: aws.String(rs.Primary.ID),
-		}
+		_, err := tfappconfig.FindExtensionByID(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.GetExtension(ctx, in)
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Extension (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Extension (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
