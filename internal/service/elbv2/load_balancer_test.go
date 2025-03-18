@@ -1006,6 +1006,12 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_IPAMPools_basic(t *testing
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pools.0.ipv4_ipam_pool_id"),
 				),
 			},
+			{ // Destroy the ALB first for eventual consistency check. IPAM pool EIP is not released after replaced.
+				Config: testAccLoadBalancerConfig_IPAMPools_basic_destroyALB(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerDestroy(ctx),
+				),
+			},
 		},
 	})
 }
@@ -2387,7 +2393,6 @@ resource "aws_vpc_ipam" "test" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
-  tier = "free"
 
   tags = {
     Name = %[1]q
@@ -2552,6 +2557,18 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   depends_on = [aws_vpc_ipam_pool_cidr.test_cidr, aws_internet_gateway.test]
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_IPAMPools_basic_destroyALB(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), testAccLoadBalancerConfig_baseIPAMPools(rName), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
