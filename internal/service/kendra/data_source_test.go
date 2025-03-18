@@ -1795,7 +1795,7 @@ func TestAccKendraDataSource_Configuration_templateConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2291,41 +2291,41 @@ resource "aws_kendra_data_source" "test" {
       template = jsonencode({
         connectionConfiguration = {
           repositoryEndpointMetadata = {
-            authentication     = "NoAuthentication"
-            s3SeedUrl          = null
-            s3SiteMapUrl       = null
-            siteMapUrls        = null
+            authentication = "NoAuthentication"
+            s3SeedUrl      = null
+            s3SiteMapUrl   = null
+            siteMapUrls    = null
             seedUrlConnections = [
               {
-                "seedUrl": "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+                "seedUrl" : "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
               },
             ]
           }
         }
         additionalProperties = {
-          crawlSubDomain = false
-          crawlAllDomain = false
-          crawlDomainsOnly = true
-          honorRobots = true
-          crawlAttachments = false
-          rateLimit = "10"
-          maxFileSize = "10"
-          crawlDepth = "1"
-          maxLinksPerUrl = "1"
+          crawlSubDomain            = false
+          crawlAllDomain            = false
+          crawlDomainsOnly          = true
+          honorRobots               = true
+          crawlAttachments          = false
+          rateLimit                 = "10"
+          maxFileSize               = "10"
+          crawlDepth                = "1"
+          maxLinksPerUrl            = "1"
           inclusionURLCrawlPatterns = []
           exclusionURLCrawlPatterns = []
           inclusionURLIndexPatterns = [
             "https:\\/\\/registry[.]terraform[.]io\\/providers\\/hashicorp\\/aws\\/latest\\/docs\\/resources\\/kendra_index",
           ]
-          exclusionURLIndexPatterns = []
+          exclusionURLIndexPatterns  = []
           inclusionFileIndexPatterns = []
           exclusionFileIndexPatterns = []
-          proxy = {}
+          proxy                      = {}
         }
-        enableIdentityCrawler = false
-        version = "1.0.0"
-        syncMode = "FULL_CRAWL"
-        type = "WEBCRAWLERV2"
+        enableIdentityCrawler    = false
+        version                  = "1.0.0"
+        syncMode                 = "FULL_CRAWL"
+        type                     = "WEBCRAWLERV2"
         repositoryConfigurations = {}
       })
     }
