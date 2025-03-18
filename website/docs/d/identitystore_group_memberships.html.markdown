@@ -45,7 +45,15 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `group_ids` - Identity Store Group IDs
-* `identity_store_ids` - Identity Store IDs
-* `member_ids` - List of Identity Store User IDs
-* `memberships_ids` - Identity Store Group Membership IDs (the ID of the membership not the member!)
+* `group_membership` - A list of group membership objects. See [`group_memberships`](#group_memberships) below.
+
+### `group_membership`
+
+* `group_id` - Group identifier.
+* `identity_store_id` - Identity store identifier.
+* `member_id` - An object containing the identifier of a group member. See [`member_id`](#member_id) below.
+* `memberships_id` - Group membership identifier.
+
+#### `member_id`
+
+* `user_id` - User identifier of the group member.
