@@ -231,6 +231,20 @@ func resourceLoadBalancer() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
+			"ipam_pools": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4_ipam_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"load_balancer_type": {
 				Type:             schema.TypeString,
 				ForceNew:         true,
@@ -381,6 +395,10 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
+	if v, ok := d.GetOk("ipam_pools"); ok {
+		input.IpamPools = expandIPAMPools(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -512,6 +530,9 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
+	if err := d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ipam_pools: %s", err)
+	}
 	d.Set("load_balancer_type", lb.Type)
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
@@ -639,6 +660,23 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	if d.HasChange("ipam_pools") {
+		input := elasticloadbalancingv2.ModifyIpPoolsInput{
+			LoadBalancerArn: aws.String(d.Id()),
+		}
+		if ipamPools := expandIPAMPools(d.Get("ipam_pools").([]any)); ipamPools == nil {
+			input.RemoveIpamPools = []awstypes.RemoveIpamPoolEnum{awstypes.RemoveIpamPoolEnumIpv4}
+		} else {
+			input.IpamPools = ipamPools
+		}
+
+		_, err := conn.ModifyIpPools(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Load Balancer (%s) IPAM pools: %s", d.Id(), err)
+		}
+	}
+
 	if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) update: %s", d.Id(), err)
 	}
@@ -649,6 +687,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+
+	var ipv4IPAMPoolID string
+	if v, ok := d.GetOk("ipam_pools"); ok {
+		ipamPools := expandIPAMPools(v.([]any))
+		ipv4IPAMPoolID = aws.ToString(ipamPools.Ipv4IpamPoolId)
+	}
 
 	log.Printf("[INFO] Deleting ELBv2 Load Balancer: %s", d.Id())
 	_, err := conn.DeleteLoadBalancer(ctx, &elasticloadbalancingv2.DeleteLoadBalancerInput{
@@ -661,8 +705,8 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id()); err != nil {
-		log.Printf("[WARN] Failed to cleanup ENIs for ALB (%s): %s", d.Id(), err)
+	if err := waitForALBNetworkInterfacesToDetach(ctx, ec2conn, d.Id(), ipv4IPAMPoolID); err != nil {
+		log.Printf("[WARN] Failed to wait for ENIs to disappear for ALB (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForNLBNetworkInterfacesToDetach(ctx, ec2conn, d.Id()); err != nil {
@@ -967,43 +1011,48 @@ func waitLoadBalancerActive(ctx context.Context, conn *elasticloadbalancingv2.Cl
 	return nil, err
 }
 
-// ALB automatically creates ENI(s) on creation
-// but the cleanup is asynchronous and may take time
-// which then blocks IGW, SG or VPC on deletion
-// So we make the cleanup "synchronous" here
-func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.Client, arn string) error {
+func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, arn, ipv4IPAMPoolID string) error {
 	name, err := loadBalancerNameFromARN(arn)
 	if err != nil {
 		return err
 	}
 
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
-	if err != nil {
-		return err
-	}
-
-	var errs []error
-
-	for _, v := range networkInterfaces {
-		if v.Attachment == nil {
-			continue
+	const (
+		timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
+	)
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
+		if err != nil {
+			return 0, err
 		}
 
-		attachmentID := aws.ToString(v.Attachment.AttachmentId)
-		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
+		for _, v := range networkInterfaces {
+			if v.Attachment == nil {
+				continue
+			}
 
-		if err := tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout); err != nil {
-			errs = append(errs, err)
-			continue
+			if ipv4IPAMPoolID != "" {
+				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+					output, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IPAMPoolID)
+					if err != nil {
+						return nil, err
+					}
+
+					if len(output) == 0 {
+						return nil, &retry.NotFoundError{}
+					}
+
+					return output, nil
+				}); err != nil {
+					return 0, err
+				}
+			}
 		}
 
-		if err := tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
-			errs = append(errs, err)
-			continue
-		}
-	}
+		return len(networkInterfaces), nil
+	})
 
-	return errors.Join(errs...)
+	return err
 }
 
 func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, lbArn string) error {
@@ -1391,4 +1440,38 @@ func expandSubnetMappings(tfList []any) []awstypes.SubnetMapping {
 	}
 
 	return apiObjects
+}
+
+func expandIPAMPools(tfList []any) *awstypes.IpamPools {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.IpamPools
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["ipv4_ipam_pool_id"].(string); ok && v != "" {
+			apiObject.Ipv4IpamPoolId = aws.String(v)
+		}
+	}
+
+	return &apiObject
+}
+
+func flattenIPAMPools(ipamPools *awstypes.IpamPools) []any {
+	if ipamPools == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"ipv4_ipam_pool_id": aws.ToString(ipamPools.Ipv4IpamPoolId),
+	}
+
+	return []any{tfMap}
 }

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
+func TestAccIPAMResourceDiscovery_serial(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
@@ -192,10 +192,6 @@ func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *a
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Resource Discovery ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
