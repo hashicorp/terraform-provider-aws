@@ -42,7 +42,4 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       # long-running test
-      - run: make TEST=./internal/... modern-check
-      - run: make TEST=./names/... modern-check
-      - run: make TEST=./version/... modern-check
-      - run: make TEST=main.go modern-check
+      - run: make TEST=./... modern-check
