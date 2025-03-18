@@ -29,7 +29,7 @@ func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigUsers_basic(rName, rEmail),
+				Config: testAccConfigUsersDataSource_basic(rName, rEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "users.#", 0),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.user_id", userResourceName, "user_id"),
@@ -44,7 +44,7 @@ func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigUsers_basic(name, email string) string {
+func testAccConfigUsersDataSource_basic(name, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
