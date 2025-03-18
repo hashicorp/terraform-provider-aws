@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -102,8 +103,25 @@ type groupMembershipsDataSourceModel struct {
 }
 
 type groupMembershipModel struct {
-	MemberID        types.String `tfsdk:"member_id"`
-	MembershipID    types.String `tfsdk:"membership_id"`
-	GroupID         types.String `tfsdk:"group_id"`
-	IdentityStoreID types.String `tfsdk:"identity_store_id"`
+	MemberID        fwtypes.ObjectValueOf[memberIDModel] `tfsdk:"member_id"`
+	MembershipID    types.String                         `tfsdk:"membership_id"`
+	GroupID         types.String                         `tfsdk:"group_id"`
+	IdentityStoreID types.String                         `tfsdk:"identity_store_id"`
+}
+
+type memberIDModel struct {
+	UserID types.String `tfsdk:"user_id"`
+}
+
+// MemberId is currently implemented as a union type with only a single
+// contained member, UserID. Should this change in the future additional
+// cases can be added here for new types implementing this interface.
+func (m *memberIDModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.MemberIdMemberUserId:
+		m.UserID = types.StringValue(t.Value)
+		return diags
+	default:
+		return diags
+	}
 }
