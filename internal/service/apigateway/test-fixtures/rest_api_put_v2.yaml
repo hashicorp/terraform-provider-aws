@@ -1,0 +1,23 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Simple API
+  description: A basic API.
+  version: 2.0.0
+paths:
+  /test:
+    get:
+      summary: Get a list of items
+      operationId: getItems
+      responses:
+        "200":
+          description: OK
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: HTTP
+        responses:
+          default:
+            statusCode: "200"
+        uri: "https://api.example.com/"
