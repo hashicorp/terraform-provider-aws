@@ -451,7 +451,6 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					var overrideRegion string
 
 					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						// TODO Handle null/empty Region.
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 						if diags.HasError() {
 							return ctx, diags
