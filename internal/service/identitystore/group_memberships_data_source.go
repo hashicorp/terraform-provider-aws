@@ -7,18 +7,25 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_identitystore_group_memberships", name="Group Memberships")
 func newGroupMembershipsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &groupMembershipsDataSource{}, nil
 }
+
+const (
+	DSNameGroupMemberships = "Group Memberships Data Source"
+)
 
 type groupMembershipsDataSource struct {
 	framework.DataSourceWithConfigure
@@ -30,9 +37,6 @@ func (d *groupMembershipsDataSource) Schema(ctx context.Context, request datasou
 			"group_memberships": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[groupMembershipModel](ctx),
 				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[groupMembershipModel](ctx),
-				},
 			},
 			"group_id": schema.StringAttribute{
 				Required: true,
@@ -53,34 +57,42 @@ func (d *groupMembershipsDataSource) Read(ctx context.Context, request datasourc
 
 	conn := d.Meta().IdentityStoreClient(ctx)
 
-	input := &identitystore.ListGroupMembershipsInput{
-		GroupId:         fwflex.StringFromFramework(ctx, data.GroupID),
-		IdentityStoreId: fwflex.StringFromFramework(ctx, data.IdentityStoreID),
+	input := identitystore.ListGroupMembershipsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	var output *identitystore.ListGroupMembershipsOutput
-	pages := identitystore.NewListGroupMembershipsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			response.Diagnostics.AddError("listing IdentityStore Group memberships", err.Error())
-
-			return
-		}
-
-		if output == nil {
-			output = page
-		} else {
-			output.GroupMemberships = append(output.GroupMemberships, page.GroupMemberships...)
-		}
+	output, err := findGroupMemberships(ctx, conn, input)
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IdentityStore, create.ErrActionReading, DSNameGroupMemberships, data.GroupID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data.GroupMemberships)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func findGroupMemberships(ctx context.Context, conn *identitystore.Client, input identitystore.ListGroupMembershipsInput) ([]awstypes.GroupMembership, error) {
+	var output []awstypes.GroupMembership
+	pages := identitystore.NewListGroupMembershipsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return output, err
+		}
+
+		output = append(output, page.GroupMemberships...)
+	}
+
+	return output, nil
 }
 
 type groupMembershipsDataSourceModel struct {
