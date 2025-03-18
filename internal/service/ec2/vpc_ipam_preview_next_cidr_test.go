@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMPreviewNextCIDR_ipv4Basic(t *testing.T) {
+func TestAccIPAMPreviewNextCIDR_ipv4Basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
 	netmaskLength := "28"
@@ -36,7 +36,7 @@ func TestAccIPAMPreviewNextCIDR_ipv4Basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPreviewNextCIDR_ipv4Allocated(t *testing.T) {
+func TestAccIPAMPreviewNextCIDR_ipv4Allocated(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
 	netmaskLength := "28"
@@ -71,7 +71,7 @@ func TestAccIPAMPreviewNextCIDR_ipv4Allocated(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPreviewNextCIDR_ipv4DisallowedCIDR(t *testing.T) {
+func TestAccIPAMPreviewNextCIDR_ipv4DisallowedCIDR(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
 	disallowedCidr := "172.2.0.0/28"
