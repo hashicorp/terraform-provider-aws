@@ -43,7 +43,10 @@ func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	applicationID := d.Get(names.AttrApplicationID).(string)
-	output, err := findConfigurationProfileSummariesByApplication(ctx, conn, applicationID)
+	input := appconfig.ListConfigurationProfilesInput{
+		ApplicationId: aws.String(applicationID),
+	}
+	output, err := findConfigurationProfileSummaries(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profiles: %s", err)
@@ -55,14 +58,6 @@ func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.Resource
 	}))
 
 	return diags
-}
-
-func findConfigurationProfileSummariesByApplication(ctx context.Context, conn *appconfig.Client, applicationID string) ([]awstypes.ConfigurationProfileSummary, error) {
-	input := appconfig.ListConfigurationProfilesInput{
-		ApplicationId: aws.String(applicationID),
-	}
-
-	return findConfigurationProfileSummaries(ctx, conn, &input)
 }
 
 func findConfigurationProfileSummaries(ctx context.Context, conn *appconfig.Client, input *appconfig.ListConfigurationProfilesInput) ([]awstypes.ConfigurationProfileSummary, error) {
