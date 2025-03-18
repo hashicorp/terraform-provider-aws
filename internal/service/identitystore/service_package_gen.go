@@ -27,8 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Groups",
 		},
 		{
-			Factory: newUsersDataSource,
-			Name:    "Users",
+			Factory:  newUsersDataSource,
+			TypeName: "aws_identitystore_users",
+			Name:     "Users",
 		},
 	}
 }
