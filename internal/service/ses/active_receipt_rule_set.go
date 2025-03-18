@@ -49,7 +49,7 @@ func resourceActiveReceiptRuleSet() *schema.Resource {
 	}
 }
 
-func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -69,7 +69,7 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceActiveReceiptRuleSetRead(ctx, d, meta)...)
 }
 
-func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -111,7 +111,7 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}

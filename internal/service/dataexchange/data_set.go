@@ -60,7 +60,7 @@ func ResourceDataSet() *schema.Resource {
 	}
 }
 
-func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 

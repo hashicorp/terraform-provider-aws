@@ -51,7 +51,7 @@ func resourceUserInGroup() *schema.Resource {
 	}
 }
 
-func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceUserInGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -100,7 +100,7 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 

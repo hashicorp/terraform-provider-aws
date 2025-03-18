@@ -103,7 +103,7 @@ func resourceVocabulary() *schema.Resource {
 	}
 }
 
-func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -171,12 +171,12 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceVocabularyRead(ctx, d, meta)
 }
 
-func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -257,7 +257,7 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 }
 
 func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
 
 		if tfresource.NotFound(err) {

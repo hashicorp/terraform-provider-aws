@@ -254,7 +254,7 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 }
 
 func statusProfile(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProfileByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

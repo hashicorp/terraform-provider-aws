@@ -54,7 +54,7 @@ func dataSourceStreamConsumer() *schema.Resource {
 	}
 }
 
-func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 

@@ -340,7 +340,7 @@ func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string)
 }
 
 func statusApplication(ctx context.Context, conn *qbusiness.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

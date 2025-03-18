@@ -124,7 +124,7 @@ const (
 	DSNameListener = "Listener Data Source"
 )
 
-func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -194,11 +194,11 @@ func findListenerByListenerIdAndServiceId(ctx context.Context, conn *vpclattice.
 	return out, nil
 }
 
-func flattenListenerRuleActionsDataSource(config types.RuleAction) []interface{} {
-	m := map[string]interface{}{}
+func flattenListenerRuleActionsDataSource(config types.RuleAction) []any {
+	m := map[string]any{}
 
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	switch v := config.(type) {
@@ -208,43 +208,43 @@ func flattenListenerRuleActionsDataSource(config types.RuleAction) []interface{}
 		m["forward"] = flattenComplexDefaultActionForwardDataSource(&v.Value)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // Flatten function for fixed_response action
-func flattenRuleActionMemberFixedResponseDataSource(response *types.FixedResponseAction) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenRuleActionMemberFixedResponseDataSource(response *types.FixedResponseAction) []any {
+	tfMap := map[string]any{}
 
 	if v := response.StatusCode; v != nil {
 		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Flatten function for forward action
-func flattenComplexDefaultActionForwardDataSource(forwardAction *types.ForwardAction) []interface{} {
+func flattenComplexDefaultActionForwardDataSource(forwardAction *types.ForwardAction) []any {
 	if forwardAction == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"target_groups": flattenDefaultActionForwardTargetGroupsDataSource(forwardAction.TargetGroups),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // Flatten function for target_groups
-func flattenDefaultActionForwardTargetGroupsDataSource(groups []types.WeightedTargetGroup) []interface{} {
+func flattenDefaultActionForwardTargetGroupsDataSource(groups []types.WeightedTargetGroup) []any {
 	if len(groups) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var targetGroups []interface{}
+	var targetGroups []any
 
 	for _, targetGroup := range groups {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"target_group_identifier": aws.ToString(targetGroup.TargetGroupIdentifier),
 			names.AttrWeight:          aws.ToInt32(targetGroup.Weight),
 		}

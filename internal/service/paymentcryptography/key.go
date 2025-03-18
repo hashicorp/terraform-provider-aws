@@ -450,7 +450,7 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 }
 
 func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKeyByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

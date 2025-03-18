@@ -84,7 +84,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 	}
 }
 
-func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -117,7 +117,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDeploymentStrategyRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -161,7 +161,7 @@ func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -200,7 +200,7 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDeploymentStrategyRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 

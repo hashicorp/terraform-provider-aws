@@ -84,7 +84,7 @@ func dataSourceZone() *schema.Resource {
 	}
 }
 
-func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -92,7 +92,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get(names.AttrName).(string)
 	zoneID, zoneIDExists := d.GetOk("zone_id")
 	vpcID, vpcIDExists := d.GetOk(names.AttrVPCID)
-	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS()
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS()
 
 	input := &route53.ListHostedZonesInput{}
 	var hostedZones []awstypes.HostedZone
