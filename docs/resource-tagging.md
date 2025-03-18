@@ -490,7 +490,7 @@ Some acceptance tests also require a TLS key and certificate.
 This can be included by setting the annotation `@Testing(tlsKey=true)`,
 which will add the Terraform variables `certificate_pem` and `private_key_pem` to the configuration.
 By default, the common name for the certificate is `example.com`.
-To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>) to reference an existing variable.
+To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>)` to reference an existing variable.
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 

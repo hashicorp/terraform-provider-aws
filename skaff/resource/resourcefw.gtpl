@@ -53,12 +53,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -369,7 +372,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, state.ID.String(), err),
+			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -737,4 +740,45 @@ type resource{{ .Resource }}Model struct {
 type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== SWEEPERS ====
+// When acceptance testing resources, interrupted or failed tests may
+// leave behind orphaned resources in an account. To facilitate cleaning
+// up lingering resources, each resource implementation should include
+// a corresponding "sweeper" function.
+//
+// The sweeper function lists all resources of a given type and sets the
+// appropriate identifers required to delete the resource via the Delete
+// method implemented above.
+//
+// Once the sweeper function is implemented, register it in sweeper.go
+// as follows:
+//
+//   awsv2.Register("{{ .ProviderResourceName }}", sweep{{ .Resource }}s)
+//
+// See more:
+// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
+{{- end }}
+func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := {{ .ServiceLower }}.List{{ .Resource }}sInput{}
+	conn := client.{{ .Service }}Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := {{ .ServiceLower }}.NewList{{ .Resource }}sPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.{{ .Resource }}s {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResource{{ .Resource }}, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .Resource }}Id))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

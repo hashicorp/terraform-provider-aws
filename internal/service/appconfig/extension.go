@@ -123,7 +123,7 @@ func ResourceExtension() *schema.Resource {
 	}
 }
 
-func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -157,7 +157,7 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
-func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -184,7 +184,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -224,7 +224,7 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
-func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -245,10 +245,10 @@ func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandExtensionActions(actionsListRaw interface{}) []awstypes.Action {
+func expandExtensionActions(actionsListRaw any) []awstypes.Action {
 	var actions []awstypes.Action
 	for _, actionRaw := range actionsListRaw.(*schema.Set).List() {
-		actionMap, ok := actionRaw.(map[string]interface{})
+		actionMap, ok := actionRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -267,21 +267,21 @@ func expandExtensionActions(actionsListRaw interface{}) []awstypes.Action {
 	return actions
 }
 
-func expandExtensionActionPoints(actionsPointListRaw []interface{}) map[string][]awstypes.Action {
+func expandExtensionActionPoints(actionsPointListRaw []any) map[string][]awstypes.Action {
 	if len(actionsPointListRaw) == 0 {
 		return map[string][]awstypes.Action{}
 	}
 
 	actionsMap := make(map[string][]awstypes.Action)
 	for _, actionPointRaw := range actionsPointListRaw {
-		actionPointMap := actionPointRaw.(map[string]interface{})
+		actionPointMap := actionPointRaw.(map[string]any)
 		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap[names.AttrAction])
 	}
 
 	return actionsMap
 }
 
-func expandExtensionParameters(rawParameters []interface{}) map[string]awstypes.Parameter {
+func expandExtensionParameters(rawParameters []any) map[string]awstypes.Parameter {
 	if rawParameters == nil {
 		return nil
 	}
@@ -289,7 +289,7 @@ func expandExtensionParameters(rawParameters []interface{}) map[string]awstypes.
 	parameters := make(map[string]awstypes.Parameter)
 
 	for _, rawParameterMap := range rawParameters {
-		parameterMap, ok := rawParameterMap.(map[string]interface{})
+		parameterMap, ok := rawParameterMap.(map[string]any)
 
 		if !ok {
 			continue
@@ -305,10 +305,10 @@ func expandExtensionParameters(rawParameters []interface{}) map[string]awstypes.
 	return parameters
 }
 
-func flattenExtensionActions(actions []awstypes.Action) []interface{} {
-	var rawActions []interface{}
+func flattenExtensionActions(actions []awstypes.Action) []any {
+	var rawActions []any
 	for _, action := range actions {
-		rawAction := map[string]interface{}{
+		rawAction := map[string]any{
 			names.AttrName:        aws.ToString(action.Name),
 			names.AttrDescription: aws.ToString(action.Description),
 			names.AttrRoleARN:     aws.ToString(action.RoleArn),
@@ -319,14 +319,14 @@ func flattenExtensionActions(actions []awstypes.Action) []interface{} {
 	return rawActions
 }
 
-func flattenExtensionActionPoints(actionPointsMap map[string][]awstypes.Action) []interface{} {
+func flattenExtensionActionPoints(actionPointsMap map[string][]awstypes.Action) []any {
 	if len(actionPointsMap) == 0 {
 		return nil
 	}
 
-	var rawActionPoints []interface{}
+	var rawActionPoints []any
 	for actionPoint, actions := range actionPointsMap {
-		rawActionPoint := map[string]interface{}{
+		rawActionPoint := map[string]any{
 			"point":          actionPoint,
 			names.AttrAction: flattenExtensionActions(actions),
 		}
@@ -336,14 +336,14 @@ func flattenExtensionActionPoints(actionPointsMap map[string][]awstypes.Action) 
 	return rawActionPoints
 }
 
-func flattenExtensionParameters(parameters map[string]awstypes.Parameter) []interface{} {
+func flattenExtensionParameters(parameters map[string]awstypes.Parameter) []any {
 	if len(parameters) == 0 {
 		return nil
 	}
 
-	var rawParameters []interface{}
+	var rawParameters []any
 	for key, parameter := range parameters {
-		rawParameter := map[string]interface{}{
+		rawParameter := map[string]any{
 			names.AttrName:        key,
 			names.AttrDescription: aws.ToString(parameter.Description),
 			"required":            parameter.Required,

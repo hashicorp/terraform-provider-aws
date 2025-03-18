@@ -455,7 +455,7 @@ func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.Describ
 }
 
 func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

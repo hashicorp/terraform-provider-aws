@@ -130,7 +130,7 @@ func resourceKeySigningKey() *schema.Resource {
 	}
 }
 
-func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -173,7 +173,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -213,7 +213,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -270,7 +270,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -359,7 +359,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 }
 
 func statusKeySigningKey(ctx context.Context, conn *route53.Client, hostedZoneID, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
 		if tfresource.NotFound(err) {

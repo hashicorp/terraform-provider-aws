@@ -117,13 +117,13 @@ func ResourceSecurityConfiguration() *schema.Resource {
 	}
 }
 
-func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
-		EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+		EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]any)),
 		Name:                    aws.String(name),
 	}
 
@@ -138,7 +138,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceSecurityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -175,7 +175,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -202,12 +202,12 @@ func DeleteSecurityConfiguration(ctx context.Context, conn *glue.Client, name st
 	return err
 }
 
-func expandCloudWatchEncryption(l []interface{}) *awstypes.CloudWatchEncryption {
+func expandCloudWatchEncryption(l []any) *awstypes.CloudWatchEncryption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	cloudwatchEncryption := &awstypes.CloudWatchEncryption{
 		CloudWatchEncryptionMode: awstypes.CloudWatchEncryptionMode(m["cloudwatch_encryption_mode"].(string)),
@@ -220,28 +220,28 @@ func expandCloudWatchEncryption(l []interface{}) *awstypes.CloudWatchEncryption 
 	return cloudwatchEncryption
 }
 
-func expandEncryptionConfiguration(l []interface{}) *awstypes.EncryptionConfiguration {
+func expandEncryptionConfiguration(l []any) *awstypes.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	encryptionConfiguration := &awstypes.EncryptionConfiguration{
-		CloudWatchEncryption:   expandCloudWatchEncryption(m["cloudwatch_encryption"].([]interface{})),
-		JobBookmarksEncryption: expandJobBookmarksEncryption(m["job_bookmarks_encryption"].([]interface{})),
-		S3Encryption:           expandS3Encryptions(m["s3_encryption"].([]interface{})),
+		CloudWatchEncryption:   expandCloudWatchEncryption(m["cloudwatch_encryption"].([]any)),
+		JobBookmarksEncryption: expandJobBookmarksEncryption(m["job_bookmarks_encryption"].([]any)),
+		S3Encryption:           expandS3Encryptions(m["s3_encryption"].([]any)),
 	}
 
 	return encryptionConfiguration
 }
 
-func expandJobBookmarksEncryption(l []interface{}) *awstypes.JobBookmarksEncryption {
+func expandJobBookmarksEncryption(l []any) *awstypes.JobBookmarksEncryption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	jobBookmarksEncryption := &awstypes.JobBookmarksEncryption{
 		JobBookmarksEncryptionMode: awstypes.JobBookmarksEncryptionMode(m["job_bookmarks_encryption_mode"].(string)),
@@ -254,20 +254,20 @@ func expandJobBookmarksEncryption(l []interface{}) *awstypes.JobBookmarksEncrypt
 	return jobBookmarksEncryption
 }
 
-func expandS3Encryptions(l []interface{}) []awstypes.S3Encryption {
+func expandS3Encryptions(l []any) []awstypes.S3Encryption {
 	s3Encryptions := make([]awstypes.S3Encryption, 0)
 
 	for _, s3Encryption := range l {
 		if s3Encryption == nil {
 			continue
 		}
-		s3Encryptions = append(s3Encryptions, expandS3Encryption(s3Encryption.(map[string]interface{})))
+		s3Encryptions = append(s3Encryptions, expandS3Encryption(s3Encryption.(map[string]any)))
 	}
 
 	return s3Encryptions
 }
 
-func expandS3Encryption(m map[string]interface{}) awstypes.S3Encryption {
+func expandS3Encryption(m map[string]any) awstypes.S3Encryption {
 	s3Encryption := awstypes.S3Encryption{
 		S3EncryptionMode: awstypes.S3EncryptionMode(m["s3_encryption_mode"].(string)),
 	}
@@ -279,48 +279,48 @@ func expandS3Encryption(m map[string]interface{}) awstypes.S3Encryption {
 	return s3Encryption
 }
 
-func flattenCloudWatchEncryption(cloudwatchEncryption *awstypes.CloudWatchEncryption) []interface{} {
+func flattenCloudWatchEncryption(cloudwatchEncryption *awstypes.CloudWatchEncryption) []any {
 	if cloudwatchEncryption == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloudwatch_encryption_mode": string(cloudwatchEncryption.CloudWatchEncryptionMode),
 		names.AttrKMSKeyARN:          aws.ToString(cloudwatchEncryption.KmsKeyArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEncryptionConfiguration(encryptionConfiguration *awstypes.EncryptionConfiguration) []interface{} {
+func flattenEncryptionConfiguration(encryptionConfiguration *awstypes.EncryptionConfiguration) []any {
 	if encryptionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloudwatch_encryption":    flattenCloudWatchEncryption(encryptionConfiguration.CloudWatchEncryption),
 		"job_bookmarks_encryption": flattenJobBookmarksEncryption(encryptionConfiguration.JobBookmarksEncryption),
 		"s3_encryption":            flattenS3Encryptions(encryptionConfiguration.S3Encryption),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenJobBookmarksEncryption(jobBookmarksEncryption *awstypes.JobBookmarksEncryption) []interface{} {
+func flattenJobBookmarksEncryption(jobBookmarksEncryption *awstypes.JobBookmarksEncryption) []any {
 	if jobBookmarksEncryption == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"job_bookmarks_encryption_mode": string(jobBookmarksEncryption.JobBookmarksEncryptionMode),
 		names.AttrKMSKeyARN:             aws.ToString(jobBookmarksEncryption.KmsKeyArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenS3Encryptions(s3Encryptions []awstypes.S3Encryption) []interface{} {
-	l := make([]interface{}, 0)
+func flattenS3Encryptions(s3Encryptions []awstypes.S3Encryption) []any {
+	l := make([]any, 0)
 
 	for _, s3Encryption := range s3Encryptions {
 		l = append(l, flattenS3Encryption(s3Encryption))
@@ -329,8 +329,8 @@ func flattenS3Encryptions(s3Encryptions []awstypes.S3Encryption) []interface{} {
 	return l
 }
 
-func flattenS3Encryption(s3Encryption awstypes.S3Encryption) map[string]interface{} {
-	m := map[string]interface{}{
+func flattenS3Encryption(s3Encryption awstypes.S3Encryption) map[string]any {
+	m := map[string]any{
 		names.AttrKMSKeyARN:  aws.ToString(s3Encryption.KmsKeyArn),
 		"s3_encryption_mode": string(s3Encryption.S3EncryptionMode),
 	}

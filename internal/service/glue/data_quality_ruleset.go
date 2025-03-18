@@ -103,7 +103,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 	}
 }
 
-func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -119,8 +119,8 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TargetTable = expandTargetTable(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TargetTable = expandTargetTable(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateDataQualityRuleset(ctx, input)
@@ -133,7 +133,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDataQualityRulesetRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -173,7 +173,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -200,7 +200,7 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDataQualityRulesetRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -220,7 +220,7 @@ func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func expandTargetTable(tfMap map[string]interface{}) *awstypes.DataQualityTargetTable {
+func expandTargetTable(tfMap map[string]any) *awstypes.DataQualityTargetTable {
 	if tfMap == nil {
 		return nil
 	}
@@ -237,12 +237,12 @@ func expandTargetTable(tfMap map[string]interface{}) *awstypes.DataQualityTarget
 	return apiObject
 }
 
-func flattenTargetTable(apiObject *awstypes.DataQualityTargetTable) []interface{} {
+func flattenTargetTable(apiObject *awstypes.DataQualityTargetTable) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrDatabaseName: aws.ToString(apiObject.DatabaseName),
 		names.AttrTableName:    aws.ToString(apiObject.TableName),
 	}
@@ -251,5 +251,5 @@ func flattenTargetTable(apiObject *awstypes.DataQualityTargetTable) []interface{
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -1,4 +1,28 @@
 ## 5.92.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_api_gateway_api_keys` ([#39335](https://github.com/hashicorp/terraform-provider-aws/issues/39335))
+* **New Data Source:** `aws_eks_cluster_versions` ([#40741](https://github.com/hashicorp/terraform-provider-aws/issues/40741))
+* **New Resource:** `aws_athena_capacity_reservation` ([#41858](https://github.com/hashicorp/terraform-provider-aws/issues/41858))
+
+ENHANCEMENTS:
+
+* data-source/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
+* data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* provider: Support `aws-marketplace` as a valid account ID in ARNs ([#41867](https://github.com/hashicorp/terraform-provider-aws/issues/41867))
+* resource/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
+* resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_rest_api: Avoid unnecessary remove and add operations for `vpc_endpoint_ids` ([#41836](https://github.com/hashicorp/terraform-provider-aws/issues/41836))
+* resource/aws_rds_cluster: Ensure that `performance_insights_enabled` takes effect when creating a cluster that is a member of a global cluster ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
+* resource/aws_rds_cluster: Fix `InvalidParameterCombination: To enable the Advanced mode of Database Insights, modify your cluster to enable Performance Insights and set the retention period for Performance Insights to at least 465 days` errors when enabling `database_insights_mode` on existing clusters ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
+* resource/aws_timestreaminfluxdb_db_instance: Set new computed value for `secondary_availability_zone` attribute when changing `deployment_type` ([#41849](https://github.com/hashicorp/terraform-provider-aws/issues/41849))
+
 ## 5.91.0 (March 13, 2025)
 
 NOTES:

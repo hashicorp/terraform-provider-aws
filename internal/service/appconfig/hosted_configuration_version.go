@@ -77,7 +77,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 	}
 }
 
-func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceHostedConfigurationVersionRead(ctx, d, meta)...)
 }
 
-func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -158,7 +158,7 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 

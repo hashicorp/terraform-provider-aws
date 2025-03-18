@@ -13,7 +13,7 @@ import (
 )
 
 func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -29,7 +29,7 @@ func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id st
 }
 
 func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -45,7 +45,7 @@ func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift
 }
 
 func statusCluster(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -61,7 +61,7 @@ func statusCluster(ctx context.Context, conn *redshift.Client, id string) retry.
 }
 
 func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -77,7 +77,7 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) re
 }
 
 func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -93,7 +93,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name strin
 }
 
 func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
