@@ -208,7 +208,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	// Look first for per-resource annotations such as tagging and Region.
 	d := ResourceDatum{
-		RegionOverrideEnabled: false, // TODO Default to true.
+		RegionOverrideEnabled: true,
 	}
 
 	for _, line := range funcDecl.Doc.List {
