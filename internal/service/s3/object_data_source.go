@@ -5,7 +5,6 @@ package s3
 
 import (
 	"context"
-	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -16,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,12 +26,13 @@ import (
 )
 
 // @SDKDataSource("aws_s3_object", name="Object")
+// @Tags(identifierAttribute="arn", resourceType="Object")
 func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +40,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -62,6 +62,10 @@ func dataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc64nvme": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +93,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +109,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -142,11 +146,11 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -160,21 +164,22 @@ func dataSourceObject() *schema.Resource {
 	}
 }
 
-func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	var optFns []func(*s3.Options)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
-	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -199,37 +204,34 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 
-	id := bucket + "/" + d.Get("key").(string)
+	id := bucket + "/" + d.Get(names.AttrKey).(string)
 	if v, ok := d.GetOk("version_id"); ok {
 		id += "@" + v.(string)
 	}
 	d.SetId(id)
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
 	d.Set("content_length", output.ContentLength)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("expiration", output.Expiration)
-	if output.Expires != nil {
-		d.Set("expires", output.Expires.Format(time.RFC1123))
-	} else {
-		d.Set("expires", nil)
-	}
+	d.Set("expires", output.ExpiresString) // formatted in RFC1123
 	if output.LastModified != nil {
 		d.Set("last_modified", output.LastModified.Format(time.RFC1123))
 	} else {
@@ -243,9 +245,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("sse_kms_key_id", output.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
@@ -271,14 +273,6 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("body", string(buf.Bytes()))
 	}
 
-	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
-		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
 	return diags
 }
 
@@ -298,6 +292,8 @@ func isContentTypeAllowed(contentType *string) bool {
 		regexache.MustCompile(`^application/x-sh$`),
 		regexache.MustCompile(`^application/xhtml\+xml$`),
 		regexache.MustCompile(`^application/xml$`),
+		regexache.MustCompile(`^application/x-sql$`),
+		regexache.MustCompile(`^application/yaml$`),
 		regexache.MustCompile(`^text/.+`),
 	}
 	for _, r := range allowedContentTypes {

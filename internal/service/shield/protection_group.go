@@ -48,7 +48,7 @@ func ResourceProtectionGroup() *schema.Resource {
 				Optional:      true,
 				MinItems:      0,
 				MaxItems:      10000,
-				ConflictsWith: []string{"resource_type"},
+				ConflictsWith: []string{names.AttrResourceType},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(verify.ValidARN,
@@ -71,7 +71,7 @@ func ResourceProtectionGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ConflictsWith:    []string{"members"},
@@ -80,11 +80,10 @@ func ResourceProtectionGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -97,10 +96,10 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("members"); ok {
-		input.Members = flex.ExpandStringValueList(v.([]interface{}))
+		input.Members = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		input.ResourceType = awstypes.ProtectedResourceType(v.(string))
 	}
 
@@ -115,7 +114,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -137,16 +136,16 @@ func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("protection_group_id", resp.ProtectionGroupId)
 	d.Set("pattern", resp.Pattern)
 	d.Set("members", resp.Members)
-	d.Set("resource_type", resp.ResourceType)
+	d.Set(names.AttrResourceType, resp.ResourceType)
 
 	return diags
 }
 
-func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &shield.UpdateProtectionGroupInput{
 			Aggregation:       awstypes.ProtectionGroupAggregation(d.Get("aggregation").(string)),
 			Pattern:           awstypes.ProtectionGroupPattern(d.Get("pattern").(string)),
@@ -154,10 +153,10 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if v, ok := d.GetOk("members"); ok {
-			input.Members = flex.ExpandStringValueList(v.([]interface{}))
+			input.Members = flex.ExpandStringValueList(v.([]any))
 		}
 
-		if v, ok := d.GetOk("resource_type"); ok {
+		if v, ok := d.GetOk(names.AttrResourceType); ok {
 			input.ResourceType = awstypes.ProtectedResourceType(v.(string))
 		}
 
@@ -171,7 +170,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 

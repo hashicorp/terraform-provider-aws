@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAccess
+	var v awstypes.EndpointAccess
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
@@ -36,13 +36,13 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "port", "5439"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5439"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_name", "aws_redshift_subnet_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "address"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_name", "aws_redshift_subnet_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAddress),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 
 func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAccess
+	var v awstypes.EndpointAccess
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
@@ -91,7 +91,7 @@ func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
 
 func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAccess
+	var v awstypes.EndpointAccess
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
@@ -115,7 +115,7 @@ func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 
 func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAccess
+	var v awstypes.EndpointAccess
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
@@ -139,7 +139,7 @@ func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 
 func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_endpoint_access" {
@@ -163,7 +163,7 @@ func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckEndpointAccessExists(ctx context.Context, n string, v *redshift.EndpointAccess) resource.TestCheckFunc {
+func testAccCheckEndpointAccessExists(ctx context.Context, n string, v *awstypes.EndpointAccess) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -174,7 +174,7 @@ func testAccCheckEndpointAccessExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Endpoint Access ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindEndpointAccessByName(ctx, conn, rs.Primary.ID)
 

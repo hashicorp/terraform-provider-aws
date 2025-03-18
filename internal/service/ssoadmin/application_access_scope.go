@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Access Scope")
+// @FrameworkResource("aws_ssoadmin_application_access_scope", name="Application Access Scope")
 func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAccessScope{}, nil
 }
@@ -41,10 +41,6 @@ const (
 
 type resourceApplicationAccessScope struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplicationAccessScope) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_access_scope"
 }
 
 func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -64,8 +60,8 @@ func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resourc
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"scope": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrScope: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -85,8 +81,8 @@ func (r *resourceApplicationAccessScope) Create(ctx context.Context, req resourc
 	}
 
 	in := &ssoadmin.PutApplicationAccessScopeInput{
-		ApplicationArn: aws.String(plan.ApplicationARN.ValueString()),
-		Scope:          aws.String(plan.Scope.ValueString()),
+		ApplicationArn: plan.ApplicationARN.ValueStringPointer(),
+		Scope:          plan.Scope.ValueStringPointer(),
 	}
 
 	if !plan.AuthorizedTargets.IsNull() {
@@ -160,7 +156,7 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.ApplicationARN = fwtypes.ARNValueMust(parts[0])
+	state.ApplicationARN = fwtypes.ARNValue(parts[0])
 	state.AuthorizedTargets = flex.FlattenFrameworkStringValueList(ctx, out.AuthorizedTargets)
 	state.Scope = flex.StringToFramework(ctx, out.Scope)
 
@@ -181,8 +177,8 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 	}
 
 	in := &ssoadmin.DeleteApplicationAccessScopeInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
-		Scope:          aws.String(state.Scope.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
+		Scope:          state.Scope.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplicationAccessScope(ctx, in)
@@ -199,7 +195,7 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 }
 
 func (r *resourceApplicationAccessScope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {

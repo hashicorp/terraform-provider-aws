@@ -39,15 +39,15 @@ func ResourceSegment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -57,7 +57,7 @@ func ResourceSegment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func ResourceSegment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -83,7 +83,7 @@ func ResourceSegment() *schema.Resource {
 					validation.StringIsJSON,
 				),
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -91,24 +91,22 @@ func ResourceSegment() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &evidently.CreateSegmentInput{
 		Name:    aws.String(name),
 		Pattern: aws.String(d.Get("pattern").(string)),
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -123,7 +121,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceSegmentRead(ctx, d, meta)...)
 }
 
-func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -140,13 +138,13 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Evidently Segment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", segment.Arn)
-	d.Set("created_time", aws.ToTime(segment.CreatedTime).Format(time.RFC3339))
-	d.Set("description", segment.Description)
+	d.Set(names.AttrARN, segment.Arn)
+	d.Set(names.AttrCreatedTime, aws.ToTime(segment.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, segment.Description)
 	d.Set("experiment_count", segment.ExperimentCount)
-	d.Set("last_updated_time", aws.ToTime(segment.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(segment.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", segment.LaunchCount)
-	d.Set("name", segment.Name)
+	d.Set(names.AttrName, segment.Name)
 	d.Set("pattern", segment.Pattern)
 
 	setTagsOut(ctx, segment.Tags)
@@ -154,12 +152,12 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceSegmentRead(ctx, d, meta)
 }
 
-func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)

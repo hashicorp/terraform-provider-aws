@@ -94,7 +94,7 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 			{
 				Config: testAccSMSPreferencesConfig_deliveryRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "delivery_status_success_sampling_rate", "75"),
 				),
 			},

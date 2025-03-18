@@ -7,16 +7,20 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_delegated_administrators")
-func DataSourceDelegatedAdministrators() *schema.Resource {
+// @SDKDataSource("aws_organizations_delegated_administrators", name="Delegated Administrators")
+func dataSourceDelegatedAdministrators() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedAdministratorsRead,
 
@@ -26,7 +30,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -34,11 +38,11 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,11 +54,11 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -70,8 +74,9 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 	}
 }
 
-func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
 
@@ -79,37 +84,37 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 		input.ServicePrincipal = aws.String(v.(string))
 	}
 
-	output, err := findDelegatedAdministrators(ctx, conn, input)
+	output, err := findDelegatedAdministrators(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DelegatedAdministrator]())
 
 	if err != nil {
-		return diag.Errorf("reading Organizations Delegated Administrators: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrators: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(output)); err != nil {
-		return diag.Errorf("setting delegated_administrators: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting delegated_administrators: %s", err)
 	}
 
 	return nil
 }
 
-func flattenDelegatedAdministrators(apiObjects []*organizations.DelegatedAdministrator) []map[string]interface{} {
+func flattenDelegatedAdministrators(apiObjects []awstypes.DelegatedAdministrator) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			"arn":                     aws.StringValue(apiObject.Arn),
-			"delegation_enabled_date": aws.TimeValue(apiObject.DelegationEnabledDate).Format(time.RFC3339),
-			"email":                   aws.StringValue(apiObject.Email),
-			"id":                      aws.StringValue(apiObject.Id),
-			"joined_method":           aws.StringValue(apiObject.JoinedMethod),
-			"joined_timestamp":        aws.TimeValue(apiObject.JoinedTimestamp).Format(time.RFC3339),
-			"name":                    aws.StringValue(apiObject.Name),
-			"status":                  aws.StringValue(apiObject.Status),
+		tfList = append(tfList, map[string]any{
+			names.AttrARN:             aws.ToString(apiObject.Arn),
+			"delegation_enabled_date": aws.ToTime(apiObject.DelegationEnabledDate).Format(time.RFC3339),
+			names.AttrEmail:           aws.ToString(apiObject.Email),
+			names.AttrID:              aws.ToString(apiObject.Id),
+			"joined_method":           apiObject.JoinedMethod,
+			"joined_timestamp":        aws.ToTime(apiObject.JoinedTimestamp).Format(time.RFC3339),
+			names.AttrName:            aws.ToString(apiObject.Name),
+			names.AttrStatus:          apiObject.Status,
 		})
 	}
 

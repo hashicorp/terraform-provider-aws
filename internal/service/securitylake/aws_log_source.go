@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="AWS Log Source")
+// @FrameworkResource("aws_securitylake_aws_log_source", name="AWS Log Source")
 func newAWSLogSourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &awsLogSourceResource{}
 
@@ -43,17 +43,13 @@ type awsLogSourceResource struct {
 	framework.WithImportByID
 }
 
-func (r *awsLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_aws_log_source"
-}
-
 func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
@@ -117,7 +113,9 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := conn.CreateAwsLogSource(ctx, input)
+	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
+		return conn.CreateAwsLogSource(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake AWS Log Source", err.Error())
@@ -144,6 +142,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	sourceData.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
 	sourceData.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
+	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -212,7 +211,9 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := conn.DeleteAwsLogSource(ctx, input)
+	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
+		return conn.DeleteAwsLogSource(ctx, input)
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

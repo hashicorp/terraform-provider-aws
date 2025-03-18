@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codestarconnections_host", name="Host")
@@ -41,11 +42,11 @@ func resourceHost() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -60,23 +61,23 @@ func resourceHost() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ProviderType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -86,7 +87,7 @@ func resourceHost() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -97,16 +98,16 @@ func resourceHost() *schema.Resource {
 	}
 }
 
-func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codestarconnections.CreateHostInput{
 		Name:             aws.String(name),
 		ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
 		ProviderType:     types.ProviderType(d.Get("provider_type").(string)),
-		VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
+		VpcConfiguration: expandHostVPCConfiguration(d.Get(names.AttrVPCConfiguration).([]any)),
 	}
 
 	output, err := conn.CreateHost(ctx, input)
@@ -124,7 +125,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
@@ -140,27 +141,27 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading CodeStar Connections Host (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, output.Name)
 	d.Set("provider_endpoint", output.ProviderEndpoint)
 	d.Set("provider_type", output.ProviderType)
-	d.Set("status", output.Status)
-	if err := d.Set("vpc_configuration", flattenHostVPCConfiguration(output.VpcConfiguration)); err != nil {
+	d.Set(names.AttrStatus, output.Status)
+	if err := d.Set(names.AttrVPCConfiguration, flattenHostVPCConfiguration(output.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
 
 	return diags
 }
 
-func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
-	if d.HasChanges("provider_endpoint", "vpc_configuration") {
+	if d.HasChanges("provider_endpoint", names.AttrVPCConfiguration) {
 		input := &codestarconnections.UpdateHostInput{
 			HostArn:          aws.String(d.Id()),
 			ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
-			VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
+			VpcConfiguration: expandHostVPCConfiguration(d.Get(names.AttrVPCConfiguration).([]any)),
 		}
 
 		_, err := conn.UpdateHost(ctx, input)
@@ -177,14 +178,15 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Host: %s", d.Id())
-	_, err := conn.DeleteHost(ctx, &codestarconnections.DeleteHostInput{
+	input := codestarconnections.DeleteHostInput{
 		HostArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteHost(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -197,17 +199,17 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func expandHostVPCConfiguration(l []interface{}) *types.VpcConfiguration {
+func expandHostVPCConfiguration(l []any) *types.VpcConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	vc := &types.VpcConfiguration{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
-		VpcId:            aws.String(m["vpc_id"].(string)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
+		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
 
 	if v, ok := m["tls_certificate"].(string); ok && v != "" {
@@ -217,22 +219,22 @@ func expandHostVPCConfiguration(l []interface{}) *types.VpcConfiguration {
 	return vc
 }
 
-func flattenHostVPCConfiguration(vpcConfig *types.VpcConfiguration) []interface{} {
+func flattenHostVPCConfiguration(vpcConfig *types.VpcConfiguration) []any {
 	if vpcConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"security_group_ids": vpcConfig.SecurityGroupIds,
-		"subnet_ids":         vpcConfig.SubnetIds,
-		"vpc_id":             aws.ToString(vpcConfig.VpcId),
+	m := map[string]any{
+		names.AttrSecurityGroupIDs: vpcConfig.SecurityGroupIds,
+		names.AttrSubnetIDs:        vpcConfig.SubnetIds,
+		names.AttrVPCID:            aws.ToString(vpcConfig.VpcId),
 	}
 
 	if vpcConfig.TlsCertificate != nil {
 		m["tls_certificate"] = aws.ToString(vpcConfig.TlsCertificate)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn string) (*codestarconnections.GetHostOutput, error) {
@@ -261,7 +263,7 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 }
 
 func statusHost(ctx context.Context, conn *codestarconnections.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findHostByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Snapshot Copy")
+// @FrameworkResource("aws_redshift_snapshot_copy", name="Snapshot Copy")
 func newResourceSnapshotCopy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSnapshotCopy{}, nil
 }
@@ -39,14 +39,10 @@ type resourceSnapshotCopy struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceSnapshotCopy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_snapshot_copy"
-}
-
 func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cluster_identifier": schema.StringAttribute{
+			names.AttrClusterIdentifier: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -58,7 +54,7 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"manual_snapshot_retention_period": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -67,7 +63,7 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"retention_period": schema.Int64Attribute{
+			names.AttrRetentionPeriod: schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
@@ -158,7 +154,7 @@ func (r *resourceSnapshotCopy) Update(ctx context.Context, req resource.UpdateRe
 
 	if !plan.RetentionPeriod.Equal(state.RetentionPeriod) {
 		in := &redshift.ModifySnapshotCopyRetentionPeriodInput{
-			ClusterIdentifier: aws.String(plan.ClusterIdentifier.ValueString()),
+			ClusterIdentifier: plan.ClusterIdentifier.ValueStringPointer(),
 			RetentionPeriod:   aws.Int32(int32(plan.RetentionPeriod.ValueInt64())),
 		}
 
@@ -194,7 +190,7 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	in := &redshift.DisableSnapshotCopyInput{
-		ClusterIdentifier: aws.String(state.ID.ValueString()),
+		ClusterIdentifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DisableSnapshotCopy(ctx, in)
@@ -213,8 +209,8 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *resourceSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
 }
 
 func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.ClusterSnapshotCopyStatus, error) {

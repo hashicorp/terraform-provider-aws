@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `rule_json` attribute to allow raw JSON for rules.
+```

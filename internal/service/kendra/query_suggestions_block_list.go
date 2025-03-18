@@ -48,11 +48,11 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -61,7 +61,7 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -69,7 +69,7 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -80,30 +80,28 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -111,18 +109,18 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	in := &kendra.CreateQuerySuggestionsBlockListInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		IndexId:      aws.String(d.Get("index_id").(string)),
-		Name:         aws.String(d.Get("name").(string)),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]any)),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -137,12 +135,12 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra QuerySuggestionsBlockList (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra QuerySuggestionsBlockList (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	out, ok := outputRaw.(*kendra.CreateQuerySuggestionsBlockListOutput)
 	if !ok || out == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra QuerySuggestionsBlockList (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra QuerySuggestionsBlockList (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	id := aws.ToString(out.Id)
@@ -157,7 +155,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
-func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -180,20 +178,20 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "kendra",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/query-suggestions-block-list/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("description", out.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("index_id", out.IndexId)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("query_suggestions_block_list_id", id)
-	d.Set("role_arn", out.RoleArn)
-	d.Set("status", out.Status)
+	d.Set(names.AttrRoleARN, out.RoleArn)
+	d.Set(names.AttrStatus, out.Status)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting complex argument: %s", err)
@@ -202,12 +200,12 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -218,26 +216,26 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 			IndexId: aws.String(indexId),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("source_s3_path") {
-			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]interface{}))
+			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]any))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra QuerySuggestionsBlockList (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -263,7 +261,7 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
-func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -298,7 +296,7 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 }
 
 func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

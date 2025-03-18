@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_conformance_pack", name="Conformance Pack")
@@ -38,7 +39,7 @@ func resourceConformancePack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +70,7 @@ func resourceConformancePack() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -102,11 +103,11 @@ func resourceConformancePack() *schema.Resource {
 	}
 }
 
-func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &configservice.PutConformancePackInput{
 		ConformancePackName: aws.String(name),
 	}
@@ -151,7 +152,7 @@ func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceConformancePackRead(ctx, d, meta)...)
 }
 
-func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -167,18 +168,18 @@ func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Conformance Pack (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", pack.ConformancePackArn)
+	d.Set(names.AttrARN, pack.ConformancePackArn)
 	d.Set("delivery_s3_bucket", pack.DeliveryS3Bucket)
 	d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix)
 	if err = d.Set("input_parameter", flattenConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting input_parameter: %s", err)
 	}
-	d.Set("name", pack.ConformancePackName)
+	d.Set(names.AttrName, pack.ConformancePackName)
 
 	return diags
 }
 
-func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -186,7 +187,7 @@ func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, 
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Conformance Pack: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
 		return conn.DeleteConformancePack(ctx, &configservice.DeleteConformancePackInput{
 			ConformancePackName: aws.String(d.Id()),
 		})
@@ -292,7 +293,7 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 }
 
 func statusConformancePack(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConformancePackStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -345,7 +346,7 @@ func waitConformancePackDeleted(ctx context.Context, conn *configservice.Client,
 	return nil, err
 }
 
-func expandConformancePackInputParameters(tfList []interface{}) []types.ConformancePackInputParameter {
+func expandConformancePackInputParameters(tfList []any) []types.ConformancePackInputParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -353,7 +354,7 @@ func expandConformancePackInputParameters(tfList []interface{}) []types.Conforma
 	var apiObjects []types.ConformancePackInputParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -374,15 +375,15 @@ func expandConformancePackInputParameters(tfList []interface{}) []types.Conforma
 	return apiObjects
 }
 
-func flattenConformancePackInputParameters(apiObjects []types.ConformancePackInputParameter) []interface{} {
+func flattenConformancePackInputParameters(apiObjects []types.ConformancePackInputParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"parameter_name":  aws.ToString(apiObject.ParameterName),
 			"parameter_value": aws.ToString(apiObject.ParameterValue),
 		}

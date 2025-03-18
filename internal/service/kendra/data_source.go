@@ -56,29 +56,28 @@ func ResourceDataSource() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get("type").(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
+				if configuration, dataSourcetype := diff.Get(names.AttrConfiguration).([]any), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if roleArn, dataSourcetype := diff.Get("role_arn").(string), diff.Get("type").(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if roleArn, dataSourcetype := diff.Get(names.AttrRoleARN).(string), diff.Get(names.AttrType).(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get("type").(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if schedule, dataSourcetype := diff.Get(names.AttrSchedule).(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("schedule must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -104,7 +103,7 @@ func ResourceDataSource() *schema.Resource {
 											},
 										},
 									},
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -191,7 +190,7 @@ func ResourceDataSource() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 253),
 															},
-															"port": {
+															names.AttrPort: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(1, 65535),
@@ -242,7 +241,7 @@ func ResourceDataSource() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 253),
 												},
-												"port": {
+												names.AttrPort: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 65535),
@@ -347,7 +346,7 @@ func ResourceDataSource() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"condition": func() *schema.Schema {
+									names.AttrCondition: func() *schema.Schema {
 										schema := documentAttributeConditionSchema()
 										return schema
 									}(),
@@ -355,7 +354,7 @@ func ResourceDataSource() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -394,7 +393,7 @@ func ResourceDataSource() *schema.Resource {
 							schema := hookConfigurationSchema()
 							return schema
 						}(),
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -402,7 +401,7 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -410,7 +409,7 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -428,7 +427,7 @@ func ResourceDataSource() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -440,7 +439,7 @@ func ResourceDataSource() *schema.Resource {
 					),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -451,20 +450,20 @@ func ResourceDataSource() *schema.Resource {
 					),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -497,7 +496,7 @@ func hookConfigurationSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"s3_bucket": {
+				names.AttrS3Bucket: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
@@ -591,46 +590,46 @@ func documentAttributeValueSchema() *schema.Schema {
 	}
 }
 
-func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateDataSourceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Type:        types.DataSourceType(d.Get("type").(string)),
+		Type:        types.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
-		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
+		input.Configuration = expandDataSourceConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("custom_document_enrichment_configuration"); ok {
-		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]interface{}))
+		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("language_code"); ok {
+	if v, ok := d.GetOk(names.AttrLanguageCode); ok {
 		input.LanguageCode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = aws.String(v.(string))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateDataSource(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -666,7 +665,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -689,28 +688,28 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/data-source/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("data_source_id", resp.Id)
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("index_id", resp.IndexId)
-	d.Set("language_code", resp.LanguageCode)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("schedule", resp.Schedule)
-	d.Set("status", resp.Status)
-	d.Set("type", resp.Type)
+	d.Set(names.AttrLanguageCode, resp.LanguageCode)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrSchedule, resp.Schedule)
+	d.Set(names.AttrStatus, resp.Status)
+	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenDataSourceConfiguration(resp.Configuration)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -721,12 +720,12 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
+	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, names.AttrLanguageCode, names.AttrName, names.AttrRoleARN, names.AttrSchedule) {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -737,38 +736,38 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			IndexId: aws.String(indexId),
 		}
 
-		if d.HasChange("configuration") {
-			input.Configuration = expandDataSourceConfiguration(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.Configuration = expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]any))
 		}
 
 		if d.HasChange("custom_document_enrichment_configuration") {
-			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]interface{}))
+			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]any))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("language_code") {
-			input.LanguageCode = aws.String(d.Get("language_code").(string))
+		if d.HasChange(names.AttrLanguageCode) {
+			input.LanguageCode = aws.String(d.Get(names.AttrLanguageCode).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
-		if d.HasChange("schedule") {
-			input.Schedule = aws.String(d.Get("schedule").(string))
+		if d.HasChange(names.AttrSchedule) {
+			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateDataSource(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -794,7 +793,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -891,7 +890,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 
 		if tfresource.NotFound(err) {
@@ -906,23 +905,23 @@ func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId stri
 	}
 }
 
-func expandDataSourceConfiguration(tfList []interface{}) *types.DataSourceConfiguration {
+func expandDataSourceConfiguration(tfList []any) *types.DataSourceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.DataSourceConfiguration{}
 
-	if v, ok := tfMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_configuration"].([]any); ok && len(v) > 0 {
 		result.S3Configuration = expandS3Configuration(v)
 	}
 
-	if v, ok := tfMap["web_crawler_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["web_crawler_configuration"].([]any); ok && len(v) > 0 {
 		result.WebCrawlerConfiguration = expandWebCrawlerConfiguration(v)
 	}
 
@@ -930,25 +929,25 @@ func expandDataSourceConfiguration(tfList []interface{}) *types.DataSourceConfig
 }
 
 // S3 Configuration
-func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguration {
+func expandS3Configuration(tfList []any) *types.S3DataSourceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.S3DataSourceConfiguration{
-		BucketName: aws.String(tfMap["bucket_name"].(string)),
+		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
 	}
 
-	if v, ok := tfMap["access_control_list_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["access_control_list_configuration"].([]any); ok && len(v) > 0 {
 		result.AccessControlListConfiguration = expandAccessControlListConfiguration(v)
 	}
 
-	if v, ok := tfMap["documents_metadata_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["documents_metadata_configuration"].([]any); ok && len(v) > 0 {
 		result.DocumentsMetadataConfiguration = expandDocumentsMetadataConfiguration(v)
 	}
 
@@ -967,12 +966,12 @@ func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguratio
 	return result
 }
 
-func expandAccessControlListConfiguration(tfList []interface{}) *types.AccessControlListConfiguration {
+func expandAccessControlListConfiguration(tfList []any) *types.AccessControlListConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -986,12 +985,12 @@ func expandAccessControlListConfiguration(tfList []interface{}) *types.AccessCon
 	return result
 }
 
-func expandDocumentsMetadataConfiguration(tfList []interface{}) *types.DocumentsMetadataConfiguration {
+func expandDocumentsMetadataConfiguration(tfList []any) *types.DocumentsMetadataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1006,21 +1005,21 @@ func expandDocumentsMetadataConfiguration(tfList []interface{}) *types.Documents
 }
 
 // Web Crawler Configuration
-func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfiguration {
+func expandWebCrawlerConfiguration(tfList []any) *types.WebCrawlerConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.WebCrawlerConfiguration{
-		Urls: expandURLs(tfMap["urls"].([]interface{})),
+		Urls: expandURLs(tfMap["urls"].([]any)),
 	}
 
-	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["authentication_configuration"].([]any); ok && len(v) > 0 {
 		result.AuthenticationConfiguration = expandAuthenticationConfiguration(v)
 	}
 
@@ -1040,7 +1039,7 @@ func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfig
 		result.MaxUrlsPerMinuteCrawlRate = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["proxy_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["proxy_configuration"].([]any); ok && len(v) > 0 {
 		result.ProxyConfiguration = expandProxyConfiguration(v)
 	}
 
@@ -1055,12 +1054,12 @@ func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfig
 	return result
 }
 
-func expandAuthenticationConfiguration(tfList []interface{}) *types.AuthenticationConfiguration {
+func expandAuthenticationConfiguration(tfList []any) *types.AuthenticationConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1074,7 +1073,7 @@ func expandAuthenticationConfiguration(tfList []interface{}) *types.Authenticati
 	return result
 }
 
-func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthenticationConfiguration {
+func expandBasicAuthentication(tfList []any) []types.BasicAuthenticationConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1082,11 +1081,11 @@ func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthentication
 	result := []types.BasicAuthenticationConfiguration{}
 
 	for _, basicAuthenticationConfig := range tfList {
-		data := basicAuthenticationConfig.(map[string]interface{})
+		data := basicAuthenticationConfig.(map[string]any)
 		basicAuthenticationConfigExpanded := types.BasicAuthenticationConfiguration{
 			Credentials: aws.String(data["credentials"].(string)),
 			Host:        aws.String(data["host"].(string)),
-			Port:        aws.Int32(int32(data["port"].(int))),
+			Port:        aws.Int32(int32(data[names.AttrPort].(int))),
 		}
 
 		result = append(result, basicAuthenticationConfigExpanded)
@@ -1095,19 +1094,19 @@ func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthentication
 	return result
 }
 
-func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
+func expandProxyConfiguration(tfList []any) *types.ProxyConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.ProxyConfiguration{
 		Host: aws.String(tfMap["host"].(string)),
-		Port: aws.Int32(int32(tfMap["port"].(int))),
+		Port: aws.Int32(int32(tfMap[names.AttrPort].(int))),
 	}
 
 	if v, ok := tfMap["credentials"].(string); ok && v != "" {
@@ -1117,35 +1116,35 @@ func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
 	return result
 }
 
-func expandURLs(tfList []interface{}) *types.Urls {
+func expandURLs(tfList []any) *types.Urls {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.Urls{}
 
-	if v, ok := tfMap["seed_url_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["seed_url_configuration"].([]any); ok && len(v) > 0 {
 		result.SeedUrlConfiguration = expandSeedURLConfiguration(v)
 	}
 
-	if v, ok := tfMap["site_maps_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["site_maps_configuration"].([]any); ok && len(v) > 0 {
 		result.SiteMapsConfiguration = expandSiteMapsConfiguration(v)
 	}
 
 	return result
 }
 
-func expandSeedURLConfiguration(tfList []interface{}) *types.SeedUrlConfiguration {
+func expandSeedURLConfiguration(tfList []any) *types.SeedUrlConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1161,12 +1160,12 @@ func expandSeedURLConfiguration(tfList []interface{}) *types.SeedUrlConfiguratio
 	return result
 }
 
-func expandSiteMapsConfiguration(tfList []interface{}) *types.SiteMapsConfiguration {
+func expandSiteMapsConfiguration(tfList []any) *types.SiteMapsConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1179,12 +1178,12 @@ func expandSiteMapsConfiguration(tfList []interface{}) *types.SiteMapsConfigurat
 }
 
 // Custom document enrichment configuration
-func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.CustomDocumentEnrichmentConfiguration {
+func expandCustomDocumentEnrichmentConfiguration(tfList []any) *types.CustomDocumentEnrichmentConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1195,22 +1194,22 @@ func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.Cu
 		result.InlineConfigurations = expandInlineCustomDocumentEnrichmentConfiguration(v.(*schema.Set).List())
 	}
 
-	if v, ok := tfMap["post_extraction_hook_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["post_extraction_hook_configuration"].([]any); ok && len(v) > 0 {
 		result.PostExtractionHookConfiguration = expandHookConfiguration(v)
 	}
 
-	if v, ok := tfMap["pre_extraction_hook_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["pre_extraction_hook_configuration"].([]any); ok && len(v) > 0 {
 		result.PreExtractionHookConfiguration = expandHookConfiguration(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		result.RoleArn = aws.String(v)
 	}
 
 	return result
 }
 
-func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []types.InlineCustomDocumentEnrichmentConfiguration {
+func expandInlineCustomDocumentEnrichmentConfiguration(tfList []any) []types.InlineCustomDocumentEnrichmentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1218,10 +1217,10 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 	result := []types.InlineCustomDocumentEnrichmentConfiguration{}
 
 	for _, inlineConfig := range tfList {
-		data := inlineConfig.(map[string]interface{})
+		data := inlineConfig.(map[string]any)
 		inlineConfigExpanded := types.InlineCustomDocumentEnrichmentConfiguration{}
 
-		if v, ok := data["condition"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrCondition].([]any); ok && len(v) > 0 {
 			inlineConfigExpanded.Condition = expandDocumentAttributeCondition(v)
 		}
 
@@ -1229,7 +1228,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 			inlineConfigExpanded.DocumentContentDeletion = v
 		}
 
-		if v, ok := data["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrTarget].([]any); ok && len(v) > 0 {
 			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
 		}
 
@@ -1239,12 +1238,12 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 	return result
 }
 
-func expandDocumentAttributeTarget(tfList []interface{}) *types.DocumentAttributeTarget {
+func expandDocumentAttributeTarget(tfList []any) *types.DocumentAttributeTarget {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1255,7 +1254,7 @@ func expandDocumentAttributeTarget(tfList []interface{}) *types.DocumentAttribut
 		result.TargetDocumentAttributeKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_document_attribute_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["target_document_attribute_value"].([]any); ok && len(v) > 0 {
 		result.TargetDocumentAttributeValue = expandDocumentAttributeValue(v)
 	}
 
@@ -1266,34 +1265,34 @@ func expandDocumentAttributeTarget(tfList []interface{}) *types.DocumentAttribut
 	return result
 }
 
-func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
+func expandHookConfiguration(tfList []any) *types.HookConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.HookConfiguration{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
-		S3Bucket:  aws.String(tfMap["s3_bucket"].(string)),
+		S3Bucket:  aws.String(tfMap[names.AttrS3Bucket].(string)),
 	}
 
-	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["invocation_condition"].([]any); ok && len(v) > 0 {
 		result.InvocationCondition = expandDocumentAttributeCondition(v)
 	}
 
 	return result
 }
 
-func expandDocumentAttributeCondition(tfList []interface{}) *types.DocumentAttributeCondition {
+func expandDocumentAttributeCondition(tfList []any) *types.DocumentAttributeCondition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1303,19 +1302,19 @@ func expandDocumentAttributeCondition(tfList []interface{}) *types.DocumentAttri
 		Operator:                      types.ConditionOperator(tfMap["operator"].(string)),
 	}
 
-	if v, ok := tfMap["condition_on_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["condition_on_value"].([]any); ok && len(v) > 0 {
 		result.ConditionOnValue = expandDocumentAttributeValue(v)
 	}
 
 	return result
 }
 
-func expandDocumentAttributeValue(tfList []interface{}) *types.DocumentAttributeValue {
+func expandDocumentAttributeValue(tfList []any) *types.DocumentAttributeValue {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1341,12 +1340,12 @@ func expandDocumentAttributeValue(tfList []interface{}) *types.DocumentAttribute
 	return result
 }
 
-func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []interface{} {
+func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.S3Configuration; v != nil {
 		m["s3_configuration"] = flattenS3Configuration(v)
@@ -1356,17 +1355,17 @@ func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []
 		m["web_crawler_configuration"] = flattenWebCrawlerConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // S3 Configuration
-func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interface{} {
+func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"bucket_name": aws.ToString(apiObject.BucketName),
+	m := map[string]any{
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
 	}
 
 	if v := apiObject.AccessControlListConfiguration; v != nil {
@@ -1389,44 +1388,44 @@ func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interf
 		m["inclusion_prefixes"] = flex.FlattenStringValueSet(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAccessControlListConfiguration(apiObject *types.AccessControlListConfiguration) []interface{} {
+func flattenAccessControlListConfiguration(apiObject *types.AccessControlListConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.KeyPath; v != nil {
 		m["key_path"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataConfiguration) []interface{} {
+func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.S3Prefix; v != nil {
 		m["s3_prefix"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // Web Crawler Configuration
-func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []interface{} {
+func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"crawl_depth": aws.ToInt32(apiObject.CrawlDepth),
 		"urls":        flattenURLs(apiObject.Urls),
 	}
@@ -1459,31 +1458,31 @@ func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []
 		m["url_inclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []interface{} {
+func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.BasicAuthentication; v != nil {
 		m["basic_authentication"] = flattenBasicAuthentication(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenBasicAuthentication(basicAuthentications []types.BasicAuthenticationConfiguration) []interface{} {
-	BasicAuthenticationList := []interface{}{}
+func flattenBasicAuthentication(basicAuthentications []types.BasicAuthenticationConfiguration) []any {
+	BasicAuthenticationList := []any{}
 
 	for _, basicAuthentication := range basicAuthentications {
-		m := map[string]interface{}{
-			"credentials": aws.ToString(basicAuthentication.Credentials),
-			"host":        aws.ToString(basicAuthentication.Host),
-			"port":        aws.ToInt32(basicAuthentication.Port),
+		m := map[string]any{
+			"credentials":  aws.ToString(basicAuthentication.Credentials),
+			"host":         aws.ToString(basicAuthentication.Host),
+			names.AttrPort: aws.ToInt32(basicAuthentication.Port),
 		}
 
 		BasicAuthenticationList = append(BasicAuthenticationList, m)
@@ -1492,29 +1491,29 @@ func flattenBasicAuthentication(basicAuthentications []types.BasicAuthentication
 	return BasicAuthenticationList
 }
 
-func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{} {
+func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"host": aws.ToString(apiObject.Host),
-		"port": aws.ToInt32(apiObject.Port),
+	m := map[string]any{
+		"host":         aws.ToString(apiObject.Host),
+		names.AttrPort: aws.ToInt32(apiObject.Port),
 	}
 
 	if v := apiObject.Credentials; v != nil {
 		m["credentials"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenURLs(apiObject *types.Urls) []interface{} {
+func flattenURLs(apiObject *types.Urls) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.SeedUrlConfiguration; v != nil {
 		m["seed_url_configuration"] = flattenSeedURLConfiguration(v)
@@ -1524,41 +1523,41 @@ func flattenURLs(apiObject *types.Urls) []interface{} {
 		m["site_maps_configuration"] = flattenSiteMapsConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSeedURLConfiguration(apiObject *types.SeedUrlConfiguration) []interface{} {
+func flattenSeedURLConfiguration(apiObject *types.SeedUrlConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"seed_urls":        flex.FlattenStringValueSet(apiObject.SeedUrls),
 		"web_crawler_mode": string(apiObject.WebCrawlerMode),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSiteMapsConfiguration(apiObject *types.SiteMapsConfiguration) []interface{} {
+func flattenSiteMapsConfiguration(apiObject *types.SiteMapsConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"site_maps": flex.FlattenStringValueSet(apiObject.SiteMaps),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // Custom Document Enrichment Configuration
-func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumentEnrichmentConfiguration) []interface{} {
+func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumentEnrichmentConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.InlineConfigurations; v != nil {
 		m["inline_configurations"] = flattenInlineConfigurations(v)
@@ -1573,26 +1572,26 @@ func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumen
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		m["role_arn"] = aws.ToString(v)
+		m[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocumentEnrichmentConfiguration) []interface{} {
-	inlineConfigurationList := []interface{}{}
+func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocumentEnrichmentConfiguration) []any {
+	inlineConfigurationList := []any{}
 
 	for _, inlineConfiguration := range inlineConfigurations {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"document_content_deletion": inlineConfiguration.DocumentContentDeletion,
 		}
 
 		if v := inlineConfiguration.Condition; v != nil {
-			m["condition"] = flattenDocumentAttributeCondition(v)
+			m[names.AttrCondition] = flattenDocumentAttributeCondition(v)
 		}
 
 		if v := inlineConfiguration.Target; v != nil {
-			m["target"] = flattenDocumentAttributeTarget(v)
+			m[names.AttrTarget] = flattenDocumentAttributeTarget(v)
 		}
 
 		inlineConfigurationList = append(inlineConfigurationList, m)
@@ -1601,12 +1600,12 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 	return inlineConfigurationList
 }
 
-func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []interface{} {
+func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"target_document_attribute_value_deletion": apiObject.TargetDocumentAttributeValueDeletion,
 	}
 
@@ -1618,32 +1617,32 @@ func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []
 		m["target_document_attribute_value"] = flattenDocumentAttributeValue(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} {
+func flattenHookConfiguration(apiObject *types.HookConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"lambda_arn": aws.ToString(apiObject.LambdaArn),
-		"s3_bucket":  aws.ToString(apiObject.S3Bucket),
+	m := map[string]any{
+		"lambda_arn":       aws.ToString(apiObject.LambdaArn),
+		names.AttrS3Bucket: aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {
 		m["invocation_condition"] = flattenDocumentAttributeCondition(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeCondition) []interface{} {
+func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeCondition) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"condition_document_attribute_key": aws.ToString(apiObject.ConditionDocumentAttributeKey),
 		"operator":                         string(apiObject.Operator),
 	}
@@ -1652,15 +1651,15 @@ func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeConditi
 		m["condition_on_value"] = flattenDocumentAttributeValue(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []interface{} {
+func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	// only one of these values should be set at a time
 	if v := apiObject.DateValue; v != nil {
@@ -1674,5 +1673,5 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []in
 		m["long_value"] = aws.ToInt64(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

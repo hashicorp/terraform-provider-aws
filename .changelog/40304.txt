@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_guardrail: Fix perpetual diff if multiple `content_policy_config.filters_config`s are specified.
+```

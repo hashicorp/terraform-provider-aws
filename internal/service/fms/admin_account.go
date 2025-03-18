@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_fms_admin_account", name="Admin Account")
@@ -40,7 +41,7 @@ func resourceAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -51,7 +52,7 @@ func resourceAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -62,8 +63,8 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 
@@ -76,7 +77,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -92,12 +93,12 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading FMS Admin Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", output.AdminAccount)
+	d.Set(names.AttrAccountID, output.AdminAccount)
 
 	return diags
 }
 
-func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -151,7 +152,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
 	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an Organization.
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &fms.AssociateAdminAccountInput{
 			AdminAccount: aws.String(accountID),
 		}
@@ -187,7 +188,7 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 }
 
 func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
 		if tfresource.NotFound(err) {

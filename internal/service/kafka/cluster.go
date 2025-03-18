@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,14 +51,16 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
-				return verify.SemVerLessThan(new.(string), old.(string))
+			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta any) bool {
+				return semver.LessThan(new.(string), old.(string))
 			}),
-			verify.SetTagsDiff,
+			customdiff.ForceNewIfChange("storage_mode", func(_ context.Context, old, new, meta any) bool {
+				return types.StorageMode(new.(string)) == types.StorageModeLocal
+			}),
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +185,7 @@ func resourceCluster() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													Computed:         true,
@@ -194,11 +197,11 @@ func resourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -220,15 +223,16 @@ func resourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"provisioned_throughput": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
+													Type:             schema.TypeList,
+													Optional:         true,
+													MaxItems:         1,
+													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															// This feature is available for
 															// storage volume larger than 10 GiB and
 															// broker types kafka.m5.4xlarge and larger.
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -242,7 +246,7 @@ func resourceCluster() *schema.Resource {
 														},
 													},
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:     schema.TypeInt,
 													Optional: true,
 													// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
@@ -304,7 +308,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -321,7 +325,7 @@ func resourceCluster() *schema.Resource {
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -402,14 +406,14 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
+									names.AttrCloudWatchLogs: {
 										Type:             schema.TypeList,
 										Optional:         true,
 										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -431,7 +435,7 @@ func resourceCluster() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -445,15 +449,15 @@ func resourceCluster() *schema.Resource {
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket": {
+												names.AttrBucket: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -537,11 +541,11 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	name := d.Get("cluster_name").(string)
+	name := d.Get(names.AttrClusterName).(string)
 	input := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
 		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
@@ -550,8 +554,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	var vpcConnectivity *types.VpcConnectivity
-	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]any)[0].(map[string]any))
 		// "BadRequestException: When creating a cluster, all vpcConnectivity auth schemes must be disabled (‘enabled’ : false). You can enable auth schemes after the cluster is created"
 		if input.BrokerNodeGroupInfo != nil && input.BrokerNodeGroupInfo.ConnectivityInfo != nil {
 			vpcConnectivity = input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity
@@ -559,28 +563,28 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ClientAuthentication = expandClientAuthentication(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientAuthentication = expandClientAuthentication(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("configuration_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConfigurationInfo = expandConfigurationInfo(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("encryption_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionInfo = expandEncryptionInfo(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("enhanced_monitoring"); ok {
 		input.EnhancedMonitoring = types.EnhancedMonitoring(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingInfo = expandLoggingInfo(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("logging_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingInfo = expandLoggingInfo(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("storage_mode"); ok {
@@ -626,7 +630,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -649,7 +653,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	clusterARN := aws.ToString(cluster.ClusterArn)
-	d.Set("arn", clusterARN)
+	d.Set(names.AttrARN, clusterARN)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.ToString(output.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslIam)))
 	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslScram)))
@@ -661,24 +665,24 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
 	d.Set("bootstrap_brokers_vpc_connectivity_tls", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivityTls)))
 	if cluster.BrokerNodeGroupInfo != nil {
-		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+		if err := d.Set("broker_node_group_info", []any{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting broker_node_group_info: %s", err)
 		}
 	} else {
 		d.Set("broker_node_group_info", nil)
 	}
 	if cluster.ClientAuthentication != nil {
-		if err := d.Set("client_authentication", []interface{}{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
+		if err := d.Set("client_authentication", []any{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
 		}
 	} else {
 		d.Set("client_authentication", nil)
 	}
-	d.Set("cluster_name", cluster.ClusterName)
+	d.Set(names.AttrClusterName, cluster.ClusterName)
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
-		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
+		if err := d.Set("configuration_info", []any{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration_info: %s", err)
 		}
 	} else {
@@ -687,7 +691,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("current_version", cluster.CurrentVersion)
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 	if cluster.EncryptionInfo != nil {
-		if err := d.Set("encryption_info", []interface{}{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
+		if err := d.Set("encryption_info", []any{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_info: %s", err)
 		}
 	} else {
@@ -695,7 +699,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	if cluster.LoggingInfo != nil {
-		if err := d.Set("logging_info", []interface{}{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
+		if err := d.Set("logging_info", []any{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_info: %s", err)
 		}
 	} else {
@@ -703,7 +707,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 	if cluster.OpenMonitoring != nil {
-		if err := d.Set("open_monitoring", []interface{}{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
+		if err := d.Set("open_monitoring", []any{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting open_monitoring: %s", err)
 		}
 	} else {
@@ -718,7 +722,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -728,8 +732,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ConnectivityInfo = expandConnectivityInfo(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ConnectivityInfo = expandConnectivityInfo(v.([]any)[0].(map[string]any))
 		}
 
 		output, err := conn.UpdateConnectivity(ctx, input)
@@ -785,8 +789,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}},
 		}
 
-		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]any)[0].(map[string]any))
+		} else if o, n := d.GetChange("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); len(o.([]any)) > 0 && len(n.([]any)) == 0 {
+			// Disable when a previously configured provisioned_throughput block is removed
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = &types.ProvisionedThroughput{Enabled: aws.Bool(false)}
 		}
 
 		output, err := conn.UpdateBrokerStorage(ctx, input)
@@ -839,12 +846,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			EnhancedMonitoring: types.EnhancedMonitoring(d.Get("enhanced_monitoring").(string)),
 		}
 
-		if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.LoggingInfo = expandLoggingInfo(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("logging_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.LoggingInfo = expandLoggingInfo(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]any)[0].(map[string]any))
 		}
 
 		output, err := conn.UpdateMonitoring(ctx, input)
@@ -871,8 +878,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("configuration_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ConfigurationInfo = expandConfigurationInfo(v.([]any)[0].(map[string]any))
 		}
 
 		output, err := conn.UpdateClusterConfiguration(ctx, input)
@@ -901,8 +908,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("configuration_info") {
-			if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("configuration_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ConfigurationInfo = expandConfigurationInfo(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -931,14 +938,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("client_authentication") {
-			if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ClientAuthentication = expandClientAuthentication(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("client_authentication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ClientAuthentication = expandClientAuthentication(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("encryption_info") {
-			if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("encryption_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.EncryptionInfo = expandEncryptionInfo(v.([]any)[0].(map[string]any))
 				if input.EncryptionInfo != nil {
 					input.EncryptionInfo.EncryptionAtRest = nil // "Updating encryption-at-rest settings on your cluster is not currently supported."
 					if input.EncryptionInfo.EncryptionInTransit != nil {
@@ -966,10 +973,35 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("storage_mode") {
+		input := kafka.UpdateStorageInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+			StorageMode:    types.StorageMode(d.Get("storage_mode").(string)),
+		}
+
+		output, err := conn.UpdateStorage(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) storage: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -993,7 +1025,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	cluster, err := findClusterByARN(ctx, conn, d.Id())
@@ -1108,7 +1140,7 @@ func findBootstrapBrokersByARN(ctx context.Context, conn *kafka.Client, arn stri
 }
 
 func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterV2ByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -1124,7 +1156,7 @@ func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) ret
 }
 
 func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterOperationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -1216,7 +1248,7 @@ func clusterUUIDFromARN(clusterARN string) (string, error) {
 	return parts[2], nil
 }
 
-func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *types.BrokerNodeGroupInfo {
+func expandBrokerNodeGroupInfo(tfMap map[string]any) *types.BrokerNodeGroupInfo {
 	if tfMap == nil {
 		return nil
 	}
@@ -1231,83 +1263,83 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *types.BrokerNodeGr
 		apiObject.ClientSubnets = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["connectivity_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ConnectivityInfo = expandConnectivityInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["connectivity_info"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ConnectivityInfo = expandConnectivityInfo(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.StorageInfo = expandStorageInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["storage_info"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StorageInfo = expandStorageInfo(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandConnectivityInfo(tfMap map[string]interface{}) *types.ConnectivityInfo {
+func expandConnectivityInfo(tfMap map[string]any) *types.ConnectivityInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ConnectivityInfo{}
 
-	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
+	if v, ok := tfMap["public_access"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["vpc_connectivity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.VpcConnectivity = expandVPCConnectivity(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vpc_connectivity"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.VpcConnectivity = expandVPCConnectivity(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandStorageInfo(tfMap map[string]interface{}) *types.StorageInfo {
+func expandStorageInfo(tfMap map[string]any) *types.StorageInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.StorageInfo{}
 
-	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EbsStorageInfo = expandEBSStorageInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ebs_storage_info"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EbsStorageInfo = expandEBSStorageInfo(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandEBSStorageInfo(tfMap map[string]interface{}) *types.EBSStorageInfo {
+func expandEBSStorageInfo(tfMap map[string]any) *types.EBSStorageInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.EBSStorageInfo{}
 
-	if v, ok := tfMap["provisioned_throughput"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
+	if v, ok := tfMap["provisioned_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandProvisionedThroughput(tfMap map[string]interface{}) *types.ProvisionedThroughput {
+func expandProvisionedThroughput(tfMap map[string]any) *types.ProvisionedThroughput {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ProvisionedThroughput{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1318,43 +1350,43 @@ func expandProvisionedThroughput(tfMap map[string]interface{}) *types.Provisione
 	return apiObject
 }
 
-func expandPublicAccess(tfMap map[string]interface{}) *types.PublicAccess {
+func expandPublicAccess(tfMap map[string]any) *types.PublicAccess {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.PublicAccess{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandVPCConnectivity(tfMap map[string]interface{}) *types.VpcConnectivity {
+func expandVPCConnectivity(tfMap map[string]any) *types.VpcConnectivity {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.VpcConnectivity{}
 
-	if v, ok := tfMap["client_authentication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ClientAuthentication = expandVPCConnectivityClientAuthentication(v[0].(map[string]interface{}))
+	if v, ok := tfMap["client_authentication"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ClientAuthentication = expandVPCConnectivityClientAuthentication(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandVPCConnectivityClientAuthentication(tfMap map[string]interface{}) *types.VpcConnectivityClientAuthentication {
+func expandVPCConnectivityClientAuthentication(tfMap map[string]any) *types.VpcConnectivityClientAuthentication {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.VpcConnectivityClientAuthentication{}
 
-	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Sasl = expandVPCConnectivitySASL(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sasl"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Sasl = expandVPCConnectivitySASL(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["tls"].(bool); ok {
@@ -1366,7 +1398,7 @@ func expandVPCConnectivityClientAuthentication(tfMap map[string]interface{}) *ty
 	return apiObject
 }
 
-func expandVPCConnectivitySASL(tfMap map[string]interface{}) *types.VpcConnectivitySasl {
+func expandVPCConnectivitySASL(tfMap map[string]any) *types.VpcConnectivitySasl {
 	if tfMap == nil {
 		return nil
 	}
@@ -1388,19 +1420,19 @@ func expandVPCConnectivitySASL(tfMap map[string]interface{}) *types.VpcConnectiv
 	return apiObject
 }
 
-func expandClientAuthentication(tfMap map[string]interface{}) *types.ClientAuthentication {
+func expandClientAuthentication(tfMap map[string]any) *types.ClientAuthentication {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ClientAuthentication{}
 
-	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Sasl = expandSASL(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sasl"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Sasl = expandSASL(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["tls"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Tls = expandTLS(v[0].(map[string]interface{}))
+	if v, ok := tfMap["tls"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Tls = expandTLS(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["unauthenticated"].(bool); ok {
@@ -1412,7 +1444,7 @@ func expandClientAuthentication(tfMap map[string]interface{}) *types.ClientAuthe
 	return apiObject
 }
 
-func expandSASL(tfMap map[string]interface{}) *types.Sasl {
+func expandSASL(tfMap map[string]any) *types.Sasl {
 	if tfMap == nil {
 		return nil
 	}
@@ -1434,7 +1466,7 @@ func expandSASL(tfMap map[string]interface{}) *types.Sasl {
 	return apiObject
 }
 
-func expandTLS(tfMap map[string]interface{}) *types.Tls {
+func expandTLS(tfMap map[string]any) *types.Tls {
 	if tfMap == nil {
 		return nil
 	}
@@ -1451,14 +1483,14 @@ func expandTLS(tfMap map[string]interface{}) *types.Tls {
 	return apiObject
 }
 
-func expandConfigurationInfo(tfMap map[string]interface{}) *types.ConfigurationInfo {
+func expandConfigurationInfo(tfMap map[string]any) *types.ConfigurationInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ConfigurationInfo{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
@@ -1469,15 +1501,15 @@ func expandConfigurationInfo(tfMap map[string]interface{}) *types.ConfigurationI
 	return apiObject
 }
 
-func expandEncryptionInfo(tfMap map[string]interface{}) *types.EncryptionInfo {
+func expandEncryptionInfo(tfMap map[string]any) *types.EncryptionInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.EncryptionInfo{}
 
-	if v, ok := tfMap["encryption_in_transit"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EncryptionInTransit = expandEncryptionInTransit(v[0].(map[string]interface{}))
+	if v, ok := tfMap["encryption_in_transit"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EncryptionInTransit = expandEncryptionInTransit(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["encryption_at_rest_kms_key_arn"].(string); ok && v != "" {
@@ -1489,7 +1521,7 @@ func expandEncryptionInfo(tfMap map[string]interface{}) *types.EncryptionInfo {
 	return apiObject
 }
 
-func expandEncryptionInTransit(tfMap map[string]interface{}) *types.EncryptionInTransit {
+func expandEncryptionInTransit(tfMap map[string]any) *types.EncryptionInTransit {
 	if tfMap == nil {
 		return nil
 	}
@@ -1507,50 +1539,50 @@ func expandEncryptionInTransit(tfMap map[string]interface{}) *types.EncryptionIn
 	return apiObject
 }
 
-func expandLoggingInfo(tfMap map[string]interface{}) *types.LoggingInfo {
+func expandLoggingInfo(tfMap map[string]any) *types.LoggingInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.LoggingInfo{}
 
-	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.BrokerLogs = expandBrokerLogs(v[0].(map[string]interface{}))
+	if v, ok := tfMap["broker_logs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.BrokerLogs = expandBrokerLogs(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandBrokerLogs(tfMap map[string]interface{}) *types.BrokerLogs {
+func expandBrokerLogs(tfMap map[string]any) *types.BrokerLogs {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.BrokerLogs{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Firehose = expandFirehose(v[0].(map[string]interface{}))
+	if v, ok := tfMap["firehose"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Firehose = expandFirehose(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3 = expandS3(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3 = expandS3(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogs(tfMap map[string]interface{}) *types.CloudWatchLogs {
+func expandCloudWatchLogs(tfMap map[string]any) *types.CloudWatchLogs {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.CloudWatchLogs{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1561,7 +1593,7 @@ func expandCloudWatchLogs(tfMap map[string]interface{}) *types.CloudWatchLogs {
 	return apiObject
 }
 
-func expandFirehose(tfMap map[string]interface{}) *types.Firehose {
+func expandFirehose(tfMap map[string]any) *types.Firehose {
 	if tfMap == nil {
 		return nil
 	}
@@ -1572,68 +1604,68 @@ func expandFirehose(tfMap map[string]interface{}) *types.Firehose {
 		apiObject.DeliveryStream = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
 	return apiObject
 }
 
-func expandS3(tfMap map[string]interface{}) *types.S3 {
+func expandS3(tfMap map[string]any) *types.S3 {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.S3{}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandOpenMonitoringInfo(tfMap map[string]interface{}) *types.OpenMonitoringInfo {
+func expandOpenMonitoringInfo(tfMap map[string]any) *types.OpenMonitoringInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.OpenMonitoringInfo{}
 
-	if v, ok := tfMap["prometheus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Prometheus = expandPrometheusInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["prometheus"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Prometheus = expandPrometheusInfo(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandPrometheusInfo(tfMap map[string]interface{}) *types.PrometheusInfo {
+func expandPrometheusInfo(tfMap map[string]any) *types.PrometheusInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.PrometheusInfo{}
 
-	if v, ok := tfMap["jmx_exporter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.JmxExporter = expandJmxExporterInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["jmx_exporter"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.JmxExporter = expandJmxExporterInfo(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["node_exporter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NodeExporter = expandNodeExporterInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["node_exporter"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NodeExporter = expandNodeExporterInfo(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandJmxExporterInfo(tfMap map[string]interface{}) *types.JmxExporterInfo {
+func expandJmxExporterInfo(tfMap map[string]any) *types.JmxExporterInfo {
 	if tfMap == nil {
 		return nil
 	}
@@ -1647,7 +1679,7 @@ func expandJmxExporterInfo(tfMap map[string]interface{}) *types.JmxExporterInfo 
 	return apiObject
 }
 
-func expandNodeExporterInfo(tfMap map[string]interface{}) *types.NodeExporterInfo {
+func expandNodeExporterInfo(tfMap map[string]any) *types.NodeExporterInfo {
 	if tfMap == nil {
 		return nil
 	}
@@ -1661,12 +1693,12 @@ func expandNodeExporterInfo(tfMap map[string]interface{}) *types.NodeExporterInf
 	return apiObject
 }
 
-func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string]interface{} {
+func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"az_distribution": apiObject.BrokerAZDistribution,
 	}
 
@@ -1675,15 +1707,15 @@ func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string
 	}
 
 	if v := apiObject.ConnectivityInfo; v != nil {
-		tfMap["connectivity_info"] = []interface{}{flattenConnectivityInfo(v)}
+		tfMap["connectivity_info"] = []any{flattenConnectivityInfo(v)}
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.ToString(v)
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.StorageInfo; v != nil {
@@ -1693,110 +1725,110 @@ func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string
 	return tfMap
 }
 
-func flattenConnectivityInfo(apiObject *types.ConnectivityInfo) map[string]interface{} {
+func flattenConnectivityInfo(apiObject *types.ConnectivityInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.PublicAccess; v != nil {
-		tfMap["public_access"] = []interface{}{flattenPublicAccess(v)}
+		tfMap["public_access"] = []any{flattenPublicAccess(v)}
 	}
 
 	if v := apiObject.VpcConnectivity; v != nil {
-		tfMap["vpc_connectivity"] = []interface{}{flattenVPCConnectivity(v)}
+		tfMap["vpc_connectivity"] = []any{flattenVPCConnectivity(v)}
 	}
 
 	return tfMap
 }
 
-func flattenStorageInfo(apiObject *types.StorageInfo) []interface{} {
+func flattenStorageInfo(apiObject *types.StorageInfo) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EbsStorageInfo; v != nil {
 		tfMap["ebs_storage_info"] = flattenEBSStorageInfo(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEBSStorageInfo(apiObject *types.EBSStorageInfo) []interface{} {
+func flattenEBSStorageInfo(apiObject *types.EBSStorageInfo) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ProvisionedThroughput; v != nil {
 		tfMap["provisioned_throughput"] = flattenProvisionedThroughput(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.ToInt32(v)
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenProvisionedThroughput(apiObject *types.ProvisionedThroughput) []interface{} {
+func flattenProvisionedThroughput(apiObject *types.ProvisionedThroughput) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.VolumeThroughput; v != nil {
 		tfMap["volume_throughput"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPublicAccess(apiObject *types.PublicAccess) map[string]interface{} {
+func flattenPublicAccess(apiObject *types.PublicAccess) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenVPCConnectivity(apiObject *types.VpcConnectivity) map[string]interface{} {
+func flattenVPCConnectivity(apiObject *types.VpcConnectivity) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if v := apiObject.ClientAuthentication; v != nil {
-		tfMap["client_authentication"] = []interface{}{flattenVPCConnectivityClientAuthentication(v)}
+		tfMap["client_authentication"] = []any{flattenVPCConnectivityClientAuthentication(v)}
 	}
 
 	return tfMap
 }
 
-func flattenVPCConnectivityClientAuthentication(apiObject *types.VpcConnectivityClientAuthentication) map[string]interface{} {
+func flattenVPCConnectivityClientAuthentication(apiObject *types.VpcConnectivityClientAuthentication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Sasl; v != nil {
-		tfMap["sasl"] = []interface{}{(flattenVPCConnectivitySASL(v))}
+		tfMap["sasl"] = []any{(flattenVPCConnectivitySASL(v))}
 	}
 
 	if v := apiObject.Tls; v != nil {
@@ -1808,12 +1840,12 @@ func flattenVPCConnectivityClientAuthentication(apiObject *types.VpcConnectivity
 	return tfMap
 }
 
-func flattenVPCConnectivitySASL(apiObject *types.VpcConnectivitySasl) map[string]interface{} {
+func flattenVPCConnectivitySASL(apiObject *types.VpcConnectivitySasl) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Iam; v != nil {
 		if v := v.Enabled; v != nil {
@@ -1830,19 +1862,19 @@ func flattenVPCConnectivitySASL(apiObject *types.VpcConnectivitySasl) map[string
 	return tfMap
 }
 
-func flattenClientAuthentication(apiObject *types.ClientAuthentication) map[string]interface{} {
+func flattenClientAuthentication(apiObject *types.ClientAuthentication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Sasl; v != nil {
-		tfMap["sasl"] = []interface{}{flattenSASL(v)}
+		tfMap["sasl"] = []any{flattenSASL(v)}
 	}
 
 	if v := apiObject.Tls; v != nil {
-		tfMap["tls"] = []interface{}{flattenTLS(v)}
+		tfMap["tls"] = []any{flattenTLS(v)}
 	}
 
 	if v := apiObject.Unauthenticated; v != nil {
@@ -1854,12 +1886,12 @@ func flattenClientAuthentication(apiObject *types.ClientAuthentication) map[stri
 	return tfMap
 }
 
-func flattenSASL(apiObject *types.Sasl) map[string]interface{} {
+func flattenSASL(apiObject *types.Sasl) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Iam; v != nil {
 		if v := v.Enabled; v != nil {
@@ -1876,12 +1908,12 @@ func flattenSASL(apiObject *types.Sasl) map[string]interface{} {
 	return tfMap
 }
 
-func flattenTLS(apiObject *types.Tls) map[string]interface{} {
+func flattenTLS(apiObject *types.Tls) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CertificateAuthorityArnList; v != nil && aws.ToBool(apiObject.Enabled) {
 		tfMap["certificate_authority_arns"] = v
@@ -1890,15 +1922,15 @@ func flattenTLS(apiObject *types.Tls) map[string]interface{} {
 	return tfMap
 }
 
-func flattenBrokerSoftwareInfo(apiObject *types.BrokerSoftwareInfo) map[string]interface{} {
+func flattenBrokerSoftwareInfo(apiObject *types.BrokerSoftwareInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConfigurationArn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.ConfigurationRevision; v != nil {
@@ -1908,12 +1940,12 @@ func flattenBrokerSoftwareInfo(apiObject *types.BrokerSoftwareInfo) map[string]i
 	return tfMap
 }
 
-func flattenEncryptionInfo(apiObject *types.EncryptionInfo) map[string]interface{} {
+func flattenEncryptionInfo(apiObject *types.EncryptionInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EncryptionAtRest; v != nil {
 		if v := v.DataVolumeKMSKeyId; v != nil {
@@ -1922,18 +1954,18 @@ func flattenEncryptionInfo(apiObject *types.EncryptionInfo) map[string]interface
 	}
 
 	if v := apiObject.EncryptionInTransit; v != nil {
-		tfMap["encryption_in_transit"] = []interface{}{flattenEncryptionInTransit(v)}
+		tfMap["encryption_in_transit"] = []any{flattenEncryptionInTransit(v)}
 	}
 
 	return tfMap
 }
 
-func flattenEncryptionInTransit(apiObject *types.EncryptionInTransit) map[string]interface{} {
+func flattenEncryptionInTransit(apiObject *types.EncryptionInTransit) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"client_broker": apiObject.ClientBroker,
 	}
 
@@ -1944,51 +1976,51 @@ func flattenEncryptionInTransit(apiObject *types.EncryptionInTransit) map[string
 	return tfMap
 }
 
-func flattenLoggingInfo(apiObject *types.LoggingInfo) map[string]interface{} {
+func flattenLoggingInfo(apiObject *types.LoggingInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BrokerLogs; v != nil {
-		tfMap["broker_logs"] = []interface{}{flattenBrokerLogs(v)}
+		tfMap["broker_logs"] = []any{flattenBrokerLogs(v)}
 	}
 
 	return tfMap
 }
 
-func flattenBrokerLogs(apiObject *types.BrokerLogs) map[string]interface{} {
+func flattenBrokerLogs(apiObject *types.BrokerLogs) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogs(v)}
+		tfMap[names.AttrCloudWatchLogs] = []any{flattenCloudWatchLogs(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {
-		tfMap["firehose"] = []interface{}{flattenFirehose(v)}
+		tfMap["firehose"] = []any{flattenFirehose(v)}
 	}
 
 	if v := apiObject.S3; v != nil {
-		tfMap["s3"] = []interface{}{flattenS3(v)}
+		tfMap["s3"] = []any{flattenS3(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCloudWatchLogs(apiObject *types.CloudWatchLogs) map[string]interface{} {
+func flattenCloudWatchLogs(apiObject *types.CloudWatchLogs) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.LogGroup; v != nil {
@@ -1998,84 +2030,84 @@ func flattenCloudWatchLogs(apiObject *types.CloudWatchLogs) map[string]interface
 	return tfMap
 }
 
-func flattenFirehose(apiObject *types.Firehose) map[string]interface{} {
+func flattenFirehose(apiObject *types.Firehose) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeliveryStream; v != nil {
 		tfMap["delivery_stream"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenS3(apiObject *types.S3) map[string]interface{} {
+func flattenS3(apiObject *types.S3) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenOpenMonitoring(apiObject *types.OpenMonitoring) map[string]interface{} {
+func flattenOpenMonitoring(apiObject *types.OpenMonitoring) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Prometheus; v != nil {
-		tfMap["prometheus"] = []interface{}{flattenPrometheus(v)}
+		tfMap["prometheus"] = []any{flattenPrometheus(v)}
 	}
 
 	return tfMap
 }
 
-func flattenPrometheus(apiObject *types.Prometheus) map[string]interface{} {
+func flattenPrometheus(apiObject *types.Prometheus) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.JmxExporter; v != nil {
-		tfMap["jmx_exporter"] = []interface{}{flattenJmxExporter(v)}
+		tfMap["jmx_exporter"] = []any{flattenJmxExporter(v)}
 	}
 
 	if v := apiObject.NodeExporter; v != nil {
-		tfMap["node_exporter"] = []interface{}{flattenNodeExporter(v)}
+		tfMap["node_exporter"] = []any{flattenNodeExporter(v)}
 	}
 
 	return tfMap
 }
 
-func flattenJmxExporter(apiObject *types.JmxExporter) map[string]interface{} {
+func flattenJmxExporter(apiObject *types.JmxExporter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EnabledInBroker; v != nil {
 		tfMap["enabled_in_broker"] = aws.ToBool(v)
@@ -2084,12 +2116,12 @@ func flattenJmxExporter(apiObject *types.JmxExporter) map[string]interface{} {
 	return tfMap
 }
 
-func flattenNodeExporter(apiObject *types.NodeExporter) map[string]interface{} {
+func flattenNodeExporter(apiObject *types.NodeExporter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EnabledInBroker; v != nil {
 		tfMap["enabled_in_broker"] = aws.ToBool(v)

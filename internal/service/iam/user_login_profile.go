@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_login_profile", name="User Login Profile")
@@ -33,7 +34,7 @@ func resourceUserLoginProfile() *schema.Resource {
 		DeleteWithoutTimeout: resourceUserLoginProfileDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("encrypted_password", "")
 				d.Set("key_fingerprint", "")
 				return []*schema.ResourceData{d}, nil
@@ -73,9 +74,10 @@ func resourceUserLoginProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": {
-				Type:     schema.TypeString,
-				Computed: true,
+			names.AttrPassword: {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -103,7 +105,7 @@ func GeneratePassword(length int) (string, error) {
 	// Even in the worst case, this tends to take less than 10 tries to find a
 	// matching password. Any sufficiently long password is likely to succeed
 	// on the first try
-	for n := 0; n < 100000; n++ {
+	for range 100000 {
 		for i := range result {
 			r, err := rand.Int(rand.Reader, charsetSize)
 			if err != nil {
@@ -135,7 +137,7 @@ func CheckPwdPolicy(pass []byte) bool {
 		bytes.ContainsAny(pass, charUpper))
 }
 
-func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	username := d.Get("user").(string)
@@ -173,13 +175,13 @@ func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData,
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_password", encrypted)
 	} else {
-		d.Set("password", initialPassword)
+		d.Set(names.AttrPassword, initialPassword)
 	}
 
 	return append(diags, resourceUserLoginProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -227,7 +229,7 @@ func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceUserLoginProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserLoginProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

@@ -41,7 +41,7 @@ func resourceEnvironmentEC2() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func resourceEnvironmentEC2() *schema.Resource {
 				Default:          types.ConnectionTypeConnectSsh,
 				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 200),
@@ -80,12 +80,12 @@ func resourceEnvironmentEC2() *schema.Resource {
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 60),
@@ -97,33 +97,31 @@ func resourceEnvironmentEC2() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
-		InstanceType:       aws.String(d.Get("instance_type").(string)),
+		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),
 		Name:               aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
@@ -132,7 +130,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.AutomaticStopTimeMinutes = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -140,11 +138,11 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.OwnerArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateEnvironmentEC2(ctx, input)
 	}, "User")
 
@@ -161,7 +159,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -177,25 +175,25 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Cloud9 EC2 Environment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", env.Arn)
+	d.Set(names.AttrARN, env.Arn)
 	d.Set("connection_type", env.ConnectionType)
-	d.Set("description", env.Description)
-	d.Set("name", env.Name)
+	d.Set(names.AttrDescription, env.Description)
+	d.Set(names.AttrName, env.Name)
 	d.Set("owner_arn", env.OwnerArn)
-	d.Set("type", env.Type)
+	d.Set(names.AttrType, env.Type)
 
 	return diags
 }
 
-func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := cloud9.UpdateEnvironmentInput{
-			Description:   aws.String(d.Get("description").(string)),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 			EnvironmentId: aws.String(d.Id()),
-			Name:          aws.String(d.Get("name").(string)),
+			Name:          aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		_, err := conn.UpdateEnvironment(ctx, &input)
@@ -208,14 +206,15 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
 	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
-	_, err := conn.DeleteEnvironment(ctx, &cloud9.DeleteEnvironmentInput{
+	input := cloud9.DeleteEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -295,7 +294,7 @@ func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*
 }
 
 func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

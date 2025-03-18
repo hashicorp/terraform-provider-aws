@@ -18,9 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_signer_signing_job")
+// @SDKResource("aws_signer_signing_job", name="Signing Job")
 func ResourceSigningJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningJobCreate,
@@ -36,7 +37,7 @@ func ResourceSigningJob() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -50,17 +51,17 @@ func ResourceSigningJob() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -71,7 +72,7 @@ func ResourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -85,12 +86,12 @@ func ResourceSigningJob() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -111,7 +112,7 @@ func ResourceSigningJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,11 +178,11 @@ func ResourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -191,11 +192,11 @@ func ResourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -203,12 +204,12 @@ func ResourceSigningJob() *schema.Resource {
 	}
 }
 
-func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	profileName := d.Get("profile_name")
-	source := d.Get("source").([]interface{})
-	destination := d.Get("destination").([]interface{})
+	source := d.Get(names.AttrSource).([]any)
+	destination := d.Get(names.AttrDestination).([]any)
 
 	startSigningJobInput := &signer.StartSigningJobInput{
 		ProfileName: aws.String(profileName.(string)),
@@ -246,7 +247,7 @@ func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceSigningJobRead(ctx, d, meta)...)
 }
 
-func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	jobId := d.Id()
@@ -271,7 +272,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job completed at: %s", err)
 	}
 
-	if err := d.Set("created_at", aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedAt, aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job created at: %s", err)
 	}
 
@@ -319,27 +320,27 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job signed object: %s", err)
 	}
 
-	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
-	if err := d.Set("status", describeSigningJobOutput.Status); err != nil {
+	if err := d.Set(names.AttrStatus, describeSigningJobOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 
-	if err := d.Set("status_reason", describeSigningJobOutput.StatusReason); err != nil {
+	if err := d.Set(names.AttrStatusReason, describeSigningJobOutput.StatusReason); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status reason: %s", err)
 	}
 
 	return diags
 }
 
-func flattenSigningJobRevocationRecord(apiObject *types.SigningJobRevocationRecord) []interface{} {
+func flattenSigningJobRevocationRecord(apiObject *types.SigningJobRevocationRecord) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Reason; v != nil {
 		tfMap["reason"] = aws.ToString(v)
@@ -353,55 +354,55 @@ func flattenSigningJobRevocationRecord(apiObject *types.SigningJobRevocationReco
 		tfMap["revoked_by"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSigningJobSource(apiObject *types.Source) []interface{} {
+func flattenSigningJobSource(apiObject *types.Source) []any {
 	if apiObject == nil || apiObject.S3 == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"s3": flattenSigningJobS3Source(apiObject.S3),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSigningJobS3Source(apiObject *types.S3Source) []interface{} {
+func flattenSigningJobS3Source(apiObject *types.S3Source) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Key; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.ToString(v)
+		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandSigningJobSource(tfList []interface{}) *types.Source {
+func expandSigningJobSource(tfList []any) *types.Source {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	var source *types.Source
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
 		source = &types.Source{
 			S3: expandSigningJobS3Source(v),
 		}
@@ -410,44 +411,44 @@ func expandSigningJobSource(tfList []interface{}) *types.Source {
 	return source
 }
 
-func expandSigningJobS3Source(tfList []interface{}) *types.S3Source {
+func expandSigningJobS3Source(tfList []any) *types.S3Source {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 	s3Source := &types.S3Source{}
 
-	if v, ok := tfMap["bucket"].(string); ok {
+	if v, ok := tfMap[names.AttrBucket].(string); ok {
 		s3Source.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok {
+	if v, ok := tfMap[names.AttrKey].(string); ok {
 		s3Source.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok {
+	if v, ok := tfMap[names.AttrVersion].(string); ok {
 		s3Source.Version = aws.String(v)
 	}
 
 	return s3Source
 }
 
-func expandSigningJobDestination(tfList []interface{}) *types.Destination {
+func expandSigningJobDestination(tfList []any) *types.Destination {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	var destination *types.Destination
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
 		destination = &types.Destination{
 			S3: expandSigningJobS3Destination(v),
 		}
@@ -456,53 +457,53 @@ func expandSigningJobDestination(tfList []interface{}) *types.Destination {
 	return destination
 }
 
-func expandSigningJobS3Destination(tfList []interface{}) *types.S3Destination {
+func expandSigningJobS3Destination(tfList []any) *types.S3Destination {
 	if tfList == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	s3Destination := &types.S3Destination{}
 
-	if _, ok := tfMap["bucket"]; ok {
-		s3Destination.BucketName = aws.String(tfMap["bucket"].(string))
+	if _, ok := tfMap[names.AttrBucket]; ok {
+		s3Destination.BucketName = aws.String(tfMap[names.AttrBucket].(string))
 	}
 
-	if _, ok := tfMap["prefix"]; ok {
-		s3Destination.Prefix = aws.String(tfMap["prefix"].(string))
+	if _, ok := tfMap[names.AttrPrefix]; ok {
+		s3Destination.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	}
 
 	return s3Destination
 }
 
-func flattenSigningJobSignedObject(apiObject *types.SignedObject) []interface{} {
+func flattenSigningJobSignedObject(apiObject *types.SignedObject) []any {
 	if apiObject == nil || apiObject.S3 == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"s3": flattenSigningJobS3SignedObject(apiObject.S3),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSigningJobS3SignedObject(apiObject *types.S3SignedObject) []interface{} {
+func flattenSigningJobS3SignedObject(apiObject *types.S3SignedObject) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Key; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func findSigningJobByID(ctx context.Context, conn *signer.Client, id string) (*signer.DescribeSigningJobOutput, error) {

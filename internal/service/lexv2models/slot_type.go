@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Slot Type")
+// @FrameworkResource("aws_lexv2models_slot_type", name="Slot Type")
 func newResourceSlotType(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSlotType{}
 
@@ -54,16 +54,12 @@ type resourceSlotType struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceSlotType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_slot_type"
-}
-
 func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	subSlotTypeCompositionLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotTypeComposition](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
 				"slot_type_id": schema.StringAttribute{
@@ -88,10 +84,10 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"locale_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -105,7 +101,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"parent_slot_type_signature": schema.StringAttribute{
@@ -114,44 +110,32 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"composite_slot_type_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CompositeSlotTypeSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"subslots": subSlotTypeCompositionLNB,
+						"sub_slots": subSlotTypeCompositionLNB,
 					},
 				},
 			},
 			"external_source_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ExternalSourceSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"grammar_slot_type_setting": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
 							CustomType: fwtypes.NewListNestedObjectTypeOf[GrammarSlotTypeSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"source": schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
+									names.AttrSource: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[Source](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"s3_bucket_name": schema.StringAttribute{
+												names.AttrS3BucketName: schema.StringAttribute{
 													Required: true,
 												},
 												"s3_object_key": schema.StringAttribute{
 													Required: true,
 												},
-												"kms_key_arn": schema.StringAttribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
 													Required: true,
 												},
 											},
@@ -164,17 +148,14 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"slot_type_values": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValues](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"slot_type_value": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValue](ctx),
+						"sample_value": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[SampleValue](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -183,7 +164,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 						"synonyms": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -211,7 +192,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[AdvancedRecognitionSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"audio_recognition_setting": schema.StringAttribute{
+									"audio_recognition_strategy": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.AudioRecognitionStrategy](),
@@ -233,7 +214,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -241,6 +222,8 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		},
 	}
 }
+
+var slotTypeFlexOpt = flex.WithFieldNamePrefix(ResNameSlotType)
 
 func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
@@ -252,9 +235,9 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	in := &lexmodelsv2.CreateSlotTypeInput{
-		SlotTypeName: aws.String(plan.Name.ValueString()),
+		SlotTypeName: plan.Name.ValueStringPointer(),
 	}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -292,7 +275,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -322,7 +305,7 @@ func (r *resourceSlotType) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -342,7 +325,7 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 	if slotTypeHasChanges(ctx, plan, state) {
 		input := &lexmodelsv2.UpdateSlotTypeInput{}
 
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), plan, input)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input, slotTypeFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -363,7 +346,7 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), input, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, input, &plan, slotTypeFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -382,10 +365,10 @@ func (r *resourceSlotType) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	in := &lexmodelsv2.DeleteSlotTypeInput{
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
-		SlotTypeId: aws.String(state.SlotTypeID.ValueString()),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
+		SlotTypeId: state.SlotTypeID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSlotType(ctx, in)
@@ -457,8 +440,8 @@ type resourceSlotTypeData struct {
 }
 
 type SubSlotTypeComposition struct {
-	Name      types.String `tfsdk:"name"`
-	SubSlotID types.String `tfsdk:"sub_slot_id"`
+	Name       types.String `tfsdk:"name"`
+	SlotTypeID types.String `tfsdk:"slot_type_id"`
 }
 
 type CompositeSlotTypeSetting struct {
@@ -479,17 +462,17 @@ type ExternalSourceSetting struct {
 	GrammarSlotTypeSetting fwtypes.ListNestedObjectValueOf[GrammarSlotTypeSetting] `tfsdk:"grammar_slot_type_setting"`
 }
 
-type SlotTypeValue struct {
+type SampleValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
 type SlotTypeValues struct {
-	SlotTypeValues fwtypes.ListNestedObjectValueOf[SlotTypeValue] `tfsdk:"slot_type_values"`
-	Synonyms       fwtypes.ListNestedObjectValueOf[SlotTypeValue] `tfsdk:"synonyms"`
+	SampleValue fwtypes.ListNestedObjectValueOf[SampleValue] `tfsdk:"sample_value"`
+	Synonyms    fwtypes.ListNestedObjectValueOf[SampleValue] `tfsdk:"synonyms"`
 }
 
 type AdvancedRecognitionSetting struct {
-	AudioRecognitionSetting types.String `tfsdk:"audio_recognition_setting"`
+	AudioRecognitionStrategy types.String `tfsdk:"audio_recognition_strategy"`
 }
 
 type RegexFilter struct {

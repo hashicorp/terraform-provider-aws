@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccImageDataSource_basic(t *testing.T) {
@@ -69,9 +70,10 @@ func testAccCheckImageExists(ctx context.Context, n string, image *types.Workspa
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
-		resp, err := conn.DescribeWorkspaceImages(ctx, &workspaces.DescribeWorkspaceImagesInput{
+		input := workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []string{rs.Primary.ID},
-		})
+		}
+		resp, err := conn.DescribeWorkspaceImages(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("Failed describe workspaces images: %w", err)
 		}
@@ -95,15 +97,15 @@ func testAccCheckImageAttributes(n string, image *types.WorkspaceImage) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "id", *image.ImageId)(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrID, *image.ImageId)(s); err != nil {
 			return err
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "name", *image.Name)(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrName, *image.Name)(s); err != nil {
 			return err
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "description", *image.Description)(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrDescription, *image.Description)(s); err != nil {
 			return err
 		}
 
@@ -115,7 +117,7 @@ func testAccCheckImageAttributes(n string, image *types.WorkspaceImage) resource
 			return err
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "state", string(image.State))(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrState, string(image.State))(s); err != nil {
 			return err
 		}
 

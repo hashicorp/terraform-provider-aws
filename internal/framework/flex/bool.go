@@ -9,26 +9,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // BoolFromFramework converts a Framework Bool value to a bool pointer.
 // A null Bool is converted to a nil bool pointer.
 func BoolFromFramework(ctx context.Context, v basetypes.BoolValuable) *bool {
-	var output *bool
+	if v.IsUnknown() {
+		return nil
+	}
+	val := fwdiag.Must(v.ToBoolValue(ctx))
+	return val.ValueBoolPointer()
+}
 
-	must(Expand(ctx, v, &output))
-
-	return output
+func BoolValueFromFramework(ctx context.Context, v basetypes.BoolValuable) bool {
+	val := fwdiag.Must(v.ToBoolValue(ctx))
+	return val.ValueBool()
 }
 
 // BoolToFramework converts a bool pointer to a Framework Bool value.
 // A nil bool pointer is converted to a null Bool.
 func BoolToFramework(ctx context.Context, v *bool) types.Bool {
-	var output types.Bool
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	return types.BoolPointerValue(v)
 }
 
 // BoolToFrameworkLegacy converts a bool pointer to a Framework Bool value.

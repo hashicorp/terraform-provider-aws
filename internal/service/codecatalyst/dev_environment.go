@@ -43,7 +43,7 @@ func ResourceDevEnvironment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -53,7 +53,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -69,7 +69,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				Default:  15,
 				Optional: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.InstanceType](),
@@ -84,7 +84,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -101,7 +101,7 @@ func ResourceDevEnvironment() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -120,12 +120,12 @@ const (
 	ResNameDevEnvironment = "DevEnvironment"
 )
 
-func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
-	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]interface{})[0].(map[string]interface{}))
-	instanceType := types.InstanceType(d.Get("instance_type").(string))
+	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]any)[0].(map[string]any))
+	instanceType := types.InstanceType(d.Get(names.AttrInstanceType).(string))
 	in := &codecatalyst.CreateDevEnvironmentInput{
 		ProjectName:       aws.String(d.Get("project_name").(string)),
 		SpaceName:         aws.String(d.Get("space_name").(string)),
@@ -137,16 +137,16 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 		in.InactivityTimeoutMinutes = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		in.Alias = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ides"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Ides = expandIdesConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("ides"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Ides = expandIdesConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("repositories"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Repositories = expandRepositorysInput(v.([]interface{}))
+	if v, ok := d.GetOk("repositories"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Repositories = expandRepositorysInput(v.([]any))
 	}
 
 	out, err := conn.CreateDevEnvironment(ctx, in)
@@ -168,7 +168,7 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -188,10 +188,10 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameDevEnvironment, d.Id(), err)
 	}
 
-	d.Set("alias", out.Alias)
+	d.Set(names.AttrAlias, out.Alias)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set("instance_type", out.InstanceType)
+	d.Set(names.AttrInstanceType, out.InstanceType)
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 
@@ -206,7 +206,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -217,13 +217,13 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		Id: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("alias") {
-		in.Alias = aws.String(d.Get("alias").(string))
+	if d.HasChanges(names.AttrAlias) {
+		in.Alias = aws.String(d.Get(names.AttrAlias).(string))
 		update = true
 	}
 
-	if d.HasChanges("instance_type") {
-		in.InstanceType = types.InstanceType(d.Get("instance_type").(string))
+	if d.HasChanges(names.AttrInstanceType) {
+		in.InstanceType = types.InstanceType(d.Get(names.AttrInstanceType).(string))
 		update = true
 	}
 	if !update {
@@ -243,18 +243,19 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting Codecatalyst DevEnvironment %s", d.Id())
 
-	_, err := conn.DeleteDevEnvironment(ctx, &codecatalyst.DeleteDevEnvironmentInput{
+	input := codecatalyst.DeleteDevEnvironmentInput{
 		Id:          aws.String(d.Id()),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 		ProjectName: aws.String(d.Get("project_name").(string)),
-	})
+	}
+	_, err := conn.DeleteDevEnvironment(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -303,7 +304,7 @@ func waitDevEnvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, i
 }
 
 func statusDevEnvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDevEnvironmentByID(ctx, conn, id, spaceName, projectName)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -342,12 +343,12 @@ func findDevEnvironmentByID(ctx context.Context, conn *codecatalyst.Client, id s
 	return out, nil
 }
 
-func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []interface{} {
+func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenRepository(&apiObject))
@@ -356,30 +357,30 @@ func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []i
 	return tfList
 }
 
-func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) interface{} {
+func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BranchName; v != nil {
 		tfMap["branch_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.ToString(v)
+		tfMap[names.AttrRepositoryName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenIdes(apiObjects []types.Ide) []interface{} {
+func flattenIdes(apiObjects []types.Ide) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenIde(&apiObject))
@@ -388,15 +389,15 @@ func flattenIdes(apiObjects []types.Ide) []interface{} {
 	return tfList
 }
 
-func flattenIde(apiObject *types.Ide) map[string]interface{} {
+func flattenIde(apiObject *types.Ide) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Runtime; v != nil {
@@ -406,19 +407,19 @@ func flattenIde(apiObject *types.Ide) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPersistentStorage(apiObject *types.PersistentStorage) []map[string]interface{} {
+func flattenPersistentStorage(apiObject *types.PersistentStorage) []map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"size": aws.ToInt32(apiObject.SizeInGiB),
+	tfMap := map[string]any{
+		names.AttrSize: aws.ToInt32(apiObject.SizeInGiB),
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
+func expandRepositorysInput(tfList []any) []types.RepositoryInput {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -426,7 +427,7 @@ func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
 	var apiObjects []types.RepositoryInput
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -440,20 +441,20 @@ func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
 	return apiObjects
 }
 
-func expandRepositoryInput(tfMap map[string]interface{}) types.RepositoryInput {
+func expandRepositoryInput(tfMap map[string]any) types.RepositoryInput {
 	apiObject := types.RepositoryInput{}
 
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
 		apiObject.BranchName = aws.String(v)
 	}
-	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRepositoryName].(string); ok && v != "" {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
+func expandIdesConfiguration(tfList []any) []types.IdeConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -461,7 +462,7 @@ func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
 	var apiObjects []types.IdeConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -475,10 +476,10 @@ func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
 	return apiObjects
 }
 
-func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration {
+func expandIdeConfiguration(tfMap map[string]any) types.IdeConfiguration {
 	apiObject := types.IdeConfiguration{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {
@@ -488,10 +489,10 @@ func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration
 	return apiObject
 }
 
-func expandPersistentStorageConfiguration(tfMap map[string]interface{}) *types.PersistentStorageConfiguration {
+func expandPersistentStorageConfiguration(tfMap map[string]any) *types.PersistentStorageConfiguration {
 	apiObject := &types.PersistentStorageConfiguration{}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		apiObject.SizeInGiB = aws.Int32(int32(v))
 	}
 

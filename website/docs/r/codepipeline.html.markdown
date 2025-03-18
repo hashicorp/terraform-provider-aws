@@ -201,6 +201,50 @@ A `stage` block supports the following arguments:
 
 * `name` - (Required) The name of the stage.
 * `action` - (Required) The action(s) to include in the stage. Defined as an `action` block below
+* `before_entry` - (Optional) The method to use when a stage allows entry. For example, configuring this field for conditions will allow entry to the stage when the conditions are met.
+* `on_success` - (Optional) The method to use when a stage has succeeded. For example, configuring this field for conditions will allow the stage to succeed when the conditions are met.
+* `on_failure` - (Optional) The method to use when a stage has not completed successfully. For example, configuring this field for rollback will roll back a failed stage automatically to the last successful pipeline execution in the stage.
+
+A `before_entry` block supports the following arguments:
+
+* `condition` - (Required) The conditions that are configured as entry condition. Defined as a `condition` block below.
+
+A `on_success` block supports the following arguments:
+
+* `condition` - (Required) The conditions that are success conditions. Defined as a `condition` block below.
+
+A `on_failure` block supports the following arguments:
+
+* `condition` - (Optional) The conditions that are failure conditions. Defined as a `condition` block below.
+* `result` - (Optional) The conditions that are configured as failure conditions. Possible values are `ROLLBACK`,  `FAIL`, `RETRY` and `SKIP`.
+* `retry_configuration` - (Optional) The retry configuration specifies automatic retry for a failed stage, along with the configured retry mode. Defined as a `retry_configuration` block below.
+
+A `condition` block supports the following arguments:
+
+* `result` - (Optional) The action to be done when the condition is met. For example, rolling back an execution for a failure condition. Possible values are `ROLLBACK`, `FAIL`, `RETRY` and `SKIP`.
+* `rule` - (Optional) The rules that make up the condition. Defined as a `rule` block below.
+
+A `rule` block supports the following arguments:
+
+* `name` - (Required) The name of the rule that is created for the condition, such as `VariableCheck`.
+* `rule_type_id` - (Required) The ID for the rule type, which is made up of the combined values for `category`, `owner`, `provider`, and `version`. Defined as an `rule_type_id` block below.
+* `commands` - (Optional) The shell commands to run with your commands rule in CodePipeline. All commands are supported except multi-line formats.
+* `configuration` - (Optional) The action configuration fields for the rule. Configurations options for rule types and providers can be found in the [Rule structure reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/rule-reference.html).
+* `input_artifacts` - (Optional) The list of the input artifacts fields for the rule, such as specifying an input file for the rule.
+* `region` - (Optional) The Region for the condition associated with the rule.
+* `role_arn` - (Optional) The pipeline role ARN associated with the rule.
+* `timeout_in_minutes` - (Optional) The action timeout for the rule.
+
+A `rule_type_id` block supports the following arguments:
+
+* `category` - (Required) A category defines what kind of rule can be run in the stage, and constrains the provider type for the rule. The valid category is `Rule`.
+* `provider` - (Required) The rule provider, such as the DeploymentWindow rule. For a list of rule provider names, see the rules listed in the [AWS CodePipeline rule reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/rule-reference.html).
+* `owner` - (Optional) The creator of the rule being called. The valid value for the Owner field in the rule category is `AWS`.
+* `version` - (Optional) A string that describes the rule version.
+
+A `retry_configuration` block supports the following arguments:
+
+* `retry_mode` - (Optional) The method that you want to configure for automatic stage retry on stage failure. You can specify to retry only failed action in the stage or all actions in the stage. Possible values are `FAILED_ACTIONS` and `ALL_ACTIONS`.
 
 An `action` block supports the following arguments:
 
@@ -209,7 +253,7 @@ An `action` block supports the following arguments:
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
 * `version` - (Required) A string that identifies the action type.
-* `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
+* `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation. Note: The `DetectChanges` parameter (optional, default value is true) in the `configuration` section causes CodePipeline to automatically start your pipeline upon new commits. Please refer to AWS Documentation for more details: https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference-CodestarConnectionSource.html#action-reference-CodestarConnectionSource-config.
 * `input_artifacts` - (Optional) A list of artifact names to be worked on.
 * `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline.
 * `role_arn` - (Optional) The ARN of the IAM service role that will perform the declared action. This is assumed through the roleArn for the pipeline.
@@ -224,7 +268,7 @@ A `trigger` block supports the following arguments:
 
 A `git_configuration` block supports the following arguments:
 
-* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration.
+* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration, such as Git tags, is specified. The trigger configuration will start the pipeline upon the specified change only.
 * `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
 * `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
 

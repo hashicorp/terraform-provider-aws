@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -41,7 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource LF Tag")
+// @FrameworkResource("aws_lakeformation_resource_lf_tag", name="Resource LF Tag")
 func newResourceResourceLFTag(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceResourceLFTag{}
 	r.SetDefaultCreateTimeout(20 * time.Minute)
@@ -57,20 +58,17 @@ const (
 type resourceResourceLFTag struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lakeformation_resource_lf_tag"
+	framework.WithNoUpdate
 }
 
 func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"catalog_id": catalogIDSchemaOptional(),
-			"id":         framework.IDAttribute(),
+			names.AttrCatalogID: catalogIDSchemaOptional(),
+			names.AttrID:        framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"database": schema.ListNestedBlock{
+			names.AttrDatabase: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[Database](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -80,8 +78,8 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptional(),
-						"name": schema.StringAttribute{
+						names.AttrCatalogID: catalogIDSchemaOptional(),
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -101,8 +99,8 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptionalComputed(),
-						"key": schema.StringAttribute{
+						names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
+						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 128),
@@ -111,7 +109,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 255),
@@ -134,18 +132,18 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptional(),
-						"database_name": schema.StringAttribute{
+						names.AttrCatalogID: catalogIDSchemaOptional(),
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
+									path.MatchRelative().AtParent().AtName(names.AttrName),
 									path.MatchRelative().AtParent().AtName("wildcard"),
 								),
 							},
@@ -157,7 +155,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 							Optional: true,
 							Validators: []validator.Bool{
 								boolvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
+									path.MatchRelative().AtParent().AtName(names.AttrName),
 									path.MatchRelative().AtParent().AtName("wildcard"),
 								),
 							},
@@ -178,7 +176,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptional(),
+						names.AttrCatalogID: catalogIDSchemaOptional(),
 						"column_names": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
@@ -192,13 +190,13 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								setplanmodifier.RequiresReplace(),
 							},
 						},
-						"database_name": schema.StringAttribute{
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -234,7 +232,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -347,7 +345,7 @@ func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateR
 
 	state := plan
 
-	id := fmt.Sprintf("%d", create.StringHashcode(prettify(in)))
+	id := strconv.Itoa(create.StringHashcode(prettify(in)))
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -418,17 +416,6 @@ func (r *resourceResourceLFTag) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceLFTag) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ResourceResourceLFTagData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
 func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
@@ -460,13 +447,15 @@ func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	in.LFTags = []awstypes.LFTagPair{
-		{
-			TagKey: fwflex.StringFromFramework(ctx, lfTag.Key),
-			TagValues: []string{
-				lfTag.Value.ValueString(),
+	if lfTag != nil {
+		in.LFTags = []awstypes.LFTagPair{
+			{
+				TagKey: fwflex.StringFromFramework(ctx, lfTag.Key),
+				TagValues: []string{
+					lfTag.Value.ValueString(),
+				},
 			},
-		},
+		}
 	}
 
 	if in.Resource == nil || reflect.DeepEqual(in.Resource, &awstypes.Resource{}) || len(in.LFTags) == 0 {
@@ -510,7 +499,7 @@ func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteR
 func (r *resourceResourceLFTag) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("database"),
+			path.MatchRoot(names.AttrDatabase),
 			path.MatchRoot("table"),
 			path.MatchRoot("table_with_columns"),
 		),

@@ -48,22 +48,18 @@ type resourcePolicy struct {
 	framework.WithImportByID
 }
 
-func (r *resourcePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_verifiedpermissions_policy"
-}
-
 func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id":        framework.IDAttribute(),
-			"policy_id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
+			"policy_id":  framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -90,7 +86,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"description": schema.StringAttribute{
+									names.AttrDescription: schema.StringAttribute{
 										Optional: true,
 									},
 									"statement": schema.StringAttribute{
@@ -122,7 +118,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"principal": schema.ListNestedBlock{
+									names.AttrPrincipal: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[templateLinkedPrincipal](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -246,7 +242,7 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 	in := &verifiedpermissions.CreatePolicyInput{}
 
 	in.ClientToken = aws.String(id.UniqueId())
-	in.PolicyStoreId = aws.String(plan.PolicyStoreID.ValueString())
+	in.PolicyStoreId = plan.PolicyStoreID.ValueStringPointer()
 
 	def, diags := plan.Definition.ToPtr(ctx)
 	resp.Diagnostics.Append(diags...)
@@ -277,7 +273,7 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 		}
 
 		value := awstypes.TemplateLinkedPolicyDefinition{
-			PolicyTemplateId: aws.String(templateLinked.PolicyTemplateID.ValueString()),
+			PolicyTemplateId: templateLinked.PolicyTemplateID.ValueStringPointer(),
 		}
 
 		if !templateLinked.Principal.IsNull() {
@@ -488,8 +484,8 @@ func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &verifiedpermissions.DeletePolicyInput{
-		PolicyId:      aws.String(state.PolicyID.ValueString()),
-		PolicyStoreId: aws.String(state.PolicyStoreID.ValueString()),
+		PolicyId:      state.PolicyID.ValueStringPointer(),
+		PolicyStoreId: state.PolicyStoreID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePolicy(ctx, in)

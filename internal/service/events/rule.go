@@ -54,11 +54,11 @@ func resourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -74,13 +74,13 @@ func resourceRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateEventPatternValue(),
-				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
-				StateFunc: func(v interface{}) string {
+				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+				StateFunc: func(v any) string {
 					json, _ := ruleEventPatternJSONDecoder(v.(string))
 					return json
 				},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -88,44 +88,44 @@ func resourceRule() *schema.Resource {
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Deprecated: `Use "state" instead`,
+				Deprecated: "is_enabled is deprecated. Use state instead.",
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 					rawPlan := d.GetRawPlan()
 					rawIsEnabled := rawPlan.GetAttr("is_enabled")
 					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
 				},
 				ConflictsWith: []string{
-					"state",
+					names.AttrState,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateRuleName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateRuleName,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
-				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
+				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
 			},
-			"state": {
+			names.AttrState: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.RuleState](),
@@ -142,23 +142,21 @@ func resourceRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := expandPutRuleInput(d, name)
 	input.Tags = getTagsIn(ctx)
 
 	arn, err := retryPutRule(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		arn, err = retryPutRule(ctx, conn, input)
@@ -174,7 +172,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
 		return findRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 	})
 
@@ -187,7 +185,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceRuleRead(ctx, d, meta)...)
 		}
 
@@ -199,7 +197,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -221,8 +219,8 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	arn := aws.ToString(output.Arn)
-	d.Set("arn", arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
 	if output.EventPattern != nil {
 		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
@@ -231,35 +229,43 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 		d.Set("event_pattern", pattern)
 	}
-	d.Set("force_destroy", d.Get("force_destroy").(bool))
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
 	switch output.State {
 	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
 		d.Set("is_enabled", true)
 	default:
 		d.Set("is_enabled", false)
 	}
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set("role_arn", output.RoleArn)
-	d.Set("schedule_expression", output.ScheduleExpression)
-	d.Set("state", output.State)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
+	d.Set(names.AttrState, output.State)
 
 	return diags
 }
 
-func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, names.AttrForceDestroy) {
 		_, ruleName, err := ruleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := expandPutRuleInput(d, ruleName)
+		input.Tags = getTagsIn(ctx) // For ABAC aws:RequestTag condition.
 
 		_, err = retryPutRule(ctx, conn, input)
+
+		// Some partitions (e.g. ISO) may not support tag-on-update.
+		if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+			input.Tags = nil
+
+			_, err = retryPutRule(ctx, conn, input)
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
@@ -269,7 +275,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -282,20 +288,19 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Name: aws.String(ruleName),
 	}
 
-	forceDestroy := d.Get("force_destroy").(bool)
-	if forceDestroy {
-		input.Force = forceDestroy
-	}
-
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
+	}
+
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
+		input.Force = v.(bool)
 	}
 
 	const (
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (any, error) {
 		return conn.DeleteRule(ctx, input)
 	}, errCodeValidationException, "Rule can't be deleted since it has targets")
 
@@ -311,7 +316,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.PutRuleInput) (string, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.PutRule(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
@@ -393,8 +398,8 @@ func ruleParseResourceID(id string) (string, string, error) {
 }
 
 // ruleEventPatternJSONDecoder decodes unicode translation of <,>,&
-func ruleEventPatternJSONDecoder(jsonString interface{}) (string, error) {
-	var j interface{}
+func ruleEventPatternJSONDecoder(jsonString any) (string, error) {
+	var j any
 
 	if jsonString == nil || jsonString.(string) == "" {
 		return "", nil
@@ -425,7 +430,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		apiObject.Description = aws.String(v.(string))
 	}
 
@@ -438,16 +443,16 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 		apiObject.EventPattern = aws.String(json)
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		apiObject.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule_expression"); ok {
+	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
 		apiObject.ScheduleExpression = aws.String(v.(string))
 	}
 
 	rawConfig := d.GetRawConfig()
-	rawState := rawConfig.GetAttr("state")
+	rawState := rawConfig.GetAttr(names.AttrState)
 	if rawState.IsKnown() && !rawState.IsNull() {
 		apiObject.State = types.RuleState(rawState.AsString())
 	} else {
@@ -465,7 +470,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 }
 
 func validateEventPatternValue() schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
+	return func(v any, k string) (ws []string, errors []error) {
 		json, err := ruleEventPatternJSONDecoder(v.(string))
 		if err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))

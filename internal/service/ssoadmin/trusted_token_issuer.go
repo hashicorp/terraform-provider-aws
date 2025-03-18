@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Trusted Token Issuer")
+// @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
 func newResourceTrustedTokenIssuer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTrustedTokenIssuer{}, nil
@@ -50,21 +50,17 @@ type resourceTrustedTokenIssuer struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTrustedTokenIssuer) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_trusted_token_issuer"
-}
-
 func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"client_token": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"instance_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -72,7 +68,7 @@ func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"trusted_token_issuer_type": schema.StringAttribute{
@@ -141,14 +137,14 @@ func (r *resourceTrustedTokenIssuer) Create(ctx context.Context, req resource.Cr
 	}
 
 	in := &ssoadmin.CreateTrustedTokenIssuerInput{
-		InstanceArn:            aws.String(plan.InstanceARN.ValueString()),
-		Name:                   aws.String(plan.Name.ValueString()),
+		InstanceArn:            plan.InstanceARN.ValueStringPointer(),
+		Name:                   plan.Name.ValueStringPointer(),
 		TrustedTokenIssuerType: awstypes.TrustedTokenIssuerType(plan.TrustedTokenIssuerType.ValueString()),
 		Tags:                   getTagsIn(ctx),
 	}
 
 	if !plan.ClientToken.IsNull() {
-		in.ClientToken = aws.String(plan.ClientToken.ValueString())
+		in.ClientToken = plan.ClientToken.ValueStringPointer()
 	}
 
 	if !plan.TrustedTokenIssuerConfiguration.IsNull() {
@@ -211,7 +207,7 @@ func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(r.Meta(), aws.ToString(out.TrustedTokenIssuerArn))
+	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(ctx, r.Meta(), aws.ToString(out.TrustedTokenIssuerArn))
 
 	state.ARN = flex.StringToFramework(ctx, out.TrustedTokenIssuerArn)
 	state.Name = flex.StringToFramework(ctx, out.Name)
@@ -250,11 +246,11 @@ func (r *resourceTrustedTokenIssuer) Update(ctx context.Context, req resource.Up
 
 	if !plan.Name.Equal(state.Name) || !plan.TrustedTokenIssuerConfiguration.Equal(state.TrustedTokenIssuerConfiguration) {
 		in := &ssoadmin.UpdateTrustedTokenIssuerInput{
-			TrustedTokenIssuerArn: aws.String(plan.ID.ValueString()),
+			TrustedTokenIssuerArn: plan.ID.ValueStringPointer(),
 		}
 
 		if !plan.Name.IsNull() {
-			in.Name = aws.String(plan.Name.ValueString())
+			in.Name = plan.Name.ValueStringPointer()
 		}
 
 		if !plan.TrustedTokenIssuerConfiguration.IsNull() {
@@ -314,7 +310,7 @@ func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.De
 	}
 
 	in := &ssoadmin.DeleteTrustedTokenIssuerInput{
-		TrustedTokenIssuerArn: aws.String(state.ID.ValueString()),
+		TrustedTokenIssuerArn: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteTrustedTokenIssuer(ctx, in)
@@ -331,11 +327,7 @@ func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.De
 }
 
 func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {
@@ -388,9 +380,9 @@ func expandOIDCJWTConfiguration(tfList []OIDCJWTConfigurationData) *awstypes.Oid
 	tfObj := tfList[0]
 
 	apiObject := &awstypes.OidcJwtConfiguration{
-		ClaimAttributePath:         aws.String(tfObj.ClaimAttributePath.ValueString()),
-		IdentityStoreAttributePath: aws.String(tfObj.IdentityStoreAttributePath.ValueString()),
-		IssuerUrl:                  aws.String(tfObj.IssuerUrl.ValueString()),
+		ClaimAttributePath:         tfObj.ClaimAttributePath.ValueStringPointer(),
+		IdentityStoreAttributePath: tfObj.IdentityStoreAttributePath.ValueStringPointer(),
+		IssuerUrl:                  tfObj.IssuerUrl.ValueStringPointer(),
 		JwksRetrievalOption:        awstypes.JwksRetrievalOption(tfObj.JWKSRetrievalOption.ValueString()),
 	}
 
@@ -423,8 +415,8 @@ func expandOIDCJWTUpdateConfiguration(tfList []OIDCJWTConfigurationData) *awstyp
 	tfObj := tfList[0]
 
 	apiObject := &awstypes.OidcJwtUpdateConfiguration{
-		ClaimAttributePath:         aws.String(tfObj.ClaimAttributePath.ValueString()),
-		IdentityStoreAttributePath: aws.String(tfObj.IdentityStoreAttributePath.ValueString()),
+		ClaimAttributePath:         tfObj.ClaimAttributePath.ValueStringPointer(),
+		IdentityStoreAttributePath: tfObj.IdentityStoreAttributePath.ValueStringPointer(),
 		JwksRetrievalOption:        awstypes.JwksRetrievalOption(tfObj.JWKSRetrievalOption.ValueString()),
 	}
 
@@ -485,12 +477,12 @@ func flattenOIDCJWTConfiguration(ctx context.Context, apiObject *awstypes.OidcJw
 
 // Instance ARN is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
 // Instance ARN can be extracted from the Trusted Token Issuer ARN.
-func TrustedTokenIssuerParseInstanceARN(conn *conns.AWSClient, id string) (string, diag.Diagnostics) {
+func TrustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient, id string) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return fmt.Sprintf("arn:%s:sso:::instance/%s", conn.Partition, parts[1]), diags
+		return fmt.Sprintf("arn:%s:sso:::instance/%s", c.Partition(ctx), parts[1]), diags
 	}
 
 	return "", diags
@@ -504,8 +496,8 @@ type resourceTrustedTokenIssuerData struct {
 	Name                            types.String `tfsdk:"name"`
 	TrustedTokenIssuerConfiguration types.List   `tfsdk:"trusted_token_issuer_configuration"`
 	TrustedTokenIssuerType          types.String `tfsdk:"trusted_token_issuer_type"`
-	Tags                            types.Map    `tfsdk:"tags"`
-	TagsAll                         types.Map    `tfsdk:"tags_all"`
+	Tags                            tftags.Map   `tfsdk:"tags"`
+	TagsAll                         tftags.Map   `tfsdk:"tags_all"`
 }
 
 type TrustedTokenIssuerConfigurationData struct {

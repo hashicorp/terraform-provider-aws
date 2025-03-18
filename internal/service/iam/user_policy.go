@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_policy", name="User Policy")
@@ -37,27 +38,27 @@ func resourceUserPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := verify.LegacyPolicyNormalize(v)
 					return json
 				},
@@ -71,17 +72,17 @@ func resourceUserPolicy() *schema.Resource {
 	}
 }
 
-func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	userName := d.Get("user").(string)
-	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.PutUserPolicyInput{
 		PolicyDocument: aws.String(policyDoc),
 		PolicyName:     aws.String(policyName),
@@ -97,7 +98,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", userName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 			return FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
 		})
 
@@ -109,7 +110,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceUserPolicyRead(ctx, d, meta)...)
 }
 
-func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -135,20 +136,20 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("name", policyName)
-	d.Set("name_prefix", create.NamePrefixFromName(policyName))
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrName, policyName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
+	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("user", userName)
 
 	return diags
 }
 
-func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

@@ -16,25 +16,26 @@ import (
 
 // @SDKDataSource("aws_apigatewayv2_vpc_link", name="VPC Link")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -48,7 +49,7 @@ func dataSourceVPCLink() *schema.Resource {
 	}
 }
 
-func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -60,10 +61,10 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(vpcLinkID)
-	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("name", output.Name)
-	d.Set("security_group_ids", output.SecurityGroupIds)
-	d.Set("subnet_ids", output.SubnetIds)
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
+	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)
 

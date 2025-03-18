@@ -30,8 +30,8 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},

@@ -6,7 +6,6 @@ package auditmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
 func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceOrganizationAdminAccountRegistration{}, nil
 }
@@ -33,10 +32,6 @@ type resourceOrganizationAdminAccountRegistration struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_organization_admin_account_registration"
-}
-
 func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -46,7 +41,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Contex
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"organization_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -64,7 +59,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Create(ctx context.Contex
 	}
 
 	in := auditmanager.RegisterOrganizationAdminAccountInput{
-		AdminAccountId: aws.String(plan.AdminAccountID.ValueString()),
+		AdminAccountId: plan.AdminAccountID.ValueStringPointer(),
 	}
 	out, err := conn.RegisterOrganizationAdminAccount(ctx, &in)
 	if err != nil {
@@ -125,7 +120,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Contex
 	}
 
 	_, err := conn.DeregisterOrganizationAdminAccount(ctx, &auditmanager.DeregisterOrganizationAdminAccountInput{
-		AdminAccountId: aws.String(state.AdminAccountID.ValueString()),
+		AdminAccountId: state.AdminAccountID.ValueStringPointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -136,7 +131,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Contex
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceOrganizationAdminAccountRegistrationData struct {

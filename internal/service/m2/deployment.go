@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Deployment")
+// @FrameworkResource("aws_m2_deployment", name="Deployment")
 func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deploymentResource{}
 
@@ -47,14 +47,10 @@ type deploymentResource struct {
 	framework.WithTimeouts
 }
 
-func (*deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_m2_deployment"
-}
-
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -81,7 +77,7 @@ func (r *deploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -118,7 +114,12 @@ func (r *deploymentResource) Create(ctx context.Context, request resource.Create
 
 	// Set values for unknowns.
 	data.DeploymentID = fwflex.StringToFramework(ctx, output.DeploymentId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Mainframe Modernization Deployment", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
 	if _, err := waitDeploymentCreated(ctx, conn, data.ApplicationID.ValueString(), data.DeploymentID.ValueString(), timeout); err != nil {
@@ -233,22 +234,44 @@ func (r *deploymentResource) Update(ctx context.Context, request resource.Update
 
 		// Set values for unknowns.
 		new.DeploymentID = fwflex.StringToFramework(ctx, output.DeploymentId)
-		new.setID()
+		id, err := new.setID()
+		if err != nil {
+			response.Diagnostics.AddError("creating Mainframe Modernization Deployment", err.Error())
+			return
+		}
+		new.ID = types.StringValue(id)
 
 		if _, err := waitDeploymentUpdated(ctx, conn, new.ApplicationID.ValueString(), new.DeploymentID.ValueString(), timeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Deployment (%s) update", new.ID.ValueString()), err.Error())
 
 			return
 		}
+
+		// Start the application if plan says to.
+		if new.Start.ValueBool() {
+			applicationID := new.ApplicationID.ValueString()
+			if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
+				return
+			}
+		}
+
+		response.Diagnostics.Append(response.State.Set(ctx, new)...)
+		return
 	}
 
-	// Start the application if plan says to.
-	if new.Start.ValueBool() {
+	// Start/stop deployment if no other update is needed
+	if !old.Start.Equal(new.Start) {
 		applicationID := new.ApplicationID.ValueString()
-		if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
-
-			return
+		new.DeploymentID = old.DeploymentID
+		if new.Start.ValueBool() {
+			if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
+			}
+		} else {
+			if _, err := stopApplicationIfRunning(ctx, conn, applicationID, new.ForceStop.ValueBool(), timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("stopping Mainframe Modernization Application (%s)", applicationID), err.Error())
+			}
 		}
 	}
 
@@ -344,7 +367,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 }
 
 func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
 		if tfresource.NotFound(err) {
@@ -426,6 +449,11 @@ func (data *deploymentResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *deploymentResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationID.ValueString(), data.DeploymentID.ValueString()}, deploymentResourceIDPartCount, false)))
+func (data *deploymentResourceModel) setID() (string, error) {
+	parts := []string{
+		data.ApplicationID.ValueString(),
+		data.DeploymentID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, deploymentResourceIDPartCount, false)
 }

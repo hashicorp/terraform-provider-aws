@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,21 +36,22 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -58,7 +59,7 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -72,21 +73,22 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic_NoDependsOn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -94,7 +96,7 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -118,7 +120,7 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,21 +134,22 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_protocolNoEncap(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "NO_ENCAP"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -154,7 +157,7 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -168,7 +171,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -176,7 +179,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
@@ -185,7 +188,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -198,18 +201,14 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *networkmanager.ConnectAttachment) resource.TestCheckFunc {
+func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Connect Attachment ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -225,7 +224,7 @@ func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *netwo
 
 func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_attachment" {

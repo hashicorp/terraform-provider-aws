@@ -8,24 +8,26 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_transfer_connector", name="Connector")
 // @Tags(identifierAttribute="arn")
-func ResourceConnector() *schema.Resource {
+func resourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
 		ReadWithoutTimeout:   resourceConnectorRead,
@@ -41,7 +43,7 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,28 +54,28 @@ func ResourceConnector() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compression": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(transfer.CompressionEnum_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CompressionEnum](),
 						},
 						"encryption_algorithm": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(transfer.EncryptionAlg_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.EncryptionAlg](),
 						},
 						"local_profile_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"mdn_response": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(transfer.MdnResponse_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MdnResponse](),
 						},
 						"mdn_signing_algorithm": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(transfer.MdnSigningAlg_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MdnSigningAlg](),
 						},
 						"message_subject": {
 							Type:     schema.TypeString,
@@ -84,9 +86,9 @@ func ResourceConnector() *schema.Resource {
 							Required: true,
 						},
 						"signing_algorithm": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(transfer.SigningAlg_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SigningAlg](),
 						},
 					},
 				},
@@ -134,28 +136,26 @@ func ResourceConnector() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	input := &transfer.CreateConnectorInput{
 		AccessRole: aws.String(d.Get("access_role").(string)),
 		Tags:       getTagsIn(ctx),
-		Url:        aws.String(d.Get("url").(string)),
+		Url:        aws.String(d.Get(names.AttrURL).(string)),
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
-		input.As2Config = expandAs2Config(v.([]interface{}))
+		input.As2Config = expandAs2ConnectorConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
@@ -167,25 +167,25 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("sftp_config"); ok {
-		input.SftpConfig = expandSftpConfig(v.([]interface{}))
+		input.SftpConfig = expandSftpConnectorConfig(v.([]any))
 	}
 
-	output, err := conn.CreateConnectorWithContext(ctx, input)
+	output, err := conn.CreateConnector(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Connector: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectorId))
+	d.SetId(aws.ToString(output.ConnectorId))
 
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	output, err := FindConnectorByID(ctx, conn, d.Id())
+	output, err := findConnectorByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Connector (%s) not found, removing from state", d.Id())
@@ -198,27 +198,28 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_role", output.AccessRole)
-	d.Set("arn", output.Arn)
-	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
+	d.Set(names.AttrARN, output.Arn)
+	if err := d.Set("as2_config", flattenAs2ConnectorConfig(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("security_policy_name", output.SecurityPolicyName)
-	if err := d.Set("sftp_config", flattenSftpConfig(output.SftpConfig)); err != nil {
+	if err := d.Set("sftp_config", flattenSftpConnectorConfig(output.SftpConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sftp_config: %s", err)
 	}
-	d.Set("url", output.Url)
+	d.Set(names.AttrURL, output.Url)
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &transfer.UpdateConnectorInput{
 			ConnectorId: aws.String(d.Id()),
 		}
@@ -228,7 +229,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("as2_config") {
-			input.As2Config = expandAs2Config(d.Get("as2_config").([]interface{}))
+			input.As2Config = expandAs2ConnectorConfig(d.Get("as2_config").([]any))
 		}
 
 		if d.HasChange("logging_role") {
@@ -240,14 +241,14 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("sftp_config") {
-			input.SftpConfig = expandSftpConfig(d.Get("sftp_config").([]interface{}))
+			input.SftpConfig = expandSftpConnectorConfig(d.Get("sftp_config").([]any))
 		}
 
-		if d.HasChange("url") {
-			input.Url = aws.String(d.Get("url").(string))
+		if d.HasChange(names.AttrURL) {
+			input.Url = aws.String(d.Get(names.AttrURL).(string))
 		}
 
-		_, err := conn.UpdateConnectorWithContext(ctx, input)
+		_, err := conn.UpdateConnector(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Transfer Connector (%s): %s", d.Id(), err)
@@ -257,16 +258,17 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Connector: %s", d.Id())
-	_, err := conn.DeleteConnectorWithContext(ctx, &transfer.DeleteConnectorInput{
+	input := transfer.DeleteConnectorInput{
 		ConnectorId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnector(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -277,96 +279,107 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandAs2Config(pUser []interface{}) *transfer.As2ConnectorConfig {
-	if len(pUser) < 1 || pUser[0] == nil {
+func findConnectorByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedConnector, error) {
+	input := &transfer.DescribeConnectorInput{
+		ConnectorId: aws.String(id),
+	}
+
+	output, err := conn.DescribeConnector(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Connector == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Connector, nil
+}
+
+func expandAs2ConnectorConfig(tfList []any) *awstypes.As2ConnectorConfig {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	m := pUser[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	as2Config := &transfer.As2ConnectorConfig{
-		Compression:         aws.String(m["compression"].(string)),
-		EncryptionAlgorithm: aws.String(m["encryption_algorithm"].(string)),
-		LocalProfileId:      aws.String(m["local_profile_id"].(string)),
-		MdnResponse:         aws.String(m["mdn_response"].(string)),
-		MdnSigningAlgorithm: aws.String(m["mdn_signing_algorithm"].(string)),
-		MessageSubject:      aws.String(m["message_subject"].(string)),
-		PartnerProfileId:    aws.String(m["partner_profile_id"].(string)),
-		SigningAlgorithm:    aws.String(m["signing_algorithm"].(string)),
+	apiObject := &awstypes.As2ConnectorConfig{
+		Compression:         awstypes.CompressionEnum(tfMap["compression"].(string)),
+		EncryptionAlgorithm: awstypes.EncryptionAlg(tfMap["encryption_algorithm"].(string)),
+		LocalProfileId:      aws.String(tfMap["local_profile_id"].(string)),
+		MdnResponse:         awstypes.MdnResponse(tfMap["mdn_response"].(string)),
+		MdnSigningAlgorithm: awstypes.MdnSigningAlg(tfMap["mdn_signing_algorithm"].(string)),
+		MessageSubject:      aws.String(tfMap["message_subject"].(string)),
+		PartnerProfileId:    aws.String(tfMap["partner_profile_id"].(string)),
+		SigningAlgorithm:    awstypes.SigningAlg(tfMap["signing_algorithm"].(string)),
 	}
 
-	return as2Config
+	return apiObject
 }
 
-func expandSftpConfig(pUser []interface{}) *transfer.SftpConnectorConfig {
-	if len(pUser) < 1 || pUser[0] == nil {
+func expandSftpConnectorConfig(tfList []any) *awstypes.SftpConnectorConfig {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	m := pUser[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	sftpConfig := &transfer.SftpConnectorConfig{
-		UserSecretId: aws.String(m["user_secret_id"].(string)),
+	apiObject := &awstypes.SftpConnectorConfig{
+		UserSecretId: aws.String(tfMap["user_secret_id"].(string)),
 	}
 
-	if v, ok := m["trusted_host_keys"].(*schema.Set); ok && len(v.List()) > 0 {
-		sftpConfig.TrustedHostKeys = flex.ExpandStringSet(v)
+	if v, ok := tfMap["trusted_host_keys"].(*schema.Set); ok && len(v.List()) > 0 {
+		apiObject.TrustedHostKeys = flex.ExpandStringValueSet(v)
 	}
 
-	return sftpConfig
+	return apiObject
 }
 
-func flattenAs2Config(apiObject *transfer.As2ConnectorConfig) []interface{} {
+func flattenAs2ConnectorConfig(apiObject *awstypes.As2ConnectorConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Compression; v != nil {
-		tfMap["compression"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.EncryptionAlgorithm; v != nil {
-		tfMap["encryption_algorithm"] = aws.StringValue(v)
+	tfMap := map[string]any{
+		"compression":           apiObject.Compression,
+		"encryption_algorithm":  apiObject.EncryptionAlgorithm,
+		"mdn_response":          apiObject.MdnResponse,
+		"mdn_signing_algorithm": apiObject.MdnSigningAlgorithm,
+		"signing_algorithm":     apiObject.SigningAlgorithm,
 	}
 
 	if v := apiObject.LocalProfileId; v != nil {
-		tfMap["local_profile_id"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.MdnResponse; v != nil {
-		tfMap["mdn_response"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.MdnSigningAlgorithm; v != nil {
-		tfMap["mdn_signing_algorithm"] = aws.StringValue(v)
+		tfMap["local_profile_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MessageSubject; v != nil {
-		tfMap["message_subject"] = aws.StringValue(v)
+		tfMap["message_subject"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PartnerProfileId; v != nil {
-		tfMap["partner_profile_id"] = aws.StringValue(v)
+		tfMap["partner_profile_id"] = aws.ToString(v)
 	}
 
-	if v := apiObject.SigningAlgorithm; v != nil {
-		tfMap["signing_algorithm"] = aws.StringValue(v)
-	}
-
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSftpConfig(posixUser *transfer.SftpConnectorConfig) []interface{} {
-	if posixUser == nil {
-		return []interface{}{}
+func flattenSftpConnectorConfig(apiObject *awstypes.SftpConnectorConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"trusted_host_keys": aws.StringValueSlice(posixUser.TrustedHostKeys),
-		"user_secret_id":    aws.StringValue(posixUser.UserSecretId),
+	tfMap := map[string]any{
+		"trusted_host_keys": apiObject.TrustedHostKeys,
+		"user_secret_id":    aws.ToString(apiObject.UserSecretId),
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }

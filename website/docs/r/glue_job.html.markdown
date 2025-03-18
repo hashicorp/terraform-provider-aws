@@ -18,11 +18,13 @@ Provides a Glue Job resource.
 
 ```terraform
 resource "aws_glue_job" "example" {
-  name     = "example"
-  role_arn = aws_iam_role.example.arn
+  name         = "example"
+  glue_version = "5.0"
+  role_arn     = aws_iam_role.example.arn
 
   command {
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
+    python_version  = "3"
   }
 }
 ```
@@ -108,7 +110,9 @@ This resource supports the following arguments:
 * `description` – (Optional) Description of the job.
 * `execution_property` – (Optional) Execution property of the job. Defined below.
 * `glue_version` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+* `job_run_queuing_enabled` - (Optional) Specifies whether job run queuing is enabled for the job runs for this job. A value of true means job run queuing is enabled for the job runs. If false or not populated, the job runs will not be considered for queueing.
 * `execution_class` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
+* `maintenance_window` – (Optional) Specifies the day of the week and hour for the maintenance window for streaming jobs.
 * `max_capacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
 * `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
@@ -131,7 +135,7 @@ This resource supports the following arguments:
 
 * `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `glueray` for Ray Job Type, or `gluestreaming` for Streaming Job Type. `max_capacity` needs to be set if `pythonshell` is chosen.
 * `script_location` - (Required) Specifies the S3 path to a script that executes a job.
-* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.6.
+* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.11 when `glue_version` is set to 5.0.
 * `runtime` - (Optional) In Ray jobs, runtime is used to specify the versions of Ray, Python and additional libraries available in your environment. This field is not used in other job types. For supported runtime environment values, see [Working with Ray jobs](https://docs.aws.amazon.com/glue/latest/dg/ray-jobs-section.html#author-job-ray-runtimes) in the Glue Developer Guide.
 
 ### execution_property Argument Reference

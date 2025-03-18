@@ -34,7 +34,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", names.AttrName),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", names.AttrName),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func testAccCheckDestinationPolicyExists(ctx context.Context, n string, v *strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
+		output, err := tflogs.FindDestinationPolicyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

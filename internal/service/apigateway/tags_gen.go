@@ -15,6 +15,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// listTags lists apigateway service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *apigateway.Client, identifier string, optFns ...func(*apigateway.Options)) (tftags.KeyValueTags, error) {
+	input := apigateway.GetTagsInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.GetTags(ctx, &input, optFns...)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists apigateway service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).APIGatewayClient(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
 // map[string]string handling
 
 // Tags returns apigateway service tags.
@@ -58,12 +91,12 @@ func updateTags(ctx context.Context, conn *apigateway.Client, identifier string,
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.APIGateway)
 	if len(removedTags) > 0 {
-		input := &apigateway.UntagResourceInput{
+		input := apigateway.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -73,12 +106,12 @@ func updateTags(ctx context.Context, conn *apigateway.Client, identifier string,
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.APIGateway)
 	if len(updatedTags) > 0 {
-		input := &apigateway.TagResourceInput{
+		input := apigateway.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

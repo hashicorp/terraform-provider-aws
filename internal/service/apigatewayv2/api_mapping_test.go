@@ -40,12 +40,11 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 	})
 
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
-		"basic":         testAccAPIMapping_basic,
-		"disappears":    testAccAPIMapping_disappears,
-		"ApiMappingKey": testAccAPIMapping_key,
+		acctest.CtBasic:      testAccAPIMapping_basic,
+		acctest.CtDisappears: testAccAPIMapping_disappears,
+		"ApiMappingKey":      testAccAPIMapping_key,
 	}
 	for name, tc := range testCases { //nolint:paralleltest
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t, rName, &certificateARN)
 		})
@@ -90,8 +89,8 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateARN *string)
 				Config: testAccAPIMappingConfig_basic(rName, *certificateARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -146,16 +145,16 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
 			{
 				Config: testAccAPIMappingConfig_key(rName, *certificateARN, "$context.apiId"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -174,13 +173,14 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-		output, err := conn.ImportCertificate(ctx, &acm.ImportCertificateInput{
+		input := acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
-			Tags: tfacm.Tags(tftags.New(ctx, map[string]interface{}{
+			Tags: tfacm.Tags(tftags.New(ctx, map[string]any{
 				"Name": rName,
 			}).IgnoreAWS()),
-		})
+		}
+		output, err := conn.ImportCertificate(ctx, &input)
 
 		if err != nil {
 			return err
@@ -201,7 +201,7 @@ func testAccCheckAPIMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfapigatewayv2.FindAPIMappingByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
+			_, err := tfapigatewayv2.FindAPIMappingByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -231,7 +231,7 @@ func testAccCheckAPIMappingExists(ctx context.Context, n string, vDomainName *st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		domainName := rs.Primary.Attributes["domain_name"]
+		domainName := rs.Primary.Attributes[names.AttrDomainName]
 		output, err := tfapigatewayv2.FindAPIMappingByTwoPartKey(ctx, conn, rs.Primary.ID, domainName)
 
 		if err != nil {
@@ -252,7 +252,7 @@ func testAccAPIMappingImportStateIdFunc(resourceName string) resource.ImportStat
 			return "", fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes["domain_name"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName]), nil
 	}
 }
 

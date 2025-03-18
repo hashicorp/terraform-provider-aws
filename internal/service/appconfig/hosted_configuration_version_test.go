@@ -37,12 +37,12 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}/hostedconfigurationversion/[0-9]+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_appconfig_application.test", "id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}/hostedconfigurationversion/[0-9]+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_appconfig_application.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", "aws_appconfig_configuration_profile.test", "configuration_profile_id"),
-					resource.TestCheckResourceAttr(resourceName, "content", "{\"foo\":\"bar\"}"),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, "{\"foo\":\"bar\"}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
@@ -96,7 +96,7 @@ func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context) resource
 			input := &appconfig.GetHostedConfigurationVersionInput{
 				ApplicationId:          aws.String(appID),
 				ConfigurationProfileId: aws.String(confProfID),
-				VersionNumber:          aws.Int32(int32(versionNumber)),
+				VersionNumber:          aws.Int32(versionNumber),
 			}
 
 			output, err := conn.GetHostedConfigurationVersion(ctx, input)
@@ -137,11 +137,12 @@ func testAccCheckHostedConfigurationVersionExists(ctx context.Context, resourceN
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetHostedConfigurationVersion(ctx, &appconfig.GetHostedConfigurationVersionInput{
+		input := appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
-			VersionNumber:          aws.Int32(int32(versionNumber)),
-		})
+			VersionNumber:          aws.Int32(versionNumber),
+		}
+		output, err := conn.GetHostedConfigurationVersion(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error reading AppConfig Hosted Configuration Version (%s): %w", rs.Primary.ID, err)

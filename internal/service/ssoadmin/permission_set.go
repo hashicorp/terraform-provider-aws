@@ -47,15 +47,15 @@ func ResourcePermissionSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -69,7 +69,7 @@ func ResourcePermissionSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -95,24 +95,22 @@ func ResourcePermissionSet() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -135,7 +133,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -156,11 +154,11 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", permissionSet.PermissionSetArn)
-	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
-	d.Set("description", permissionSet.Description)
+	d.Set(names.AttrARN, permissionSet.PermissionSetArn)
+	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, permissionSet.Description)
 	d.Set("instance_arn", instanceARN)
-	d.Set("name", permissionSet.Name)
+	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 
@@ -175,7 +173,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -184,7 +182,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("description", "relay_state", "session_duration") {
+	if d.HasChanges(names.AttrDescription, "relay_state", "session_duration") {
 		input := &ssoadmin.UpdatePermissionSetInput{
 			InstanceArn:      aws.String(instanceARN),
 			PermissionSetArn: aws.String(permissionSetARN),
@@ -195,7 +193,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 		// for consistency, we'll check for the "presence of" instead of "if changed" for all input fields
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17411
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -219,8 +217,8 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 		if err := updateTags(ctx, conn, permissionSetARN, instanceARN, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
@@ -229,7 +227,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -336,7 +334,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 }
 
 func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
 
 		if tfresource.NotFound(err) {

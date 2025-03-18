@@ -24,12 +24,12 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_db_proxy_endpoint", name="DB Proxy Endpoint")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyEndpointCreate,
@@ -41,8 +41,6 @@ func resourceProxyEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -50,7 +48,7 @@ func resourceProxyEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +64,7 @@ func resourceProxyEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,11 +81,11 @@ func resourceProxyEndpoint() *schema.Resource {
 				Default:          types.DBProxyEndpointTargetRoleReadWrite,
 				ValidateDiagFunc: enum.Validate[types.DBProxyEndpointTargetRole](),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -103,7 +101,7 @@ func resourceProxyEndpoint() *schema.Resource {
 	}
 }
 
-func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -112,12 +110,12 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &rds.CreateDBProxyEndpointInput{
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
-		Tags:                getTagsInV2(ctx),
+		Tags:                getTagsIn(ctx),
 		TargetRole:          types.DBProxyEndpointTargetRole(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -136,7 +134,7 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceProxyEndpointRead(ctx, d, meta)...)
 }
 
-func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -157,20 +155,20 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", dbProxyEndpoint.DBProxyEndpointArn)
+	d.Set(names.AttrARN, dbProxyEndpoint.DBProxyEndpointArn)
 	d.Set("db_proxy_endpoint_name", dbProxyEndpoint.DBProxyEndpointName)
 	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
-	d.Set("endpoint", dbProxyEndpoint.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxyEndpoint.Endpoint)
 	d.Set("is_default", dbProxyEndpoint.IsDefault)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
-	d.Set("vpc_id", dbProxyEndpoint.VpcId)
-	d.Set("vpc_security_group_ids", dbProxyEndpoint.VpcSecurityGroupIds)
+	d.Set(names.AttrVPCID, dbProxyEndpoint.VpcId)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxyEndpoint.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxyEndpoint.VpcSubnetIds)
 
 	return diags
 }
 
-func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -179,10 +177,10 @@ func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChange("vpc_security_group_ids") {
+	if d.HasChange(names.AttrVPCSecurityGroupIDs) {
 		input := &rds.ModifyDBProxyEndpointInput{
 			DBProxyEndpointName: aws.String(dbProxyEndpointName),
-			VpcSecurityGroupIds: flex.ExpandStringValueSet(d.Get("vpc_security_group_ids").(*schema.Set)),
+			VpcSecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBProxyEndpoint(ctx, input)
@@ -199,7 +197,7 @@ func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceProxyEndpointRead(ctx, d, meta)...)
 }
 
-func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -307,7 +305,7 @@ func findDBProxyEndpoints(ctx context.Context, conn *rds.Client, input *rds.Desc
 }
 
 func statusDBProxyEndpoint(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBProxyEndpointByTwoPartKey(ctx, conn, dbProxyName, dbProxyEndpointName)
 
 		if tfresource.NotFound(err) {

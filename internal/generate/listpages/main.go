@@ -16,10 +16,10 @@ import (
 	"html/template"
 	"log"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -35,7 +35,7 @@ var (
 	outputPaginator = flag.String("OutputPaginator", "", "name of the output pagination token field")
 	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
 	export          = flag.Bool("Export", false, "whether to export the list functions")
-	sdkVersion      = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS Go SDK to use i.e. 1 or 2")
+	v2Suffix        = flag.Bool("V2Suffix", false, "whether to append a V2 suffix to the list functions")
 )
 
 func usage() {
@@ -70,32 +70,25 @@ func main() {
 	servicePackage := os.Getenv("GOPACKAGE")
 	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
 
-	awsService, err := names.AWSGoV1Package(servicePackage)
-
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
+	awsService := service.GoV2Package()
+
 	functions := strings.Split(*listOps, ",")
-	sort.Strings(functions)
+	slices.Sort(functions)
 
-	tmpl := template.Must(template.New("function").Parse(functionTemplateV1))
-	if *sdkVersion == sdkV2 {
-		tmpl = template.Must(template.New("function").Parse(functionTemplateV2))
+	tmpl := template.Must(template.New("function").Parse(functionTemplate))
 
-	}
 	g := Generator{
 		tmpl:            tmpl,
 		inputPaginator:  *inputPaginator,
 		outputPaginator: *outputPaginator,
 	}
 
-	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s", awsService)
-
-	if *sdkVersion == sdkV2 {
-		sourcePackage = fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
-
-	}
+	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
 
 	g.parsePackage(sourcePackage)
 
@@ -103,17 +96,10 @@ func main() {
 		Parameters:         strings.Join(os.Args[1:], " "),
 		DestinationPackage: servicePackage,
 		SourcePackage:      sourcePackage,
-		SourceIntfPackage:  fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s/%[1]siface", awsService),
-	}, *sdkVersion)
-
-	awsUpper, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
-
-	if err != nil {
-		log.Fatalf("encountered: %s", err)
-	}
+	})
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsService, awsUpper, *export, *sdkVersion)
+		g.generateFunction(functionName, awsService, *export)
 	}
 
 	src := g.format()
@@ -128,7 +114,6 @@ type HeaderInfo struct {
 	Parameters         string
 	DestinationPackage string
 	SourcePackage      string
-	SourceIntfPackage  string
 }
 
 type Generator struct {
@@ -139,7 +124,7 @@ type Generator struct {
 	outputPaginator string
 }
 
-func (g *Generator) Printf(format string, args ...interface{}) {
+func (g *Generator) Printf(format string, args ...any) {
 	fmt.Fprintf(&g.buf, format, args...)
 }
 
@@ -152,12 +137,8 @@ type Package struct {
 	files []*PackageFile
 }
 
-func (g *Generator) printHeader(headerInfo HeaderInfo, sdkVersion int) {
-	header := template.Must(template.New("header").Parse(headerTemplateV1))
-
-	if sdkVersion == sdkV2 {
-		header = template.Must(template.New("header").Parse(headerTemplateV2))
-	}
+func (g *Generator) printHeader(headerInfo HeaderInfo) {
+	header := template.Must(template.New("header").Parse(headerTemplate))
 
 	err := header.Execute(&g.buf, headerInfo)
 	if err != nil {
@@ -195,14 +176,14 @@ func (g *Generator) addPackage(pkg *packages.Package) {
 type FuncSpec struct {
 	Name            string
 	AWSName         string
-	RecvType        string
+	AWSService      string
 	ParamType       string
 	ResultType      string
 	InputPaginator  string
 	OutputPaginator string
 }
 
-func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper string, export bool, sdkVersion int) {
+func (g *Generator) generateFunction(functionName, awsService string, export bool) {
 	var function *ast.FuncDecl
 
 	for _, file := range g.pkg.files {
@@ -231,18 +212,12 @@ func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper s
 		funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
 	}
 
-	recvType := fmt.Sprintf("%[1]siface.%[2]sAPI", awsService, awsServiceUpper)
-
-	if sdkVersion == sdkV2 {
-		recvType = fmt.Sprintf("*%[1]s.%[2]s", awsService, awsServiceUpper)
-	}
-
 	funcSpec := FuncSpec{
-		Name:            fixUpFuncName(funcName, awsServiceUpper),
+		Name:            fixSomeInitialisms(funcName),
 		AWSName:         function.Name.Name,
-		RecvType:        recvType,
-		ParamType:       g.expandTypeField(function.Type.Params, sdkVersion, false), // Assumes there is a single input parameter
-		ResultType:      g.expandTypeField(function.Type.Results, sdkVersion, true), // Assumes we can take the first return parameter
+		AWSService:      awsService,
+		ParamType:       g.expandTypeField(function.Type.Params, false), // Assumes there is a single input parameter
+		ResultType:      g.expandTypeField(function.Type.Results, true), // Assumes we can take the first return parameter
 		InputPaginator:  g.inputPaginator,
 		OutputPaginator: g.outputPaginator,
 	}
@@ -253,10 +228,10 @@ func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper s
 	}
 }
 
-func (g *Generator) expandTypeField(field *ast.FieldList, sdkVersion int, result bool) string {
+func (g *Generator) expandTypeField(field *ast.FieldList, result bool) string {
 	typeValue := field.List[0].Type
 
-	if sdkVersion == sdkV2 && !result {
+	if !result {
 		typeValue = field.List[1].Type
 	}
 
@@ -277,21 +252,11 @@ func (g *Generator) expandTypeExpr(expr ast.Expr) string {
 	return ""
 }
 
-func fixUpFuncName(funcName, service string) string {
-	return strings.ReplaceAll(fixSomeInitialisms(funcName), service, "")
-}
+//go:embed v2/header.gtpl
+var headerTemplate string
 
-//go:embed v1/header.tmpl
-var headerTemplateV1 string
-
-//go:embed v1/function.tmpl
-var functionTemplateV1 string
-
-//go:embed v2/header.tmpl
-var headerTemplateV2 string
-
-//go:embed v2/function.tmpl
-var functionTemplateV2 string
+//go:embed v2/function.gtpl
+var functionTemplate string
 
 func (g *Generator) format() []byte {
 	src, err := format.Source(g.buf.Bytes())

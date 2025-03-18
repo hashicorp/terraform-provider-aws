@@ -34,7 +34,7 @@ func dataSourcePool() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +43,11 @@ func dataSourcePool() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"provider_name": {
+						names.AttrProviderName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -88,7 +88,7 @@ func dataSourcePool() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -98,7 +98,7 @@ const (
 	ListPoolMaxResults = 20
 )
 
-func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
@@ -112,13 +112,13 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.ToString(ip.IdentityPoolId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "cognito-identity",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("identity_pool_name", ip.IdentityPoolName)
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
@@ -147,11 +147,11 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name string) (*cognitoidentity.DescribeIdentityPoolOutput, error) {
 	var poolID string
-	input := &cognitoidentity.ListIdentityPoolsInput{
+	listInout := cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int32(ListPoolMaxResults),
 	}
 
-	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, input)
+	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, &listInout)
 	for p.HasMorePages() {
 		pools, err := p.NextPage(ctx)
 		if err != nil {
@@ -169,9 +169,10 @@ func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name stri
 		return nil, fmt.Errorf("no identity pool found with name %q", name)
 	}
 
-	pool, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+	describeInput := cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(poolID),
-	})
+	}
+	pool, err := conn.DescribeIdentityPool(ctx, &describeInput)
 
 	if err != nil {
 		return nil, err

@@ -10,13 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,6 +27,7 @@ import (
 
 // @SDKResource("aws_vpclattice_access_log_subscription", name="Access Log Subscription")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceAccessLogSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessLogSubscriptionCreate,
@@ -38,18 +40,18 @@ func resourceAccessLogSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateFunc:     verify.ValidARN,
 				DiffSuppressFunc: suppressEquivalentCloudWatchLogsLogGroupARN,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,11 +61,16 @@ func resourceAccessLogSubscription() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
+			"service_network_log_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ServiceNetworkLogType](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -71,28 +78,34 @@ const (
 	ResNameAccessLogSubscription = "Access Log Subscription"
 )
 
-func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
 		ClientToken:        aws.String(id.UniqueId()),
-		DestinationArn:     aws.String(d.Get("destination_arn").(string)),
+		DestinationArn:     aws.String(d.Get(names.AttrDestinationARN).(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("service_network_log_type"); ok {
+		in.ServiceNetworkLogType = awstypes.ServiceNetworkLogType(v.(string))
 	}
 
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get("destination_arn").(string), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get(names.AttrDestinationARN).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
-	return resourceAccessLogSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceAccessLogSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findAccessLogSubscriptionByID(ctx, conn, d.Id())
@@ -100,43 +113,46 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice AccessLogSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("destination_arn", out.DestinationArn)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrDestinationARN, out.DestinationArn)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)
+	d.Set("service_network_log_type", out.ServiceNetworkLogType)
 
-	return nil
+	return diags
 }
 
-func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceAccessLogSubscriptionRead(ctx, d, meta)
 }
 
-func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
-	_, err := conn.DeleteAccessLogSubscription(ctx, &vpclattice.DeleteAccessLogSubscriptionInput{
+	input := vpclattice.DeleteAccessLogSubscriptionInput{
 		AccessLogSubscriptionIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAccessLogSubscription(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetAccessLogSubscriptionOutput, error) {
@@ -145,7 +161,7 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 	}
 	out, err := conn.GetAccessLogSubscription(ctx, in)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

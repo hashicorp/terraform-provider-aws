@@ -37,11 +37,11 @@ func TestAccRedshiftProducerDataSharesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccProducerDataSharesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "producer_arn", namespaceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "producer_arn", namespaceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "data_shares.#"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "data_shares.*", map[string]*regexp.Regexp{
 						"data_share_arn": regexache.MustCompile(`datashare:+.`),
-						"producer_arn":   regexache.MustCompile(`namespace/+.`),
+						"producer_arn":   regexache.MustCompile(`namespace/.+$`),
 					}),
 				),
 			},

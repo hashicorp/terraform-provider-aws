@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apprunner_custom_domain_association", name="Custom Domain Association")
@@ -42,19 +43,19 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -65,7 +66,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -83,7 +84,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,12 +92,12 @@ func resourceCustomDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	serviceARN := d.Get("service_arn").(string)
 	id := customDomainAssociationCreateResourceID(domainName, serviceARN)
 	input := &apprunner.AssociateCustomDomainInput{
@@ -121,7 +122,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceCustomDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -146,15 +147,15 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_validation_records: %s", err)
 	}
-	d.Set("domain_name", customDomain.DomainName)
+	d.Set(names.AttrDomainName, customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
 	d.Set("service_arn", serviceArn)
-	d.Set("status", customDomain.Status)
+	d.Set(names.AttrStatus, customDomain.Status)
 
 	return diags
 }
 
-func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -165,10 +166,11 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[INFO] Deleting App Runner Custom Domain Association: %s", d.Id())
-	_, err = conn.DisassociateCustomDomain(ctx, &apprunner.DisassociateCustomDomainInput{
+	input := apprunner.DisassociateCustomDomainInput{
 		DomainName: aws.String(domainName),
 		ServiceArn: aws.String(serviceARN),
-	})
+	}
+	_, err = conn.DisassociateCustomDomain(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -221,16 +223,15 @@ func findCustomDomain(ctx context.Context, conn *apprunner.Client, input *apprun
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCustomDomains(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) ([]*types.CustomDomain, error) {
-	var output []*types.CustomDomain
+func findCustomDomains(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) ([]types.CustomDomain, error) {
+	var output []types.CustomDomain
 
 	err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
 		for _, v := range page.CustomDomains {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -274,7 +275,7 @@ const (
 )
 
 func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
 		if tfresource.NotFound(err) {
@@ -329,15 +330,15 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	return nil, err
 }
 
-func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []interface{} {
-	var results []interface{}
+func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []any {
+	var results []any
 
 	for _, record := range records {
-		m := map[string]interface{}{
-			"name":   aws.ToString(record.Name),
-			"status": record.Status,
-			"type":   aws.ToString(record.Type),
-			"value":  aws.ToString(record.Value),
+		m := map[string]any{
+			names.AttrName:   aws.ToString(record.Name),
+			names.AttrStatus: record.Status,
+			names.AttrType:   aws.ToString(record.Type),
+			names.AttrValue:  aws.ToString(record.Value),
 		}
 
 		results = append(results, m)

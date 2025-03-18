@@ -21,9 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glacier_vault_lock")
+// @SDKResource("aws_glacier_vault_lock", name="Vault Lock")
 func resourceVaultLock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultLockCreate,
@@ -46,14 +47,14 @@ func resourceVaultLock() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ForceNew:              true,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -73,11 +74,11 @@ const (
 	lockStateLocked     = "Locked"
 )
 
-func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -120,7 +121,7 @@ func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceVaultLockRead(ctx, d, meta)...)
 }
 
-func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -139,18 +140,18 @@ func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("complete_lock", aws.ToString(output.State) == lockStateLocked)
 	d.Set("vault_name", d.Id())
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }
 
-func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -197,7 +198,7 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 }
 
 func statusLockState(ctx context.Context, conn *glacier.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVaultLockByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

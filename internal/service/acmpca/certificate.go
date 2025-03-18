@@ -47,7 +47,7 @@ func resourceCertificate() *schema.Resource {
 		// Expects ACM PCA ARN format, e.g:
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				re := regexache.MustCompile(`arn:.+:certificate-authority/[^/]+`)
 				authorityARN := re.FindString(d.Id())
 				if authorityARN == "" {
@@ -67,16 +67,16 @@ func resourceCertificate() *schema.Resource {
 				ForceNew:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func resourceCertificate() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,13 +115,13 @@ func resourceCertificate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.ValidityPeriodType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -134,13 +134,13 @@ func resourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const certificateIssueTimeout = 5 * time.Minute
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
-	inputI := &acmpca.IssueCertificateInput{
+	inputI := acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(id.UniqueId()),
@@ -159,14 +159,14 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		inputI.TemplateArn = aws.String(v)
 	}
 
-	if validity, err := expandValidity(d.Get("validity").([]interface{})); err != nil {
+	if validity, err := expandValidity(d.Get("validity").([]any)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
 		inputI.Validity = validity
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (interface{}, error) {
-		return conn.IssueCertificate(ctx, inputI)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (any, error) {
+		return conn.IssueCertificate(ctx, &inputI)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 
 	if err != nil {
@@ -176,11 +176,11 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*acmpca.IssueCertificateOutput).CertificateArn))
 
 	// Wait for certificate status to become ISSUED.
-	inputG := &acmpca.GetCertificateInput{
+	inputG := acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
-	err = acmpca.NewCertificateIssuedWaiter(conn).Wait(ctx, inputG, certificateIssueTimeout)
+	err = acmpca.NewCertificateIssuedWaiter(conn).Wait(ctx, &inputG, certificateIssueTimeout)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)
@@ -189,7 +189,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -205,19 +205,19 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrCertificate, output.Certificate)
 	d.Set("certificate_authority_arn", d.Get("certificate_authority_arn").(string))
-	d.Set("certificate_chain", output.CertificateChain)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 
 	return diags
 }
 
-func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
+	block, _ := pem.Decode([]byte(d.Get(names.AttrCertificate).(string)))
 	if block == nil {
 		log.Printf("[WARN] Failed to parse ACM PCA Certificate (%s)", d.Id())
 		return diags
@@ -232,11 +232,12 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Revoking ACM PCA Certificate: %s", d.Id())
-	_, err = conn.RevokeCertificate(ctx, &acmpca.RevokeCertificateInput{
+	input := acmpca.RevokeCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-		CertificateSerial:       aws.String(fmt.Sprintf("%x", serial)),
+		CertificateSerial:       aws.String(serial.Text(16)), //nolint:mnd // Should be excluded, but not sure how to specify a method
 		RevocationReason:        types.RevocationReasonUnspecified,
-	})
+	}
+	_, err = conn.RevokeCertificate(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsA[*types.RequestAlreadyProcessedException](err) ||
@@ -253,12 +254,12 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findCertificateByTwoPartKey(ctx context.Context, conn *acmpca.Client, certificateARN, certificateAuthorityARN string) (*acmpca.GetCertificateOutput, error) {
-	input := &acmpca.GetCertificateInput{
+	input := acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(certificateARN),
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	return findCertificate(ctx, conn, input)
+	return findCertificate(ctx, conn, &input)
 }
 
 func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.GetCertificateInput) (*acmpca.GetCertificateOutput, error) {
@@ -316,7 +317,7 @@ func getCertificateSerial(der []byte) (*big.Int, error) {
 	return serial, nil
 }
 
-func validTemplateARN(v interface{}, k string) (ws []string, errors []error) {
+func validTemplateARN(v any, k string) (ws []string, errors []error) {
 	wsARN, errorsARN := verify.ValidARN(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
@@ -345,21 +346,21 @@ func validTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandValidity(l []interface{}) (*types.Validity, error) {
+func expandValidity(l []any) (*types.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	valueType := m["type"].(string)
+	valueType := m[names.AttrType].(string)
 	result := &types.Validity{
 		Type: types.ValidityPeriodType(valueType),
 	}
 
-	i, err := ExpandValidityValue(valueType, m["value"].(string))
+	i, err := ExpandValidityValue(valueType, m[names.AttrValue].(string))
 	if err != nil {
-		return nil, fmt.Errorf("parsing value %q: %w", m["value"].(string), err)
+		return nil, fmt.Errorf("parsing value %q: %w", m[names.AttrValue].(string), err)
 	}
 	result.Value = aws.Int64(i)
 

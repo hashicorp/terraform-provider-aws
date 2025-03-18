@@ -4,123 +4,117 @@
 package imagebuilder
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenWorkflowParameter(apiObject *imagebuilder.WorkflowParameter) map[string]interface{} {
+func flattenWorkflowParameter(apiObject *awstypes.WorkflowParameter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
-	if v := apiObject.Value; v != nil {
+	if v := apiObject.Value; len(v) > 0 {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		tfMap["value"] = aws.StringValueSlice(v)[0]
+		tfMap[names.AttrValue] = v[0]
 	}
 
 	return tfMap
 }
 
-func flattenWorkflowParameters(apiObjects []*imagebuilder.WorkflowParameter) []interface{} {
+func flattenWorkflowParameters(apiObjects []awstypes.WorkflowParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenWorkflowParameter(apiObject))
+		tfList = append(tfList, flattenWorkflowParameter(&apiObject))
 	}
 
 	return tfList
 }
 
-func flattenWorkflowConfiguration(apiObject *imagebuilder.WorkflowConfiguration) map[string]interface{} {
+func flattenWorkflowConfiguration(apiObject *awstypes.WorkflowConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.OnFailure; v != nil {
-		tfMap["on_failure"] = aws.String(*v)
+	tfMap := map[string]any{
+		"on_failure": apiObject.OnFailure,
 	}
 
 	if v := apiObject.ParallelGroup; v != nil {
-		tfMap["parallel_group"] = aws.String(*v)
+		tfMap["parallel_group"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Parameters; v != nil {
-		tfMap["parameter"] = flattenWorkflowParameters(v)
+		tfMap[names.AttrParameter] = flattenWorkflowParameters(v)
 	}
 
 	if v := apiObject.WorkflowArn; v != nil {
-		tfMap["workflow_arn"] = aws.StringValue(v)
+		tfMap["workflow_arn"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenWorkflowConfigurations(apiObjects []*imagebuilder.WorkflowConfiguration) []interface{} {
+func flattenWorkflowConfigurations(apiObjects []awstypes.WorkflowConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if apiObjects == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenWorkflowConfiguration(apiObject))
+		tfList = append(tfList, flattenWorkflowConfiguration(&apiObject))
 	}
 
 	return tfList
 }
 
-func expandWorkflowParameter(tfMap map[string]interface{}) *imagebuilder.WorkflowParameter {
+func expandWorkflowParameter(tfMap map[string]any) *awstypes.WorkflowParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.WorkflowParameter{}
+	apiObject := &awstypes.WorkflowParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		apiObject.Value = aws.StringSlice([]string{v})
+		apiObject.Value = []string{v}
 	}
 
 	return apiObject
 }
 
-func expandWorkflowParameters(tfList []interface{}) []*imagebuilder.WorkflowParameter {
+func expandWorkflowParameters(tfList []any) []awstypes.WorkflowParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.WorkflowParameter
+	var apiObjects []awstypes.WorkflowParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -131,28 +125,28 @@ func expandWorkflowParameters(tfList []interface{}) []*imagebuilder.WorkflowPara
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandWorkflowConfiguration(tfMap map[string]interface{}) *imagebuilder.WorkflowConfiguration {
+func expandWorkflowConfiguration(tfMap map[string]any) *awstypes.WorkflowConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.WorkflowConfiguration{}
+	apiObject := &awstypes.WorkflowConfiguration{}
 
 	if v, ok := tfMap["on_failure"].(string); ok && v != "" {
-		apiObject.OnFailure = aws.String(v)
+		apiObject.OnFailure = awstypes.OnWorkflowFailure(v)
 	}
 
 	if v, ok := tfMap["parallel_group"].(string); ok && v != "" {
 		apiObject.ParallelGroup = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Parameters = expandWorkflowParameters(v.List())
 	}
 
@@ -163,16 +157,15 @@ func expandWorkflowConfiguration(tfMap map[string]interface{}) *imagebuilder.Wor
 	return apiObject
 }
 
-func expandWorkflowConfigurations(tfList []interface{}) []*imagebuilder.WorkflowConfiguration {
+func expandWorkflowConfigurations(tfList []any) []awstypes.WorkflowConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.WorkflowConfiguration
+	var apiObjects []awstypes.WorkflowConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -183,7 +176,7 @@ func expandWorkflowConfigurations(tfList []interface{}) []*imagebuilder.Workflow
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects

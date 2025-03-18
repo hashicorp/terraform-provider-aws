@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_codepipeline: Add `timeout_in_minutes` argument to the `action` configuration block
+```
+
+```release-note:bug
+resource/aws_codepipeline: Mark `trigger` as Computed
+```

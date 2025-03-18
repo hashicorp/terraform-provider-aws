@@ -16,18 +16,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eip", name="EIP")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,
@@ -39,8 +41,6 @@ func resourceEIP() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
@@ -48,7 +48,7 @@ func resourceEIP() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -57,11 +57,15 @@ func resourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"associate_with_private_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +81,7 @@ func resourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Optional:         true,
@@ -88,6 +92,12 @@ func resourceEIP() *schema.Resource {
 			"instance": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"ipam_pool_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				Computed: true,
 			},
 			"network_border_group": {
@@ -134,22 +144,22 @@ func resourceEIP() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				Computed:      true,
-				Deprecated:    "use domain attribute instead",
-				ConflictsWith: []string{"domain"},
+				Deprecated:    "vpc is deprecated. Use domain instead.",
+				ConflictsWith: []string{names.AttrDomain},
 			},
 		},
 	}
 }
 
-func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.AllocateAddressInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeElasticIp),
+	input := ec2.AllocateAddressInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeElasticIp),
 	}
 
-	if v, ok := d.GetOk("address"); ok {
+	if v, ok := d.GetOk(names.AttrAddress); ok {
 		input.Address = aws.String(v.(string))
 	}
 
@@ -157,12 +167,16 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
-	if v := d.Get("domain"); v != nil && v.(string) != "" {
+	if v := d.Get(names.AttrDomain); v != nil && v.(string) != "" {
 		input.Domain = types.DomainType(v.(string))
 	}
 
 	if v := d.Get("vpc"); v != nil && v.(bool) {
 		input.Domain = types.DomainTypeVpc
+	}
+
+	if v, ok := d.GetOk("ipam_pool_id"); ok {
+		input.IpamPoolId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("network_border_group"); ok {
@@ -173,7 +187,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.PublicIpv4Pool = aws.String(v.(string))
 	}
 
-	output, err := conn.AllocateAddress(ctx, input)
+	output, err := conn.AllocateAddress(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP: %s", err)
@@ -181,7 +195,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.ToString(output.AllocationId))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	})
 
@@ -191,7 +205,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if instanceID, eniID := d.Get("instance").(string), d.Get("network_interface").(string); instanceID != "" || eniID != "" {
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func() (any, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
 
@@ -203,7 +217,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceEIPRead(ctx, d, meta)...)
 }
 
-func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -211,7 +225,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -226,13 +240,18 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	address := outputRaw.(*types.Address)
-	d.Set("allocation_id", address.AllocationId)
-	d.Set("association_id", address.AssociationId)
+	allocationID := aws.ToString(address.AllocationId)
+	d.Set("allocation_id", allocationID)
+	d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
+	d.Set(names.AttrAssociationID, address.AssociationId)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
-	d.Set("domain", address.Domain)
+	d.Set(names.AttrDomain, address.Domain)
 	d.Set("instance", address.InstanceId)
+	if v := aws.ToString(address.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
+		d.Set("ipam_pool_id", v)
+	}
 	d.Set("network_border_group", address.NetworkBorderGroup)
 	d.Set("network_interface", address.NetworkInterfaceId)
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
@@ -263,12 +282,12 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
 	}
 
-	setTagsOutV2(ctx, address.Tags)
+	setTagsOut(ctx, address.Tags)
 
 	return diags
 }
 
-func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -276,7 +295,7 @@ func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		o, n := d.GetChange("instance")
 		oldInstanceID, newInstanceID := o.(string), n.(string)
 
-		if associationID := d.Get("association_id").(string); oldInstanceID != "" || associationID != "" {
+		if associationID := d.Get(names.AttrAssociationID).(string); oldInstanceID != "" || associationID != "" {
 			if err := disassociateEIP(ctx, conn, associationID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -292,7 +311,7 @@ func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceEIPRead(ctx, d, meta)...)
 }
 
-func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -301,13 +320,13 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// If we are attached to an instance or interface, detach first.
-	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {
+	if associationID := d.Get(names.AttrAssociationID).(string); associationID != "" || d.Get("instance").(string) != "" {
 		if err := disassociateEIP(ctx, conn, associationID); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	input := &ec2.ReleaseAddressInput{
+	input := ec2.ReleaseAddressInput{
 		AllocationId: aws.String(d.Id()),
 	}
 
@@ -316,7 +335,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[INFO] Deleting EC2 EIP: %s", d.Id())
-	_, err := conn.ReleaseAddress(ctx, input)
+	_, err := conn.ReleaseAddress(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return diags
@@ -324,6 +343,21 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 EIP (%s): %s", d.Id(), err)
+	}
+
+	// If the EIP's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
+	if v, ok := d.GetOk("ipam_pool_id"); ok {
+		ipamPoolID := v.(string)
+		const (
+			timeout = 10 * time.Minute // IPAM eventual consistency
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+		}
 	}
 
 	return diags
@@ -337,7 +371,7 @@ func (id eipID) IsVPC() bool {
 }
 
 func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceID, networkInterfaceID, privateIPAddress string) error {
-	input := &ec2.AssociateAddressInput{
+	input := ec2.AssociateAddressInput{
 		AllocationId: aws.String(allocationID),
 	}
 
@@ -353,14 +387,14 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 		input.PrivateIpAddress = aws.String(privateIPAddress)
 	}
 
-	output, err := conn.AssociateAddress(ctx, input)
+	output, err := conn.AssociateAddress(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
 	}
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return findEIPByAssociationID(ctx, conn, aws.ToString(output.AssociationId))
 		},
 		func(err error) (bool, error) {
@@ -389,11 +423,11 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 		return nil
 	}
 
-	input := &ec2.DisassociateAddressInput{
+	input := ec2.DisassociateAddressInput{
 		AssociationId: aws.String(associationID),
 	}
 
-	_, err := conn.DisassociateAddress(ctx, input)
+	_, err := conn.DisassociateAddress(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return nil
@@ -404,4 +438,30 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 	}
 
 	return nil
+}
+
+func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string {
+	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
+}
+
+func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]types.IpamPoolAllocation, error) {
+	input := ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(ipamPoolID),
+	}
+
+	output, err := findIPAMPoolAllocations(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output = tfslices.Filter(output, func(v types.IpamPoolAllocation) bool {
+		return v.ResourceType == types.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
+	})
+
+	if len(output) == 0 {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
 }

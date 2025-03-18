@@ -5,27 +5,32 @@ package imagebuilder
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_image", name="Image")
 // @Tags(identifierAttribute="id")
-func ResourceImage() *schema.Resource {
+func resourceImage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageCreate,
 		ReadWithoutTimeout:   resourceImageRead,
@@ -41,7 +46,7 @@ func ResourceImage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,7 +107,7 @@ func ResourceImage() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -147,7 +152,7 @@ func ResourceImage() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,11 +170,11 @@ func ResourceImage() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"description": {
+									names.AttrDescription: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -177,11 +182,11 @@ func ResourceImage() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -198,7 +203,7 @@ func ResourceImage() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -214,7 +219,7 @@ func ResourceImage() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -226,10 +231,10 @@ func ResourceImage() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_failure": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(imagebuilder.OnWorkflowFailure_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OnWorkflowFailure](),
 						},
 						"parallel_group": {
 							Type:         schema.TypeString,
@@ -237,19 +242,19 @@ func ResourceImage() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -267,14 +272,12 @@ func ResourceImage() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImageInput{
 		ClientToken:                  aws.String(id.UniqueId()),
@@ -298,12 +301,12 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
@@ -314,52 +317,38 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Workflows = expandWorkflowConfigurations(v.(*schema.Set).List())
 	}
 
-	output, err := conn.CreateImageWithContext(ctx, input)
+	output, err := conn.CreateImage(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: empty response")
-	}
-
-	d.SetId(aws.StringValue(output.ImageBuildVersionArn))
+	d.SetId(aws.ToString(output.ImageBuildVersionArn))
 
 	if _, err := waitImageStatusAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImageInput{
-		ImageBuildVersionArn: aws.String(d.Id()),
-	}
+	image, err := findImageByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetImageWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.Image == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image (%s): empty response", d.Id())
-	}
-
-	image := output.Image
-
-	d.Set("arn", image.Arn)
+	d.Set(names.AttrARN, image.Arn)
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
 	}
@@ -373,29 +362,37 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
 	if image.ImageScanningConfiguration != nil {
-		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+		if err := d.Set("image_scanning_configuration", []any{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
+		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if image.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
+		if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
+		}
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
-	d.Set("name", image.Name)
+	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
-		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
+		if err := d.Set("output_resources", []any{flattenOutputResources(image.OutputResources)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting output_resources: %s", err)
+		}
 	} else {
 		d.Set("output_resources", nil)
 	}
 	d.Set("platform", image.Platform)
-	d.Set("version", image.Version)
+	d.Set(names.AttrVersion, image.Version)
 	if image.Workflows != nil {
-		d.Set("workflow", flattenWorkflowConfigurations(image.Workflows))
+		if err := d.Set("workflow", flattenWorkflowConfigurations(image.Workflows)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
+		}
 	} else {
 		d.Set("workflow", nil)
 	}
@@ -405,7 +402,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -413,17 +410,16 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteImageInput{
+	log.Printf("[DEBUG] Deleting Image Builder Image: %s", d.Id())
+	_, err := conn.DeleteImage(ctx, &imagebuilder.DeleteImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteImageWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -434,12 +430,79 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]interface{} {
+func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Image, error) {
+	input := &imagebuilder.GetImageInput{
+		ImageBuildVersionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetImage(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Image == nil || output.Image.State == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Image, nil
+}
+
+func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findImageByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, string(awstypes.ImageStatusPending), nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State.Status), nil
+	}
+}
+
+func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, arn string, timeout time.Duration) (*awstypes.Image, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ImageStatusBuilding,
+			awstypes.ImageStatusCreating,
+			awstypes.ImageStatusDistributing,
+			awstypes.ImageStatusIntegrating,
+			awstypes.ImageStatusPending,
+			awstypes.ImageStatusTesting,
+		),
+		Target:  enum.Slice(awstypes.ImageStatusAvailable),
+		Refresh: statusImage(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Image); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Amis; v != nil {
 		tfMap["amis"] = flattenAMIs(v)
@@ -452,84 +515,68 @@ func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]
 	return tfMap
 }
 
-func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenAMI(apiObject awstypes.Ami) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap[names.AttrAccountID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := apiObject.Image; v != nil {
-		tfMap["image"] = aws.StringValue(v)
+		tfMap["image"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenAMIs(apiObjects []*imagebuilder.Ami) []interface{} {
+func flattenAMIs(apiObjects []awstypes.Ami) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenAMI(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenContainer(apiObject *imagebuilder.Container) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenContainer(apiObject awstypes.Container) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ImageUris; v != nil {
-		tfMap["image_uris"] = aws.StringValueSlice(v)
+		tfMap["image_uris"] = aws.StringSlice(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenContainers(apiObjects []*imagebuilder.Container) []interface{} {
+func flattenContainers(apiObjects []awstypes.Container) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenContainer(apiObject))
 	}
 

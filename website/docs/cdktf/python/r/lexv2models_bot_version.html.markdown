@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         Lexv2ModelsBotVersion(self, "test",
-            bot_id=Token.as_string(aws_lexv2_models_test.id),
+            bot_id=Token.as_string(aws_lexv2_models_bot_test.id),
             locale_specification={
                 "en__uS": [{
                     "source_bot_version": "DRAFT"
@@ -89,4 +89,4 @@ Using `terraform import`, import Lex V2 Models Bot Version using the `id`. For e
 % terraform import aws_lexv2models_bot_version.example id-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a456539fea25cf1ef83623e5d78856d7ff66325c0c79b684c0f828c892c8b39f -->
+<!-- cache-key: cdktf-0.20.8 input-1083d8e00d95e96391a8f8ae1d36ea86d249c001a0286867966cba1d749c0b69 -->

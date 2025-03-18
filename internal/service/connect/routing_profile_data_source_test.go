@@ -30,10 +30,10 @@ func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
 			{
 				Config: testAccRoutingProfileDataSourceConfig_id(rName, rName2, rName3, rName4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_outbound_queue_id", resourceName, "default_outbound_queue_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "media_concurrencies.#", resourceName, "media_concurrencies.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "VOICE",
@@ -43,22 +43,22 @@ func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
 						"channel":     "CHAT",
 						"concurrency": "2",
 					}),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "queue_configs.#", resourceName, "queue_configs.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.channel"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.delay"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.priority"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.default_outbound_queue", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.default_outbound_queue", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.default_outbound_queue", "name"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.default_outbound_queue", names.AttrName),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.channel"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.delay"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.priority"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_id", "aws_connect_queue.test", "queue_id"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.test", "name"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "routing_profile_id", resourceName, "routing_profile_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
@@ -83,10 +83,10 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 			{
 				Config: testAccRoutingProfileDataSourceConfig_name(rName, rName2, rName3, rName4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_outbound_queue_id", resourceName, "default_outbound_queue_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "media_concurrencies.#", resourceName, "media_concurrencies.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "VOICE",
@@ -96,22 +96,22 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 						"channel":     "CHAT",
 						"concurrency": "2",
 					}),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "queue_configs.#", resourceName, "queue_configs.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.channel"),
 					resource.TestCheckResourceAttr(datasourceName, "queue_configs.0.delay", "1"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.priority"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.default_outbound_queue", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.default_outbound_queue", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.default_outbound_queue", "name"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.default_outbound_queue", names.AttrName),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.channel"),
 					resource.TestCheckResourceAttr(datasourceName, "queue_configs.1.delay", "1"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.priority"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_id", "aws_connect_queue.test", "queue_id"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.test", "name"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "routing_profile_id", resourceName, "routing_profile_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
@@ -119,7 +119,7 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4 string) string {
+func testAccRoutingProfileDataSourceConfig_base(rName, rName2, rName3, rName4 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -186,7 +186,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileDataSourceConfig_id(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4),
+		testAccRoutingProfileDataSourceConfig_base(rName, rName2, rName3, rName4),
 		`
 data "aws_connect_routing_profile" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -197,7 +197,7 @@ data "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileDataSourceConfig_name(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseDataSourceConfig(rName, rName2, rName3, rName4),
+		testAccRoutingProfileDataSourceConfig_base(rName, rName2, rName3, rName4),
 		`
 data "aws_connect_routing_profile" "test" {
   instance_id = aws_connect_instance.test.id

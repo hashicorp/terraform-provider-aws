@@ -6,6 +6,7 @@ package cognitoidp_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -23,6 +24,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedGroupNameUTF8 := strings.Repeat("あ", 128)
 	resourceName := "aws_cognito_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,7 +37,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 				),
 			},
 			{
@@ -47,7 +49,14 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(poolName, updatedGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_basic(poolName, updatedGroupNameUTF8),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupNameUTF8),
 				),
 			},
 		},
@@ -95,10 +104,10 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 				Config: testAccUserGroupConfig_complex(poolName, groupName, "This is the user group description", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", groupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is the user group description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -110,10 +119,10 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 				Config: testAccUserGroupConfig_complex(poolName, updatedGroupName, "This is the updated user group description", 42),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is the updated user group description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the updated user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "42"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -135,7 +144,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 				Config: testAccUserGroupConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -147,7 +156,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 				Config: testAccUserGroupConfig_roleARNUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -161,9 +170,9 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["name"])
+		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}
@@ -171,14 +180,14 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_group" {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["name"])
+			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -260,22 +269,31 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
 
+resource "aws_cognito_identity_pool" "test" {
+  identity_pool_name               = %[1]q
+  allow_unauthenticated_identities = false
+}
+
 resource "aws_iam_role" "test1" {
   name = "%[1]s-1"
 
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity"
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Principal": {
+      "Federated": "cognito-identity.amazonaws.com"
+    },
+    "Condition": {
+      "StringEquals": {
+        "cognito-identity.amazonaws.com:aud": [
+            "${aws_cognito_identity_pool.test.identity_pool_name}"
+        ]
+      }
     }
-  ]
+  }]
 }
 EOF
 }
@@ -291,7 +309,12 @@ resource "aws_cognito_user_group" "test" {
 func testAccUserGroupConfig_roleARNUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = "%[1]s"
+  name = %[1]q
+}
+
+resource "aws_cognito_identity_pool" "test" {
+  identity_pool_name               = %[1]q
+  allow_unauthenticated_identities = false
 }
 
 resource "aws_iam_role" "test2" {
@@ -300,16 +323,20 @@ resource "aws_iam_role" "test2" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity"
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Principal": {
+      "Federated": "cognito-identity.amazonaws.com"
+    },
+    "Condition": {
+      "StringEquals": {
+        "cognito-identity.amazonaws.com:aud": [
+            "${aws_cognito_identity_pool.test.identity_pool_name}"
+        ]
+      }
     }
-  ]
+  }]
 }
 EOF
 }

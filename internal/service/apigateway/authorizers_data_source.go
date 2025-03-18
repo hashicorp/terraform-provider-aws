@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_api_gateway_authorizers", name="Authorizers")
@@ -20,7 +21,7 @@ func dataSourceAuthorizers() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAuthorizersRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -33,17 +34,17 @@ func dataSourceAuthorizers() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
-	input := &apigateway.GetAuthorizersInput{
+	input := apigateway.GetAuthorizersInput{
 		RestApiId: aws.String(apiID),
 	}
 	var ids []*string
 
-	err := getAuthorizersPages(ctx, conn, input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
+	err := getAuthorizersPages(ctx, conn, &input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -60,7 +61,7 @@ func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(apiID)
-	d.Set("ids", aws.ToStringSlice(ids))
+	d.Set(names.AttrIDs, aws.ToStringSlice(ids))
 
 	return diags
 }

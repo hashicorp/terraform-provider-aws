@@ -54,7 +54,7 @@ func resourceLocationAzureBlob() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,17 +104,15 @@ func resourceLocationAzureBlob() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -134,7 +132,7 @@ func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("sas_configuration"); ok {
-		input.SasConfiguration = expandAzureBlobSasConfiguration(v.([]interface{}))
+		input.SasConfiguration = expandAzureBlobSasConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
@@ -152,7 +150,7 @@ func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocationAzureBlobRead(ctx, d, meta)...)
 }
 
-func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -182,22 +180,22 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("access_tier", output.AccessTier)
 	d.Set("agent_arns", output.AgentArns)
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("blob_type", output.BlobType)
 	d.Set("container_url", containerURL)
 	d.Set("sas_configuration", d.Get("sas_configuration"))
 	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }
 
-func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationAzureBlobInput{
 			LocationArn: aws.String(d.Id()),
 		}
@@ -219,7 +217,7 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("sas_configuration") {
-			input.SasConfiguration = expandAzureBlobSasConfiguration(d.Get("sas_configuration").([]interface{}))
+			input.SasConfiguration = expandAzureBlobSasConfiguration(d.Get("sas_configuration").([]any))
 		}
 
 		if d.HasChange("subdirectory") {
@@ -236,14 +234,15 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocationAzureBlobRead(ctx, d, meta)...)
 }
 
-func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync LocationMicrosoft Azure Blob Storage: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
@@ -281,12 +280,12 @@ func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.Client, arn 
 	return output, nil
 }
 
-func expandAzureBlobSasConfiguration(l []interface{}) *awstypes.AzureBlobSasConfiguration {
+func expandAzureBlobSasConfiguration(l []any) *awstypes.AzureBlobSasConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	apiObject := &awstypes.AzureBlobSasConfiguration{
 		Token: aws.String(m["token"].(string)),

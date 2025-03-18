@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_prometheus_workspaces", name="Workspaces")
@@ -30,7 +31,7 @@ func dataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -44,7 +45,7 @@ func dataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 	}
 }
 
-func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
+func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -62,22 +63,22 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 		workspaceIDs = append(workspaceIDs, aws.ToString(w.WorkspaceId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("aliases", aliases)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("workspace_ids", workspaceIDs)
 
 	return diags
 }
 
 func findWorkspaces(ctx context.Context, conn *amp.Client, alias string) ([]types.WorkspaceSummary, error) { // nosemgrep:ci.caps0-in-func-name
-	input := &amp.ListWorkspacesInput{}
+	input := amp.ListWorkspacesInput{}
 	if alias != "" {
 		input.Alias = aws.String(alias)
 	}
 
 	var output []types.WorkspaceSummary
-	pages := amp.NewListWorkspacesPaginator(conn, input)
+	pages := amp.NewListWorkspacesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

@@ -25,7 +25,7 @@ const (
 	ResExtensionAssociation = "ExtensionAssociation"
 )
 
-// @SDKResource("aws_appconfig_extension_association")
+// @SDKResource("aws_appconfig_extension_association", name="Extension Association")
 func ResourceExtensionAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionAssociationCreate,
@@ -38,7 +38,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,12 +47,12 @@ func ResourceExtensionAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,18 +65,18 @@ func ResourceExtensionAssociation() *schema.Resource {
 	}
 }
 
-func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
-		ResourceIdentifier:  aws.String(d.Get("resource_arn").(string)),
+		ResourceIdentifier:  aws.String(d.Get(names.AttrResourceARN).(string)),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok {
+		in.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	out, err := conn.CreateExtensionAssociation(ctx, &in)
@@ -94,7 +94,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -111,16 +111,16 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("extension_arn", out.ExtensionArn)
-	d.Set("parameters", out.Parameters)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrParameters, out.Parameters)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
 	return diags
 }
 
-func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -130,8 +130,8 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 		ExtensionAssociationId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("parameters") {
-		in.Parameters = flex.ExpandStringValueMap(d.Get("parameters").(map[string]interface{}))
+	if d.HasChange(names.AttrParameters) {
+		in.Parameters = flex.ExpandStringValueMap(d.Get(names.AttrParameters).(map[string]any))
 		requestUpdate = true
 	}
 
@@ -150,15 +150,16 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
-	_, err := conn.DeleteExtensionAssociation(ctx, &appconfig.DeleteExtensionAssociationInput{
+	input := appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExtensionAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

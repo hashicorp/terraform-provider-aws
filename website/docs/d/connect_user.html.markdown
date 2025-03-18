@@ -34,7 +34,7 @@ data "aws_connect_user" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
@@ -62,6 +62,7 @@ An `identity_info` block supports the following attributes:
 * `email` - The email address.
 * `first_name` - The first name.
 * `last_name` - The last name.
+* `secondary_email` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 ### `phone_config`
 

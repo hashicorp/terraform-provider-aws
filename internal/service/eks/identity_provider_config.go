@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,19 +39,17 @@ func resourceIdentityProviderConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -65,7 +62,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -120,7 +117,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,13 +127,13 @@ func resourceIdentityProviderConfig() *schema.Resource {
 	}
 }
 
-func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
-	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
+	clusterName := d.Get(names.AttrClusterName).(string)
+	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]any)[0].(map[string]any))
 	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
 	input := &eks.AssociateIdentityProviderConfigInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -160,7 +157,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceIdentityProviderConfigRead(ctx, d, meta)...)
 }
 
-func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -182,24 +179,24 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", oidc.IdentityProviderConfigArn)
-	d.Set("cluster_name", oidc.ClusterName)
-	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
+	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
+	d.Set(names.AttrClusterName, oidc.ClusterName)
+	if err := d.Set("oidc", []any{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}
-	d.Set("status", oidc.Status)
+	d.Set(names.AttrStatus, oidc.Status)
 
 	setTagsOut(ctx, oidc.Tags)
 
 	return diags
 }
 
-func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceIdentityProviderConfigRead(ctx, d, meta)
 }
 
-func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -267,7 +264,7 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 }
 
 func statusOIDCIdentityProviderConfig(ctx context.Context, conn *eks.Client, clusterName, configName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
 
 		if tfresource.NotFound(err) {
@@ -316,14 +313,14 @@ func waitOIDCIdentityProviderConfigDeleted(ctx context.Context, conn *eks.Client
 	return nil, err
 }
 
-func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *types.OidcIdentityProviderConfigRequest) {
+func expandOIDCIdentityProviderConfigRequest(tfMap map[string]any) (string, *types.OidcIdentityProviderConfigRequest) {
 	if tfMap == nil {
 		return "", nil
 	}
 
 	apiObject := &types.OidcIdentityProviderConfigRequest{}
 
-	if v, ok := tfMap["client_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
 
@@ -345,7 +342,7 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 		apiObject.IssuerUrl = aws.String(v)
 	}
 
-	if v, ok := tfMap["required_claims"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["required_claims"].(map[string]any); ok && len(v) > 0 {
 		apiObject.RequiredClaims = flex.ExpandStringValueMap(v)
 	}
 
@@ -360,15 +357,15 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 	return identityProviderConfigName, apiObject
 }
 
-func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConfig) map[string]interface{} {
+func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ClientId; v != nil {
-		tfMap["client_id"] = aws.ToString(v)
+		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupsClaim; v != nil {

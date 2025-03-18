@@ -11,6 +11,8 @@ var (
 	FindBrokerByID        = findBrokerByID
 	FindConfigurationByID = findConfigurationByID
 
+	NormalizeEngineVersion = normalizeEngineVersion
+
 	WaitBrokerRebooted = waitBrokerRebooted
 	WaitBrokerDeleted  = waitBrokerDeleted
 )

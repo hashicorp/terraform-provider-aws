@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Rotation")
+// @FrameworkDataSource("aws_ssmcontacts_rotation", name="Rotation")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
 func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRotation{}
 
@@ -30,14 +32,10 @@ type dataSourceRotation struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceRotation) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ssmcontacts_rotation"
-}
-
 func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -46,8 +44,8 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"recurrence": schema.ListAttribute{
@@ -55,11 +53,11 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: fwtypes.NewObjectTypeOf[dsRecurrenceData](ctx),
 				Computed:    true,
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"time_zone_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -88,8 +86,8 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	rc := &dsRecurrenceData{}
-	rc.RecurrenceMultiplier = fwflex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
-	rc.NumberOfOnCalls = fwflex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
+	rc.RecurrenceMultiplier = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.RecurrenceMultiplier)
+	rc.NumberOfOnCalls = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.NumberOfOnCalls)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
 	if response.Diagnostics.HasError() {
@@ -119,18 +117,6 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	data.TimeZoneID = fwflex.StringToFramework(ctx, output.TimeZoneId)
 	data.ID = fwflex.StringToFramework(ctx, output.RotationArn)
 
-	tags, err := listTags(ctx, conn, data.ARN.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSMContacts, create.ErrActionSetting, ResNameRotation, data.ARN.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, tags.Map())
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -141,7 +127,7 @@ type dataSourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[dsRecurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                      `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                                 `tfsdk:"start_time"`
-	Tags       types.Map                                         `tfsdk:"tags"`
+	Tags       tftags.Map                                        `tfsdk:"tags"`
 	TimeZoneID types.String                                      `tfsdk:"time_zone_id"`
 }
 
@@ -193,12 +179,12 @@ func flattenShiftCoveragesDataSource(ctx context.Context, object map[string][]aw
 		for _, v := range value {
 			ct := dsCoverageTimesData{
 				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.End.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.End.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.Start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)

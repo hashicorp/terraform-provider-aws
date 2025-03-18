@@ -9,13 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sqs_queue_policy")
+// @SDKResource("aws_sqs_queue_policy", name="Queue Policy")
 func resourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNamePolicy,
-		SchemaKey:     "policy",
+		SchemaKey:     names.AttrPolicy,
 		ToSet:         verify.PolicyToSet,
 	}
 
@@ -34,13 +35,13 @@ func resourceQueuePolicy() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},

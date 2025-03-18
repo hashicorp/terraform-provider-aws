@@ -45,7 +45,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -84,7 +84,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -94,58 +94,10 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.2.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.2.0.0/16",
 					}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var inputSecurityGroup medialive.DescribeInputSecurityGroupOutput
-	resourceName := "aws_medialive_input_security_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
-			testAccInputSecurityGroupsPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInputSecurityGroupConfig_tags1("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccInputSecurityGroupConfig_tags2("key1", "value1", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccInputSecurityGroupConfig_tags1("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -260,35 +212,4 @@ resource "aws_medialive_input_security_group" "test" {
   }
 }
 `, rName, cidr)
-}
-
-func testAccInputSecurityGroupConfig_tags1(key1, value1 string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rules {
-    cidr = "10.2.0.0/16"
-  }
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, key1, value1))
-}
-
-func testAccInputSecurityGroupConfig_tags2(key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rules {
-    cidr = "10.2.0.0/16"
-  }
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, key1, value1, key2, value2))
 }

@@ -38,66 +38,69 @@ func resourceVPCIngressConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"ingress_vpc_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"service_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apprunner.CreateVpcIngressConnectionInput{
 		ServiceArn:               aws.String(d.Get("service_arn").(string)),
 		Tags:                     getTagsIn(ctx),
 		VpcIngressConnectionName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("ingress_vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.IngressVpcConfiguration = expandIngressVPCConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("ingress_vpc_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.IngressVpcConfiguration = expandIngressVPCConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateVpcIngressConnection(ctx, input)
@@ -115,7 +118,7 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceVPCIngressConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -132,32 +135,33 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", connection.VpcIngressConnectionArn)
-	d.Set("domain_name", connection.DomainName)
+	d.Set(names.AttrARN, connection.VpcIngressConnectionArn)
+	d.Set(names.AttrDomainName, connection.DomainName)
 	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(connection.IngressVpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ingress_vpc_configuration: %s", err)
 	}
-	d.Set("name", connection.VpcIngressConnectionName)
+	d.Set(names.AttrName, connection.VpcIngressConnectionName)
 	d.Set("service_arn", connection.ServiceArn)
-	d.Set("status", connection.Status)
+	d.Set(names.AttrStatus, connection.Status)
 
 	return diags
 }
 
-func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceVPCIngressConnectionRead(ctx, d, meta)
 }
 
-func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner VPC Ingress Connection: %s", d.Id())
-	_, err := conn.DeleteVpcIngressConnection(ctx, &apprunner.DeleteVpcIngressConnectionInput{
+	input := apprunner.DeleteVpcIngressConnectionInput{
 		VpcIngressConnectionArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcIngressConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -207,7 +211,7 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 }
 
 func statusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCIngressConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -261,35 +265,35 @@ func waitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.Client
 	return nil, err
 }
 
-func expandIngressVPCConfiguration(l []interface{}) *types.IngressVpcConfiguration {
+func expandIngressVPCConfiguration(l []any) *types.IngressVpcConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configuration := &types.IngressVpcConfiguration{}
 
-	if v, ok := m["vpc_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrVPCID].(string); ok && v != "" {
 		configuration.VpcId = aws.String(v)
 	}
 
-	if v, ok := m["vpc_endpoint_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrVPCEndpointID].(string); ok && v != "" {
 		configuration.VpcEndpointId = aws.String(v)
 	}
 
 	return configuration
 }
 
-func flattenIngressVPCConfiguration(ingressVpcConfiguration *types.IngressVpcConfiguration) []interface{} {
+func flattenIngressVPCConfiguration(ingressVpcConfiguration *types.IngressVpcConfiguration) []any {
 	if ingressVpcConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"vpc_id":          aws.ToString(ingressVpcConfiguration.VpcId),
-		"vpc_endpoint_id": aws.ToString(ingressVpcConfiguration.VpcEndpointId),
+	m := map[string]any{
+		names.AttrVPCID:         aws.ToString(ingressVpcConfiguration.VpcId),
+		names.AttrVPCEndpointID: aws.ToString(ingressVpcConfiguration.VpcEndpointId),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

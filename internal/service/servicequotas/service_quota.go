@@ -7,21 +7,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicequotas_service_quota")
+// @SDKResource("aws_servicequotas_service_quota", name="Service Quota")
 func ResourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceQuotaCreate,
@@ -37,11 +42,11 @@ func ResourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_value": {
+			names.AttrDefaultValue: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
@@ -77,7 +82,7 @@ func ResourceServiceQuota() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,14 +108,14 @@ func ResourceServiceQuota() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"metric_name": {
+						names.AttrMetricName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -125,7 +130,7 @@ func ResourceServiceQuota() *schema.Resource {
 					},
 				},
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeFloat,
 				Required: true,
 			},
@@ -133,15 +138,13 @@ func ResourceServiceQuota() *schema.Resource {
 	}
 }
 
-func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
-	value := d.Get("value").(float64)
-
-	d.SetId(fmt.Sprintf("%s/%s", serviceCode, quotaCode))
+	value := d.Get(names.AttrValue).(float64)
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
@@ -179,15 +182,16 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 		d.Set("request_id", output.RequestedQuota.Id)
 	}
 
+	d.SetId(fmt.Sprintf("%s/%s", serviceCode, quotaCode))
+
 	return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
 }
 
-func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quota (%s): %s", d.Id(), err)
 	}
@@ -195,31 +199,43 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
 	defaultQuota, err := findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Quota (%s) default value not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
 
 	d.Set("adjustable", defaultQuota.Adjustable)
-	d.Set("arn", defaultQuota.QuotaArn)
-	d.Set("default_value", defaultQuota.Value)
+	d.Set(names.AttrARN, defaultQuota.QuotaArn)
+	d.Set(names.AttrDefaultValue, defaultQuota.Value)
 	d.Set("quota_code", defaultQuota.QuotaCode)
 	d.Set("quota_name", defaultQuota.QuotaName)
 	d.Set("service_code", defaultQuota.ServiceCode)
-	d.Set("service_name", defaultQuota.ServiceName)
-	d.Set("value", defaultQuota.Value)
+	d.Set(names.AttrServiceName, defaultQuota.ServiceName)
+	d.Set(names.AttrValue, defaultQuota.Value)
 
 	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting usage_metric for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
-	if err != nil && !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			tflog.Debug(ctx, "No quota value set", map[string]any{
+				"service_code": serviceCode,
+				"quota_code":   quotaCode,
+			})
+		} else {
+			return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
+		}
 	}
 
 	if err == nil {
-		d.Set("arn", serviceQuota.QuotaArn)
-		d.Set("value", serviceQuota.Value)
+		d.Set(names.AttrARN, serviceQuota.QuotaArn)
+		d.Set(names.AttrValue, serviceQuota.Value)
 	}
 
 	requestID := d.Get("request_id").(string)
@@ -252,18 +268,18 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 		case types.RequestStatusApproved, types.RequestStatusCaseClosed, types.RequestStatusDenied:
 			d.Set("request_id", "")
 		case types.RequestStatusCaseOpened, types.RequestStatusPending:
-			d.Set("value", output.RequestedQuota.DesiredValue)
+			d.Set(names.AttrValue, output.RequestedQuota.DesiredValue)
 		}
 	}
 
 	return diags
 }
 
-func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
-	value := d.Get("value").(float64)
+	value := d.Get(names.AttrValue).(float64)
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
 	if err != nil {
@@ -299,4 +315,66 @@ func resourceServiceQuotaParseID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findServiceQuotaDefaultByID(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string) (*types.ServiceQuota, error) {
+	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
+		ServiceCode: aws.String(serviceCode),
+		QuotaCode:   aws.String(quotaCode),
+	}
+
+	output, err := conn.GetAWSDefaultServiceQuota(ctx, input)
+	if errs.IsA[*types.NoSuchResourceException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if output == nil || output.Quota == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Quota, nil
+}
+
+func findServiceQuotaByID(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string) (*types.ServiceQuota, error) {
+	input := &servicequotas.GetServiceQuotaInput{
+		ServiceCode: aws.String(serviceCode),
+		QuotaCode:   aws.String(quotaCode),
+	}
+
+	output, err := conn.GetServiceQuota(ctx, input)
+
+	var nsr *types.NoSuchResourceException
+	if errors.As(err, &nsr) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Quota == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if output.Quota.ErrorReason != nil {
+		return nil, &retry.NotFoundError{
+			Message:     fmt.Sprintf("%s: %s", output.Quota.ErrorReason.ErrorCode, aws.ToString(output.Quota.ErrorReason.ErrorMessage)),
+			LastRequest: input,
+		}
+	}
+
+	if output.Quota.Value == nil {
+		return nil, &retry.NotFoundError{
+			Message:     "empty value",
+			LastRequest: input,
+		}
+	}
+
+	return output.Quota, nil
 }

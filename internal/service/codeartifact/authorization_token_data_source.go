@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_codeartifact_authorization_token", name="Authoiration Token")
@@ -28,7 +29,7 @@ func dataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,16 +55,16 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 	var domainOwner string
 	if v, ok := d.GetOk("domain_owner"); ok {
 		domainOwner = v.(string)
 	} else {
-		domainOwner = meta.(*conns.AWSClient).AccountID
+		domainOwner = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	input := &codeartifact.GetAuthorizationTokenInput{
 		Domain:      aws.String(domainName),

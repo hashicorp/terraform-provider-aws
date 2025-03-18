@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +24,7 @@ import (
 
 func TestAccEC2EBSVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -36,16 +37,17 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
 			{
@@ -60,7 +62,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 
 func TestAccEC2EBSVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +85,7 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 
 func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -97,8 +99,8 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 				Config: testAccEBSVolumeConfig_attached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -111,8 +113,8 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 				Config: testAccEBSVolumeConfig_attachedUpdateSize(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "size", "20"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "20"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 		},
@@ -121,7 +123,7 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 
 func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -135,8 +137,8 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -149,8 +151,8 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 				Config: testAccEBSVolumeConfig_updateSize(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 		},
@@ -159,7 +161,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 
 func TestAccEC2EBSVolume_updateType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -173,8 +175,8 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -187,8 +189,8 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 				Config: testAccEBSVolumeConfig_updateType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "sc1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "sc1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 		},
@@ -197,7 +199,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 
 func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -211,8 +213,8 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				Config: testAccEBSVolumeConfig_iopsIo1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -225,8 +227,8 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				Config: testAccEBSVolumeConfig_iopsIo1Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 		},
@@ -235,7 +237,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 
 func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -249,8 +251,8 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_iopsIo2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -263,8 +265,8 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_iopsIo2Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 		},
@@ -273,7 +275,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 
 func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -288,9 +290,9 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 				Config: testAccEBSVolumeConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -305,7 +307,7 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 
 func TestAccEC2EBSVolume_noIops(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -319,7 +321,7 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 				Config: testAccEBSVolumeConfig_noIOPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
 			{
@@ -367,7 +369,7 @@ func TestAccEC2EBSVolume_invalidThroughputForType(t *testing.T) {
 
 func TestAccEC2EBSVolume_withTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -377,11 +379,11 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeConfig_tags1("key1", "value1"),
+				Config: testAccEBSVolumeConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -391,20 +393,20 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSVolumeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccEBSVolumeConfig_tags1("key2", "value2"),
+				Config: testAccEBSVolumeConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -413,7 +415,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 
 func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -427,9 +429,9 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 				Config: testAccEBSVolumeConfig_multiAttach(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "io1"),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io1"),
 				),
 			},
 			{
@@ -444,7 +446,7 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 
 func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -458,9 +460,9 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_multiAttach(rName, "io2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "io2"),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io2"),
 				),
 			},
 			{
@@ -491,7 +493,7 @@ func TestAccEC2EBSVolume_multiAttach_gp2(t *testing.T) {
 
 func TestAccEC2EBSVolume_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -506,7 +508,7 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 				Config: testAccEBSVolumeConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -521,7 +523,7 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 
 func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -535,18 +537,18 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 			{
@@ -561,7 +563,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 
 func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -575,18 +577,18 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "200"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 			{
@@ -599,18 +601,18 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "5000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "200"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 		},
@@ -619,7 +621,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 
 func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -633,18 +635,18 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "400"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 			{
@@ -657,18 +659,18 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "600"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "600"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 		},
@@ -677,7 +679,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 
 func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -691,18 +693,18 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "3000", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "400"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 			{
@@ -715,18 +717,18 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp2", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
 		},
@@ -735,7 +737,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 
 func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -749,18 +751,18 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "io1", "4000", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "io1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io1"),
 				),
 			},
 			{
@@ -773,18 +775,18 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "gp3", "4000", "125"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
 		},
@@ -793,7 +795,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 
 func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -808,18 +810,18 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 				Config: testAccEBSVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
 			{
@@ -834,7 +836,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 
 func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -849,18 +851,18 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 				Config: testAccEBSVolumeConfig_snapshotIdAndSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "size", "20"),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "20"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
 			{
@@ -875,7 +877,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 
 func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Volume
+	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -910,7 +912,7 @@ func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 
 func testAccCheckVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ebs_volume" {
@@ -934,7 +936,7 @@ func testAccCheckVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVolumeExists(ctx context.Context, n string, v *ec2.Volume) resource.TestCheckFunc {
+func testAccCheckVolumeExists(ctx context.Context, n string, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -945,7 +947,7 @@ func testAccCheckVolumeExists(ctx context.Context, n string, v *ec2.Volume) reso
 			return fmt.Errorf("No EBS Volume ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
 
@@ -959,18 +961,18 @@ func testAccCheckVolumeExists(ctx context.Context, n string, v *ec2.Volume) reso
 	}
 }
 
-func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *ec2.Volume) resource.TestCheckFunc {
+func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		input := &ec2.DescribeSnapshotsInput{
+		input := ec2.DescribeSnapshotsInput{
 			Filters: tfec2.NewAttributeFilterList(map[string]string{
-				"volume-id": aws.StringValue(v.VolumeId),
-				"status":    ec2.SnapshotStateCompleted,
+				"volume-id":      aws.ToString(v.VolumeId),
+				names.AttrStatus: string(awstypes.SnapshotStateCompleted),
 			}),
 		}
 
-		output, err := tfec2.FindSnapshot(ctx, conn, input)
+		output, err := tfec2.FindSnapshot(ctx, conn, &input)
 
 		if err != nil {
 			return err
@@ -978,7 +980,7 @@ func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *ec2.Volume) r
 
 		r := tfec2.ResourceEBSSnapshot()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(output.SnapshotId))
+		d.SetId(aws.ToString(output.SnapshotId))
 
 		err = acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 

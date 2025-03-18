@@ -36,16 +36,16 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
 			{
 				Config: testAccSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "description", "update"),
+					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", names.AttrDescription, "update"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "3"),
-					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
 			{
@@ -89,9 +89,10 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+			input := dax.DescribeSubnetGroupsInput{
 				SubnetGroupNames: []string{rs.Primary.ID},
-			})
+			}
+			_, err := conn.DescribeSubnetGroups(ctx, &input)
 			if err != nil {
 				if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
 					return nil
@@ -112,9 +113,10 @@ func testAccCheckSubnetGroupExists(ctx context.Context, name string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
-		_, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+		input := dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []string{rs.Primary.ID},
-		})
+		}
+		_, err := conn.DescribeSubnetGroups(ctx, &input)
 
 		return err
 	}

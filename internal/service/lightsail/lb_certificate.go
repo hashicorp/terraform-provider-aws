@@ -21,11 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_certificate")
+// @SDKResource("aws_lightsail_lb_certificate", name="Load Balancer Certificate")
 func ResourceLoadBalancerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCertificateCreate,
@@ -37,15 +38,15 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 				// trailing period, no longer requiring a custom StateFunc
 				// to prevent ACM API error
@@ -60,7 +61,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -90,7 +91,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -123,11 +124,11 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
 				// so that the user doesn't need to explicitly set it themselves.
-				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domain_name := diff.Get("domain_name").(string)
+				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
+					domain_name := diff.Get(names.AttrDomainName).(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domain_name)
@@ -143,13 +144,13 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	certName := d.Get("name").(string)
+	certName := d.Get(names.AttrName).(string)
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
-		CertificateDomainName: aws.String(d.Get("domain_name").(string)),
+		CertificateDomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		CertificateName:       aws.String(certName),
 		LoadBalancerName:      aws.String(d.Get("lb_name").(string)),
 	}
@@ -181,7 +182,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceLoadBalancerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -198,19 +199,19 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificate, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
-	d.Set("domain_name", out.DomainName)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("domain_validation_records", flattenLoadBalancerDomainValidationRecords(out.DomainValidationRecords))
 	d.Set("lb_name", out.LoadBalancerName)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("subject_alternative_names", out.SubjectAlternativeNames)
 	d.Set("support_code", out.SupportCode)
 
 	return diags
 }
 
-func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -223,6 +224,10 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 		CertificateName:  aws.String(certName),
 		LoadBalancerName: aws.String(lbName),
 	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
@@ -237,12 +242,12 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]interface{} {
-	var domainValidationResult []map[string]interface{}
+func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]any {
+	var domainValidationResult []map[string]any
 
 	for _, o := range domainValidationRecords {
-		validationOption := map[string]interface{}{
-			"domain_name":           aws.ToString(o.DomainName),
+		validationOption := map[string]any{
+			names.AttrDomainName:    aws.ToString(o.DomainName),
 			"resource_record_name":  aws.ToString(o.Name),
 			"resource_record_type":  aws.ToString(o.Type),
 			"resource_record_value": aws.ToString(o.Value),

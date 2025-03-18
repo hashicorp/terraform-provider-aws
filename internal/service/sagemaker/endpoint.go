@@ -5,26 +5,30 @@ package sagemaker
 
 import (
 	"context"
+	"errors"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="arn")
-func ResourceEndpoint() *schema.Resource {
+func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
 		ReadWithoutTimeout:   resourceEndpointRead,
@@ -35,7 +39,7 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,12 +106,12 @@ func ResourceEndpoint() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
+															names.AttrType: {
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
 															},
-															"value": {
+															names.AttrValue: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -121,12 +125,12 @@ func ResourceEndpoint() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
+															names.AttrType: {
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
 															},
-															"value": {
+															names.AttrValue: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -134,10 +138,10 @@ func ResourceEndpoint() *schema.Resource {
 														},
 													},
 												},
-												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(sagemaker.TrafficRoutingConfigType_Values(), false),
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.TrafficRoutingConfigType](),
 												},
 												"wait_interval_in_seconds": {
 													Type:         schema.TypeInt,
@@ -166,12 +170,12 @@ func ResourceEndpoint() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntAtLeast(1),
@@ -190,12 +194,12 @@ func ResourceEndpoint() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntAtLeast(1),
@@ -219,7 +223,7 @@ func ResourceEndpoint() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validName,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -229,168 +233,256 @@ func ResourceEndpoint() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
 	}
-
-	createOpts := &sagemaker.CreateEndpointInput{
+	input := &sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
 		EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
-		createOpts.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
+	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
+		input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]any))
 	}
 
-	log.Printf("[DEBUG] SageMaker Endpoint create config: %#v", *createOpts)
-	_, err := conn.CreateEndpointWithContext(ctx, createOpts)
+	_, err := conn.CreateEndpoint(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	describeInput := &sagemaker.DescribeEndpointInput{
-		EndpointName: aws.String(name),
-	}
-
-	if err := conn.WaitUntilEndpointInServiceWithContext(ctx, describeInput); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", name, err)
+	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) create: %s", name, err)
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	endpoint, err := FindEndpointByName(ctx, conn, d.Id())
+	endpoint, err := findEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Endpoint (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", endpoint.EndpointName)
-	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
-	d.Set("arn", endpoint.EndpointArn)
-
+	d.Set(names.AttrARN, endpoint.EndpointArn)
 	if err := d.Set("deployment_config", flattenEndpointDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting deployment_config for SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_config: %s", err)
 	}
+	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
+	d.Set(names.AttrName, endpoint.EndpointName)
 
 	return diags
 }
 
-func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChanges("endpoint_config_name", "deployment_config") {
-		modifyOpts := &sagemaker.UpdateEndpointInput{
+		input := &sagemaker.UpdateEndpointInput{
 			EndpointName:       aws.String(d.Id()),
 			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		}
 
-		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
-			modifyOpts.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
+		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
+			input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]any))
 		}
 
-		log.Printf("[INFO] Modifying endpoint_config_name attribute for %s: %#v", d.Id(), modifyOpts)
-		if _, err := conn.UpdateEndpointWithContext(ctx, modifyOpts); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint (%s): %s", d.Id(), err)
-		}
+		_, err := conn.UpdateEndpoint(ctx, input)
 
-		describeInput := &sagemaker.DescribeEndpointInput{
-			EndpointName: aws.String(d.Id()),
-		}
-
-		err := conn.WaitUntilEndpointInServiceWithContext(ctx, describeInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Endpoint (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint: %s", d.Id())
+	_, err := conn.DeleteEndpoint(ctx, &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
-	}
-	log.Printf("[INFO] Deleting SageMaker Endpoint: %s", d.Id())
+	})
 
-	_, err := conn.DeleteEndpointWithContext(ctx, deleteEndpointOpts)
-
-	if tfawserr.ErrCodeEquals(err, "ValidationException") {
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint (%s): %s", d.Id(), err)
 	}
 
-	describeInput := &sagemaker.DescribeEndpointInput{
-		EndpointName: aws.String(d.Id()),
-	}
-
-	if err := conn.WaitUntilEndpointDeletedWithContext(ctx, describeInput); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandEndpointDeploymentConfig(configured []interface{}) *sagemaker.DeploymentConfig {
+func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+	input := &sagemaker.DescribeEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := findEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeEndpointInput) (*sagemaker.DescribeEndpointOutput, error) {
+	output, err := conn.DescribeEndpoint(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findEndpointByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.EndpointStatus), nil
+	}
+}
+
+func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) { //nolint:unparam
+	const (
+		timeout = 60 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
+		Target:  enum.Slice(awstypes.EndpointStatusInService),
+		Refresh: statusEndpoint(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
+		Target:  []string{},
+		Refresh: statusEndpoint(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandEndpointDeploymentConfig(configured []any) *awstypes.DeploymentConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
-	c := &sagemaker.DeploymentConfig{
-		BlueGreenUpdatePolicy: expandEndpointDeploymentConfigBlueGreenUpdatePolicy(m["blue_green_update_policy"].([]interface{})),
+	c := &awstypes.DeploymentConfig{
+		BlueGreenUpdatePolicy: expandEndpointDeploymentConfigBlueGreenUpdatePolicy(m["blue_green_update_policy"].([]any)),
 	}
 
-	if v, ok := m["auto_rollback_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["auto_rollback_configuration"].([]any); ok && len(v) > 0 {
 		c.AutoRollbackConfiguration = expandEndpointDeploymentConfigAutoRollbackConfig(v)
 	}
 
-	if v, ok := m["rolling_update_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rolling_update_policy"].([]any); ok && len(v) > 0 {
 		c.RollingUpdatePolicy = expandEndpointDeploymentConfigRollingUpdatePolicy(v)
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfig(configured *sagemaker.DeploymentConfig) []map[string]interface{} {
+func flattenEndpointDeploymentConfig(configured *awstypes.DeploymentConfig) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"blue_green_update_policy": flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured.BlueGreenUpdatePolicy),
 	}
 
@@ -402,76 +494,76 @@ func flattenEndpointDeploymentConfig(configured *sagemaker.DeploymentConfig) []m
 		cfg["rolling_update_policy"] = flattenEndpointDeploymentConfigRollingUpdatePolicy(configured.RollingUpdatePolicy)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigBlueGreenUpdatePolicy(configured []interface{}) *sagemaker.BlueGreenUpdatePolicy {
+func expandEndpointDeploymentConfigBlueGreenUpdatePolicy(configured []any) *awstypes.BlueGreenUpdatePolicy {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
-	c := &sagemaker.BlueGreenUpdatePolicy{
-		TerminationWaitInSeconds:    aws.Int64(int64(m["termination_wait_in_seconds"].(int))),
-		TrafficRoutingConfiguration: expandEndpointDeploymentConfigTrafficRoutingConfiguration(m["traffic_routing_configuration"].([]interface{})),
+	c := &awstypes.BlueGreenUpdatePolicy{
+		TerminationWaitInSeconds:    aws.Int32(int32(m["termination_wait_in_seconds"].(int))),
+		TrafficRoutingConfiguration: expandEndpointDeploymentConfigTrafficRoutingConfiguration(m["traffic_routing_configuration"].([]any)),
 	}
 
 	if v, ok := m["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
-		c.MaximumExecutionTimeoutInSeconds = aws.Int64(int64(v))
+		c.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured *sagemaker.BlueGreenUpdatePolicy) []map[string]interface{} {
+func flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured *awstypes.BlueGreenUpdatePolicy) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
-		"termination_wait_in_seconds":   aws.Int64Value(configured.TerminationWaitInSeconds),
+	cfg := map[string]any{
+		"termination_wait_in_seconds":   aws.ToInt32(configured.TerminationWaitInSeconds),
 		"traffic_routing_configuration": flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured.TrafficRoutingConfiguration),
 	}
 
 	if configured.MaximumExecutionTimeoutInSeconds != nil {
-		cfg["maximum_execution_timeout_in_seconds"] = aws.Int64Value(configured.MaximumExecutionTimeoutInSeconds)
+		cfg["maximum_execution_timeout_in_seconds"] = aws.ToInt32(configured.MaximumExecutionTimeoutInSeconds)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []interface{}) *sagemaker.TrafficRoutingConfig {
+func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []any) *awstypes.TrafficRoutingConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
-	c := &sagemaker.TrafficRoutingConfig{
-		Type:                  aws.String(m["type"].(string)),
-		WaitIntervalInSeconds: aws.Int64(int64(m["wait_interval_in_seconds"].(int))),
+	c := &awstypes.TrafficRoutingConfig{
+		Type:                  awstypes.TrafficRoutingConfigType(m[names.AttrType].(string)),
+		WaitIntervalInSeconds: aws.Int32(int32(m["wait_interval_in_seconds"].(int))),
 	}
 
-	if v, ok := m["canary_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["canary_size"].([]any); ok && len(v) > 0 {
 		c.CanarySize = expandEndpointDeploymentCapacitySize(v)
 	}
 
-	if v, ok := m["linear_step_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["linear_step_size"].([]any); ok && len(v) > 0 {
 		c.LinearStepSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *sagemaker.TrafficRoutingConfig) []map[string]interface{} {
+func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *awstypes.TrafficRoutingConfig) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
-		"type":                     aws.StringValue(configured.Type),
-		"wait_interval_in_seconds": aws.Int64Value(configured.WaitIntervalInSeconds),
+	cfg := map[string]any{
+		names.AttrType:             configured.Type,
+		"wait_interval_in_seconds": aws.ToInt32(configured.WaitIntervalInSeconds),
 	}
 
 	if configured.CanarySize != nil {
@@ -482,115 +574,115 @@ func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *sage
 		cfg["linear_step_size"] = flattenEndpointDeploymentCapacitySize(configured.LinearStepSize)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentCapacitySize(configured []interface{}) *sagemaker.CapacitySize {
+func expandEndpointDeploymentCapacitySize(configured []any) *awstypes.CapacitySize {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
-	c := &sagemaker.CapacitySize{
-		Type:  aws.String(m["type"].(string)),
-		Value: aws.Int64(int64(m["value"].(int))),
+	c := &awstypes.CapacitySize{
+		Type:  awstypes.CapacitySizeType(m[names.AttrType].(string)),
+		Value: aws.Int32(int32(m[names.AttrValue].(int))),
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentCapacitySize(configured *sagemaker.CapacitySize) []map[string]interface{} {
+func flattenEndpointDeploymentCapacitySize(configured *awstypes.CapacitySize) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
-		"type":  aws.StringValue(configured.Type),
-		"value": aws.Int64Value(configured.Value),
+	cfg := map[string]any{
+		names.AttrType:  configured.Type,
+		names.AttrValue: aws.ToInt32(configured.Value),
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigAutoRollbackConfig(configured []interface{}) *sagemaker.AutoRollbackConfig {
+func expandEndpointDeploymentConfigAutoRollbackConfig(configured []any) *awstypes.AutoRollbackConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
-	c := &sagemaker.AutoRollbackConfig{
+	c := &awstypes.AutoRollbackConfig{
 		Alarms: expandEndpointDeploymentConfigAutoRollbackConfigAlarms(m["alarms"].(*schema.Set).List()),
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfigAutoRollbackConfig(configured *sagemaker.AutoRollbackConfig) []map[string]interface{} {
+func flattenEndpointDeploymentConfigAutoRollbackConfig(configured *awstypes.AutoRollbackConfig) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"alarms": flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured.Alarms),
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []interface{}) *sagemaker.RollingUpdatePolicy {
+func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []any) *awstypes.RollingUpdatePolicy {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
-	c := &sagemaker.RollingUpdatePolicy{
-		WaitIntervalInSeconds: aws.Int64(int64(m["wait_interval_in_seconds"].(int))),
+	c := &awstypes.RollingUpdatePolicy{
+		WaitIntervalInSeconds: aws.Int32(int32(m["wait_interval_in_seconds"].(int))),
 	}
 
 	if v, ok := m["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
-		c.MaximumExecutionTimeoutInSeconds = aws.Int64(int64(v))
+		c.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := m["maximum_batch_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["maximum_batch_size"].([]any); ok && len(v) > 0 {
 		c.MaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
-	if v, ok := m["rollback_maximum_batch_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rollback_maximum_batch_size"].([]any); ok && len(v) > 0 {
 		c.RollbackMaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfigRollingUpdatePolicy(configured *sagemaker.RollingUpdatePolicy) []map[string]interface{} {
+func flattenEndpointDeploymentConfigRollingUpdatePolicy(configured *awstypes.RollingUpdatePolicy) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
-		"maximum_execution_timeout_in_seconds": aws.Int64Value(configured.MaximumExecutionTimeoutInSeconds),
-		"wait_interval_in_seconds":             aws.Int64Value(configured.WaitIntervalInSeconds),
+	cfg := map[string]any{
+		"maximum_execution_timeout_in_seconds": aws.ToInt32(configured.MaximumExecutionTimeoutInSeconds),
+		"wait_interval_in_seconds":             aws.ToInt32(configured.WaitIntervalInSeconds),
 		"maximum_batch_size":                   flattenEndpointDeploymentCapacitySize(configured.MaximumBatchSize),
 		"rollback_maximum_batch_size":          flattenEndpointDeploymentCapacitySize(configured.RollbackMaximumBatchSize),
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interface{}) []*sagemaker.Alarm {
+func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []any) []awstypes.Alarm {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	alarms := make([]*sagemaker.Alarm, 0, len(configured))
+	alarms := make([]awstypes.Alarm, 0, len(configured))
 
 	for _, alarmRaw := range configured {
-		m := alarmRaw.(map[string]interface{})
+		m := alarmRaw.(map[string]any)
 
-		alarm := &sagemaker.Alarm{
+		alarm := awstypes.Alarm{
 			AlarmName: aws.String(m["alarm_name"].(string)),
 		}
 
@@ -600,12 +692,12 @@ func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interfa
 	return alarms
 }
 
-func flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []*sagemaker.Alarm) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(configured))
+func flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []awstypes.Alarm) []map[string]any {
+	result := make([]map[string]any, 0, len(configured))
 
 	for _, i := range configured {
-		l := map[string]interface{}{
-			"alarm_name": aws.StringValue(i.AlarmName),
+		l := map[string]any{
+			"alarm_name": aws.ToString(i.AlarmName),
 		}
 
 		result = append(result, l)

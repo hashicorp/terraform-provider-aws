@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,7 +30,7 @@ const (
 	ResNameLFTags = "Resource LF Tags"
 )
 
-// @SDKResource("aws_lakeformation_resource_lf_tags")
+// @SDKResource("aws_lakeformation_resource_lf_tags", name="Resource LF Tags")
 func ResourceResourceLFTags() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceLFTagsCreate,
@@ -42,34 +43,34 @@ func ResourceResourceLFTags() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				ForceNew:     true,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"database",
+					names.AttrDatabase,
 					"table",
 					"table_with_columns",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -83,19 +84,19 @@ func ResourceResourceLFTags() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
 							Computed: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -112,25 +113,25 @@ func ResourceResourceLFTags() *schema.Resource {
 				MaxItems: 1,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"database",
+					names.AttrDatabase,
 					"table",
 					"table_with_columns",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 							ForceNew: true,
@@ -160,13 +161,13 @@ func ResourceResourceLFTags() *schema.Resource {
 				MaxItems: 1,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"database",
+					names.AttrDatabase,
 					"table",
 					"table_with_columns",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
@@ -187,7 +188,7 @@ func ResourceResourceLFTags() *schema.Resource {
 								"table_with_columns.0.wildcard",
 							},
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -202,7 +203,7 @@ func ResourceResourceLFTags() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -224,14 +225,14 @@ func ResourceResourceLFTags() *schema.Resource {
 	}
 }
 
-func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.AddLFTagsToResourceInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -288,12 +289,12 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	return append(diags, resourceResourceLFTagsRead(ctx, d, meta)...)
 }
 
-func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
@@ -302,7 +303,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		ShowAssignedLFTags: aws.Bool(true),
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -327,14 +328,14 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.RemoveLFTagsFromResourceInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -384,11 +385,11 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 
 func lfTagsTagger(d *schema.ResourceData) (tagger, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &databaseTagger{}, diags
-	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &tableTagger{}, diags
-	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &columnTagger{}, diags
 	} else {
 		diags = append(diags, errs.NewErrorDiagnostic(
@@ -410,7 +411,7 @@ type tagger interface {
 type databaseTagger struct{}
 
 func (t *databaseTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
-	v := d.Get("database").([]any)[0].(map[string]any)
+	v := d.Get(names.AttrDatabase).([]any)[0].(map[string]any)
 	return &awstypes.Resource{
 		Database: ExpandDatabaseResource(v),
 	}
@@ -455,44 +456,44 @@ func (t *columnTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput
 	return flattenLFTagPairs(tags.LFTags)
 }
 
-func lfTagsHash(v interface{}) int {
-	m, ok := v.(map[string]interface{})
+func lfTagsHash(v any) int {
+	m, ok := v.(map[string]any)
 
 	if !ok {
 		return 0
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(m["key"].(string))
-	buf.WriteString(m["value"].(string))
-	buf.WriteString(m["catalog_id"].(string))
+	buf.WriteString(m[names.AttrKey].(string))
+	buf.WriteString(m[names.AttrValue].(string))
+	buf.WriteString(m[names.AttrCatalogID].(string))
 
 	return create.StringHashcode(buf.String())
 }
 
-func expandLFTagPair(tfMap map[string]interface{}) awstypes.LFTagPair {
+func expandLFTagPair(tfMap map[string]any) awstypes.LFTagPair {
 	if tfMap == nil {
 		return awstypes.LFTagPair{}
 	}
 
 	apiObject := awstypes.LFTagPair{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.TagValues = []string{v}
 	}
 
 	return apiObject
 }
 
-func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
+func expandLFTagPairs(tfList []any) []awstypes.LFTagPair {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -500,7 +501,7 @@ func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
 	var apiObjects []awstypes.LFTagPair
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -518,34 +519,34 @@ func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
 	return apiObjects
 }
 
-func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]interface{} {
+func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]any {
 	if reflect.ValueOf(apiObject).IsZero() {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagKey; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagValues; len(v) > 0 {
-		tfMap["value"] = apiObject.TagValues[0]
+		tfMap[names.AttrValue] = apiObject.TagValues[0]
 	}
 
 	return tfMap
 }
 
-func flattenLFTagPairs(apiObjects []awstypes.LFTagPair) []interface{} {
+func flattenLFTagPairs(apiObjects []awstypes.LFTagPair) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if reflect.ValueOf(apiObject).IsZero() {

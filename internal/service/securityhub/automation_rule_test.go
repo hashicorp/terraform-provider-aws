@@ -72,7 +72,7 @@ func testAccAutomationRule_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelCritical)),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "0"),
@@ -98,7 +98,7 @@ func testAccAutomationRule_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelLow)),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "15.5"),
@@ -266,13 +266,13 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonEquals), "key1", "value1"),
+				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonEquals), acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.comparison", string(types.MapFilterComparisonEquals)),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.value", acctest.CtValue1),
 				),
 			},
 			{
@@ -281,13 +281,13 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonContains), "key2", "value2"),
+				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonContains), acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.comparison", string(types.MapFilterComparisonContains)),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", "key2"),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.value", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", acctest.CtKey2),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.value", acctest.CtValue2),
 				),
 			},
 		},
@@ -307,11 +307,11 @@ func testAccAutomationRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutomationRuleConfig_tags(rName, "key1", "value1"),
+				Config: testAccAutomationRuleConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -320,20 +320,20 @@ func testAccAutomationRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAutomationRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAutomationRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAutomationRuleConfig_tags(rName, "key1", "value1"),
+				Config: testAccAutomationRuleConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

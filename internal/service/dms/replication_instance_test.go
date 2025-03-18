@@ -35,22 +35,22 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
@@ -58,7 +58,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -104,20 +104,20 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "5"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "6"),
 				),
 			},
 		},
@@ -139,27 +139,27 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 		},
@@ -182,14 +182,14 @@ func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_availabilityZone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, "names.0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -207,23 +207,23 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.4.7"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.4.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.2"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", "apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrAllowMajorVersionUpgrade, names.AttrApplyImmediately},
 			},
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.5.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.3"),
 				),
 			},
 		},
@@ -246,14 +246,14 @@ func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_kmsKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -274,27 +274,27 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_multiAz(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
 			},
 		},
@@ -323,7 +323,7 @@ func TestAccDMSReplicationInstance_networkType(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_networkType(rName, "DUAL"),
@@ -351,20 +351,20 @@ func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, "sun:00:30-sun:02:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:00:30-sun:02:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "sun:00:30-sun:02:30"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, "mon:00:30-mon:02:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "mon:00:30-mon:02:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "mon:00:30-mon:02:30"),
 				),
 			},
 		},
@@ -386,7 +386,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
 				),
 			},
@@ -394,7 +394,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -425,59 +425,13 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDMSReplicationInstance_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationInstanceConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccReplicationInstanceConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -506,7 +460,7 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -519,7 +473,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -529,7 +483,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 
 func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_instance" {
@@ -572,7 +526,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   allocated_storage           = %[2]d
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -586,7 +540,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   auto_minor_version_upgrade  = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -600,7 +554,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   availability_zone           = data.aws_availability_zones.available.names[0]
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -615,7 +569,7 @@ resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   allow_major_version_upgrade = true
   engine_version              = %[2]q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -633,7 +587,7 @@ resource "aws_kms_key" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   kms_key_arn                 = aws_kms_key.test.arn
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -647,7 +601,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   multi_az                    = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -667,7 +621,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   network_type                = %[2]q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -681,7 +635,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
   preferred_maintenance_window = %[2]q
-  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id      = %[1]q
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.id
 }
@@ -703,7 +657,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   publicly_accessible         = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 
@@ -723,41 +677,6 @@ resource "aws_dms_replication_instance" "test" {
 `, replicationInstanceClass, rName))
 }
 
-func testAccReplicationInstanceConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_replication_instance" "test" {
-  apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %[1]q
-  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1))
-}
-
-func testAccReplicationInstanceConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_replication_instance" "test" {
-  apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %[1]q
-  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2))
-}
-
 func testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -773,7 +692,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids      = [aws_security_group.test.id]

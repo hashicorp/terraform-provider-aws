@@ -7,10 +7,12 @@ import (
 	"context"
 	"log"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,7 +32,8 @@ import (
 )
 
 // @SDKResource("aws_appflow_flow", name="Flow")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
@@ -39,7 +42,16 @@ func resourceFlow() *schema.Resource {
 		DeleteWithoutTimeout: resourceFlowDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				p, err := arn.Parse(d.Id())
+				if err != nil {
+					return nil, err
+				}
+				name := strings.TrimPrefix(p.Resource, "flow/")
+				d.Set(names.AttrName, name)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -107,12 +119,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -146,7 +158,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"domain_name": {
+												names.AttrDomainName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
@@ -171,12 +183,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -208,12 +220,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -253,12 +265,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -284,7 +296,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -295,12 +307,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -332,12 +344,12 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Computed:     true,
@@ -383,6 +395,15 @@ func resourceFlow() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
+																		"prefix_hierarchy": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Schema{
+																				Type:             schema.TypeString,
+																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
+																			},
+																		},
 																		"prefix_format": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
@@ -419,12 +440,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -469,12 +490,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -505,12 +526,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -532,7 +553,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -543,12 +564,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -579,12 +600,12 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -620,6 +641,15 @@ func resourceFlow() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
+																		"prefix_hierarchy": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Schema{
+																				Type:             schema.TypeString,
+																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
+																			},
+																		},
 																		"prefix_format": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
@@ -651,12 +681,12 @@ func resourceFlow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"bucket_name": {
+															names.AttrBucketName: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -870,13 +900,13 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -918,6 +948,11 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 											},
 										},
 									},
@@ -931,6 +966,34 @@ func resourceFlow() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+												"pagination_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_page_size": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 10000),
+															},
+														},
+													},
+												},
+												"parallelism_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_page_size": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 10),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -1152,8 +1215,8 @@ func resourceFlow() *schema.Resource {
 							},
 							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 								if v, ok := d.Get("task").(*schema.Set); ok && v.Len() == 1 {
-									if tl, ok := v.List()[0].(map[string]interface{}); ok && len(tl) > 0 {
-										if sf, ok := tl["source_fields"].([]interface{}); ok && len(sf) == 1 {
+									if tl, ok := v.List()[0].(map[string]any); ok && len(tl) > 0 {
+										if sf, ok := tl["source_fields"].([]any); ok && len(sf) == 1 {
 											if sf[0] == "" {
 												return oldValue == "0" && newValue == "1"
 											}
@@ -1213,7 +1276,7 @@ func resourceFlow() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IsRFC3339Time,
 												},
-												"schedule_expression": {
+												names.AttrScheduleExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 256),
@@ -1247,13 +1310,43 @@ func resourceFlow() *schema.Resource {
 					},
 				},
 			},
+			"metadata_catalog_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"glue_data_catalog": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrDatabaseName: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									names.AttrRoleARN: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+									"table_prefix": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
@@ -1261,11 +1354,15 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get(names.AttrName).(string)
 	input := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(name),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
-		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]any)),
+		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]any)[0].(map[string]any)),
 		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
-		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
+		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]any)[0].(map[string]any)),
+	}
+
+	if v, ok := d.GetOk("metadata_catalog_config"); ok {
+		input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1287,27 +1384,27 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
-func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	flowDefinition, err := findFlowByARN(ctx, conn, d.Id())
+	flowDefinition, err := findFlowByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Get(names.AttrName))
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
 	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
 	d.Set(names.AttrARN, output.FlowArn)
@@ -1319,7 +1416,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("kms_arn", output.KmsArn)
 	d.Set(names.AttrName, output.FlowName)
 	if output.SourceFlowConfig != nil {
-		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(output.SourceFlowConfig)}); err != nil {
+		if err := d.Set("source_flow_config", []any{flattenSourceFlowConfig(output.SourceFlowConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source_flow_config: %s", err)
 		}
 	} else {
@@ -1329,11 +1426,19 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "setting task: %s", err)
 	}
 	if output.TriggerConfig != nil {
-		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
+		if err := d.Set("trigger_config", []any{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)
+	}
+
+	if output.MetadataCatalogConfig != nil {
+		if err := d.Set("metadata_catalog_config", flattenMetadataCatalogConfig(output.MetadataCatalogConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting metadata_catalog_config: %s", err)
+		}
+	} else {
+		d.Set("metadata_catalog_config", nil)
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -1341,18 +1446,22 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appflow.UpdateFlowInput{
-			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
+			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]any)),
 			FlowName:                  aws.String(d.Get(names.AttrName).(string)),
-			SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
+			SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]any)[0].(map[string]any)),
 			Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
-			TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
+			TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]any)[0].(map[string]any)),
+		}
+
+		if v, ok := d.GetOk("metadata_catalog_config"); ok {
+			input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
 		}
 
 		// always send description when updating a task
@@ -1363,71 +1472,37 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateFlow(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 		}
 	}
 
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
-func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Id())
-	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
+	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
+	input := appflow.DeleteFlowInput{
 		FlowName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteFlow(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
-	if _, err := waitFlowDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Id(), err)
+	if _, err := waitFlowDeleted(ctx, conn, d.Get(names.AttrName).(string)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Get(names.AttrName), err)
 	}
 
 	return diags
-}
-
-func findFlowByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.FlowDefinition, error) {
-	input := &appflow.ListFlowsInput{}
-
-	pages := appflow.NewListFlowsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Flows {
-			if aws.ToString(v.FlowArn) == arn {
-				if status := v.FlowStatus; status == types.FlowStatusDeleted {
-					return nil, &retry.NotFoundError{
-						Message:     string(status),
-						LastRequest: input,
-					}
-				}
-
-				return &v, nil
-			}
-		}
-	}
-
-	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*appflow.DescribeFlowOutput, error) {
@@ -1462,9 +1537,9 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	return output, nil
 }
 
-func statusFlow(ctx context.Context, conn *appflow.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findFlowByARN(ctx, conn, arn)
+func statusFlow(ctx context.Context, conn *appflow.Client, name string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findFlowByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1478,13 +1553,13 @@ func statusFlow(ctx context.Context, conn *appflow.Client, arn string) retry.Sta
 	}
 }
 
-func waitFlowDeleted(ctx context.Context, conn *appflow.Client, arn string) (*types.FlowDefinition, error) {
+func waitFlowDeleted(ctx context.Context, conn *appflow.Client, name string) (*types.FlowDefinition, error) {
 	const (
 		timeout = 2 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{},
-		Refresh: statusFlow(ctx, conn, arn),
+		Refresh: statusFlow(ctx, conn, name),
 		Timeout: timeout,
 	}
 
@@ -1497,18 +1572,18 @@ func waitFlowDeleted(ctx context.Context, conn *appflow.Client, arn string) (*ty
 	return nil, err
 }
 
-func expandErrorHandlingConfig(tfMap map[string]interface{}) *types.ErrorHandlingConfig {
+func expandErrorHandlingConfig(tfMap map[string]any) *types.ErrorHandlingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.ErrorHandlingConfig{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -1519,7 +1594,7 @@ func expandErrorHandlingConfig(tfMap map[string]interface{}) *types.ErrorHandlin
 	return a
 }
 
-func expandAggregationConfig(tfMap map[string]interface{}) *types.AggregationConfig {
+func expandAggregationConfig(tfMap map[string]any) *types.AggregationConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1537,7 +1612,7 @@ func expandAggregationConfig(tfMap map[string]interface{}) *types.AggregationCon
 	return a
 }
 
-func expandPrefixConfig(tfMap map[string]interface{}) *types.PrefixConfig {
+func expandPrefixConfig(tfMap map[string]any) *types.PrefixConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1552,10 +1627,14 @@ func expandPrefixConfig(tfMap map[string]interface{}) *types.PrefixConfig {
 		a.PrefixType = types.PrefixType(v)
 	}
 
+	if v, ok := tfMap["prefix_hierarchy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.PathPrefixHierarchy = flex.ExpandStringyValueList[types.PathPrefix](v)
+	}
+
 	return a
 }
 
-func expandDestinationFlowConfigs(tfList []interface{}) []types.DestinationFlowConfig {
+func expandDestinationFlowConfigs(tfList []any) []types.DestinationFlowConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1563,7 +1642,7 @@ func expandDestinationFlowConfigs(tfList []interface{}) []types.DestinationFlowC
 	var s []types.DestinationFlowConfig
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -1581,7 +1660,7 @@ func expandDestinationFlowConfigs(tfList []interface{}) []types.DestinationFlowC
 	return s
 }
 
-func expandDestinationFlowConfig(tfMap map[string]interface{}) *types.DestinationFlowConfig {
+func expandDestinationFlowConfig(tfMap map[string]any) *types.DestinationFlowConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1603,85 +1682,85 @@ func expandDestinationFlowConfig(tfMap map[string]interface{}) *types.Destinatio
 		return nil
 	}
 
-	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.DestinationConnectorProperties = expandDestinationConnectorProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["destination_connector_properties"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.DestinationConnectorProperties = expandDestinationConnectorProperties(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandDestinationConnectorProperties(tfMap map[string]interface{}) *types.DestinationConnectorProperties {
+func expandDestinationConnectorProperties(tfMap map[string]any) *types.DestinationConnectorProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.DestinationConnectorProperties{}
 
-	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.CustomConnector = expandCustomConnectorDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["custom_connector"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.CustomConnector = expandCustomConnectorDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["customer_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.CustomerProfiles = expandCustomerProfilesDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["customer_profiles"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.CustomerProfiles = expandCustomerProfilesDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["event_bridge"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.EventBridge = expandEventBridgeDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["event_bridge"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.EventBridge = expandEventBridgeDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["honeycode"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["honeycode"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]any))
 	}
 
 	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
 	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
-	if v, ok := tfMap["lookout_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["lookout_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.LookoutMetrics = v[0].(*types.LookoutMetricsDestinationProperties)
 	}
 
-	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["marketo"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["redshift"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Redshift = expandRedshiftDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["redshift"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Redshift = expandRedshiftDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.S3 = expandS3DestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.S3 = expandS3DestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Salesforce = expandSalesforceDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["salesforce"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Salesforce = expandSalesforceDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.SAPOData = expandSAPODataDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sapo_data"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.SAPOData = expandSAPODataDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Snowflake = expandSnowflakeDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["snowflake"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Snowflake = expandSnowflakeDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["upsolver"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Upsolver = expandUpsolverDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["upsolver"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Upsolver = expandUpsolverDestinationProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Zendesk = expandZendeskDestinationProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["zendesk"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Zendesk = expandZendeskDestinationProperties(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *types.CustomConnectorDestinationProperties {
+func expandCustomConnectorDestinationProperties(tfMap map[string]any) *types.CustomConnectorDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.CustomConnectorDestinationProperties{}
 
-	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_properties"].(map[string]any); ok && len(v) > 0 {
 		a.CustomProperties = flex.ExpandStringValueMap(v)
 	}
 
@@ -1689,11 +1768,11 @@ func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *t
 		a.EntityName = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["id_field_names"].([]any); ok && len(v) > 0 {
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
@@ -1704,14 +1783,14 @@ func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *t
 	return a
 }
 
-func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *types.CustomerProfilesDestinationProperties {
+func expandCustomerProfilesDestinationProperties(tfMap map[string]any) *types.CustomerProfilesDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.CustomerProfilesDestinationProperties{}
 
-	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDomainName].(string); ok && v != "" {
 		a.DomainName = aws.String(v)
 	}
 
@@ -1722,15 +1801,15 @@ func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *
 	return a
 }
 
-func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *types.EventBridgeDestinationProperties {
+func expandEventBridgeDestinationProperties(tfMap map[string]any) *types.EventBridgeDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.EventBridgeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -1740,15 +1819,15 @@ func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *types
 	return a
 }
 
-func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *types.HoneycodeDestinationProperties {
+func expandHoneycodeDestinationProperties(tfMap map[string]any) *types.HoneycodeDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.HoneycodeDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -1758,15 +1837,15 @@ func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *types.H
 	return a
 }
 
-func expandMarketoDestinationProperties(tfMap map[string]interface{}) *types.MarketoDestinationProperties {
+func expandMarketoDestinationProperties(tfMap map[string]any) *types.MarketoDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.MarketoDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -1776,19 +1855,19 @@ func expandMarketoDestinationProperties(tfMap map[string]interface{}) *types.Mar
 	return a
 }
 
-func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *types.RedshiftDestinationProperties {
+func expandRedshiftDestinationProperties(tfMap map[string]any) *types.RedshiftDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.RedshiftDestinationProperties{}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["intermediate_bucket_name"].(string); ok && v != "" {
@@ -1802,45 +1881,45 @@ func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *types.Re
 	return a
 }
 
-func expandS3DestinationProperties(tfMap map[string]interface{}) *types.S3DestinationProperties {
+func expandS3DestinationProperties(tfMap map[string]any) *types.S3DestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.S3DestinationProperties{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.S3OutputFormatConfig = expandS3OutputFormatConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_output_format_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.S3OutputFormatConfig = expandS3OutputFormatConfig(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandS3OutputFormatConfig(tfMap map[string]interface{}) *types.S3OutputFormatConfig {
+func expandS3OutputFormatConfig(tfMap map[string]any) *types.S3OutputFormatConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.S3OutputFormatConfig{}
 
-	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["aggregation_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["file_type"].(string); ok && v != "" {
 		a.FileType = types.FileType(v)
 	}
 
-	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["prefix_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["preserve_source_data_typing"].(bool); ok {
@@ -1850,18 +1929,18 @@ func expandS3OutputFormatConfig(tfMap map[string]interface{}) *types.S3OutputFor
 	return a
 }
 
-func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *types.SalesforceDestinationProperties {
+func expandSalesforceDestinationProperties(tfMap map[string]any) *types.SalesforceDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.SalesforceDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["id_field_names"].([]any); ok && len(v) > 0 {
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
@@ -1876,18 +1955,18 @@ func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *types.
 	return a
 }
 
-func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SAPODataDestinationProperties {
+func expandSAPODataDestinationProperties(tfMap map[string]any) *types.SAPODataDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.SAPODataDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["id_field_names"].([]any); ok && len(v) > 0 {
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
@@ -1895,8 +1974,8 @@ func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SA
 		a.ObjectPath = aws.String(v)
 	}
 
-	if v, ok := tfMap["success_response_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.SuccessResponseHandlingConfig = expandSuccessResponseHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["success_response_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.SuccessResponseHandlingConfig = expandSuccessResponseHandlingConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
@@ -1906,37 +1985,37 @@ func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SA
 	return a
 }
 
-func expandSuccessResponseHandlingConfig(tfMap map[string]interface{}) *types.SuccessResponseHandlingConfig {
+func expandSuccessResponseHandlingConfig(tfMap map[string]any) *types.SuccessResponseHandlingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.SuccessResponseHandlingConfig{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
 	return a
 }
 
-func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *types.SnowflakeDestinationProperties {
+func expandSnowflakeDestinationProperties(tfMap map[string]any) *types.SnowflakeDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.SnowflakeDestinationProperties{}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["intermediate_bucket_name"].(string); ok && v != "" {
@@ -1950,62 +2029,62 @@ func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *types.S
 	return a
 }
 
-func expandUpsolverDestinationProperties(tfMap map[string]interface{}) *types.UpsolverDestinationProperties {
+func expandUpsolverDestinationProperties(tfMap map[string]any) *types.UpsolverDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.UpsolverDestinationProperties{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.S3OutputFormatConfig = expandUpsolverS3OutputFormatConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_output_format_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.S3OutputFormatConfig = expandUpsolverS3OutputFormatConfig(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *types.UpsolverS3OutputFormatConfig {
+func expandUpsolverS3OutputFormatConfig(tfMap map[string]any) *types.UpsolverS3OutputFormatConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.UpsolverS3OutputFormatConfig{}
 
-	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["aggregation_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["file_type"].(string); ok && v != "" {
 		a.FileType = types.FileType(v)
 	}
 
-	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["prefix_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandZendeskDestinationProperties(tfMap map[string]interface{}) *types.ZendeskDestinationProperties {
+func expandZendeskDestinationProperties(tfMap map[string]any) *types.ZendeskDestinationProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.ZendeskDestinationProperties{}
 
-	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["id_field_names"].([]any); ok && len(v) > 0 {
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
@@ -2020,7 +2099,7 @@ func expandZendeskDestinationProperties(tfMap map[string]interface{}) *types.Zen
 	return a
 }
 
-func expandSourceFlowConfig(tfMap map[string]interface{}) *types.SourceFlowConfig {
+func expandSourceFlowConfig(tfMap map[string]any) *types.SourceFlowConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2039,18 +2118,18 @@ func expandSourceFlowConfig(tfMap map[string]interface{}) *types.SourceFlowConfi
 		a.ConnectorType = types.ConnectorType(v)
 	}
 
-	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.IncrementalPullConfig = expandIncrementalPullConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["incremental_pull_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.IncrementalPullConfig = expandIncrementalPullConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["source_connector_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.SourceConnectorProperties = expandSourceConnectorProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["source_connector_properties"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.SourceConnectorProperties = expandSourceConnectorProperties(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandIncrementalPullConfig(tfMap map[string]interface{}) *types.IncrementalPullConfig {
+func expandIncrementalPullConfig(tfMap map[string]any) *types.IncrementalPullConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2064,81 +2143,81 @@ func expandIncrementalPullConfig(tfMap map[string]interface{}) *types.Incrementa
 	return a
 }
 
-func expandSourceConnectorProperties(tfMap map[string]interface{}) *types.SourceConnectorProperties {
+func expandSourceConnectorProperties(tfMap map[string]any) *types.SourceConnectorProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.SourceConnectorProperties{}
 
-	if v, ok := tfMap["amplitude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Amplitude = expandAmplitudeSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["amplitude"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Amplitude = expandAmplitudeSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.CustomConnector = expandCustomConnectorSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["custom_connector"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.CustomConnector = expandCustomConnectorSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Datadog = expandDatadogSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["datadog"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Datadog = expandDatadogSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["dynatrace"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Dynatrace = expandDynatraceSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dynatrace"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Dynatrace = expandDynatraceSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["google_analytics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.GoogleAnalytics = expandGoogleAnalyticsSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["google_analytics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.GoogleAnalytics = expandGoogleAnalyticsSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["infor_nexus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.InforNexus = expandInforNexusSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["infor_nexus"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.InforNexus = expandInforNexusSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Marketo = expandMarketoSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["marketo"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Marketo = expandMarketoSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.S3 = expandS3SourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.S3 = expandS3SourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.SAPOData = expandSAPODataSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sapo_data"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.SAPOData = expandSAPODataSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Salesforce = expandSalesforceSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["salesforce"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Salesforce = expandSalesforceSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["service_now"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ServiceNow = expandServiceNowSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["service_now"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ServiceNow = expandServiceNowSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["singular"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Singular = expandSingularSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["singular"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Singular = expandSingularSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["slack"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Slack = expandSlackSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["slack"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Slack = expandSlackSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["trendmicro"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Trendmicro = expandTrendmicroSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["trendmicro"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Trendmicro = expandTrendmicroSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["veeva"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Veeva = expandVeevaSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["veeva"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Veeva = expandVeevaSourceProperties(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Zendesk = expandZendeskSourceProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["zendesk"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Zendesk = expandZendeskSourceProperties(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandAmplitudeSourceProperties(tfMap map[string]interface{}) *types.AmplitudeSourceProperties {
+func expandAmplitudeSourceProperties(tfMap map[string]any) *types.AmplitudeSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2152,14 +2231,14 @@ func expandAmplitudeSourceProperties(tfMap map[string]interface{}) *types.Amplit
 	return a
 }
 
-func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *types.CustomConnectorSourceProperties {
+func expandCustomConnectorSourceProperties(tfMap map[string]any) *types.CustomConnectorSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.CustomConnectorSourceProperties{}
 
-	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_properties"].(map[string]any); ok && len(v) > 0 {
 		a.CustomProperties = flex.ExpandStringValueMap(v)
 	}
 
@@ -2170,7 +2249,7 @@ func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *types.
 	return a
 }
 
-func expandDatadogSourceProperties(tfMap map[string]interface{}) *types.DatadogSourceProperties {
+func expandDatadogSourceProperties(tfMap map[string]any) *types.DatadogSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2184,7 +2263,7 @@ func expandDatadogSourceProperties(tfMap map[string]interface{}) *types.DatadogS
 	return a
 }
 
-func expandDynatraceSourceProperties(tfMap map[string]interface{}) *types.DynatraceSourceProperties {
+func expandDynatraceSourceProperties(tfMap map[string]any) *types.DynatraceSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2198,7 +2277,7 @@ func expandDynatraceSourceProperties(tfMap map[string]interface{}) *types.Dynatr
 	return a
 }
 
-func expandGoogleAnalyticsSourceProperties(tfMap map[string]interface{}) *types.GoogleAnalyticsSourceProperties {
+func expandGoogleAnalyticsSourceProperties(tfMap map[string]any) *types.GoogleAnalyticsSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2212,7 +2291,7 @@ func expandGoogleAnalyticsSourceProperties(tfMap map[string]interface{}) *types.
 	return a
 }
 
-func expandInforNexusSourceProperties(tfMap map[string]interface{}) *types.InforNexusSourceProperties {
+func expandInforNexusSourceProperties(tfMap map[string]any) *types.InforNexusSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2226,7 +2305,7 @@ func expandInforNexusSourceProperties(tfMap map[string]interface{}) *types.Infor
 	return a
 }
 
-func expandMarketoSourceProperties(tfMap map[string]interface{}) *types.MarketoSourceProperties {
+func expandMarketoSourceProperties(tfMap map[string]any) *types.MarketoSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2240,29 +2319,29 @@ func expandMarketoSourceProperties(tfMap map[string]interface{}) *types.MarketoS
 	return a
 }
 
-func expandS3SourceProperties(tfMap map[string]interface{}) *types.S3SourceProperties {
+func expandS3SourceProperties(tfMap map[string]any) *types.S3SourceProperties {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.S3SourceProperties{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_input_format_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.S3InputFormatConfig = expandS3InputFormatConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_input_format_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.S3InputFormatConfig = expandS3InputFormatConfig(v[0].(map[string]any))
 	}
 
 	return a
 }
 
-func expandS3InputFormatConfig(tfMap map[string]interface{}) *types.S3InputFormatConfig {
+func expandS3InputFormatConfig(tfMap map[string]any) *types.S3InputFormatConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2276,7 +2355,7 @@ func expandS3InputFormatConfig(tfMap map[string]interface{}) *types.S3InputForma
 	return a
 }
 
-func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.SalesforceSourceProperties {
+func expandSalesforceSourceProperties(tfMap map[string]any) *types.SalesforceSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2295,10 +2374,42 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.Sales
 		a.Object = aws.String(v)
 	}
 
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
+	}
+
 	return a
 }
 
-func expandSAPODataSourceProperties(tfMap map[string]interface{}) *types.SAPODataSourceProperties {
+func expandSAPODataPaginationConfigProperties(tfMap map[string]any) *types.SAPODataPaginationConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SAPODataPaginationConfig{}
+
+	if v, ok := tfMap["max_page_size"].(int); ok && v != 0 {
+		a.MaxPageSize = aws.Int32(int32(v))
+	}
+
+	return a
+}
+
+func expandSAPODataParallelismConfigProperties(tfMap map[string]any) *types.SAPODataParallelismConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SAPODataParallelismConfig{}
+
+	if v, ok := tfMap["max_parallelism"].(int); ok && v != 0 {
+		a.MaxParallelism = aws.Int32(int32(v))
+	}
+
+	return a
+}
+
+func expandSAPODataSourceProperties(tfMap map[string]any) *types.SAPODataSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2309,10 +2420,18 @@ func expandSAPODataSourceProperties(tfMap map[string]interface{}) *types.SAPODat
 		a.ObjectPath = aws.String(v)
 	}
 
+	if v, ok := tfMap["pagination_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.PaginationConfig = expandSAPODataPaginationConfigProperties(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["parallelism_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ParallelismConfig = expandSAPODataParallelismConfigProperties(v[0].(map[string]any))
+	}
+
 	return a
 }
 
-func expandServiceNowSourceProperties(tfMap map[string]interface{}) *types.ServiceNowSourceProperties {
+func expandServiceNowSourceProperties(tfMap map[string]any) *types.ServiceNowSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2326,7 +2445,7 @@ func expandServiceNowSourceProperties(tfMap map[string]interface{}) *types.Servi
 	return a
 }
 
-func expandSingularSourceProperties(tfMap map[string]interface{}) *types.SingularSourceProperties {
+func expandSingularSourceProperties(tfMap map[string]any) *types.SingularSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2340,7 +2459,7 @@ func expandSingularSourceProperties(tfMap map[string]interface{}) *types.Singula
 	return a
 }
 
-func expandSlackSourceProperties(tfMap map[string]interface{}) *types.SlackSourceProperties {
+func expandSlackSourceProperties(tfMap map[string]any) *types.SlackSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2354,7 +2473,7 @@ func expandSlackSourceProperties(tfMap map[string]interface{}) *types.SlackSourc
 	return a
 }
 
-func expandTrendmicroSourceProperties(tfMap map[string]interface{}) *types.TrendmicroSourceProperties {
+func expandTrendmicroSourceProperties(tfMap map[string]any) *types.TrendmicroSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2368,7 +2487,7 @@ func expandTrendmicroSourceProperties(tfMap map[string]interface{}) *types.Trend
 	return a
 }
 
-func expandVeevaSourceProperties(tfMap map[string]interface{}) *types.VeevaSourceProperties {
+func expandVeevaSourceProperties(tfMap map[string]any) *types.VeevaSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2398,7 +2517,7 @@ func expandVeevaSourceProperties(tfMap map[string]interface{}) *types.VeevaSourc
 	return a
 }
 
-func expandZendeskSourceProperties(tfMap map[string]interface{}) *types.ZendeskSourceProperties {
+func expandZendeskSourceProperties(tfMap map[string]any) *types.ZendeskSourceProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2412,7 +2531,7 @@ func expandZendeskSourceProperties(tfMap map[string]interface{}) *types.ZendeskS
 	return a
 }
 
-func expandTasks(tfList []interface{}) []types.Task {
+func expandTasks(tfList []any) []types.Task {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2420,7 +2539,7 @@ func expandTasks(tfList []interface{}) []types.Task {
 	var s []types.Task
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -2438,28 +2557,28 @@ func expandTasks(tfList []interface{}) []types.Task {
 	return s
 }
 
-func expandTask(tfMap map[string]interface{}) *types.Task {
+func expandTask(tfMap map[string]any) *types.Task {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.Task{}
 
-	if v, ok := tfMap["connector_operator"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.ConnectorOperator = expandConnectorOperator(v[0].(map[string]interface{}))
+	if v, ok := tfMap["connector_operator"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.ConnectorOperator = expandConnectorOperator(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["destination_field"].(string); ok && v != "" {
 		a.DestinationField = aws.String(v)
 	}
 
-	if v, ok := tfMap["source_fields"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["source_fields"].([]any); ok && len(v) > 0 {
 		a.SourceFields = flex.ExpandStringValueList(v)
 	} else {
 		a.SourceFields = []string{} // send an empty object if source_fields is empty (required by API)
 	}
 
-	if v, ok := tfMap["task_properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["task_properties"].(map[string]any); ok && len(v) > 0 {
 		a.TaskProperties = flex.ExpandStringValueMap(v)
 	}
 
@@ -2473,7 +2592,7 @@ func expandTask(tfMap map[string]interface{}) *types.Task {
 	return a
 }
 
-func expandConnectorOperator(tfMap map[string]interface{}) *types.ConnectorOperator {
+func expandConnectorOperator(tfMap map[string]any) *types.ConnectorOperator {
 	if tfMap == nil {
 		return nil
 	}
@@ -2547,15 +2666,15 @@ func expandConnectorOperator(tfMap map[string]interface{}) *types.ConnectorOpera
 	return a
 }
 
-func expandTriggerConfig(tfMap map[string]interface{}) *types.TriggerConfig {
+func expandTriggerConfig(tfMap map[string]any) *types.TriggerConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.TriggerConfig{}
 
-	if v, ok := tfMap["trigger_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.TriggerProperties = expandTriggerProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["trigger_properties"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.TriggerProperties = expandTriggerProperties(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["trigger_type"].(string); ok && v != "" {
@@ -2565,7 +2684,7 @@ func expandTriggerConfig(tfMap map[string]interface{}) *types.TriggerConfig {
 	return a
 }
 
-func expandTriggerProperties(tfMap map[string]interface{}) *types.TriggerProperties {
+func expandTriggerProperties(tfMap map[string]any) *types.TriggerProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2573,15 +2692,15 @@ func expandTriggerProperties(tfMap map[string]interface{}) *types.TriggerPropert
 	a := &types.TriggerProperties{}
 
 	// Only return TriggerProperties if nested field is non-empty
-	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.Scheduled = expandScheduledTriggerProperties(v[0].(map[string]interface{}))
+	if v, ok := tfMap["scheduled"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.Scheduled = expandScheduledTriggerProperties(v[0].(map[string]any))
 		return a
 	}
 
 	return nil
 }
 
-func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.ScheduledTriggerProperties {
+func expandScheduledTriggerProperties(tfMap map[string]any) *types.ScheduledTriggerProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -2604,7 +2723,7 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.Sched
 		a.ScheduleEndTime = aws.Time(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		a.ScheduleExpression = aws.String(v)
 	}
 
@@ -2625,19 +2744,83 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.Sched
 	return a
 }
 
-func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) map[string]interface{} {
+func expandMetadataCatalogConfig(tfList []any) *types.MetadataCatalogConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+
+	a := &types.MetadataCatalogConfig{}
+
+	if v, ok := m["glue_data_catalog"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.GlueDataCatalog = expandGlueDataCatalog(v[0].(map[string]any))
+	}
+
+	return a
+}
+
+func expandGlueDataCatalog(tfMap map[string]any) *types.GlueDataCatalogConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.GlueDataCatalogConfig{}
+
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+		a.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		a.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["table_prefix"].(string); ok && v != "" {
+		a.TablePrefix = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenMetadataCatalogConfig(in *types.MetadataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"glue_data_catalog": flattenGlueDataCatalog(in.GlueDataCatalog),
+	}
+
+	return []any{m}
+}
+
+func flattenGlueDataCatalog(in *types.GlueDataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		names.AttrDatabaseName: in.DatabaseName,
+		names.AttrRoleARN:      in.RoleArn,
+		"table_prefix":         in.TablePrefix,
+	}
+
+	return []any{m}
+}
+
+func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) map[string]any {
 	if errorHandlingConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := errorHandlingConfig.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := errorHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	m["fail_on_first_destination_error"] = errorHandlingConfig.FailOnFirstDestinationError
@@ -2645,25 +2828,26 @@ func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) 
 	return m
 }
 
-func flattenPrefixConfig(prefixConfig *types.PrefixConfig) map[string]interface{} {
+func flattenPrefixConfig(prefixConfig *types.PrefixConfig) map[string]any {
 	if prefixConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["prefix_format"] = prefixConfig.PrefixFormat
 	m["prefix_type"] = prefixConfig.PrefixType
+	m["prefix_hierarchy"] = flex.FlattenStringyValueList(prefixConfig.PathPrefixHierarchy)
 
 	return m
 }
 
-func flattenAggregationConfig(aggregationConfig *types.AggregationConfig) map[string]interface{} {
+func flattenAggregationConfig(aggregationConfig *types.AggregationConfig) map[string]any {
 	if aggregationConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["aggregation_type"] = aggregationConfig.AggregationType
 	m["target_file_size"] = aggregationConfig.TargetFileSize
@@ -2671,12 +2855,12 @@ func flattenAggregationConfig(aggregationConfig *types.AggregationConfig) map[st
 	return m
 }
 
-func flattenDestinationFlowConfigs(destinationFlowConfigs []types.DestinationFlowConfig) []interface{} {
+func flattenDestinationFlowConfigs(destinationFlowConfigs []types.DestinationFlowConfig) []any {
 	if len(destinationFlowConfigs) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, destinationFlowConfig := range destinationFlowConfigs {
 		l = append(l, flattenDestinationFlowConfig(destinationFlowConfig))
@@ -2685,8 +2869,8 @@ func flattenDestinationFlowConfigs(destinationFlowConfigs []types.DestinationFlo
 	return l
 }
 
-func flattenDestinationFlowConfig(destinationFlowConfig types.DestinationFlowConfig) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenDestinationFlowConfig(destinationFlowConfig types.DestinationFlowConfig) map[string]any {
+	m := map[string]any{}
 
 	if v := destinationFlowConfig.ApiVersion; v != nil {
 		m["api_version"] = aws.ToString(v)
@@ -2699,82 +2883,82 @@ func flattenDestinationFlowConfig(destinationFlowConfig types.DestinationFlowCon
 	m["connector_type"] = destinationFlowConfig.ConnectorType
 
 	if v := destinationFlowConfig.DestinationConnectorProperties; v != nil {
-		m["destination_connector_properties"] = []interface{}{flattenDestinationConnectorProperties(v)}
+		m["destination_connector_properties"] = []any{flattenDestinationConnectorProperties(v)}
 	}
 
 	return m
 }
 
-func flattenDestinationConnectorProperties(destinationConnectorProperties *types.DestinationConnectorProperties) map[string]interface{} {
+func flattenDestinationConnectorProperties(destinationConnectorProperties *types.DestinationConnectorProperties) map[string]any {
 	if destinationConnectorProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := destinationConnectorProperties.CustomConnector; v != nil {
-		m["custom_connector"] = []interface{}{flattenCustomConnectorDestinationProperties(v)}
+		m["custom_connector"] = []any{flattenCustomConnectorDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.CustomerProfiles; v != nil {
-		m["customer_profiles"] = []interface{}{flattenCustomerProfilesDestinationProperties(v)}
+		m["customer_profiles"] = []any{flattenCustomerProfilesDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.EventBridge; v != nil {
-		m["event_bridge"] = []interface{}{flattenEventBridgeDestinationProperties(v)}
+		m["event_bridge"] = []any{flattenEventBridgeDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Honeycode; v != nil {
-		m["honeycode"] = []interface{}{flattenHoneycodeDestinationProperties(v)}
+		m["honeycode"] = []any{flattenHoneycodeDestinationProperties(v)}
 	}
 
 	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
 	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
 	if v := destinationConnectorProperties.LookoutMetrics; v != nil {
-		m["lookout_metrics"] = []interface{}{map[string]interface{}{}}
+		m["lookout_metrics"] = []any{map[string]any{}}
 	}
 
 	if v := destinationConnectorProperties.Marketo; v != nil {
-		m["marketo"] = []interface{}{flattenMarketoDestinationProperties(v)}
+		m["marketo"] = []any{flattenMarketoDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Redshift; v != nil {
-		m["redshift"] = []interface{}{flattenRedshiftDestinationProperties(v)}
+		m["redshift"] = []any{flattenRedshiftDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.S3; v != nil {
-		m["s3"] = []interface{}{flattenS3DestinationProperties(v)}
+		m["s3"] = []any{flattenS3DestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Salesforce; v != nil {
-		m["salesforce"] = []interface{}{flattenSalesforceDestinationProperties(v)}
+		m["salesforce"] = []any{flattenSalesforceDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.SAPOData; v != nil {
-		m["sapo_data"] = []interface{}{flattenSAPODataDestinationProperties(v)}
+		m["sapo_data"] = []any{flattenSAPODataDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Snowflake; v != nil {
-		m["snowflake"] = []interface{}{flattenSnowflakeDestinationProperties(v)}
+		m["snowflake"] = []any{flattenSnowflakeDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Upsolver; v != nil {
-		m["upsolver"] = []interface{}{flattenUpsolverDestinationProperties(v)}
+		m["upsolver"] = []any{flattenUpsolverDestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Zendesk; v != nil {
-		m["zendesk"] = []interface{}{flattenZendeskDestinationProperties(v)}
+		m["zendesk"] = []any{flattenZendeskDestinationProperties(v)}
 	}
 
 	return m
 }
 
-func flattenCustomConnectorDestinationProperties(customConnectorDestinationProperties *types.CustomConnectorDestinationProperties) map[string]interface{} {
+func flattenCustomConnectorDestinationProperties(customConnectorDestinationProperties *types.CustomConnectorDestinationProperties) map[string]any {
 	if customConnectorDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := customConnectorDestinationProperties.CustomProperties; v != nil {
 		m["custom_properties"] = v
@@ -2785,7 +2969,7 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	}
 
 	if v := customConnectorDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := customConnectorDestinationProperties.IdFieldNames; v != nil {
@@ -2797,15 +2981,15 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	return m
 }
 
-func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationProperties *types.CustomerProfilesDestinationProperties) map[string]interface{} {
+func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationProperties *types.CustomerProfilesDestinationProperties) map[string]any {
 	if customerProfilesDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := customerProfilesDestinationProperties.DomainName; v != nil {
-		m["domain_name"] = aws.ToString(v)
+		m[names.AttrDomainName] = aws.ToString(v)
 	}
 
 	if v := customerProfilesDestinationProperties.ObjectTypeName; v != nil {
@@ -2815,15 +2999,15 @@ func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationPro
 	return m
 }
 
-func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *types.EventBridgeDestinationProperties) map[string]interface{} {
+func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *types.EventBridgeDestinationProperties) map[string]any {
 	if eventBridgeDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := eventBridgeDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := eventBridgeDestinationProperties.Object; v != nil {
@@ -2833,15 +3017,15 @@ func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *t
 	return m
 }
 
-func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *types.HoneycodeDestinationProperties) map[string]interface{} {
+func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *types.HoneycodeDestinationProperties) map[string]any {
 	if honeycodeDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := honeycodeDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := honeycodeDestinationProperties.Object; v != nil {
@@ -2851,15 +3035,15 @@ func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *types
 	return m
 }
 
-func flattenMarketoDestinationProperties(marketoDestinationProperties *types.MarketoDestinationProperties) map[string]interface{} {
+func flattenMarketoDestinationProperties(marketoDestinationProperties *types.MarketoDestinationProperties) map[string]any {
 	if marketoDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := marketoDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := marketoDestinationProperties.Object; v != nil {
@@ -2869,19 +3053,19 @@ func flattenMarketoDestinationProperties(marketoDestinationProperties *types.Mar
 	return m
 }
 
-func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.RedshiftDestinationProperties) map[string]interface{} {
+func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.RedshiftDestinationProperties) map[string]any {
 	if redshiftDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := redshiftDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := redshiftDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := redshiftDestinationProperties.IntermediateBucketName; v != nil {
@@ -2895,43 +3079,43 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.R
 	return m
 }
 
-func flattenS3DestinationProperties(s3DestinationProperties *types.S3DestinationProperties) map[string]interface{} {
+func flattenS3DestinationProperties(s3DestinationProperties *types.S3DestinationProperties) map[string]any {
 	if s3DestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := s3DestinationProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := s3DestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := s3DestinationProperties.S3OutputFormatConfig; v != nil {
-		m["s3_output_format_config"] = []interface{}{flattenS3OutputFormatConfig(v)}
+		m["s3_output_format_config"] = []any{flattenS3OutputFormatConfig(v)}
 	}
 
 	return m
 }
 
-func flattenS3OutputFormatConfig(s3OutputFormatConfig *types.S3OutputFormatConfig) map[string]interface{} {
+func flattenS3OutputFormatConfig(s3OutputFormatConfig *types.S3OutputFormatConfig) map[string]any {
 	if s3OutputFormatConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := s3OutputFormatConfig.AggregationConfig; v != nil {
-		m["aggregation_config"] = []interface{}{flattenAggregationConfig(v)}
+		m["aggregation_config"] = []any{flattenAggregationConfig(v)}
 	}
 
 	m["file_type"] = s3OutputFormatConfig.FileType
 
 	if v := s3OutputFormatConfig.PrefixConfig; v != nil {
-		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
+		m["prefix_config"] = []any{flattenPrefixConfig(v)}
 	}
 
 	m["preserve_source_data_typing"] = s3OutputFormatConfig.PreserveSourceDataTyping
@@ -2939,15 +3123,15 @@ func flattenS3OutputFormatConfig(s3OutputFormatConfig *types.S3OutputFormatConfi
 	return m
 }
 
-func flattenSalesforceDestinationProperties(salesforceDestinationProperties *types.SalesforceDestinationProperties) map[string]interface{} {
+func flattenSalesforceDestinationProperties(salesforceDestinationProperties *types.SalesforceDestinationProperties) map[string]any {
 	if salesforceDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := salesforceDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := salesforceDestinationProperties.IdFieldNames; v != nil {
@@ -2963,15 +3147,15 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *typ
 	return m
 }
 
-func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.SAPODataDestinationProperties) map[string]interface{} {
+func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.SAPODataDestinationProperties) map[string]any {
 	if SAPODataDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := SAPODataDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := SAPODataDestinationProperties.IdFieldNames; v != nil {
@@ -2983,7 +3167,7 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.S
 	}
 
 	if v := SAPODataDestinationProperties.SuccessResponseHandlingConfig; v != nil {
-		m["success_response_handling_config"] = []interface{}{flattenSuccessResponseHandlingConfig(v)}
+		m["success_response_handling_config"] = []any{flattenSuccessResponseHandlingConfig(v)}
 	}
 
 	m["write_operation_type"] = SAPODataDestinationProperties.WriteOperationType
@@ -2991,37 +3175,37 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.S
 	return m
 }
 
-func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *types.SuccessResponseHandlingConfig) map[string]interface{} {
+func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *types.SuccessResponseHandlingConfig) map[string]any {
 	if successResponseHandlingConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := successResponseHandlingConfig.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := successResponseHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types.SnowflakeDestinationProperties) map[string]interface{} {
+func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types.SnowflakeDestinationProperties) map[string]any {
 	if snowflakeDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := snowflakeDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := snowflakeDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := snowflakeDestinationProperties.IntermediateBucketName; v != nil {
@@ -3035,57 +3219,57 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types
 	return m
 }
 
-func flattenUpsolverDestinationProperties(upsolverDestinationProperties *types.UpsolverDestinationProperties) map[string]interface{} {
+func flattenUpsolverDestinationProperties(upsolverDestinationProperties *types.UpsolverDestinationProperties) map[string]any {
 	if upsolverDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := upsolverDestinationProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := upsolverDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := upsolverDestinationProperties.S3OutputFormatConfig; v != nil {
-		m["s3_output_format_config"] = []interface{}{flattenUpsolverS3OutputFormatConfig(v)}
+		m["s3_output_format_config"] = []any{flattenUpsolverS3OutputFormatConfig(v)}
 	}
 
 	return m
 }
 
-func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *types.UpsolverS3OutputFormatConfig) map[string]interface{} {
+func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *types.UpsolverS3OutputFormatConfig) map[string]any {
 	if upsolverS3OutputFormatConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := upsolverS3OutputFormatConfig.AggregationConfig; v != nil {
-		m["aggregation_config"] = []interface{}{flattenAggregationConfig(v)}
+		m["aggregation_config"] = []any{flattenAggregationConfig(v)}
 	}
 
 	m["file_type"] = upsolverS3OutputFormatConfig.FileType
 
 	if v := upsolverS3OutputFormatConfig.PrefixConfig; v != nil {
-		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
+		m["prefix_config"] = []any{flattenPrefixConfig(v)}
 	}
 
 	return m
 }
 
-func flattenZendeskDestinationProperties(zendeskDestinationProperties *types.ZendeskDestinationProperties) map[string]interface{} {
+func flattenZendeskDestinationProperties(zendeskDestinationProperties *types.ZendeskDestinationProperties) map[string]any {
 	if zendeskDestinationProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := zendeskDestinationProperties.ErrorHandlingConfig; v != nil {
-		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
 
 	if v := zendeskDestinationProperties.IdFieldNames; v != nil {
@@ -3101,12 +3285,12 @@ func flattenZendeskDestinationProperties(zendeskDestinationProperties *types.Zen
 	return m
 }
 
-func flattenSourceFlowConfig(sourceFlowConfig *types.SourceFlowConfig) map[string]interface{} {
+func flattenSourceFlowConfig(sourceFlowConfig *types.SourceFlowConfig) map[string]any {
 	if sourceFlowConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := sourceFlowConfig.ApiVersion; v != nil {
 		m["api_version"] = aws.ToString(v)
@@ -3119,22 +3303,22 @@ func flattenSourceFlowConfig(sourceFlowConfig *types.SourceFlowConfig) map[strin
 	m["connector_type"] = sourceFlowConfig.ConnectorType
 
 	if v := sourceFlowConfig.IncrementalPullConfig; v != nil {
-		m["incremental_pull_config"] = []interface{}{flattenIncrementalPullConfig(v)}
+		m["incremental_pull_config"] = []any{flattenIncrementalPullConfig(v)}
 	}
 
 	if v := sourceFlowConfig.SourceConnectorProperties; v != nil {
-		m["source_connector_properties"] = []interface{}{flattenSourceConnectorProperties(v)}
+		m["source_connector_properties"] = []any{flattenSourceConnectorProperties(v)}
 	}
 
 	return m
 }
 
-func flattenIncrementalPullConfig(incrementalPullConfig *types.IncrementalPullConfig) map[string]interface{} {
+func flattenIncrementalPullConfig(incrementalPullConfig *types.IncrementalPullConfig) map[string]any {
 	if incrementalPullConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := incrementalPullConfig.DatetimeTypeFieldName; v != nil {
 		m["datetime_type_field_name"] = aws.ToString(v)
@@ -3143,86 +3327,86 @@ func flattenIncrementalPullConfig(incrementalPullConfig *types.IncrementalPullCo
 	return m
 }
 
-func flattenSourceConnectorProperties(sourceConnectorProperties *types.SourceConnectorProperties) map[string]interface{} {
+func flattenSourceConnectorProperties(sourceConnectorProperties *types.SourceConnectorProperties) map[string]any {
 	if sourceConnectorProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := sourceConnectorProperties.Amplitude; v != nil {
-		m["amplitude"] = []interface{}{flattenAmplitudeSourceProperties(v)}
+		m["amplitude"] = []any{flattenAmplitudeSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.CustomConnector; v != nil {
-		m["custom_connector"] = []interface{}{flattenCustomConnectorSourceProperties(v)}
+		m["custom_connector"] = []any{flattenCustomConnectorSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Datadog; v != nil {
-		m["datadog"] = []interface{}{flattenDatadogSourceProperties(v)}
+		m["datadog"] = []any{flattenDatadogSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Dynatrace; v != nil {
-		m["dynatrace"] = []interface{}{flattenDynatraceSourceProperties(v)}
+		m["dynatrace"] = []any{flattenDynatraceSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.GoogleAnalytics; v != nil {
-		m["google_analytics"] = []interface{}{flattenGoogleAnalyticsSourceProperties(v)}
+		m["google_analytics"] = []any{flattenGoogleAnalyticsSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.InforNexus; v != nil {
-		m["infor_nexus"] = []interface{}{flattenInforNexusSourceProperties(v)}
+		m["infor_nexus"] = []any{flattenInforNexusSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Marketo; v != nil {
-		m["marketo"] = []interface{}{flattenMarketoSourceProperties(v)}
+		m["marketo"] = []any{flattenMarketoSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.S3; v != nil {
-		m["s3"] = []interface{}{flattenS3SourceProperties(v)}
+		m["s3"] = []any{flattenS3SourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Salesforce; v != nil {
-		m["salesforce"] = []interface{}{flattenSalesforceSourceProperties(v)}
+		m["salesforce"] = []any{flattenSalesforceSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.SAPOData; v != nil {
-		m["sapo_data"] = []interface{}{flattenSAPODataSourceProperties(v)}
+		m["sapo_data"] = []any{flattenSAPODataSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.ServiceNow; v != nil {
-		m["service_now"] = []interface{}{flattenServiceNowSourceProperties(v)}
+		m["service_now"] = []any{flattenServiceNowSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Singular; v != nil {
-		m["singular"] = []interface{}{flattenSingularSourceProperties(v)}
+		m["singular"] = []any{flattenSingularSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Slack; v != nil {
-		m["slack"] = []interface{}{flattenSlackSourceProperties(v)}
+		m["slack"] = []any{flattenSlackSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Trendmicro; v != nil {
-		m["trendmicro"] = []interface{}{flattenTrendmicroSourceProperties(v)}
+		m["trendmicro"] = []any{flattenTrendmicroSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Veeva; v != nil {
-		m["veeva"] = []interface{}{flattenVeevaSourceProperties(v)}
+		m["veeva"] = []any{flattenVeevaSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Zendesk; v != nil {
-		m["zendesk"] = []interface{}{flattenZendeskSourceProperties(v)}
+		m["zendesk"] = []any{flattenZendeskSourceProperties(v)}
 	}
 
 	return m
 }
 
-func flattenAmplitudeSourceProperties(amplitudeSourceProperties *types.AmplitudeSourceProperties) map[string]interface{} {
+func flattenAmplitudeSourceProperties(amplitudeSourceProperties *types.AmplitudeSourceProperties) map[string]any {
 	if amplitudeSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := amplitudeSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3231,12 +3415,12 @@ func flattenAmplitudeSourceProperties(amplitudeSourceProperties *types.Amplitude
 	return m
 }
 
-func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *types.CustomConnectorSourceProperties) map[string]interface{} {
+func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *types.CustomConnectorSourceProperties) map[string]any {
 	if customConnectorSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := customConnectorSourceProperties.CustomProperties; v != nil {
 		m["custom_properties"] = v
@@ -3249,12 +3433,12 @@ func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *typ
 	return m
 }
 
-func flattenDatadogSourceProperties(datadogSourceProperties *types.DatadogSourceProperties) map[string]interface{} {
+func flattenDatadogSourceProperties(datadogSourceProperties *types.DatadogSourceProperties) map[string]any {
 	if datadogSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := datadogSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3263,12 +3447,12 @@ func flattenDatadogSourceProperties(datadogSourceProperties *types.DatadogSource
 	return m
 }
 
-func flattenDynatraceSourceProperties(dynatraceSourceProperties *types.DynatraceSourceProperties) map[string]interface{} {
+func flattenDynatraceSourceProperties(dynatraceSourceProperties *types.DynatraceSourceProperties) map[string]any {
 	if dynatraceSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := dynatraceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3277,12 +3461,12 @@ func flattenDynatraceSourceProperties(dynatraceSourceProperties *types.Dynatrace
 	return m
 }
 
-func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *types.GoogleAnalyticsSourceProperties) map[string]interface{} {
+func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *types.GoogleAnalyticsSourceProperties) map[string]any {
 	if googleAnalyticsSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := googleAnalyticsSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3291,12 +3475,12 @@ func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *typ
 	return m
 }
 
-func flattenInforNexusSourceProperties(inforNexusSourceProperties *types.InforNexusSourceProperties) map[string]interface{} {
+func flattenInforNexusSourceProperties(inforNexusSourceProperties *types.InforNexusSourceProperties) map[string]any {
 	if inforNexusSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := inforNexusSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3305,12 +3489,12 @@ func flattenInforNexusSourceProperties(inforNexusSourceProperties *types.InforNe
 	return m
 }
 
-func flattenMarketoSourceProperties(marketoSourceProperties *types.MarketoSourceProperties) map[string]interface{} {
+func flattenMarketoSourceProperties(marketoSourceProperties *types.MarketoSourceProperties) map[string]any {
 	if marketoSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := marketoSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3319,49 +3503,50 @@ func flattenMarketoSourceProperties(marketoSourceProperties *types.MarketoSource
 	return m
 }
 
-func flattenS3SourceProperties(s3SourceProperties *types.S3SourceProperties) map[string]interface{} {
+func flattenS3SourceProperties(s3SourceProperties *types.S3SourceProperties) map[string]any {
 	if s3SourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := s3SourceProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := s3SourceProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := s3SourceProperties.S3InputFormatConfig; v != nil {
-		m["s3_input_format_config"] = []interface{}{flattenS3InputFormatConfig(v)}
+		m["s3_input_format_config"] = []any{flattenS3InputFormatConfig(v)}
 	}
 
 	return m
 }
 
-func flattenS3InputFormatConfig(s3InputFormatConfig *types.S3InputFormatConfig) map[string]interface{} {
+func flattenS3InputFormatConfig(s3InputFormatConfig *types.S3InputFormatConfig) map[string]any {
 	if s3InputFormatConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["s3_input_file_type"] = s3InputFormatConfig.S3InputFileType
 
 	return m
 }
 
-func flattenSalesforceSourceProperties(salesforceSourceProperties *types.SalesforceSourceProperties) map[string]interface{} {
+func flattenSalesforceSourceProperties(salesforceSourceProperties *types.SalesforceSourceProperties) map[string]any {
 	if salesforceSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
+	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 
 	if v := salesforceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3370,26 +3555,62 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 	return m
 }
 
-func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSourceProperties) map[string]interface{} {
+func flattenSAPODataPaginationConfigProperties(sapoDataPaginationConfig *types.SAPODataPaginationConfig) []any {
+	if sapoDataPaginationConfig == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := sapoDataPaginationConfig.MaxPageSize; v != nil {
+		m["max_page_size"] = aws.ToInt32(v)
+	}
+
+	return []any{m}
+}
+
+func flattenSAPODataParallelismConfigProperties(sapoDataParallelismConfig *types.SAPODataParallelismConfig) []any {
+	if sapoDataParallelismConfig == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := sapoDataParallelismConfig.MaxParallelism; v != nil {
+		m["max_parallelism"] = aws.ToInt32(v)
+	}
+
+	return []any{m}
+}
+
+func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSourceProperties) map[string]any {
 	if sapoDataSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := sapoDataSourceProperties.ObjectPath; v != nil {
 		m["object_path"] = aws.ToString(v)
 	}
 
+	if v := sapoDataSourceProperties.PaginationConfig; v != nil {
+		m["pagination_config"] = flattenSAPODataPaginationConfigProperties(v)
+	}
+
+	if v := sapoDataSourceProperties.ParallelismConfig; v != nil {
+		m["pagination_config"] = flattenSAPODataParallelismConfigProperties(v)
+	}
+
 	return m
 }
 
-func flattenServiceNowSourceProperties(serviceNowSourceProperties *types.ServiceNowSourceProperties) map[string]interface{} {
+func flattenServiceNowSourceProperties(serviceNowSourceProperties *types.ServiceNowSourceProperties) map[string]any {
 	if serviceNowSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := serviceNowSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3398,12 +3619,12 @@ func flattenServiceNowSourceProperties(serviceNowSourceProperties *types.Service
 	return m
 }
 
-func flattenSingularSourceProperties(singularSourceProperties *types.SingularSourceProperties) map[string]interface{} {
+func flattenSingularSourceProperties(singularSourceProperties *types.SingularSourceProperties) map[string]any {
 	if singularSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := singularSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3412,12 +3633,12 @@ func flattenSingularSourceProperties(singularSourceProperties *types.SingularSou
 	return m
 }
 
-func flattenSlackSourceProperties(slackSourceProperties *types.SlackSourceProperties) map[string]interface{} {
+func flattenSlackSourceProperties(slackSourceProperties *types.SlackSourceProperties) map[string]any {
 	if slackSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := slackSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3426,12 +3647,12 @@ func flattenSlackSourceProperties(slackSourceProperties *types.SlackSourceProper
 	return m
 }
 
-func flattenTrendmicroSourceProperties(trendmicroSourceProperties *types.TrendmicroSourceProperties) map[string]interface{} {
+func flattenTrendmicroSourceProperties(trendmicroSourceProperties *types.TrendmicroSourceProperties) map[string]any {
 	if trendmicroSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := trendmicroSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3440,12 +3661,12 @@ func flattenTrendmicroSourceProperties(trendmicroSourceProperties *types.Trendmi
 	return m
 }
 
-func flattenVeevaSourceProperties(veevaSourceProperties *types.VeevaSourceProperties) map[string]interface{} {
+func flattenVeevaSourceProperties(veevaSourceProperties *types.VeevaSourceProperties) map[string]any {
 	if veevaSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := veevaSourceProperties.DocumentType; v != nil {
 		m["document_type"] = aws.ToString(v)
@@ -3462,12 +3683,12 @@ func flattenVeevaSourceProperties(veevaSourceProperties *types.VeevaSourceProper
 	return m
 }
 
-func flattenZendeskSourceProperties(zendeskSourceProperties *types.ZendeskSourceProperties) map[string]interface{} {
+func flattenZendeskSourceProperties(zendeskSourceProperties *types.ZendeskSourceProperties) map[string]any {
 	if zendeskSourceProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := zendeskSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
@@ -3476,12 +3697,12 @@ func flattenZendeskSourceProperties(zendeskSourceProperties *types.ZendeskSource
 	return m
 }
 
-func flattenTasks(tasks []types.Task) []interface{} {
+func flattenTasks(tasks []types.Task) []any {
 	if len(tasks) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	t := slices.IndexFunc(tasks, func(t types.Task) bool {
 		return t.TaskType == types.TaskTypeMapAll
@@ -3499,15 +3720,15 @@ func flattenTasks(tasks []types.Task) []interface{} {
 	return l
 }
 
-func flattenTask(task types.Task) map[string]interface{} {
+func flattenTask(task types.Task) map[string]any {
 	if itypes.IsZero(&task) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := task.ConnectorOperator; v != nil {
-		m["connector_operator"] = []interface{}{flattenConnectorOperator(v)}
+		m["connector_operator"] = []any{flattenConnectorOperator(v)}
 	}
 
 	if v := task.DestinationField; v != nil {
@@ -3519,7 +3740,7 @@ func flattenTask(task types.Task) map[string]interface{} {
 	}
 
 	if v := task.TaskProperties; v != nil {
-		m["task_properties"] = v
+		m["task_properties"] = flex.FlattenStringValueMap(v)
 	}
 
 	m["task_type"] = task.TaskType
@@ -3527,12 +3748,12 @@ func flattenTask(task types.Task) map[string]interface{} {
 	return m
 }
 
-func flattenConnectorOperator(connectorOperator *types.ConnectorOperator) map[string]interface{} {
+func flattenConnectorOperator(connectorOperator *types.ConnectorOperator) map[string]any {
 	if connectorOperator == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["amplitude"] = connectorOperator.Amplitude
 	m["custom_connector"] = connectorOperator.CustomConnector
@@ -3554,15 +3775,15 @@ func flattenConnectorOperator(connectorOperator *types.ConnectorOperator) map[st
 	return m
 }
 
-func flattenTriggerConfig(triggerConfig *types.TriggerConfig) map[string]interface{} {
+func flattenTriggerConfig(triggerConfig *types.TriggerConfig) map[string]any {
 	if triggerConfig == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := triggerConfig.TriggerProperties; v != nil {
-		m["trigger_properties"] = []interface{}{flattenTriggerProperties(v)}
+		m["trigger_properties"] = []any{flattenTriggerProperties(v)}
 	}
 
 	m["trigger_type"] = triggerConfig.TriggerType
@@ -3570,26 +3791,26 @@ func flattenTriggerConfig(triggerConfig *types.TriggerConfig) map[string]interfa
 	return m
 }
 
-func flattenTriggerProperties(triggerProperties *types.TriggerProperties) map[string]interface{} {
+func flattenTriggerProperties(triggerProperties *types.TriggerProperties) map[string]any {
 	if triggerProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := triggerProperties.Scheduled; v != nil {
-		m["scheduled"] = []interface{}{flattenScheduled(v)}
+		m["scheduled"] = []any{flattenScheduled(v)}
 	}
 
 	return m
 }
 
-func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperties) map[string]interface{} {
+func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperties) map[string]any {
 	if scheduledTriggerProperties == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["data_pull_mode"] = scheduledTriggerProperties.DataPullMode
 
@@ -3602,7 +3823,7 @@ func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperti
 	}
 
 	if v := scheduledTriggerProperties.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.ToString(v)
+		m[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {

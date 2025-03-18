@@ -4,192 +4,236 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const measureFieldsMaxItems5 = 5
-const measureFieldsMaxItems20 = 20
-const measureFieldsMaxItems40 = 40
-const measureFieldsMaxItems200 = 200
-const dimensionsFieldMaxItems10 = 10
-const dimensionsFieldMaxItems40 = 40
-const dimensionsFieldMaxItems200 = 200
+type measureFieldsSize int
 
-func dimensionFieldSchema(maxItems int) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-		Type:     schema.TypeList,
-		MinItems: 1,
-		MaxItems: maxItems,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"categorical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalDimensionField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
-							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
+const (
+	measureFieldsMaxItems5   measureFieldsSize = 5
+	measureFieldsMaxItems20  measureFieldsSize = 20
+	measureFieldsMaxItems40  measureFieldsSize = 40
+	measureFieldsMaxItems200 measureFieldsSize = 200
+)
+
+type dimensionFieldSize int
+
+const (
+	dimensionsFieldMaxItems10  dimensionFieldSize = 10
+	dimensionsFieldMaxItems40  dimensionFieldSize = 40
+	dimensionsFieldMaxItems200 dimensionFieldSize = 200
+)
+
+type dimensionFieldSchemaIdentity dimensionFieldSize
+
+var dimensionFieldSchemaCache syncMap[dimensionFieldSchemaIdentity, *schema.Schema]
+
+func dimensionFieldSchema(maxItems dimensionFieldSize) *schema.Schema {
+	id := dimensionFieldSchemaIdentity(maxItems)
+
+	s, ok := dimensionFieldSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = dimensionFieldSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+			Type:     schema.TypeList,
+			MinItems: 1,
+			MaxItems: int(maxItems),
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"categorical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalDimensionField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+							},
 						},
 					},
-				},
-				"date_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateDimensionField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"date_granularity":     stringSchema(false, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
-							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
-							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
+					"date_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateDimensionField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"date_granularity":     stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+							},
 						},
 					},
-				},
-				"numerical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalDimensionField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
-							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
+					"numerical_dimension_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalDimensionField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+								"hierarchy_id":         stringLenBetweenSchema(attrOptional, 1, 512),
+							},
 						},
 					},
 				},
 			},
 		},
-	}
+	)
+	return s
 }
 
-func measureFieldSchema(maxItems int) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-		Type:     schema.TypeList,
-		MinItems: 1,
-		MaxItems: maxItems,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"calculated_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"expression": stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"field_id":   stringSchema(true, validation.StringLenBetween(1, 512)),
+type meaureFieldSchemaIdentity measureFieldsSize
+
+var measureFieldSchemaCache syncMap[meaureFieldSchemaIdentity, *schema.Schema]
+
+func measureFieldSchema(maxItems measureFieldsSize) *schema.Schema {
+	id := meaureFieldSchemaIdentity(maxItems)
+
+	s, ok := measureFieldSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = measureFieldSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+			Type:     schema.TypeList,
+			MinItems: 1,
+			MaxItems: int(maxItems),
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"calculated_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+								"field_id":           stringLenBetweenSchema(attrRequired, 1, 512),
+							},
 						},
 					},
-				},
-				"categorical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"aggregation_function": stringSchema(false, validation.StringInSlice(quicksight.CategoricalAggregationFunction_Values(), false)),
-							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+					"categorical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoricalMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+								"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+							},
 						},
 					},
-				},
-				"date_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"aggregation_function": stringSchema(false, validation.StringInSlice(quicksight.DateAggregationFunction_Values(), false)),
-							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+					"date_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function": stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+								"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+							},
 						},
 					},
-				},
-				"numerical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalMeasureField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
-							"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-							"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+					"numerical_measure_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalMeasureField.html
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 1,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+								"field_id":             stringLenBetweenSchema(attrRequired, 1, 512),
+								"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+								"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+							},
 						},
 					},
 				},
 			},
 		},
-	}
+	)
+	return s
 }
 
-func expandDimensionFields(tfList []interface{}) []*quicksight.DimensionField {
+func expandDimensionFields(tfList []any) []awstypes.DimensionField {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var fields []*quicksight.DimensionField
+	var apiObjects []awstypes.DimensionField
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		field := expandDimensionInternal(tfMap)
-		if field == nil {
+		apiObject := expandDimensionInternal(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		fields = append(fields, field)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return fields
+	return apiObjects
 }
 
-func expandDimensionInternal(tfMap map[string]interface{}) *quicksight.DimensionField {
+func expandDimensionInternal(tfMap map[string]any) *awstypes.DimensionField {
 	if tfMap == nil {
 		return nil
 	}
 
-	field := &quicksight.DimensionField{}
+	apiObject := &awstypes.DimensionField{}
 
-	if v, ok := tfMap["categorical_dimension_field"].([]interface{}); ok && len(v) > 0 {
-		field.CategoricalDimensionField = expandCategoricalDimensionField(v)
+	if v, ok := tfMap["categorical_dimension_field"].([]any); ok && len(v) > 0 {
+		apiObject.CategoricalDimensionField = expandCategoricalDimensionField(v)
 	}
-	if v, ok := tfMap["date_dimension_field"].([]interface{}); ok && len(v) > 0 {
-		field.DateDimensionField = expandDateDimensionField(v)
+	if v, ok := tfMap["date_dimension_field"].([]any); ok && len(v) > 0 {
+		apiObject.DateDimensionField = expandDateDimensionField(v)
 	}
-	if v, ok := tfMap["numerical_dimension_field"].([]interface{}); ok && len(v) > 0 {
-		field.NumericalDimensionField = expandNumericalDimensionField(v)
+	if v, ok := tfMap["numerical_dimension_field"].([]any); ok && len(v) > 0 {
+		apiObject.NumericalDimensionField = expandNumericalDimensionField(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandDimensionField(tfList []interface{}) *quicksight.DimensionField {
+func expandDimensionField(tfList []any) *awstypes.DimensionField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -201,145 +245,146 @@ func expandDimensionField(tfList []interface{}) *quicksight.DimensionField {
 	return expandDimensionInternal(tfMap)
 }
 
-func expandCategoricalDimensionField(tfList []interface{}) *quicksight.CategoricalDimensionField {
+func expandCategoricalDimensionField(tfList []any) *awstypes.CategoricalDimensionField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.CategoricalDimensionField{}
+	apiObject := &awstypes.CategoricalDimensionField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
-		field.HierarchyId = aws.String(v)
+		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		field.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		field.FormatConfiguration = expandStringFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandStringFormatConfiguration(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandDateDimensionField(tfList []interface{}) *quicksight.DateDimensionField {
+func expandDateDimensionField(tfList []any) *awstypes.DateDimensionField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.DateDimensionField{}
+	apiObject := &awstypes.DateDimensionField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
-		field.HierarchyId = aws.String(v)
+		apiObject.HierarchyId = aws.String(v)
 	}
 	if v, ok := tfMap["date_granularity"].(string); ok && v != "" {
-		field.DateGranularity = aws.String(v)
+		apiObject.DateGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		field.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		field.FormatConfiguration = expandDateTimeFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandDateTimeFormatConfiguration(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandNumericalDimensionField(tfList []interface{}) *quicksight.NumericalDimensionField {
+func expandNumericalDimensionField(tfList []any) *awstypes.NumericalDimensionField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.NumericalDimensionField{}
+	apiObject := &awstypes.NumericalDimensionField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
-		field.HierarchyId = aws.String(v)
+		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		field.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		field.FormatConfiguration = expandNumberFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandNumberFormatConfiguration(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandMeasureFields(tfList []interface{}) []*quicksight.MeasureField {
+func expandMeasureFields(tfList []any) []awstypes.MeasureField {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var fields []*quicksight.MeasureField
+	var apiObjects []awstypes.MeasureField
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		field := expandMeasureFieldInternal(tfMap)
-		if field == nil {
+		apiObject := expandMeasureFieldInternal(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		fields = append(fields, field)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return fields
+	return apiObjects
 }
 
-func expandMeasureFieldInternal(tfMap map[string]interface{}) *quicksight.MeasureField {
+func expandMeasureFieldInternal(tfMap map[string]any) *awstypes.MeasureField {
 	if tfMap == nil {
 		return nil
 	}
 
-	field := &quicksight.MeasureField{}
+	apiObject := &awstypes.MeasureField{}
 
-	if v, ok := tfMap["calculated_measure_field"].([]interface{}); ok && len(v) > 0 {
-		field.CalculatedMeasureField = expandCalculatedMeasureField(v)
+	if v, ok := tfMap["calculated_measure_field"].([]any); ok && len(v) > 0 {
+		apiObject.CalculatedMeasureField = expandCalculatedMeasureField(v)
 	}
-	if v, ok := tfMap["categorical_measure_field"].([]interface{}); ok && len(v) > 0 {
-		field.CategoricalMeasureField = expandCategoricalMeasureField(v)
+	if v, ok := tfMap["categorical_measure_field"].([]any); ok && len(v) > 0 {
+		apiObject.CategoricalMeasureField = expandCategoricalMeasureField(v)
 	}
-	if v, ok := tfMap["date_measure_field"].([]interface{}); ok && len(v) > 0 {
-		field.DateMeasureField = expandDateMeasureField(v)
+	if v, ok := tfMap["date_measure_field"].([]any); ok && len(v) > 0 {
+		apiObject.DateMeasureField = expandDateMeasureField(v)
 	}
-	if v, ok := tfMap["numerical_measure_field"].([]interface{}); ok && len(v) > 0 {
-		field.NumericalMeasureField = expandNumericalMeasureField(v)
+	if v, ok := tfMap["numerical_measure_field"].([]any); ok && len(v) > 0 {
+		apiObject.NumericalMeasureField = expandNumericalMeasureField(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandMeasureField(tfList []interface{}) *quicksight.MeasureField {
+func expandMeasureField(tfList []any) *awstypes.MeasureField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -347,118 +392,119 @@ func expandMeasureField(tfList []interface{}) *quicksight.MeasureField {
 	return expandMeasureFieldInternal(tfMap)
 }
 
-func expandCalculatedMeasureField(tfList []interface{}) *quicksight.CalculatedMeasureField {
+func expandCalculatedMeasureField(tfList []any) *awstypes.CalculatedMeasureField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.CalculatedMeasureField{}
+	apiObject := &awstypes.CalculatedMeasureField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
-		field.Expression = aws.String(v)
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
+		apiObject.Expression = aws.String(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandCategoricalMeasureField(tfList []interface{}) *quicksight.CategoricalMeasureField {
+func expandCategoricalMeasureField(tfList []any) *awstypes.CategoricalMeasureField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.CategoricalMeasureField{}
+	apiObject := &awstypes.CategoricalMeasureField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["aggregation_function"].(string); ok && v != "" {
-		field.AggregationFunction = aws.String(v)
+		apiObject.AggregationFunction = awstypes.CategoricalAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		field.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		field.FormatConfiguration = expandStringFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandStringFormatConfiguration(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandDateMeasureField(tfList []interface{}) *quicksight.DateMeasureField {
+func expandDateMeasureField(tfList []any) *awstypes.DateMeasureField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.DateMeasureField{}
+	apiObject := &awstypes.DateMeasureField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["aggregation_function"].(string); ok && v != "" {
-		field.AggregationFunction = aws.String(v)
+		apiObject.AggregationFunction = awstypes.DateAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		field.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		field.FormatConfiguration = expandDateTimeFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandDateTimeFormatConfiguration(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandNumericalMeasureField(tfList []interface{}) *quicksight.NumericalMeasureField {
+func expandNumericalMeasureField(tfList []any) *awstypes.NumericalMeasureField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	field := &quicksight.NumericalMeasureField{}
+	apiObject := &awstypes.NumericalMeasureField{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		field.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		field.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
-		field.AggregationFunction = expandNumericalAggregationFunction(v)
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
+		apiObject.AggregationFunction = expandNumericalAggregationFunction(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		field.FormatConfiguration = expandNumberFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandNumberFormatConfiguration(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func flattenDimensionField(apiObject *quicksight.DimensionField) []interface{} {
+func flattenDimensionField(apiObject *awstypes.DimensionField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CategoricalDimensionField != nil {
 		tfMap["categorical_dimension_field"] = flattenCategoricalDimensionField(apiObject.CategoricalDimensionField)
 	}
@@ -469,29 +515,27 @@ func flattenDimensionField(apiObject *quicksight.DimensionField) []interface{} {
 		tfMap["numerical_dimension_field"] = flattenNumericalDimensionField(apiObject.NumericalDimensionField)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDimensionFields(apiObject []*quicksight.DimensionField) []interface{} {
-	if len(apiObject) == 0 {
+func flattenDimensionFields(apiObjects []awstypes.DimensionField) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if config.CategoricalDimensionField != nil {
-			tfMap["categorical_dimension_field"] = flattenCategoricalDimensionField(config.CategoricalDimensionField)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.CategoricalDimensionField != nil {
+			tfMap["categorical_dimension_field"] = flattenCategoricalDimensionField(apiObject.CategoricalDimensionField)
 		}
-		if config.DateDimensionField != nil {
-			tfMap["date_dimension_field"] = flattenDateDimensionField(config.DateDimensionField)
+		if apiObject.DateDimensionField != nil {
+			tfMap["date_dimension_field"] = flattenDateDimensionField(apiObject.DateDimensionField)
 		}
-		if config.NumericalDimensionField != nil {
-			tfMap["numerical_dimension_field"] = flattenNumericalDimensionField(config.NumericalDimensionField)
+		if apiObject.NumericalDimensionField != nil {
+			tfMap["numerical_dimension_field"] = flattenNumericalDimensionField(apiObject.NumericalDimensionField)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -500,81 +544,83 @@ func flattenDimensionFields(apiObject []*quicksight.DimensionField) []interface{
 	return tfList
 }
 
-func flattenCategoricalDimensionField(apiObject *quicksight.CategoricalDimensionField) []interface{} {
+func flattenCategoricalDimensionField(apiObject *awstypes.CategoricalDimensionField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	if apiObject.HierarchyId != nil {
-		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDateDimensionField(apiObject *quicksight.DateDimensionField) []interface{} {
+func flattenDateDimensionField(apiObject *awstypes.DateDimensionField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
-	if apiObject.DateGranularity != nil {
-		tfMap["date_granularity"] = aws.StringValue(apiObject.DateGranularity)
-	}
+	tfMap["date_granularity"] = apiObject.DateGranularity
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	if apiObject.HierarchyId != nil {
-		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericalDimensionField(apiObject *quicksight.NumericalDimensionField) []interface{} {
+func flattenNumericalDimensionField(apiObject *awstypes.NumericalDimensionField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	if apiObject.HierarchyId != nil {
-		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMeasureField(apiObject *quicksight.MeasureField) []interface{} {
+func flattenMeasureField(apiObject *awstypes.MeasureField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CalculatedMeasureField != nil {
 		tfMap["calculated_measure_field"] = flattenCalculatedMeasureField(apiObject.CalculatedMeasureField)
 	}
@@ -588,32 +634,30 @@ func flattenMeasureField(apiObject *quicksight.MeasureField) []interface{} {
 		tfMap["numerical_measure_field"] = flattenNumericalMeasureField(apiObject.NumericalMeasureField)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMeasureFields(apiObject []*quicksight.MeasureField) []interface{} {
-	if len(apiObject) == 0 {
+func flattenMeasureFields(apiObjects []awstypes.MeasureField) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if config.CalculatedMeasureField != nil {
-			tfMap["calculated_measure_field"] = flattenCalculatedMeasureField(config.CalculatedMeasureField)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.CalculatedMeasureField != nil {
+			tfMap["calculated_measure_field"] = flattenCalculatedMeasureField(apiObject.CalculatedMeasureField)
 		}
-		if config.CategoricalMeasureField != nil {
-			tfMap["categorical_measure_field"] = flattenCategoricalMeasureField(config.CategoricalMeasureField)
+		if apiObject.CategoricalMeasureField != nil {
+			tfMap["categorical_measure_field"] = flattenCategoricalMeasureField(apiObject.CategoricalMeasureField)
 		}
-		if config.DateMeasureField != nil {
-			tfMap["date_measure_field"] = flattenDateMeasureField(config.DateMeasureField)
+		if apiObject.DateMeasureField != nil {
+			tfMap["date_measure_field"] = flattenDateMeasureField(apiObject.DateMeasureField)
 		}
-		if config.NumericalMeasureField != nil {
-			tfMap["numerical_measure_field"] = flattenNumericalMeasureField(config.NumericalMeasureField)
+		if apiObject.NumericalMeasureField != nil {
+			tfMap["numerical_measure_field"] = flattenNumericalMeasureField(apiObject.NumericalMeasureField)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -622,72 +666,72 @@ func flattenMeasureFields(apiObject []*quicksight.MeasureField) []interface{} {
 	return tfList
 }
 
-func flattenCalculatedMeasureField(apiObject *quicksight.CalculatedMeasureField) []interface{} {
+func flattenCalculatedMeasureField(apiObject *awstypes.CalculatedMeasureField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Expression != nil {
-		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCategoricalMeasureField(apiObject *quicksight.CategoricalMeasureField) []interface{} {
+func flattenCategoricalMeasureField(apiObject *awstypes.CategoricalMeasureField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.AggregationFunction != nil {
-		tfMap["aggregation_function"] = aws.StringValue(apiObject.AggregationFunction)
-	}
+	tfMap := map[string]any{}
+
+	tfMap["aggregation_function"] = apiObject.AggregationFunction
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDateMeasureField(apiObject *quicksight.DateMeasureField) []interface{} {
+func flattenDateMeasureField(apiObject *awstypes.DateMeasureField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.AggregationFunction != nil {
-		tfMap["aggregation_function"] = aws.StringValue(apiObject.AggregationFunction)
-	}
+	tfMap := map[string]any{}
+
+	tfMap["aggregation_function"] = apiObject.AggregationFunction
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericalMeasureField(apiObject *quicksight.NumericalMeasureField) []interface{} {
+func flattenNumericalMeasureField(apiObject *awstypes.NumericalMeasureField) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.AggregationFunction != nil {
 		tfMap["aggregation_function"] = flattenNumericalAggregationFunction(apiObject.AggregationFunction)
 	}
@@ -695,11 +739,11 @@ func flattenNumericalMeasureField(apiObject *quicksight.NumericalMeasureField) [
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

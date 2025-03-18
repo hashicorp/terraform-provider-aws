@@ -40,18 +40,18 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceSimpleName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "300"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "name", rName+"-simple"),
+					resource.TestCheckResourceAttr(resourceSimpleName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceSimpleName, names.AttrName, rName+"-simple"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "scaling_adjustment", "2"),
 
 					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v),
 					resource.TestCheckResourceAttr(resourceStepName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceStepName, "autoscaling_group_name", rName),
-					resource.TestCheckResourceAttr(resourceStepName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceStepName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr(resourceStepName, "metric_aggregation_type", "Minimum"),
-					resource.TestCheckResourceAttr(resourceStepName, "name", rName+"-step"),
+					resource.TestCheckResourceAttr(resourceStepName, names.AttrName, rName+"-step"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
 						"scaling_adjustment": "1",
@@ -59,8 +59,8 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 
 					testAccCheckScalingPolicyExists(ctx, resourceTargetTrackingName, &v),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "autoscaling_group_name", rName),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "name", rName+"-tracking"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, names.AttrName, rName+"-tracking"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "0"),
@@ -72,19 +72,19 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceStepName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceStepName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceStepName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceTargetTrackingName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceTargetTrackingName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceTargetTrackingName),
 				ImportStateVerify: true,
 			},
 			{
@@ -92,11 +92,11 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "30"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceSimpleName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 
 					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v),
-					resource.TestCheckResourceAttr(resourceStepName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceStepName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "20"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
@@ -104,7 +104,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					}),
 
 					testAccCheckScalingPolicyExists(ctx, resourceTargetTrackingName, &v),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "1"),
@@ -171,7 +171,7 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -208,7 +208,7 @@ func TestAccAutoScalingPolicy_predictiveScalingResourceLabel(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -237,17 +237,17 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.metric.0.metric_name", "metric_name_foo"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.metric.0.namespace", "namespace_foo"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.stat", "Sum"),
-					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.return_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.return_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.id", "capacity_sum"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.dimensions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.metric_name", "metric_name_bar"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.namespace", "namespace_bar"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.unit", "Percent"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.stat", "Sum"),
-					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.return_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.return_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.id", "capacity"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.expression", "weighted_sum / capacity_sum"),
-					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.return_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.return_data", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification.0.metric_data_queries.0.id", "scaling_metric"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification.0.metric_data_queries.0.expression", "TIME_SERIES(1)"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.id", "load_metric"),
@@ -261,7 +261,7 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -297,7 +297,7 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -349,7 +349,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -380,7 +380,7 @@ func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -410,7 +410,7 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -438,7 +438,7 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -466,7 +466,7 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -494,8 +494,18 @@ func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"target_tracking_configuration.0.customized_metric_specification.0.metrics.0.metric_stat.0.period",
+					"target_tracking_configuration.0.customized_metric_specification.0.metrics.1.metric_stat.0.period",
+				},
+			},
+			{
+				Config: testAccPolicyConfig_targetTrackingMetricMathWithPeriod(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})
@@ -528,13 +538,13 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceStepName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceStepName),
+				ImportStateIdFunc: testAccPolicyImportStateIDFunc(resourceStepName),
 				ImportStateVerify: true,
 			},
 		},
@@ -588,7 +598,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -599,7 +609,7 @@ func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdF
 	}
 }
 
-func testAccPolicyConfigBase(rName string) string {
+func testAccPolicyConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
@@ -622,7 +632,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccPolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ChangeInCapacity"
@@ -666,7 +676,7 @@ resource "aws_autoscaling_policy" "test_tracking" {
 }
 
 func testAccPolicyConfig_predictiveScalingPredefined(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -693,7 +703,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingPredefined_resourceLabel(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -718,7 +728,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingCustom(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -788,7 +798,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ChangeInCapacity"
@@ -801,7 +811,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -826,7 +836,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_predictiveScalingFloatTargetValue(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-predictive"
   policy_type            = "PredictiveScaling"
@@ -845,7 +855,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_basicUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ChangeInCapacity"
@@ -896,7 +906,7 @@ resource "aws_autoscaling_policy" "test_tracking" {
 }
 
 func testAccPolicyConfig_simpleScalingStepAdjustment(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ExactCapacity"
@@ -909,7 +919,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingPredefined(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -927,7 +937,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingCustom(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -942,6 +952,7 @@ resource "aws_autoscaling_policy" "test" {
 
       metric_name = "hoge"
       namespace   = "hoge"
+      period      = 10
       statistic   = "Average"
     }
 
@@ -952,7 +963,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
@@ -1010,8 +1021,59 @@ resource "aws_autoscaling_policy" "test" {
 `, rName))
 }
 
+func testAccPolicyConfig_targetTrackingMetricMathWithPeriod(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+
+  target_tracking_configuration {
+    customized_metric_specification {
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+          }
+          unit   = "Percent"
+          stat   = "Sum"
+          period = 10
+        }
+        return_data = false
+      }
+      metrics {
+        id = "m3"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+            dimensions {
+              name  = "x"
+              value = "y"
+            }
+            dimensions {
+              name  = "y"
+              value = "x"
+            }
+          }
+          unit   = "Percent"
+          stat   = "Sum"
+          period = 10
+        }
+        return_data = true
+      }
+    }
+
+    target_value = 12.3
+  }
+}
+`, rName))
+}
+
 func testAccPolicyConfig_zeroValue(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
   name                   = "%[1]s-simple"
   adjustment_type        = "ExactCapacity"

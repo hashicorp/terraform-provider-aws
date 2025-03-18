@@ -34,8 +34,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Scraper")
+// @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
 
@@ -55,14 +56,10 @@ type scraperResource struct {
 	framework.WithTimeouts
 }
 
-func (r *scraperResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_prometheus_scraper"
-}
-
 func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"alias": schema.StringAttribute{
+			names.AttrAlias: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -70,7 +67,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -86,7 +83,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"destination": schema.ListNestedBlock{
+			names.AttrDestination: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -121,7 +118,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperSourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -150,7 +147,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"security_group_ids": schema.SetAttribute{
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
@@ -160,7 +157,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											setplanmodifier.UseStateForUnknown(),
 										},
 									},
-									"subnet_ids": schema.SetAttribute{
+									names.AttrSubnetIDs: schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Required:    true,
@@ -177,7 +174,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -208,7 +205,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	destination := &awstypes.DestinationMemberAmpConfiguration{}
+	destination := awstypes.DestinationMemberAmpConfiguration{}
 	resp.Diagnostics.Append(flex.Expand(ctx, ampDestinationData, &destination.Value)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,27 +223,28 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	source := &awstypes.SourceMemberEksConfiguration{}
+	source := awstypes.SourceMemberEksConfiguration{}
 	resp.Diagnostics.Append(flex.Expand(ctx, eksSourceData, &source.Value)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &amp.CreateScraperInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
-		Destination: destination,
-		Source:      source,
-		ScrapeConfiguration: &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-			Value: []byte(data.ScrapeConfiguration.ValueString()),
-		},
-		Tags: getTagsIn(ctx),
+	scrapeConfiguration := awstypes.ScrapeConfigurationMemberConfigurationBlob{
+		Value: []byte(data.ScrapeConfiguration.ValueString()),
+	}
+	input := amp.CreateScraperInput{
+		ClientToken:         aws.String(sdkid.UniqueId()),
+		Destination:         &destination,
+		Source:              &source,
+		ScrapeConfiguration: &scrapeConfiguration,
+		Tags:                getTagsIn(ctx),
 	}
 
 	if !data.Alias.IsNull() {
-		input.Alias = aws.String(data.Alias.ValueString())
+		input.Alias = data.Alias.ValueStringPointer()
 	}
 
-	output, err := conn.CreateScraper(ctx, input)
+	output, err := conn.CreateScraper(ctx, &input)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -365,10 +363,11 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	_, err := conn.DeleteScraper(ctx, &amp.DeleteScraperInput{
+	input := amp.DeleteScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		ScraperId:   aws.String(data.ID.ValueString()),
-	})
+		ScraperId:   data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteScraper(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -391,10 +390,6 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *scraperResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 type scraperResourceModel struct {
 	Alias               types.String                                             `tfsdk:"alias"`
 	ARN                 types.String                                             `tfsdk:"arn"`
@@ -403,8 +398,8 @@ type scraperResourceModel struct {
 	RoleARN             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
-	Tags                types.Map                                                `tfsdk:"tags"`
-	TagsAll             types.Map                                                `tfsdk:"tags_all"`
+	Tags                tftags.Map                                               `tfsdk:"tags"`
+	TagsAll             tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
@@ -427,11 +422,11 @@ type scraperEKSSourceModel struct {
 }
 
 func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.ScraperDescription, error) {
-	input := &amp.DescribeScraperInput{
+	input := amp.DescribeScraperInput{
 		ScraperId: aws.String(id),
 	}
 
-	output, err := conn.DescribeScraper(ctx, input)
+	output, err := conn.DescribeScraper(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -452,7 +447,7 @@ func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstype
 }
 
 func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findScraperByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -490,6 +485,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 		Target:  []string{},
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,
+		Delay:   8 * time.Minute,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -51,6 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 * `protocols` - File transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint.
 * `security_policy_name` - The name of the security policy that is attached to the server.
 * `structured_log_destinations` - A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs.
+* `tags` - Map of tags assigned to the resource.
 * `url` - URL of the service endpoint used to authenticate users with an `identity_provider_type` of `API_GATEWAY`.
 
-<!-- cache-key: cdktf-0.20.1 input-527a93818210197a7ed1dcc84d2ff4fa1fd16ef88ced9a8af3676cc1ab7b8447 -->
+<!-- cache-key: cdktf-0.20.8 input-aaf83b44d3a635f5e39b1f2975869116a8983e59843210bac0bde9cc0f4cfd5d -->

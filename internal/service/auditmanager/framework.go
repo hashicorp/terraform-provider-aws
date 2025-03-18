@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Framework")
+// @FrameworkResource("aws_auditmanager_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil
@@ -44,18 +44,14 @@ type resourceFramework struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework"
-}
-
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Optional: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"framework_type": schema.StringAttribute{
@@ -64,8 +60,8 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -78,8 +74,8 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"id": framework.IDAttribute(),
-						"name": schema.StringAttribute{
+						names.AttrID: framework.IDAttribute(),
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -90,7 +86,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
+									names.AttrID: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -125,16 +121,16 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	in := auditmanager.CreateAssessmentFrameworkInput{
-		Name:        aws.String(plan.Name.ValueString()),
+		Name:        plan.Name.ValueStringPointer(),
 		ControlSets: csInput,
 		Tags:        getTagsIn(ctx),
 	}
 
 	if !plan.ComplianceType.IsNull() {
-		in.ComplianceType = aws.String(plan.ComplianceType.ValueString())
+		in.ComplianceType = plan.ComplianceType.ValueStringPointer()
 	}
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	out, err := conn.CreateAssessmentFramework(ctx, &in)
@@ -216,15 +212,15 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 
 		in := &auditmanager.UpdateAssessmentFrameworkInput{
 			ControlSets: csInput,
-			FrameworkId: aws.String(plan.ID.ValueString()),
-			Name:        aws.String(plan.Name.ValueString()),
+			FrameworkId: plan.ID.ValueStringPointer(),
+			Name:        plan.Name.ValueStringPointer(),
 		}
 
 		if !plan.ComplianceType.IsNull() {
-			in.ComplianceType = aws.String(plan.ComplianceType.ValueString())
+			in.ComplianceType = plan.ComplianceType.ValueStringPointer()
 		}
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 
 		out, err := conn.UpdateAssessmentFramework(ctx, in)
@@ -258,7 +254,7 @@ func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	_, err := conn.DeleteAssessmentFramework(ctx, &auditmanager.DeleteAssessmentFrameworkInput{
-		FrameworkId: aws.String(state.ID.ValueString()),
+		FrameworkId: state.ID.ValueStringPointer(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -273,7 +269,7 @@ func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceFramework) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -300,8 +296,6 @@ func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyP
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {
@@ -330,13 +324,13 @@ func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string
 
 var (
 	frameworkControlSetsAttrTypes = map[string]attr.Type{
-		"controls": types.SetType{ElemType: types.ObjectType{AttrTypes: frameworkControlSetsControlsAttrTypes}},
-		"id":       types.StringType,
-		"name":     types.StringType,
+		"controls":     types.SetType{ElemType: types.ObjectType{AttrTypes: frameworkControlSetsControlsAttrTypes}},
+		names.AttrID:   types.StringType,
+		names.AttrName: types.StringType,
 	}
 
 	frameworkControlSetsControlsAttrTypes = map[string]attr.Type{
-		"id": types.StringType,
+		names.AttrID: types.StringType,
 	}
 )
 
@@ -348,8 +342,8 @@ type resourceFrameworkData struct {
 	FrameworkType  types.String `tfsdk:"framework_type"`
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
-	Tags           types.Map    `tfsdk:"tags"`
-	TagsAll        types.Map    `tfsdk:"tags_all"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
 
 type frameworkControlSetsData struct {
@@ -395,7 +389,7 @@ func expandFrameworkControlSetsCreate(ctx context.Context, tfList []frameworkCon
 		diags.Append(item.Controls.ElementsAs(ctx, &controls, false)...)
 
 		new := awstypes.CreateAssessmentFrameworkControlSet{
-			Name:     aws.String(item.Name.ValueString()),
+			Name:     item.Name.ValueStringPointer(),
 			Controls: expandFrameworkControlSetsControls(controls),
 		}
 
@@ -414,8 +408,8 @@ func expandFrameworkControlSetsUpdate(ctx context.Context, tfList []frameworkCon
 
 		new := awstypes.UpdateAssessmentFrameworkControlSet{
 			Controls: expandFrameworkControlSetsControls(controls),
-			Id:       aws.String(item.ID.ValueString()),
-			Name:     aws.String(item.Name.ValueString()),
+			Id:       item.ID.ValueStringPointer(),
+			Name:     item.Name.ValueStringPointer(),
 		}
 
 		ucs = append(ucs, new)
@@ -431,7 +425,7 @@ func expandFrameworkControlSetsControls(tfList []frameworkControlSetsControlsDat
 	var controlsInput []awstypes.CreateAssessmentFrameworkControl
 	for _, item := range tfList {
 		new := awstypes.CreateAssessmentFrameworkControl{
-			Id: aws.String(item.ID.ValueString()),
+			Id: item.ID.ValueStringPointer(),
 		}
 		controlsInput = append(controlsInput, new)
 	}
@@ -449,9 +443,9 @@ func flattenFrameworkControlSets(ctx context.Context, apiObject []awstypes.Contr
 		diags.Append(d...)
 
 		obj := map[string]attr.Value{
-			"controls": controls,
-			"id":       flex.StringToFramework(ctx, item.Id),
-			"name":     flex.StringToFramework(ctx, item.Name),
+			"controls":     controls,
+			names.AttrID:   flex.StringToFramework(ctx, item.Id),
+			names.AttrName: flex.StringToFramework(ctx, item.Name),
 		}
 		objVal, d := types.ObjectValue(frameworkControlSetsAttrTypes, obj)
 		diags.Append(d...)
@@ -475,7 +469,7 @@ func flattenFrameworkControlSetsControls(ctx context.Context, apiObject []awstyp
 	elems := []attr.Value{}
 	for _, item := range apiObject {
 		obj := map[string]attr.Value{
-			"id": flex.StringToFramework(ctx, item.Id),
+			names.AttrID: flex.StringToFramework(ctx, item.Id),
 		}
 		objVal, d := types.ObjectValue(frameworkControlSetsControlsAttrTypes, obj)
 		diags.Append(d...)

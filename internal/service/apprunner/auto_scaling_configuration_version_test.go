@@ -34,16 +34,16 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 				Config: testAccAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "has_associated_service", "false"),
-					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
-					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "has_associated_service", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
 				),
 			},
 			{
@@ -70,14 +70,14 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 				Config: testAccAutoScalingConfigurationVersionConfig_nonDefaults(rName, 50, 10, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "50"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
 				),
 			},
 			{
@@ -90,14 +90,14 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 				Config: testAccAutoScalingConfigurationVersionConfig_nonDefaults(rName, 150, 20, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "150"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "20"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
 				),
 			},
 			{
@@ -110,14 +110,14 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 				Config: testAccAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
 				),
 			},
 		},
@@ -141,22 +141,22 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
-					acctest.MatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
+					acctest.MatchResourceAttrRegionalARN(ctx, otherResourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_revision", "2"),
-					resource.TestCheckResourceAttr(otherResourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(otherResourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(otherResourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(otherResourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(otherResourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(otherResourceName, "status", "active"),
+					resource.TestCheckResourceAttr(otherResourceName, names.AttrStatus, "active"),
 				),
 			},
 			{
@@ -165,8 +165,8 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
-					resource.TestCheckResourceAttr(resourceName, "latest", "false"),
-					resource.TestCheckResourceAttr(otherResourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtFalse),
+					resource.TestCheckResourceAttr(otherResourceName, "latest", acctest.CtTrue),
 				),
 			},
 			{
@@ -207,22 +207,22 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, otherResourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_configuration_revision", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest", "false"),
+					resource.TestCheckResourceAttr(resourceName, "latest", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
-					acctest.MatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
+					acctest.MatchResourceAttrRegionalARN(ctx, otherResourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_revision", "2"),
-					resource.TestCheckResourceAttr(otherResourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(otherResourceName, "latest", acctest.CtTrue),
 					resource.TestCheckResourceAttr(otherResourceName, "max_concurrency", "125"),
 					resource.TestCheckResourceAttr(otherResourceName, "max_size", "20"),
 					resource.TestCheckResourceAttr(otherResourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(otherResourceName, "status", "active"),
+					resource.TestCheckResourceAttr(otherResourceName, names.AttrStatus, "active"),
 				),
 			},
 			{
@@ -257,51 +257,6 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceAutoScalingConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAutoScalingConfigurationVersionConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAutoScalingConfigurationVersionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAutoScalingConfigurationVersionConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -397,29 +352,4 @@ resource "aws_apprunner_auto_scaling_configuration_version" "other" {
   max_size        = 20
 }
 `, rName)
-}
-
-func testAccAutoScalingConfigurationVersionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_auto_scaling_configuration_version" "test" {
-  auto_scaling_configuration_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAutoScalingConfigurationVersionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_auto_scaling_configuration_version" "test" {
-  auto_scaling_configuration_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

@@ -85,6 +85,7 @@ This resource supports the following arguments:
 * `engineName` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `majorEngineVersion` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `skipDestroy` - (Optional) Set to true if you do not wish the option group to be deleted at destroy time, and instead just remove the option group from the Terraform state.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `option` Block
@@ -102,8 +103,8 @@ The `option` blocks support the following arguments:
 
 The `optionSettings` blocks support the following arguments:
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 
@@ -151,4 +152,4 @@ Using `terraform import`, import DB option groups using the `name`. For example:
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4f57d2a8743b4e406d5ddc4770491e90f783f3d60d46d4947114c831496d546 -->
+<!-- cache-key: cdktf-0.20.8 input-7c21a061374a3e140a82a5f64d30f96ee7632e4b0fbeba886f3b84b15cf34bd8 -->

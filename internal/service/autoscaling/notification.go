@@ -19,6 +19,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_notification", name="Notification")
@@ -40,7 +41,7 @@ func resourceNotification() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"topic_arn": {
+			names.AttrTopicARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,11 +50,11 @@ func resourceNotification() *schema.Resource {
 	}
 }
 
-func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	topic := d.Get("topic_arn").(string)
+	topic := d.Get(names.AttrTopicARN).(string)
 	if err := addNotificationConfigToGroupsWithTopic(ctx, conn, flex.ExpandStringSet(d.Get("group_names").(*schema.Set)), flex.ExpandStringSet(d.Get("notifications").(*schema.Set)), topic); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Notification (%s): %s", topic, err)
 	}
@@ -65,7 +66,7 @@ func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -101,7 +102,7 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -120,7 +121,7 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	remove := flex.ExpandStringSet(o.(*schema.Set))
 	add := flex.ExpandStringSet(n.(*schema.Set))
 
-	topic := d.Get("topic_arn").(string)
+	topic := d.Get(names.AttrTopicARN).(string)
 
 	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, remove, topic); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Notification (%s): %s", topic, err)
@@ -140,11 +141,11 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	topic := d.Get("topic_arn").(string)
+	topic := d.Get(names.AttrTopicARN).(string)
 	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, flex.ExpandStringSet(d.Get("group_names").(*schema.Set)), topic); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Notification (%s): %s", topic, err)
 	}

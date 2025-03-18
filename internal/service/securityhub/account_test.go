@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -36,9 +36,9 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorDefaultValueFromAWS),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
 			},
 			{
@@ -87,7 +87,7 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 				Config: testAccAccountConfig_enableDefaultStandardsFalse,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtFalse),
 				),
 			},
 		},
@@ -109,7 +109,7 @@ func testAccAccount_full(t *testing.T) {
 				Config: testAccAccountConfig_full(false, "STANDARD_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 				),
 			},
@@ -117,7 +117,7 @@ func testAccAccount_full(t *testing.T) {
 				Config: testAccAccountConfig_full(true, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
@@ -152,7 +152,7 @@ func testAccAccount_migrateV0(t *testing.T) {
 				Config:                   testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 				),
 			},
 		},
@@ -184,9 +184,9 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorExpectedValue),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
 				ExpectNonEmptyPlan: expectNonEmptyPlan,
 			},
@@ -209,7 +209,7 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 		conn := awsClient.SecurityHubClient(ctx)
 
-		arn := tfsecurityhub.AccountHubARN(awsClient)
+		arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
 		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 		return err
@@ -226,7 +226,7 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			arn := tfsecurityhub.AccountHubARN(awsClient)
+			arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
 			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {

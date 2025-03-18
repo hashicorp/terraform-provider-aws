@@ -37,17 +37,17 @@ func resourceAggregateAuthorization() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,16 +55,14 @@ func resourceAggregateAuthorization() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	accountID, region := d.Get("account_id").(string), d.Get("region").(string)
+	accountID, region := d.Get(names.AttrAccountID).(string), d.Get(names.AttrRegion).(string)
 	id := aggregateAuthorizationCreateResourceID(accountID, region)
 	input := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountID),
@@ -83,7 +81,7 @@ func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -104,14 +102,14 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", aggregationAuthorization.AuthorizedAccountId)
-	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
-	d.Set("region", aggregationAuthorization.AuthorizedAwsRegion)
+	d.Set(names.AttrAccountID, aggregationAuthorization.AuthorizedAccountId)
+	d.Set(names.AttrARN, aggregationAuthorization.AggregationAuthorizationArn)
+	d.Set(names.AttrRegion, aggregationAuthorization.AuthorizedAwsRegion)
 
 	return diags
 }
 
-func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -119,7 +117,7 @@ func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -129,10 +127,11 @@ func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting ConfigService Aggregate Authorization: %s", d.Id())
-	_, err = conn.DeleteAggregationAuthorization(ctx, &configservice.DeleteAggregationAuthorizationInput{
+	input := configservice.DeleteAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountID),
 		AuthorizedAwsRegion: aws.String(region),
-	})
+	}
+	_, err = conn.DeleteAggregationAuthorization(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Aggregate Authorization (%s): %s", d.Id(), err)

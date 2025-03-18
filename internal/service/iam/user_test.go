@@ -51,7 +51,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			{
 				Config: testAccUserConfig_basic(name2, path2),
@@ -114,7 +114,7 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -145,7 +145,7 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -176,7 +176,7 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -206,7 +206,7 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -236,7 +236,7 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -267,7 +267,7 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -372,7 +372,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			{
 				Config: testAccUserConfig_basic(name2, path),
@@ -410,7 +410,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			{
 				Config: testAccUserConfig_basic(name, path2),
@@ -452,7 +452,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			// Test update
 			{
@@ -468,7 +468,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			// Test removal
 			{
@@ -757,7 +757,7 @@ func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) reso
 			return fmt.Errorf("externally creating IAM Policy (%s): %s", aws.ToString(user.UserName), err)
 		}
 
-		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func() (any, error) {
 			return tfiam.FindPolicyByARN(ctx, conn, aws.ToString(output.Policy.Arn))
 		}, true)
 		if err != nil {
@@ -789,7 +789,7 @@ func testAccCheckUserInlinePolicy(ctx context.Context, user *awstypes.User) reso
 			return fmt.Errorf("externally putting IAM User (%s) policy: %s", aws.ToString(user.UserName), err)
 		}
 
-		_, err = tfresource.RetryWhenNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, 2*time.Minute, func() (any, error) {
 			return tfiam.FindUserPolicyByTwoPartKey(ctx, conn, aws.ToString(user.UserName), aws.ToString(user.UserName))
 		})
 		if err != nil {
@@ -825,49 +825,4 @@ resource "aws_iam_user" "test" {
   name          = %q
 }
 `, rName)
-}
-
-func testAccUserConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-}
-`, rName)
-}
-
-func testAccUserConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccUserConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccUserConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }

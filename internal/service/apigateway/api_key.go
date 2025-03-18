@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_api_key", name="API Key")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetApiKeyOutput")
 func resourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIKeyCreate,
@@ -40,11 +39,11 @@ func resourceAPIKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,27 +51,27 @@ func resourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"value": {
+			names.AttrValue: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -81,29 +80,27 @@ func resourceAPIKey() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
-	input := &apigateway.CreateApiKeyInput{
-		Description: aws.String(d.Get("description").(string)),
-		Enabled:     d.Get("enabled").(bool),
+	name := d.Get(names.AttrName).(string)
+	input := apigateway.CreateApiKeyInput{
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Enabled:     d.Get(names.AttrEnabled).(bool),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Value:       aws.String(d.Get("value").(string)),
+		Value:       aws.String(d.Get(names.AttrValue).(string)),
 	}
 
 	if v, ok := d.GetOk("customer_id"); ok {
 		input.CustomerId = aws.String(v.(string))
 	}
 
-	apiKey, err := conn.CreateApiKey(ctx, input)
+	apiKey, err := conn.CreateApiKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway API Key (%s): %s", name, err)
@@ -114,7 +111,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -132,20 +129,14 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	setTagsOut(ctx, apiKey.Tags)
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrARN, apiKeyARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrCreatedDate, apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
-	d.Set("description", apiKey.Description)
-	d.Set("enabled", apiKey.Enabled)
-	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", apiKey.Name)
-	d.Set("value", apiKey.Value)
+	d.Set(names.AttrDescription, apiKey.Description)
+	d.Set(names.AttrEnabled, apiKey.Enabled)
+	d.Set(names.AttrLastUpdatedDate, apiKey.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrName, apiKey.Name)
+	d.Set(names.AttrValue, apiKey.Value)
 
 	return diags
 }
@@ -153,9 +144,9 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []types.PatchOperation {
 	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("enabled") {
+	if d.HasChange(names.AttrEnabled) {
 		isEnabled := "false"
-		if d.Get("enabled").(bool) {
+		if d.Get(names.AttrEnabled).(bool) {
 			isEnabled = "true"
 		}
 		operations = append(operations, types.PatchOperation{
@@ -165,19 +156,19 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []types.PatchOperati
 		})
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
-			Value: aws.String(d.Get("description").(string)),
+			Value: aws.String(d.Get(names.AttrDescription).(string)),
 		})
 	}
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
-			Value: aws.String(d.Get("name").(string)),
+			Value: aws.String(d.Get(names.AttrName).(string)),
 		})
 	}
 
@@ -192,15 +183,16 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []types.PatchOperati
 	return operations
 }
 
-func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		_, err := conn.UpdateApiKey(ctx, &apigateway.UpdateApiKeyInput{
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := apigateway.UpdateApiKeyInput{
 			ApiKey:          aws.String(d.Id()),
 			PatchOperations: resourceAPIKeyUpdateOperations(d),
-		})
+		}
+		_, err := conn.UpdateApiKey(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway API Key (%s): %s", d.Id(), err)
@@ -210,14 +202,15 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
-	_, err := conn.DeleteApiKey(ctx, &apigateway.DeleteApiKeyInput{
+	input := apigateway.DeleteApiKeyInput{
 		ApiKey: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApiKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -231,12 +224,12 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetApiKeyOutput, error) {
-	input := &apigateway.GetApiKeyInput{
+	input := apigateway.GetApiKeyInput{
 		ApiKey:       aws.String(id),
 		IncludeValue: aws.Bool(true),
 	}
 
-	output, err := conn.GetApiKey(ctx, input)
+	output, err := conn.GetApiKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -254,4 +247,8 @@ func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*a
 	}
 
 	return output, nil
+}
+
+func apiKeyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/apikeys/%s", id))
 }

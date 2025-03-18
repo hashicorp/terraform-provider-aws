@@ -6,9 +6,9 @@ package ssmcontacts
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -35,8 +35,10 @@ const (
 	ResNameRotation = "Rotation"
 )
 
-// @FrameworkResource(name="Rotation")
+// @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
 func newResourceRotation(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRotation{}
 
@@ -48,24 +50,20 @@ type resourceRotation struct {
 	framework.WithImportByID
 }
 
-func (r *resourceRotation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ssmcontacts_rotation"
-}
-
 func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"contact_ids": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Optional:   true,
 			},
@@ -109,11 +107,11 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 						"shift_coverages": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[shiftCoveragesData](ctx),
 							PlanModifiers: []planmodifier.List{
-								ShiftCoveragesPlanModifier(),
+								shiftCoveragesPlanModifier(),
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
+								Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 									"map_block_key": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
 										Required:   true,
@@ -237,8 +235,8 @@ func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRe
 		ContactIds:       fwflex.ExpandFrameworkStringValueList(ctx, plan.ContactIds),
 		Name:             fwflex.StringFromFramework(ctx, plan.Name),
 		Recurrence: &awstypes.RecurrenceSettings{
-			NumberOfOnCalls:      fwflex.Int32FromFramework(ctx, recurrenceData.NumberOfOnCalls),
-			RecurrenceMultiplier: fwflex.Int32FromFramework(ctx, recurrenceData.RecurrenceMultiplier),
+			NumberOfOnCalls:      fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.NumberOfOnCalls),
+			RecurrenceMultiplier: fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.RecurrenceMultiplier),
 			DailySettings:        dailySettingsOutput.Data,
 			MonthlySettings:      monthlySettingsOutput.Data,
 			ShiftCoverages:       shiftCoverages,
@@ -293,8 +291,8 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	rc := &recurrenceData{}
-	rc.RecurrenceMultiplier = fwflex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
-	rc.NumberOfOnCalls = fwflex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
+	rc.RecurrenceMultiplier = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.RecurrenceMultiplier)
+	rc.NumberOfOnCalls = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.NumberOfOnCalls)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
 	if response.Diagnostics.HasError() {
@@ -383,8 +381,8 @@ func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRe
 		input := &ssmcontacts.UpdateRotationInput{
 			RotationId: fwflex.StringFromFramework(ctx, state.ID),
 			Recurrence: &awstypes.RecurrenceSettings{
-				NumberOfOnCalls:      fwflex.Int32FromFramework(ctx, recurrenceData.NumberOfOnCalls),
-				RecurrenceMultiplier: fwflex.Int32FromFramework(ctx, recurrenceData.RecurrenceMultiplier),
+				NumberOfOnCalls:      fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.NumberOfOnCalls),
+				RecurrenceMultiplier: fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.RecurrenceMultiplier),
 				DailySettings:        dailySettingsOutput.Data,
 				MonthlySettings:      monthlySettingsOutput.Data,
 				ShiftCoverages:       shiftCoverages,
@@ -419,8 +417,8 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
-		"id": state.ID.ValueString(),
+	tflog.Debug(ctx, "deleting TODO", map[string]any{
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	_, err := conn.DeleteRotation(ctx, &ssmcontacts.DeleteRotationInput{
@@ -440,10 +438,6 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *resourceRotation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceRotationData struct {
 	ARN        types.String                                    `tfsdk:"arn"`
 	ContactIds fwtypes.ListValueOf[types.String]               `tfsdk:"contact_ids"`
@@ -451,8 +445,8 @@ type resourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[recurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                    `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                               `tfsdk:"start_time"`
-	Tags       types.Map                                       `tfsdk:"tags"`
-	TagsAll    types.Map                                       `tfsdk:"tags_all"`
+	Tags       tftags.Map                                      `tfsdk:"tags"`
+	TagsAll    tftags.Map                                      `tfsdk:"tags_all"`
 	TimeZoneID types.String                                    `tfsdk:"time_zone_id"`
 }
 
@@ -518,12 +512,12 @@ func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, dia
 
 			cTimes = append(cTimes, awstypes.CoverageTime{
 				End: &awstypes.HandOffTime{
-					HourOfDay:    fwflex.Int32ValueFromFramework(ctx, end.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueFromFramework(ctx, end.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueFromFrameworkInt64(ctx, end.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueFromFrameworkInt64(ctx, end.MinuteOfHour),
 				},
 				Start: &awstypes.HandOffTime{
-					HourOfDay:    fwflex.Int32ValueFromFramework(ctx, start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueFromFramework(ctx, start.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueFromFrameworkInt64(ctx, start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueFromFrameworkInt64(ctx, start.MinuteOfHour),
 				},
 			})
 		}
@@ -549,12 +543,12 @@ func flattenShiftCoverages(ctx context.Context, object map[string][]awstypes.Cov
 		for _, v := range value {
 			ct := coverageTimesData{
 				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &handOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.End.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.End.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &handOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.Start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ce_cost_allocation_tag", name="Cost Allocation Tag")
@@ -31,7 +32,7 @@ func resourceCostAllocationTag() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.CostAllocationTagStatus](),
@@ -41,7 +42,7 @@ func resourceCostAllocationTag() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +50,7 @@ func resourceCostAllocationTag() *schema.Resource {
 	}
 }
 
-func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
@@ -65,20 +66,20 @@ func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Cost Allocation Tag (%s): %s", d.Id(), err)
 	}
 
-	d.Set("status", tag.Status)
+	d.Set(names.AttrStatus, tag.Status)
 	d.Set("tag_key", tag.TagKey)
-	d.Set("type", tag.Type)
+	d.Set(names.AttrType, tag.Type)
 
 	return diags
 }
 
-func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	tagKey := d.Get("tag_key").(string)
 
-	if err := updateCostAllocationTagStatus(ctx, conn, tagKey, awstypes.CostAllocationTagStatus(d.Get("status").(string))); err != nil {
+	if err := updateCostAllocationTagStatus(ctx, conn, tagKey, awstypes.CostAllocationTagStatus(d.Get(names.AttrStatus).(string))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Cost Explorer Cost Allocation Tag (%s): %s", tagKey, err)
 	}
 
@@ -87,7 +88,7 @@ func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCostAllocationTagRead(ctx, d, meta)...)
 }
 
-func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 

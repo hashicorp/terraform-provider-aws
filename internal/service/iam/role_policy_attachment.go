@@ -22,6 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_role_policy_attachment", name="Role Policy Attachment")
@@ -42,7 +43,7 @@ func resourceRolePolicyAttachment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,11 +52,11 @@ func resourceRolePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	role := d.Get("role").(string)
+	role := d.Get(names.AttrRole).(string)
 	policyARN := d.Get("policy_arn").(string)
 
 	if err := attachPolicyToRole(ctx, conn, role, policyARN); err != nil {
@@ -68,16 +69,16 @@ func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceRolePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	role := d.Get("role").(string)
+	role := d.Get(names.AttrRole).(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", role, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findAttachedRolePolicyByTwoPartKey(ctx, conn, role, policyARN)
 	}, d.IsNewResource())
 
@@ -94,18 +95,18 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if err := detachPolicyFromRole(ctx, conn, d.Get("role").(string), d.Get("policy_arn").(string)); err != nil {
+	if err := detachPolicyFromRole(ctx, conn, d.Get(names.AttrRole).(string), d.Get("policy_arn").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <role-name>/<policy_arn>", d.Id())
@@ -114,7 +115,7 @@ func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 	roleName := idParts[0]
 	policyARN := idParts[1]
 
-	d.Set("role", roleName)
+	d.Set(names.AttrRole, roleName)
 	d.Set("policy_arn", policyARN)
 	d.SetId(fmt.Sprintf("%s-%s", roleName, policyARN))
 
@@ -123,7 +124,7 @@ func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 
 func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
 		return conn.AttachRolePolicy(ctx, &iam.AttachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),
@@ -139,7 +140,7 @@ func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN s
 
 func detachPolicyFromRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
 		return conn.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),

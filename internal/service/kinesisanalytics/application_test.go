@@ -9,7 +9,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,20 +37,20 @@ func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -63,7 +64,7 @@ func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -87,7 +88,7 @@ func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -98,12 +99,12 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -112,22 +113,22 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -136,7 +137,7 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,40 +151,40 @@ func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 				Config: testAccApplicationConfig_code(rName, "SELECT 1;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 1;\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_code(rName, "SELECT 2;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 2;\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -197,7 +198,7 @@ func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
@@ -213,42 +214,42 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -262,7 +263,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
@@ -278,42 +279,42 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testi
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -327,7 +328,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testi
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -345,44 +346,44 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testi
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_cloudWatchLoggingOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream2ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -396,7 +397,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testi
 
 func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -412,33 +413,33 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -459,17 +460,17 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -483,7 +484,7 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -501,13 +502,13 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -528,30 +529,30 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_inputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "42"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -576,16 +577,16 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -599,7 +600,7 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
@@ -616,13 +617,13 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -643,30 +644,30 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -687,20 +688,20 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"), // Add input processing configuration + update input.
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"), // Add input processing configuration + update input.
 				),
 			},
 			{
@@ -714,7 +715,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
@@ -731,13 +732,13 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -758,33 +759,33 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -805,17 +806,17 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"), // Delete input processing configuration + update input.
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"), // Delete input processing configuration + update input.
 				),
 			},
 			{
@@ -829,7 +830,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -848,13 +849,13 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -875,33 +876,33 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambda1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambda1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_inputProcessing(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -922,20 +923,20 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambda2ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambda2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -949,7 +950,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -970,15 +971,15 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 				Config: testAccApplicationConfig_multiple(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -999,43 +1000,43 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_1",
+						names.AttrName:                "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
 						"kinesis_firehose.#":          "1",
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_multipleUpdated(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "42"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1060,31 +1061,31 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_2",
+						names.AttrName:                "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
 						"kinesis_firehose.#":          "0",
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_3",
+						names.AttrName:                "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
 						"kinesis_firehose.#":          "0",
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
@@ -1099,16 +1100,16 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
-					resource.TestCheckResourceAttr(resourceName, "version", "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
 				),
 			},
 			{
@@ -1122,7 +1123,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1141,70 +1142,70 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 				Config: testAccApplicationConfig_output(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_1",
+						names.AttrName:                "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
 						"kinesis_firehose.#":          "1",
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_outputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_2",
+						names.AttrName:                "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
 						"kinesis_firehose.#":          "0",
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_3",
+						names.AttrName:                "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
 						"kinesis_firehose.#":          "0",
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "4"), // 1 * output deletion + 2 * output addition.
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "4"), // 1 * output deletion + 2 * output addition.
 				),
 			},
 			{
@@ -1216,20 +1217,20 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "6"), // 2 * output deletion.
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "6"), // 2 * output deletion.
 				),
 			},
 		},
@@ -1238,7 +1239,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -1254,33 +1255,33 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_referenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
@@ -1297,15 +1298,15 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -1319,7 +1320,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -1335,13 +1336,13 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 				Config: testAccApplicationConfig_referenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
@@ -1358,35 +1359,35 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 				),
 			},
 			{
@@ -1400,7 +1401,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1417,13 +1418,13 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 				Config: testAccApplicationConfig_referenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
@@ -1440,28 +1441,28 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_referenceDataSourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
@@ -1481,15 +1482,15 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.0.record_row_path", "$path.to.record"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "JSON"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-2"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 				),
 			},
 			{
@@ -1503,7 +1504,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 
 func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1519,13 +1520,13 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1546,17 +1547,17 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "NOW"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -1571,7 +1572,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 
 func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1587,13 +1588,13 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1614,17 +1615,17 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -1637,13 +1638,13 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 				Config: testAccApplicationConfig_start(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1664,30 +1665,30 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "NOW"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_start(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1708,17 +1709,17 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "NOW"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 		},
@@ -1727,7 +1728,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 
 func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1745,18 +1746,18 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_multiple(rName, "true", "LAST_STOPPED_POINT"),
+				Config: testAccApplicationConfig_multiple(rName, acctest.CtTrue, "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1777,44 +1778,44 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "LAST_STOPPED_POINT"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_1",
+						names.AttrName:                "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
 						"kinesis_firehose.#":          "1",
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_multipleUpdated(rName, "true", "LAST_STOPPED_POINT"),
+				Config: testAccApplicationConfig_multipleUpdated(rName, acctest.CtTrue, "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "42"),
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
@@ -1839,31 +1840,31 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "LAST_STOPPED_POINT"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_2",
+						names.AttrName:                "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
 						"kinesis_firehose.#":          "0",
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"name":                        "OUTPUT_3",
+						names.AttrName:                "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
 						"kinesis_firehose.#":          "0",
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
@@ -1878,17 +1879,17 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
-					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
-					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
-					resource.TestCheckResourceAttr(resourceName, "version", "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
 				),
 			},
 			{
@@ -1903,14 +1904,14 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesis_analytics_application" {
 				continue
 			}
 
-			_, err := tfkinesisanalytics.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfkinesisanalytics.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1926,20 +1927,16 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanalytics.ApplicationDetail) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.ApplicationDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Analytics Application ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
-
-		application, err := tfkinesisanalytics.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes["name"])
+		application, err := tfkinesisanalytics.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -1952,11 +1949,11 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
 	input := &kinesisanalytics.ListApplicationsInput{}
 
-	_, err := conn.ListApplicationsWithContext(ctx, input)
+	_, err := conn.ListApplications(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -2055,7 +2052,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
   role          = aws_iam_role.test[0].arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

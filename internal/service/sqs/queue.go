@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -29,8 +28,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,7 +40,7 @@ import (
 
 var (
 	queueSchema = map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -95,28 +96,28 @@ var (
 			Default:      defaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-		"name": {
+		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name_prefix"},
+			ConflictsWith: []string{names.AttrNamePrefix},
 		},
-		"name_prefix": {
+		names.AttrNamePrefix: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name"},
+			ConflictsWith: []string{names.AttrName},
 		},
-		"policy": {
+		names.AttrPolicy: {
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -131,7 +132,7 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -141,7 +142,7 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -154,7 +155,7 @@ var (
 		},
 		names.AttrTags:    tftags.TagsSchema(),
 		names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		"url": {
+		names.AttrURL: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -167,7 +168,7 @@ var (
 	}
 
 	queueAttributeMap = attrmap.New(map[string]types.QueueAttributeName{
-		"arn":                               types.QueueAttributeNameQueueArn,
+		names.AttrARN:                       types.QueueAttributeNameQueueArn,
 		"content_based_deduplication":       types.QueueAttributeNameContentBasedDeduplication,
 		"deduplication_scope":               types.QueueAttributeNameDeduplicationScope,
 		"delay_seconds":                     types.QueueAttributeNameDelaySeconds,
@@ -177,17 +178,18 @@ var (
 		"kms_master_key_id":                 types.QueueAttributeNameKmsMasterKeyId,
 		"max_message_size":                  types.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         types.QueueAttributeNameMessageRetentionPeriod,
-		"policy":                            types.QueueAttributeNamePolicy,
+		names.AttrPolicy:                    types.QueueAttributeNamePolicy,
 		"receive_wait_time_seconds":         types.QueueAttributeNameReceiveMessageWaitTimeSeconds,
 		"redrive_allow_policy":              types.QueueAttributeNameRedriveAllowPolicy,
 		"redrive_policy":                    types.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           types.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        types.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
+	}, queueSchema).WithIAMPolicyAttribute(names.AttrPolicy).WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -199,16 +201,20 @@ func resourceQueue() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceQueueCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceQueueCustomizeDiff,
 
 		Schema: queueSchema,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
 	}
 }
 
-func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	name := queueName(d)
@@ -219,32 +225,35 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
+	// create is 2 phase: 1. create, 2. wait for propagation
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
 		return conn.CreateQueue(ctx, input)
 	}, errCodeQueueDeletedRecently)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
 			return conn.CreateQueue(ctx, input)
 		}, errCodeQueueDeletedRecently)
 	}
 
 	if err != nil {
-		return diag.Errorf("creating SQS Queue (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SQS Queue (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
-		return diag.Errorf("waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -252,43 +261,44 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-			return resourceQueueRead(ctx, d, meta)
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+			return append(diags, resourceQueueRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("setting SQS Queue (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting SQS Queue (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (any, error) {
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	name, err := queueNameFromURL(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
@@ -296,24 +306,25 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("kms_data_key_reuse_period_seconds", defaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
 	} else {
-		d.Set("name_prefix", create.NamePrefixFromName(name))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
-	d.Set("url", d.Id())
+	d.Set(names.AttrURL, d.Id())
 
-	return nil
+	return diags
 }
 
-func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &sqs.SetQueueAttributesInput{
@@ -324,18 +335,19 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.SetQueueAttributes(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating SQS Queue (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
-			return diag.Errorf("waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
+		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
@@ -344,23 +356,24 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := waitQueueDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for SQS Queue (%s) delete: %s", d.Id(), err)
+	if err := waitQueueDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
+	sqsManagedSSEEnabled := diff.Get("sqs_managed_sse_enabled").(bool)
 
 	if diff.Id() == "" {
 		// Create.
@@ -376,6 +389,20 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid queue name: %s", name)
 		}
+
+		if sqsManagedSSEEnabled {
+			// KmsDataKeyReusePeriodSeconds is only valid for SqsManagedSseEnabled queues.
+			if err := diff.SetNew("kms_data_key_reuse_period_seconds", nil); err != nil {
+				return err
+			}
+		}
+	} else {
+		// Update.
+		if sqsManagedSSEEnabled {
+			if err := diff.Clear("kms_data_key_reuse_period_seconds"); err != nil {
+				return err
+			}
+		}
 	}
 
 	if !fifoQueue && contentBasedDeduplication {
@@ -385,8 +412,8 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d verify.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+func queueName(d sdkv2.ResourceDiffer) string {
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
@@ -469,20 +496,13 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 }
 
 const (
-	// Maximum amount of time to wait for SQS queue attribute changes to propagate
-	// This timeout should not be increased without strong consideration
-	// as this will negatively impact user experience when configurations
-	// have incorrect references or permissions.
-	// Reference: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SetQueueAttributes.html
-	queueAttributePropagationTimeout = 2 * time.Minute
+	// Because accounts vary significantly, customizable timeouts are now used to ensure that users
+	// who need to wait longer can do so. The default timeouts are set to 3 minutes.
 
 	// If you delete a queue, you must wait at least 60 seconds before creating a queue with the same name.
-	// ReferenceL https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html
-	queueCreatedTimeout = 70 * time.Second
-	queueReadTimeout    = 20 * time.Second
-	queueDeletedTimeout = 3 * time.Minute
-	queueTagsTimeout    = 60 * time.Second
-
+	// Reference: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html
+	queueReadTimeout          = 20 * time.Second
+	queueDeletedTimeout       = 3 * time.Minute
 	queueAttributeReadTimeout = 20 * time.Second
 
 	queueStateExists = "exists"
@@ -492,7 +512,7 @@ const (
 )
 
 func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findQueueAttributesByURL(ctx, conn, url)
 
 		if tfresource.NotFound(err) {
@@ -508,7 +528,7 @@ func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.S
 }
 
 func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		attributesMatch := func(got map[types.QueueAttributeName]string) string {
 			for k, e := range expected {
 				g, ok := got[k]
@@ -568,12 +588,12 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 	}
 }
 
-func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) error {
+func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
-		Timeout:                   queueAttributePropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
@@ -584,12 +604,12 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 	return err
 }
 
-func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string) error {
+func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(ctx, conn, url),
-		Timeout:                   queueDeletedTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            5,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering

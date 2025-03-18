@@ -5,7 +5,6 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_account", name="Account")
@@ -40,7 +40,7 @@ func resourceAccount() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type: resourceV0.CoreConfigSchema().ImpliedType(),
-				Upgrade: func(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+				Upgrade: func(_ context.Context, rawState map[string]any, _ any) (map[string]any, error) {
 					if v, ok := rawState["enable_default_standards"]; !ok || v == nil {
 						rawState["enable_default_standards"] = "true"
 					}
@@ -52,7 +52,7 @@ func resourceAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	autoEnableControls := d.Get("auto_enable_controls").(bool)
 	inputU := &securityhub.UpdateSecurityHubConfigurationInput{
@@ -108,7 +108,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	arn := accountHubARN(meta.(*conns.AWSClient))
+	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
 	const (
 		timeout = 1 * time.Minute
 	)
@@ -129,11 +129,11 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	arn := accountHubARN(meta.(*conns.AWSClient))
+	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
 	output, err := findHubByARN(ctx, conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -146,7 +146,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.HubArn)
+	d.Set(names.AttrARN, output.HubArn)
 	d.Set("auto_enable_controls", output.AutoEnableControls)
 	d.Set("control_finding_generator", output.ControlFindingGenerator)
 	// enable_default_standards is never returned
@@ -155,7 +155,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -176,12 +176,12 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountDeletedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountDeletedTimeout, func() (any, error) {
 		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
 	}, errCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
 
@@ -226,6 +226,6 @@ func findHub(ctx context.Context, conn *securityhub.Client, input *securityhub.D
 }
 
 // Security Hub ARN: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecurityhub.html#awssecurityhub-resources-for-iam-policies
-func accountHubARN(meta *conns.AWSClient) string {
-	return fmt.Sprintf("arn:%s:securityhub:%s:%s:hub/default", meta.Partition, meta.Region, meta.AccountID)
+func accountHubARN(ctx context.Context, c *conns.AWSClient) string {
+	return c.RegionalARN(ctx, "securityhub", "hub/default")
 }

@@ -47,11 +47,11 @@ func resourceLocationSMB() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -64,7 +64,7 @@ func resourceLocationSMB() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"version": {
+						names.AttrVersion: {
 							Type:             schema.TypeString,
 							Default:          awstypes.SmbVersionAutomatic,
 							Optional:         true,
@@ -73,7 +73,7 @@ func resourceLocationSMB() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
@@ -103,7 +103,7 @@ func resourceLocationSMB() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,26 +113,24 @@ func resourceLocationSMB() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 104),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
-		MountOptions:   expandSMBMountOptions(d.Get("mount_options").([]interface{})),
-		Password:       aws.String(d.Get("password").(string)),
+		MountOptions:   expandSMBMountOptions(d.Get("mount_options").([]any)),
+		Password:       aws.String(d.Get(names.AttrPassword).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -147,7 +145,7 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationSMBRead(ctx, d, meta)...)
 }
 
-func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -174,34 +172,34 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("agent_arns", output.AgentArns)
-	d.Set("arn", output.LocationArn)
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrDomain, output.Domain)
 	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
 	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 	d.Set("user", output.User)
 
 	return diags
 }
 
-func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationSmbInput{
 			LocationArn:  aws.String(d.Id()),
 			AgentArns:    flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
-			MountOptions: expandSMBMountOptions(d.Get("mount_options").([]interface{})),
-			Password:     aws.String(d.Get("password").(string)),
+			MountOptions: expandSMBMountOptions(d.Get("mount_options").([]any)),
+			Password:     aws.String(d.Get(names.AttrPassword).(string)),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 			User:         aws.String(d.Get("user").(string)),
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -215,14 +213,15 @@ func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationSMBRead(ctx, d, meta)...)
 }
 
-func resourceLocationSMBDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationSMBDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location SMB: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
@@ -260,27 +259,27 @@ func findLocationSMBByARN(ctx context.Context, conn *datasync.Client, arn string
 	return output, nil
 }
 
-func flattenSMBMountOptions(mountOptions *awstypes.SmbMountOptions) []interface{} {
+func flattenSMBMountOptions(mountOptions *awstypes.SmbMountOptions) []any {
 	if mountOptions == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"version": string(mountOptions.Version),
+	m := map[string]any{
+		names.AttrVersion: string(mountOptions.Version),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandSMBMountOptions(l []interface{}) *awstypes.SmbMountOptions {
+func expandSMBMountOptions(l []any) *awstypes.SmbMountOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	smbMountOptions := &awstypes.SmbMountOptions{
-		Version: awstypes.SmbVersion(m["version"].(string)),
+		Version: awstypes.SmbVersion(m[names.AttrVersion].(string)),
 	}
 
 	return smbMountOptions

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,7 +38,7 @@ func resourceVPCConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +53,7 @@ func resourceVPCConnection() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -67,28 +66,26 @@ func resourceVPCConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	input := &kafka.CreateVpcConnectionInput{
 		Authentication:   aws.String(d.Get("authentication").(string)),
 		ClientSubnets:    flex.ExpandStringValueSet(d.Get("client_subnets").(*schema.Set)),
-		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+		SecurityGroups:   flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
-		VpcId:            aws.String(d.Get("vpc_id").(string)),
+		VpcId:            aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	output, err := conn.CreateVpcConnection(ctx, input)
@@ -106,7 +103,7 @@ func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -122,19 +119,19 @@ func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading MSK VPC Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.VpcConnectionArn)
+	d.Set(names.AttrARN, output.VpcConnectionArn)
 	d.Set("authentication", output.Authentication)
 	d.Set("client_subnets", flex.FlattenStringValueSet(output.Subnets))
-	d.Set("security_groups", flex.FlattenStringValueSet(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueSet(output.SecurityGroups))
 	d.Set("target_cluster_arn", output.TargetClusterArn)
-	d.Set("vpc_id", output.VpcId)
+	d.Set(names.AttrVPCID, output.VpcId)
 
 	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -142,7 +139,7 @@ func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -201,7 +198,7 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn strin
 }
 
 func statusVPCConnection(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

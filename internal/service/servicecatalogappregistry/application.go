@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,11 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_servicecatalogappregistry_application", name="Application")
+// @Tags(identifierAttribute="arn")
 func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplication{}, nil
 }
@@ -38,19 +41,15 @@ type resourceApplication struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicecatalogappregistry_application"
-}
-
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				// Name cannot be updated despite being present in the update API struct.
 				//
@@ -62,7 +61,12 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			"application_tag": schema.MapAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
+				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -81,6 +85,8 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateApplication(ctx, in)
 	if err != nil {
@@ -144,7 +150,7 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		in.Application = aws.String(plan.ID.ValueString()) // Set manually, AWS naming is inconsistent
+		in.Application = plan.ID.ValueStringPointer() // Set manually, AWS naming is inconsistent
 
 		out, err := conn.UpdateApplication(ctx, in)
 		if err != nil {
@@ -178,7 +184,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	in := &servicecatalogappregistry.DeleteApplicationInput{
-		Application: aws.String(state.ID.ValueString()),
+		Application: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplication(ctx, in)
@@ -195,7 +201,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetApplicationOutput, error) {
@@ -228,4 +234,6 @@ type resourceApplicationData struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	ApplicationTag types.Map    `tfsdk:"application_tag"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }

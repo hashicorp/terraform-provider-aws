@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +20,7 @@ import (
 func testAccRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	regionName := names.APSoutheast3RegionID
+	regionName := endpoints.ApSoutheast3RegionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -34,8 +35,8 @@ func testAccRegion_basic(t *testing.T) {
 				PreConfig: func() {},
 				Config:    testAccRegionConfig_basic(regionName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
 				),
@@ -48,8 +49,8 @@ func testAccRegion_basic(t *testing.T) {
 			{
 				Config: testAccRegionConfig_basic(regionName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
 				),
@@ -61,7 +62,7 @@ func testAccRegion_basic(t *testing.T) {
 func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	regionName := names.APSoutheast3RegionID
+	regionName := endpoints.ApSoutheast3RegionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -77,8 +78,8 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 				PreConfig: func() {},
 				Config:    testAccRegionConfig_organization(regionName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
 				),
@@ -91,8 +92,8 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 			{
 				Config: testAccRegionConfig_organization(regionName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
 				),

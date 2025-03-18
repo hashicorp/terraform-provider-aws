@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,7 +41,7 @@ func resourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +70,7 @@ func resourceStream() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -86,7 +87,7 @@ func resourceStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -103,19 +104,18 @@ func resourceStream() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
 	ledgerName := d.Get("ledger_name").(string)
 	name := d.Get("stream_name").(string)
 	input := &qldb.StreamJournalToKinesisInput{
 		LedgerName: aws.String(ledgerName),
-		RoleArn:    aws.String(d.Get("role_arn").(string)),
+		RoleArn:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		StreamName: aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
@@ -130,26 +130,27 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.InclusiveStartTime = aws.Time(v)
 	}
 
-	if v, ok := d.GetOk("kinesis_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.KinesisConfiguration = expandKinesisConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("kinesis_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.KinesisConfiguration = expandKinesisConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.StreamJournalToKinesis(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating QLDB Stream (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating QLDB Stream (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.StreamId))
 
 	if _, err := waitStreamCreated(ctx, conn, ledgerName, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for QLDB Stream (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for QLDB Stream (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceStreamRead(ctx, d, meta)
+	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
 	ledgerName := d.Get("ledger_name").(string)
@@ -158,14 +159,14 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QLDB Stream %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading QLDB Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QLDB Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", stream.Arn)
+	d.Set(names.AttrARN, stream.Arn)
 	if stream.ExclusiveEndTime != nil {
 		d.Set("exclusive_end_time", aws.ToTime(stream.ExclusiveEndTime).Format(time.RFC3339))
 	} else {
@@ -177,25 +178,26 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("inclusive_start_time", nil)
 	}
 	if stream.KinesisConfiguration != nil {
-		if err := d.Set("kinesis_configuration", []interface{}{flattenKinesisConfiguration(stream.KinesisConfiguration)}); err != nil {
-			return diag.Errorf("setting kinesis_configuration: %s", err)
+		if err := d.Set("kinesis_configuration", []any{flattenKinesisConfiguration(stream.KinesisConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting kinesis_configuration: %s", err)
 		}
 	} else {
 		d.Set("kinesis_configuration", nil)
 	}
 	d.Set("ledger_name", stream.LedgerName)
-	d.Set("role_arn", stream.RoleArn)
+	d.Set(names.AttrRoleARN, stream.RoleArn)
 	d.Set("stream_name", stream.StreamName)
 
-	return nil
+	return diags
 }
 
-func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceStreamRead(ctx, d, meta)
 }
 
-func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
 	ledgerName := d.Get("ledger_name").(string)
@@ -205,23 +207,23 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Stream: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.CancelJournalKinesisStream(ctx, input)
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting QLDB Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QLDB Stream (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitStreamDeleted(ctx, conn, ledgerName, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for QLDB Stream (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for QLDB Stream (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findStreamByTwoPartKey(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) (*types.JournalKinesisStreamDescription, error) {
@@ -270,7 +272,7 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.Client, input *qld
 }
 
 func statusStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		// Don't call FindStream as it maps useful statuses to NotFoundError.
 		output, err := findJournalKinesisStream(ctx, conn, &qldb.DescribeJournalKinesisStreamInput{
 			LedgerName: aws.String(ledgerName),
@@ -310,7 +312,7 @@ func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, strea
 }
 
 func statusStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStreamByTwoPartKey(ctx, conn, ledgerName, streamID)
 
 		if tfresource.NotFound(err) {
@@ -345,7 +347,7 @@ func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	return nil, err
 }
 
-func expandKinesisConfiguration(tfMap map[string]interface{}) *types.KinesisConfiguration {
+func expandKinesisConfiguration(tfMap map[string]any) *types.KinesisConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -356,26 +358,26 @@ func expandKinesisConfiguration(tfMap map[string]interface{}) *types.KinesisConf
 		apiObject.AggregationEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamArn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenKinesisConfiguration(apiObject *types.KinesisConfiguration) map[string]interface{} {
+func flattenKinesisConfiguration(apiObject *types.KinesisConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AggregationEnabled; v != nil {
 		tfMap["aggregation_enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.StreamArn; v != nil {
-		tfMap["stream_arn"] = aws.ToString(v)
+		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
 	return tfMap

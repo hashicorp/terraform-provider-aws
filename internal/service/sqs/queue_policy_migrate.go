@@ -8,10 +8,11 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func QueuePolicyMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS SQS Query Policy State v0; migrating to v1")
@@ -30,7 +31,7 @@ func migrateQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
 
-	is.Attributes["id"] = is.Attributes["queue_url"]
+	is.Attributes[names.AttrID] = is.Attributes["queue_url"]
 	is.ID = is.Attributes["queue_url"]
 
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, is.Attributes["queue_url"])

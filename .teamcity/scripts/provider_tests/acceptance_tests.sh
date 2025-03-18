@@ -37,6 +37,7 @@ TF_ACC=1 go test \
     ./internal/attrmap/... \
     ./internal/conns/... \
     ./internal/create/... \
+    ./internal/dns/... \
     ./internal/enum/... \
     ./internal/envvar/... \
     ./internal/errs/... \
@@ -45,12 +46,16 @@ TF_ACC=1 go test \
     ./internal/framework/... \
     ./internal/function/... \
     ./internal/generate/... \
+    ./internal/io/... \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
+    ./internal/namevaluesfilters/... \
     ./internal/provider/... \
+    ./internal/reflect/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
+    ./internal/semver/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \
@@ -58,4 +63,5 @@ TF_ACC=1 go test \
     ./internal/types/... \
     ./internal/vault/... \
     ./internal/verify/... \
-    -json -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -run=TestAcc
+    ./internal/yaml/... \
+    -json -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -run=TestAcc

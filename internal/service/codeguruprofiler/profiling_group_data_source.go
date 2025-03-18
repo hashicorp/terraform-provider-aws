@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Profiling Group")
+// @FrameworkDataSource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 func newDataSourceProfilingGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProfilingGroup{}, nil
 }
@@ -33,10 +33,6 @@ type dataSourceProfilingGroup struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceProfilingGroup) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
-}
-
 func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	computePlatform := fwtypes.StringEnumType[awstypes.ComputePlatform]()
 
@@ -47,16 +43,16 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 				Computed:    true,
 				ElementType: fwtypes.NewObjectTypeOf[dsAgentOrchestrationConfig](ctx),
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_platform": schema.StringAttribute{
 				CustomType: computePlatform,
 				Computed:   true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"profiling_status": schema.ListAttribute{
@@ -102,7 +98,7 @@ func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.Read
 	data.CreatedAt = flex.StringValueToFramework(ctx, out.CreatedAt.Format(time.RFC3339))
 	data.UpdatedAt = flex.StringValueToFramework(ctx, out.UpdatedAt.Format(time.RFC3339))
 	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+	data.Tags = tftags.FlattenStringValueMap(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -115,7 +111,7 @@ type dataSourceProfilingGroupData struct {
 	ID                       types.String                                                `tfsdk:"id"`
 	Name                     types.String                                                `tfsdk:"name"`
 	ProfilingStatus          fwtypes.ListNestedObjectValueOf[dsProfilingStatus]          `tfsdk:"profiling_status"`
-	Tags                     types.Map                                                   `tfsdk:"tags"`
+	Tags                     tftags.Map                                                  `tfsdk:"tags"`
 	UpdatedAt                types.String                                                `tfsdk:"updated_at"`
 }
 

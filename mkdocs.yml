@@ -14,6 +14,7 @@ nav:
           - Resource: add-a-new-resource.md
           - Service: add-a-new-service.md
           - Data source: add-a-new-datasource.md
+          - Ephemeral Resource: add-a-new-ephemeral-resource.md
           - Function: add-a-new-function.md
           - AWS Region: add-a-new-region.md
           - Import Support: add-import-support.md
@@ -24,13 +25,13 @@ nav:
           - Bugs and Enhancements: bugs-and-enhancements.md
           - Documentation Changes: documentation-changes.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Unit Tests: unit-tests.md
+      - Continuous Integration: continuous-integration.md
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
-      - AWS SDK for Go Versions: aws-go-sdk-versions.md
-      - AWS SDK for Go Migrations: aws-go-sdk-migrations.md
       - AWS SDK Go Base: aws-sdk-go-base.md
       - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
@@ -38,6 +39,8 @@ nav:
       - Dependency Updates: dependency-updates.md
       - Design Decision Log: design-decision-log.md
       - Error Handling: error-handling.md
+      - ID Attributes: id-attributes.md
+      - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md
       - Provider Design: provider-design.md
       - Provider Scaffolding (skaff): skaff.md
@@ -71,6 +74,7 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - footnotes
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.tabbed:

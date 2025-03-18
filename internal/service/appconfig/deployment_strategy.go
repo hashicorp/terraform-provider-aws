@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +36,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +45,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(0, 1440),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -67,7 +66,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 				Default:          awstypes.GrowthTypeLinear,
 				ValidateDiagFunc: enum.Validate[awstypes.GrowthType](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -82,15 +81,14 @@ func ResourceDeploymentStrategy() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appconfig.CreateDeploymentStrategyInput{
 		DeploymentDurationInMinutes: aws.Int32(int32(d.Get("deployment_duration_in_minutes").(int))),
 		GrowthFactor:                aws.Float32(float32(d.Get("growth_factor").(float64))),
@@ -100,7 +98,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -119,7 +117,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDeploymentStrategyRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -143,31 +141,31 @@ func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "getting AppConfig Deployment Strategy (%s): empty response", d.Id())
 	}
 
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("deployment_duration_in_minutes", output.DeploymentDurationInMinutes)
 	d.Set("final_bake_time_in_minutes", output.FinalBakeTimeInMinutes)
 	d.Set("growth_factor", output.GrowthFactor)
 	d.Set("growth_type", output.GrowthType)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("replicate_to", output.ReplicateTo)
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("deploymentstrategy/%s", d.Id()),
 		Service:   "appconfig",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
 
-func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		updateInput := &appconfig.UpdateDeploymentStrategyInput{
 			DeploymentStrategyId: aws.String(d.Id()),
 		}
@@ -176,8 +174,8 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 			updateInput.DeploymentDurationInMinutes = aws.Int32(int32(d.Get("deployment_duration_in_minutes").(int)))
 		}
 
-		if d.HasChange("description") {
-			updateInput.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			updateInput.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("final_bake_time_in_minutes") {
@@ -202,14 +200,15 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDeploymentStrategyRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Deployment Strategy: %s", d.Id())
-	_, err := conn.DeleteDeploymentStrategy(ctx, &appconfig.DeleteDeploymentStrategyInput{
+	input := appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeploymentStrategy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

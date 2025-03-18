@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codedeploy_deployment_group: Remove maximum items limit on the `alarm_configuration.alarms` argument
+```
