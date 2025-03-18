@@ -102,7 +102,7 @@ type userModel struct {
 	IdentityStoreID   types.String                                       `tfsdk:"identity_store_id"`
 	Locale            types.String                                       `tfsdk:"locale"`
 	Name              fwtypes.ListNestedObjectValueOf[nameModel]         `tfsdk:"name"`
-	NickName          types.String                                       `tfsdk:"nickname"`
+	Nickname          types.String                                       `tfsdk:"nickname"`
 	PhoneNumbers      fwtypes.ListNestedObjectValueOf[phoneNumbersModel] `tfsdk:"phone_numbers"`
 	PreferredLanguage types.String                                       `tfsdk:"preferred_language"`
 	ProfileUrl        types.String                                       `tfsdk:"profile_url"`
