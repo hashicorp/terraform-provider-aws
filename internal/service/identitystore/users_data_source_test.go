@@ -18,6 +18,7 @@ func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_identitystore_users.test"
+	userResourceName := "aws_identitystore_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -29,8 +30,14 @@ func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigUsers_basic(rName, rEmail),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "users.#", 0),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.user_id", userResourceName, "user_id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.display_name", userResourceName, "display_name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.user_name", userResourceName, "user_name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.name.0.family_name", userResourceName, "name.0.family_name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.name.0.given_name", userResourceName, "name.0.given_name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.emails.0.value", userResourceName, "emails.0.value"),
 				),
 			},
 		},
@@ -57,9 +64,7 @@ resource "aws_identitystore_user" "test" {
 }
 
 data "aws_identitystore_users" "test" {
-  depends_on = [aws_identitystore_user.test]
-
-  identity_store_id = data.aws_ssoadmin_instances.test.identity_store_ids[0]
+  identity_store_id = aws_identitystore_user.test.identity_store_id
 }
 `, name, email)
 }
