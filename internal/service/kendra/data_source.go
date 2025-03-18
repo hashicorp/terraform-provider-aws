@@ -171,11 +171,13 @@ func ResourceDataSource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"template": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateFunc:     validation.StringIsJSON,
+										DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 										StateFunc: func(v any) string {
-											jsonString, _ := structure.NormalizeJsonString(v)
-											return jsonString
+											json, _ := structure.NormalizeJsonString(v)
+											return json
 										},
 									},
 								},
