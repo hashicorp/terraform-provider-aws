@@ -525,15 +525,14 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-
 func flattenVerifiedAccessEndpointPortRanges(apiObjects []types.VerifiedAccessEndpointPortRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfList := make([]interface{}, len(apiObjects))
+	tfList := make([]any, len(apiObjects))
 	for i, apiObject := range apiObjects {
-		tfmap := map[string]interface{}{}
+		tfmap := map[string]any{}
 
 		if v := apiObject.FromPort; v != nil {
 			tfmap["from_port"] = aws.ToInt32(v)
@@ -554,7 +553,7 @@ func flattenVerifiedAccessEndpointCidrOptions(apiObject *types.VerifiedAccessEnd
 		return nil
 	}
 
-	tfmap := map[string]interface{}{}
+	tfmap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		tfmap["cidr"] = aws.ToString(v)
@@ -572,7 +571,7 @@ func flattenVerifiedAccessEndpointCidrOptions(apiObject *types.VerifiedAccessEnd
 		tfmap[names.AttrSubnetIDs] = aws.StringSlice(v)
 	}
 
-	return []interface{}{tfmap}
+	return []any{tfmap}
 }
 
 func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []any {
@@ -698,7 +697,7 @@ func expandCreateVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.
 		apiobject.Cidr = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPortRanges].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPortRanges].([]any); ok && len(v) > 0 {
 		apiobject.PortRanges = expandCreateVerifiedAccessPortRanges(v)
 	}
 
@@ -747,13 +746,13 @@ func expandCreateVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.C
 	return apiobject
 }
 
-func expandCreateVerifiedAccessPortRanges(tfList []interface{}) []types.CreateVerifiedAccessEndpointPortRange {
+func expandCreateVerifiedAccessPortRanges(tfList []any) []types.CreateVerifiedAccessEndpointPortRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 	portRanges := make([]types.CreateVerifiedAccessEndpointPortRange, len(tfList))
 	for _, tfElem := range tfList {
-		tfMap := tfElem.(map[string]interface{})
+		tfMap := tfElem.(map[string]any)
 		portRange := types.CreateVerifiedAccessEndpointPortRange{}
 		if v, ok := tfMap["from_port"].(int); ok {
 			portRange.FromPort = aws.Int32(int32(v))
@@ -768,13 +767,13 @@ func expandCreateVerifiedAccessPortRanges(tfList []interface{}) []types.CreateVe
 	return portRanges
 }
 
-func expandModifyVerifiedAccessPortRanges(tfList []interface{}) []types.ModifyVerifiedAccessEndpointPortRange {
+func expandModifyVerifiedAccessPortRanges(tfList []any) []types.ModifyVerifiedAccessEndpointPortRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 	portRanges := make([]types.ModifyVerifiedAccessEndpointPortRange, len(tfList))
 	for _, tfElem := range tfList {
-		tfMap := tfElem.(map[string]interface{})
+		tfMap := tfElem.(map[string]any)
 		portRange := types.ModifyVerifiedAccessEndpointPortRange{}
 		if v, ok := tfMap["from_port"].(int); ok {
 			portRange.FromPort = aws.Int32(int32(v))
@@ -804,7 +803,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrPortRanges].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPortRanges].([]any); ok && len(v) > 0 {
 		apiobject.PortRanges = expandCreateVerifiedAccessPortRanges(v)
 	}
 
@@ -834,7 +833,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.C
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrPortRanges].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPortRanges].([]any); ok && len(v) > 0 {
 		apiobject.PortRanges = expandCreateVerifiedAccessPortRanges(v)
 	}
 
@@ -852,7 +851,7 @@ func expandModifyVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.
 	apiObject := &types.ModifyVerifiedAccessEndpointCidrOptions{}
 
 	if v, ok := tfMap[names.AttrPortRanges]; ok {
-		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.([]interface{}))
+		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.([]any))
 	}
 
 	return apiObject
@@ -918,7 +917,7 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.M
 	}
 
 	if v, ok := tfMap[names.AttrPortRanges]; ok {
-		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.([]interface{}))
+		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.([]any))
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
