@@ -1780,7 +1780,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 		},
 	})
 }
-func TestAccKendraDataSource_Configuration_TemplateConfiguration(t *testing.T) {
+func TestAccKendraDataSource_Configuration_templateConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
