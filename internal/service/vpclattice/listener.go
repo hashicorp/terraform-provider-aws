@@ -254,7 +254,7 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[INFO] Deleting VPCLattice Listener %s", d.Id())
+	log.Printf("[INFO] Deleting VPCLattice Listener: %s", d.Id())
 	input := vpclattice.DeleteListenerInput{
 		ListenerIdentifier: aws.String(listenerID),
 		ServiceIdentifier:  aws.String(serviceID),

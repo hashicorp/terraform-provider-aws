@@ -8,6 +8,7 @@ var (
 	ResourceAccessLogSubscription             = resourceAccessLogSubscription
 	ResourceAuthPolicy                        = resourceAuthPolicy
 	ResourceListener                          = resourceListener
+	ResourceListenerRule                      = resourceListenerRule
 	ResourceResourceConfiguration             = newResourceConfigurationResource
 	ResourceResourceGateway                   = newResourceGatewayResource
 	ResourceService                           = resourceService
@@ -21,6 +22,7 @@ var (
 	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
 	FindAuthPolicyByID                        = findAuthPolicyByID
 	FindListenerByTwoPartKey                  = findListenerByTwoPartKey
+	FindListenerRuleByThreePartKey            = findListenerRuleByThreePartKey
 	FindResourceConfigurationByID             = findResourceConfigurationByID
 	FindResourceGatewayByID                   = findResourceGatewayByID
 	FindServiceByID                           = findServiceByID
