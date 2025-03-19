@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_api_gateway_api_keys` ([#39335](https://github.com/hashicorp/terraform-provider-aws/issues/39335))
 * **New Data Source:** `aws_eks_cluster_versions` ([#40741](https://github.com/hashicorp/terraform-provider-aws/issues/40741))
 * **New Data Source:** `aws_identitystore_group_memberships` ([#31589](https://github.com/hashicorp/terraform-provider-aws/issues/31589))
+* **New Data Source:** `aws_identitystore_users` ([#31688](https://github.com/hashicorp/terraform-provider-aws/issues/31688))
 * **New Resource:** `aws_athena_capacity_reservation` ([#41858](https://github.com/hashicorp/terraform-provider-aws/issues/41858))
 
 ENHANCEMENTS:
