@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
 * data-source/aws_lb: Add `ipam_pools` attribute ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
 * provider: Support `aws-marketplace` as a valid account ID in ARNs ([#41867](https://github.com/hashicorp/terraform-provider-aws/issues/41867))
+* resource/aws_appconfig_extension_association: Add plan-time validation of `extension_arn` and `resource_arn` ([#41907](https://github.com/hashicorp/terraform-provider-aws/issues/41907))
 * resource/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
