@@ -50,7 +50,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAuthPolicy,
+			Factory:  dataSourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
 			Name:     "Auth Policy",
 		},
