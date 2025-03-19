@@ -11,6 +11,7 @@ var (
 	ResourceListenerRule                      = resourceListenerRule
 	ResourceResourceConfiguration             = newResourceConfigurationResource
 	ResourceResourceGateway                   = newResourceGatewayResource
+	ResourceResourcePolicy                    = resourceResourcePolicy
 	ResourceService                           = resourceService
 	ResourceServiceNetwork                    = resourceServiceNetwork
 	ResourceServiceNetworkResourceAssociation = newServiceNetworkResourceAssociationResource
@@ -25,6 +26,7 @@ var (
 	FindListenerRuleByThreePartKey            = findListenerRuleByThreePartKey
 	FindResourceConfigurationByID             = findResourceConfigurationByID
 	FindResourceGatewayByID                   = findResourceGatewayByID
+	FindResourcePolicyByID                    = findResourcePolicyByID
 	FindServiceByID                           = findServiceByID
 	FindServiceNetworkByID                    = findServiceNetworkByID
 	FindServiceNetworkResourceAssociationByID = findServiceNetworkResourceAssociationByID
