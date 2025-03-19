@@ -49,7 +49,7 @@ func (d *dataSourceVPCEndpointAssociations) Schema(ctx context.Context, req data
 						"resource_accessibility": schema.StringAttribute{
 							Computed: true,
 						},
-						"resource_arn": schema.StringAttribute{
+						names.AttrResourceARN: schema.StringAttribute{
 							Computed: true,
 						},
 						"resource_configuration_group_arn": schema.StringAttribute{
