@@ -62,8 +62,8 @@ func (d *dataSourceVpcEndpointAssociations) Schema(ctx context.Context, req data
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"dns_entry":         schemaDnsEntry(ctx),
-						"private_dns_entry": schemaDnsEntry(ctx),
+						"dns_entry":         schemaDNSEntry(ctx),
+						"private_dns_entry": schemaDNSEntry(ctx),
 					},
 				},
 			},
@@ -71,9 +71,9 @@ func (d *dataSourceVpcEndpointAssociations) Schema(ctx context.Context, req data
 	}
 }
 
-func schemaDnsEntry(ctx context.Context) schema.ListNestedBlock {
+func schemaDNSEntry(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceVpcEndpointAssociationDnsEntryModel](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceVpcEndpointAssociationDNSEntryModel](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrDNSName: schema.StringAttribute{
@@ -136,15 +136,15 @@ type dataSourceVpcEndpointAssociationsModel struct {
 type dataSourceVpcEndpointAssociationModel struct {
 	AssociatedResourceAccessibility types.String                                                                   `tfsdk:"resource_accessibility"`
 	AssociatedResourceArn           types.String                                                                   `tfsdk:"resource_arn"`
-	DnsEntry                        fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationDnsEntryModel] `tfsdk:"dns_entry"`
+	DnsEntry                        fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationDNSEntryModel] `tfsdk:"dns_entry"`
 	ID                              types.String                                                                   `tfsdk:"id"`
-	PrivateDnsEntry                 fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationDnsEntryModel] `tfsdk:"private_dns_entry"`
+	PrivateDnsEntry                 fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationDNSEntryModel] `tfsdk:"private_dns_entry"`
 	ResourceConfigurationGroupArn   fwtypes.ARN                                                                    `tfsdk:"resource_configuration_group_arn"`
 	ServiceNetworkArn               fwtypes.ARN                                                                    `tfsdk:"service_network_arn"`
 	ServiceNetworkName              types.String                                                                   `tfsdk:"service_network_name"`
 }
 
-type dataSourceVpcEndpointAssociationDnsEntryModel struct {
+type dataSourceVpcEndpointAssociationDNSEntryModel struct {
 	DnsName      types.String `tfsdk:"dns_name"`
 	HostedZoneId types.String `tfsdk:"hosted_zone_id"`
 }

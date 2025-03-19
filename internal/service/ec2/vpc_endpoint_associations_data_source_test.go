@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VpcEndpointAssociationsDataSource_basic(t *testing.T) {
+func TestAccVPCEndpointAssociationsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	resourceConfigName := "aws_vpclattice_resource_configuration.test"
@@ -27,7 +27,7 @@ func TestAccEC2VpcEndpointAssociationsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointAssociationsDataSourceConfig_basic(rName),
+				Config: testAccVPCEndpointAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "associations.#", "1"),
@@ -42,7 +42,7 @@ func TestAccEC2VpcEndpointAssociationsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VpcEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
+func TestAccVPCEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	resourceConfigName := "aws_vpclattice_resource_configuration.test"
@@ -57,7 +57,7 @@ func TestAccEC2VpcEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointAssociationsDataSourceConfig_serviceNetwork(rName),
+				Config: testAccVPCEndpointAssociationsDataSourceConfig_serviceNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "associations.#", "1"),
@@ -73,7 +73,7 @@ func TestAccEC2VpcEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
 	})
 }
 
-func testAccVpcEndpointAssociationsDataSourceConfig_basic(rName string) string {
+func testAccVPCEndpointAssociationsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_resourceConfiguration(rName),
 		fmt.Sprintf(`
 data "aws_vpc_endpoint_associations" "test" {
@@ -83,7 +83,7 @@ data "aws_vpc_endpoint_associations" "test" {
 	)
 }
 
-func testAccVpcEndpointAssociationsDataSourceConfig_serviceNetwork(rName string) string {
+func testAccVPCEndpointAssociationsDataSourceConfig_serviceNetwork(rName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_serviceNetwork(rName),
 		fmt.Sprintf(`
 
