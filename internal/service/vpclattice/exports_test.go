@@ -6,6 +6,7 @@ package vpclattice
 // Exports for use in tests only.
 var (
 	ResourceAccessLogSubscription             = resourceAccessLogSubscription
+	ResourceAuthPolicy                        = resourceAuthPolicy
 	ResourceListener                          = resourceListener
 	ResourceResourceConfiguration             = newResourceConfigurationResource
 	ResourceResourceGateway                   = newResourceGatewayResource
@@ -18,6 +19,7 @@ var (
 	ResourceTargetGroupAttachment             = resourceTargetGroupAttachment
 
 	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
+	FindAuthPolicyByID                        = findAuthPolicyByID
 	FindListenerByTwoPartKey                  = findListenerByTwoPartKey
 	FindResourceConfigurationByID             = findResourceConfigurationByID
 	FindResourceGatewayByID                   = findResourceGatewayByID

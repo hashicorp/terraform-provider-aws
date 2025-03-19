@@ -49,7 +49,7 @@ func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	resourceID := d.Get("resource_identifier").(string)
-	out, err := findAuthPolicy(ctx, conn, resourceID)
+	out, err := findAuthPolicyByID(ctx, conn, resourceID)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, resourceID, err)
