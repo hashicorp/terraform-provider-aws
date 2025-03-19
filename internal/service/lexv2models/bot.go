@@ -433,7 +433,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

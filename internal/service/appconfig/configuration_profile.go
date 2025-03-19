@@ -118,7 +118,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 	}
 }
 
-func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -166,7 +166,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -222,7 +222,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -268,7 +268,7 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
@@ -305,7 +305,7 @@ func ConfigurationProfileParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandValidator(tfMap map[string]interface{}) awstypes.Validator {
+func expandValidator(tfMap map[string]any) awstypes.Validator {
 	validator := awstypes.Validator{}
 
 	// AppConfig API supports empty content
@@ -320,13 +320,13 @@ func expandValidator(tfMap map[string]interface{}) awstypes.Validator {
 	return validator
 }
 
-func expandValidators(tfList []interface{}) []awstypes.Validator {
+func expandValidators(tfList []any) []awstypes.Validator {
 	// AppConfig API requires a 0 length slice instead of a nil value
 	// when updating from N validators to 0/nil validators
 	validators := make([]awstypes.Validator, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -339,8 +339,8 @@ func expandValidators(tfList []interface{}) []awstypes.Validator {
 	return validators
 }
 
-func flattenValidator(validator awstypes.Validator) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenValidator(validator awstypes.Validator) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := validator.Content; v != nil {
 		tfMap[names.AttrContent] = aws.ToString(v)
@@ -351,12 +351,12 @@ func flattenValidator(validator awstypes.Validator) map[string]interface{} {
 	return tfMap
 }
 
-func flattenValidators(validators []awstypes.Validator) []interface{} {
+func flattenValidators(validators []awstypes.Validator) []any {
 	if len(validators) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, validator := range validators {
 		tfList = append(tfList, flattenValidator(validator))

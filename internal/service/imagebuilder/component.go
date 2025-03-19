@@ -131,7 +131,7 @@ func resourceComponent() *schema.Resource {
 	}
 }
 
-func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -187,7 +187,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceComponentRead(ctx, d, meta)...)
 }
 
-func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -222,7 +222,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -230,7 +230,7 @@ func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceComponentRead(ctx, d, meta)...)
 }
 
-func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

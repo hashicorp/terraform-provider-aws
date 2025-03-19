@@ -61,7 +61,7 @@ func resourceModelPackageGroup() *schema.Resource {
 	}
 }
 
-func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -89,7 +89,7 @@ func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceModelPackageGroupRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -120,7 +120,7 @@ func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceModelPackageGroupRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

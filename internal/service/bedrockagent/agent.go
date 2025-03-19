@@ -537,7 +537,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 }
 
 func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

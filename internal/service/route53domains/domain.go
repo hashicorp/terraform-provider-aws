@@ -607,7 +607,8 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Route 53 Domains Domain (%s) delete", domainName), err.Error())
 
 		return
@@ -615,7 +616,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	// Delete the associated Route 53 hosted zone.
 	if hostedZoneID := fwflex.StringValueFromFramework(ctx, data.HostedZoneID); hostedZoneID != "" {
-		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, domainName, true); err != nil {
+		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, domainName, true, timeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Hosted Zone (%s)", hostedZoneID), err.Error())
 
 			return

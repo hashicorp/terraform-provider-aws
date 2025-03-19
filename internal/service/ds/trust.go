@@ -468,7 +468,7 @@ func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
 		if tfresource.NotFound(err) {

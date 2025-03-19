@@ -429,6 +429,7 @@ Defaults to true.
   Cannot be set  with `replicateSourceDb`, `restoreToPointInTime`, `s3Import`, or `snapshotIdentifier`.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `customIamInstanceProfile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
+* `databaseInsightsMode` - (Optional) The mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
 * `dbName` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `dbSubnetGroupName` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
   DB instance will be created in the VPC associated with the DB subnet group.
@@ -708,4 +709,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8c72ee77c4819ae2d1e6c4175088084e6cf691e8c48e81f6e2b079d9907fcce5 -->
+<!-- cache-key: cdktf-0.20.8 input-170bb3fe17db99a19e0decb8cf130ef3d8124cee3b70926c6903689609912c96 -->
