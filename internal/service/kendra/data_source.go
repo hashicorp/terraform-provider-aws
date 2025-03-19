@@ -737,9 +737,11 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set(names.AttrConfiguration, flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+	configuration, err := flattenDataSourceConfiguration(resp.Configuration)
+	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+	d.Set(names.AttrConfiguration, configuration)
 
 	if err := d.Set("custom_document_enrichment_configuration", flattenCustomDocumentEnrichmentConfiguration(resp.CustomDocumentEnrichmentConfiguration)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -1402,9 +1404,9 @@ func expandDocumentAttributeValue(tfList []any) *types.DocumentAttributeValue {
 	return result
 }
 
-func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []any {
+func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) ([]any, error) {
 	if apiObject == nil {
-		return nil
+		return nil, nil
 	}
 
 	m := map[string]any{}
@@ -1418,10 +1420,14 @@ func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []
 	}
 
 	if v := apiObject.TemplateConfiguration; v != nil {
-		m["template_configuration"] = flattenTemplateConfiguration(v)
+		templateConfiguration, err := flattenTemplateConfiguration(v)
+		if err != nil {
+			return nil, err
+		}
+		m["template_configuration"] = templateConfiguration
 	}
 
-	return []any{m}
+	return []any{m}, nil
 }
 
 // S3 Configuration
@@ -1527,23 +1533,22 @@ func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []
 	return []any{m}
 }
 
-func flattenTemplateConfiguration(apiObject *types.TemplateConfiguration) []any {
+func flattenTemplateConfiguration(apiObject *types.TemplateConfiguration) ([]any, error) {
 	if apiObject == nil {
-		return nil
+		return nil, nil
 	}
 	template := map[string]any{}
 
 	if v := apiObject.Template; v != nil {
 		bytes, err := apiObject.Template.MarshalSmithyDocument()
 		if err != nil {
-			tfresource.SetLastError(err, nil)
-			return nil
-		} else {
-			template["template"] = string(bytes[:])
+			return nil, err
 		}
+
+		template["template"] = string(bytes[:])
 	}
 
-	return []any{template}
+	return []any{template}, nil
 }
 
 func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []any {
