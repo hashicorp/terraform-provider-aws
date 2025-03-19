@@ -43,6 +43,7 @@ Associations blocks (for `associations`) support the following attributes:
 * `resource_configuration_group_arn` - ARN of the Resource Group if the Resource is a member of a group
 * `service_network_arn` - Service Network ARN. Applicable for endpoints of type `ServiceNetwork`.
 * `service_network_name` - Service Network Name. Applicable for endpoints of type `ServiceNetwork`.
+* `tags` - Tags of the association.
 
 ### `dns_entry` Block
 

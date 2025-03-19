@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,6 +61,7 @@ func (d *dataSourceVPCEndpointAssociations) Schema(ctx context.Context, req data
 						"service_network_name": schema.StringAttribute{
 							Computed: true,
 						},
+						names.AttrTags: tftags.TagsAttributeComputedOnly(),
 					},
 					Blocks: map[string]schema.Block{
 						"dns_entry":         schemaDNSEntry(ctx),
@@ -142,6 +144,7 @@ type dataSourceVPCEndpointAssociationModel struct {
 	ResourceConfigurationGroupArn   fwtypes.ARN                                                                    `tfsdk:"resource_configuration_group_arn"`
 	ServiceNetworkArn               fwtypes.ARN                                                                    `tfsdk:"service_network_arn"`
 	ServiceNetworkName              types.String                                                                   `tfsdk:"service_network_name"`
+	Tags                            tftags.Map                                                                     `tfsdk:"tags"`
 }
 
 type dataSourceVPCEndpointAssociationDNSEntryModel struct {
