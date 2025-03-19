@@ -33,7 +33,7 @@ var Analyzer = &analysis.Analyzer{
 	Run: run,
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
 	callExprs := pass.ResultOf[testcheckresourceattrcallexpr.Analyzer].([]*ast.CallExpr)
 

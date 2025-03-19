@@ -38,7 +38,7 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+/revisions/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+/revisions/.+`)),
 				),
 			},
 			{

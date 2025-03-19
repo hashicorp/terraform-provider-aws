@@ -32,10 +32,10 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "memorydb", "cluster/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
@@ -44,8 +44,10 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_cluster_name", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
@@ -68,8 +70,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
@@ -95,10 +96,10 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_defaults(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "memorydb", "cluster/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
@@ -145,7 +146,7 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceCluster(), resourceName),
 				),
@@ -168,7 +169,7 @@ func TestAccMemoryDBCluster_nameGenerated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_noName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
@@ -191,7 +192,7 @@ func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_namePrefix(rName, "tftest-"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tftest-"),
@@ -216,7 +217,7 @@ func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_noTLS(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtFalse),
 				),
@@ -243,9 +244,37 @@ func TestAccMemoryDBCluster_create_withDataTiering(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_dataTiering(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_multiRegionClusterName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_cluster.test"
+	multiRegionClusterResourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_multiRegionClusterName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_region_cluster_name", multiRegionClusterResourceName, "multi_region_cluster_name"),
 				),
 			},
 			{
@@ -270,7 +299,7 @@ func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_kms(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
@@ -297,7 +326,7 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_port(rName, 9999),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "9999"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
@@ -325,7 +354,7 @@ func TestAccMemoryDBCluster_create_fromSnapshot(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_snapshotFrom(rName1, rName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_memorydb_cluster.test1"),
 					testAccCheckClusterExists(ctx, "aws_memorydb_cluster.test2"),
 				),
@@ -347,7 +376,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_finalSnapshotName(rName, rName+"-1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+"-1"),
 				),
@@ -360,7 +389,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_finalSnapshotName(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName),
 				),
@@ -373,7 +402,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_baseNetwork(rName), // empty Config not supported
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSnapshotExistsByName(ctx, rName),
 				),
 			},
@@ -394,7 +423,7 @@ func TestAccMemoryDBCluster_Update_aclName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_aclName(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", rName),
 				),
@@ -406,7 +435,7 @@ func TestAccMemoryDBCluster_Update_aclName(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_aclName(rName, "open-access"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
 				),
@@ -433,7 +462,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_description(rName, "Test 1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test 1"),
 				),
@@ -445,7 +474,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_description(rName, "Test 2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test 2"),
 				),
@@ -457,7 +486,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_description(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
@@ -485,7 +514,7 @@ func TestAccMemoryDBCluster_Update_engine(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engine(rName, "redis", "7.1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
@@ -497,7 +526,7 @@ func TestAccMemoryDBCluster_Update_engine(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_engine(rName, "valkey", "7.2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 				),
@@ -524,7 +553,7 @@ func TestAccMemoryDBCluster_Update_maintenanceWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_maintenanceWindow(rName, "thu:09:00-thu:10:00"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "thu:09:00-thu:10:00"),
 				),
@@ -536,7 +565,7 @@ func TestAccMemoryDBCluster_Update_maintenanceWindow(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_maintenanceWindow(rName, "fri:09:00-fri:10:00"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "fri:09:00-fri:10:00"),
 				),
@@ -563,7 +592,7 @@ func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_nodeType(rName, "db.t4g.small"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 				),
@@ -575,7 +604,7 @@ func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_nodeType(rName, "db.t4g.medium"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.medium"),
 				),
@@ -605,7 +634,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_numShards(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 				),
@@ -617,7 +646,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_numShards(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
 				),
@@ -642,7 +671,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_numShards(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
 				),
@@ -654,7 +683,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_numShards(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 				),
@@ -679,7 +708,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 				),
@@ -691,7 +720,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "2"),
 				),
@@ -716,7 +745,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 				),
@@ -728,7 +757,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "0"),
 				),
@@ -750,7 +779,7 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis7"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, "default.memorydb-redis7"),
 				),
@@ -762,14 +791,14 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_parameterGroup(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 				),
 			},
 			{
 				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis7"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, "default.memorydb-redis7"),
 				),
@@ -796,7 +825,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
@@ -809,7 +838,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_securityGroups(rName, 2, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"), // add one
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
@@ -827,7 +856,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // remove one
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
@@ -855,7 +884,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "2"),
 				),
@@ -867,7 +896,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 35),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "35"),
 				),
@@ -879,7 +908,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
 				),
@@ -906,7 +935,7 @@ func TestAccMemoryDBCluster_Update_snapshotWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_snapshotWindow(rName, "00:30-01:30"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "00:30-01:30"),
 				),
@@ -918,7 +947,7 @@ func TestAccMemoryDBCluster_Update_snapshotWindow(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_snapshotWindow(rName, "02:30-03:30"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:30-03:30"),
 				),
@@ -945,7 +974,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_snsTopic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
 				),
@@ -957,7 +986,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_snsTopicNull(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 				),
@@ -969,7 +998,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_snsTopic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
 				),
@@ -996,7 +1025,7 @@ func TestAccMemoryDBCluster_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -1009,7 +1038,7 @@ func TestAccMemoryDBCluster_tags(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -1018,7 +1047,7 @@ func TestAccMemoryDBCluster_tags(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -1041,10 +1070,10 @@ func TestAccMemoryDBCluster_valkeyEngine(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engine(rName, "valkey", "7.2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "memorydb", "cluster/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
@@ -1077,8 +1106,7 @@ func TestAccMemoryDBCluster_valkeyEngine(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
@@ -1188,10 +1216,6 @@ func testAccClusterConfig_basic(rName string) string {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {
@@ -1203,10 +1227,6 @@ resource "aws_memorydb_cluster" "test" {
   security_group_ids         = [aws_security_group.test.id]
   snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName),
 	)
@@ -1220,10 +1240,6 @@ func testAccClusterConfig_engine(rName, engine, engineVersion string) string {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {
@@ -1237,10 +1253,6 @@ resource "aws_memorydb_cluster" "test" {
   security_group_ids         = [aws_security_group.test.id]
   snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, engine, engineVersion),
 	)
@@ -1368,6 +1380,38 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, finalSnapshotName),
+	)
+}
+
+func testAccClusterConfig_multiRegionClusterName(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseNetwork(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_memorydb_multi_region_cluster" "test" {
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  num_shards                       = 2
+}
+
+resource "aws_memorydb_cluster" "test" {
+  acl_name                   = aws_memorydb_acl.test.id
+  auto_minor_version_upgrade = false
+  name                       = %[1]q
+  node_type                  = "db.r7g.xlarge"
+  num_shards                 = 2
+  security_group_ids         = [aws_security_group.test.id]
+  snapshot_retention_limit   = 7
+  subnet_group_name          = aws_memorydb_subnet_group.test.id
+
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+`, rName),
 	)
 }
 
@@ -1512,10 +1556,6 @@ resource "aws_security_group" "test" {
 
   vpc_id = aws_vpc.test.id
   name   = "%[1]s-${count.index}"
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {

@@ -39,8 +39,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Guardrail")
+// @FrameworkResource("aws_bedrock_guardrail", name="Guardrail")
 // @Tags(identifierAttribute="guardrail_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetGuardrailOutput")
+// @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
+// @Testing(importStateIdAttribute="guardrail_id")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
 
@@ -58,10 +61,6 @@ const (
 type resourceGuardrail struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceGuardrail) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_guardrail"
 }
 
 func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -548,10 +547,6 @@ func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.Import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
-func (r *resourceGuardrail) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
@@ -605,7 +600,7 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

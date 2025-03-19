@@ -46,10 +46,6 @@ type resourceInstanceState struct {
 	framework.WithNoOpDelete
 }
 
-func (r *resourceInstanceState) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rds_instance_state"
-}
-
 func (r *resourceInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -96,8 +92,6 @@ func (r *resourceInstanceState) Create(ctx context.Context, req resource.CreateR
 	if err := updateInstanceState(ctx, conn, instanceID, aws.ToString(instance.DBInstanceStatus), plan.State.ValueString(), r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", instanceID), err.Error())
 	}
-
-	plan.State = flex.StringToFramework(ctx, instance.DBInstanceStatus)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

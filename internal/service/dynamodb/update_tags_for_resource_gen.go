@@ -27,12 +27,12 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DynamoDB)
 	if len(removedTags) > 0 {
-		input := &dynamodb.UntagResourceInput{
+		input := dynamodb.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -42,12 +42,12 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DynamoDB)
 	if len(updatedTags) > 0 {
-		input := &dynamodb.TagResourceInput{
+		input := dynamodb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

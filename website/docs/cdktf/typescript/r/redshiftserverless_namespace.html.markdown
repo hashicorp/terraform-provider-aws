@@ -12,6 +12,8 @@ description: |-
 
 Creates a new Amazon Redshift Serverless Namespace.
 
+-> **Note:** Write-Only argument `admin_password_wo` is available to use in place of `admin_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```typescript
@@ -40,7 +42,10 @@ This resource supports the following arguments:
 
 * `adminPasswordSecretKmsKeyId` - (Optional) ID of the KMS key used to encrypt the namespace's admin credentials secret.
 * `adminUserPassword` - (Optional) The password of the administrator for the first database created in the namespace.
-  Conflicts with `manageAdminPassword`.
+  Conflicts with `manageAdminPassword` and `adminUserPasswordWo`.
+* `adminUserPasswordWo` - (Optional, Write-Only) The password of the administrator for the first database created in the namespace.
+  Conflicts with `manageAdminPassword` and `adminUserPassword`.
+* `adminUserPasswordWoVersion` - (Optional) Used together with `adminUserPasswordWo` to trigger an update. Increment this value when an update to the `adminUserPasswordWo` is required
 * `adminUsername` - (Optional) The username of the administrator for the first database created in the namespace.
 * `dbName` - (Optional) The name of the first database created in the namespace.
 * `defaultIamRoleArn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to set as a default in the namespace. When specifying `defaultIamRoleArn`, it also must be part of `iamRoles`.
@@ -49,13 +54,14 @@ This resource supports the following arguments:
 * `logExports` - (Optional) The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespaceName` - (Required) The name of the namespace.
 * `manageAdminPassword` - (Optional) Whether to use AWS SecretManager to manage namespace's admin credentials.
-  Conflicts with `adminUserPassword`.
+  Conflicts with `adminUserPassword` and `adminUserPasswordWo`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `adminPasswordSecretArn` - Amazon Resource Name (ARN) of namespace's admin user credentials secret.
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.
 * `namespaceId` - The Redshift Namespace ID.
@@ -93,4 +99,4 @@ Using `terraform import`, import Redshift Serverless Namespaces using the `names
 % terraform import aws_redshiftserverless_namespace.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8d0f329acb579c9de6ce6c6afe0ed3c4d9e31fd6288ff616419eeab5e656c8db -->
+<!-- cache-key: cdktf-0.20.8 input-a7fa84b26a505d053ab1a264484c942dfcffb8ab785d1ec48be4868cb5fe59bf -->

@@ -98,11 +98,14 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
@@ -110,7 +113,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 			// ObjectLockEnabled is required by the API, even if configured directly on the S3 bucket
 			// during creation, else a MalformedXML error will be returned.
 			ObjectLockEnabled: types.ObjectLockEnabled(d.Get("object_lock_enabled").(string)),
-			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]interface{})),
+			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]any)),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -125,7 +128,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		input.Token = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutObjectLockConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -137,9 +140,9 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Object Lock Configuration: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -150,13 +153,17 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 	return append(diags, resourceBucketObjectLockConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
@@ -181,13 +188,17 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutObjectLockConfigurationInput{
@@ -196,7 +207,7 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 			// ObjectLockEnabled is required by the API, even if configured directly on the S3 bucket
 			// during creation, else a MalformedXML error will be returned.
 			ObjectLockEnabled: types.ObjectLockEnabled(d.Get("object_lock_enabled").(string)),
-			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]interface{})),
+			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]any)),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -220,13 +231,17 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 	return append(diags, resourceBucketObjectLockConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutObjectLockConfigurationInput{
@@ -288,31 +303,31 @@ func findObjectLockConfiguration(ctx context.Context, conn *s3.Client, bucket, e
 	return output.ObjectLockConfiguration, nil
 }
 
-func expandObjectLockRule(l []interface{}) *types.ObjectLockRule {
+func expandObjectLockRule(l []any) *types.ObjectLockRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	rule := &types.ObjectLockRule{}
 
-	if v, ok := tfMap["default_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["default_retention"].([]any); ok && len(v) > 0 && v[0] != nil {
 		rule.DefaultRetention = expandDefaultRetention(v)
 	}
 
 	return rule
 }
 
-func expandDefaultRetention(l []interface{}) *types.DefaultRetention {
+func expandDefaultRetention(l []any) *types.DefaultRetention {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -334,30 +349,30 @@ func expandDefaultRetention(l []interface{}) *types.DefaultRetention {
 	return dr
 }
 
-func flattenObjectLockRule(rule *types.ObjectLockRule) []interface{} {
+func flattenObjectLockRule(rule *types.ObjectLockRule) []any {
 	if rule == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if rule.DefaultRetention != nil {
 		m["default_retention"] = flattenDefaultRetention(rule.DefaultRetention)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDefaultRetention(dr *types.DefaultRetention) []interface{} {
+func flattenDefaultRetention(dr *types.DefaultRetention) []any {
 	if dr == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"days":         dr.Days,
 		names.AttrMode: dr.Mode,
 		"years":        dr.Years,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

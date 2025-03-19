@@ -284,9 +284,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDashboards(ctx, &quicksight.ListDashboardsInput{
+	input := quicksight.ListDashboardsInput{
 		AwsAccountId: aws.String(acctest.Ct12Digit),
-	},
+	}
+	_, err := client.ListDashboards(ctx, &input,
 		func(opts *quicksight.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
@@ -542,7 +543,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 

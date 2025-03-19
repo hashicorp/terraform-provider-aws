@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListApplications(ctx, &codedeploy.ListApplicationsInput{},
+	input := codedeploy.ListApplicationsInput{}
+	_, err := client.ListApplications(ctx, &input,
 		func(opts *codedeploy.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
@@ -619,7 +620,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 

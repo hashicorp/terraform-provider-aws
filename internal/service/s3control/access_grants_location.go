@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Location")
+// @FrameworkResource("aws_s3control_access_grants_location", name="Access Grants Location")
 // @Tags
 func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsLocationResource{}
@@ -40,10 +40,6 @@ func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConf
 type accessGrantsLocationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (r *accessGrantsLocationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_location"
 }
 
 func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -100,7 +96,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantsLocationInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
@@ -110,7 +106,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
 		return conn.CreateAccessGrantsLocation(ctx, input)
 	}, errCodeInvalidIAMRole)
 
@@ -209,7 +205,7 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
 			return conn.UpdateAccessGrantsLocation(ctx, input)
 		}, errCodeInvalidIAMRole)
 
@@ -248,7 +244,7 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 	}
 
 	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
 		return conn.DeleteAccessGrantsLocation(ctx, input)
 	}, errCodeAccessGrantsLocationNotEmptyError)
 
@@ -261,10 +257,6 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 
 		return
 	}
-}
-
-func (r *accessGrantsLocationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantsLocationOutput, error) {

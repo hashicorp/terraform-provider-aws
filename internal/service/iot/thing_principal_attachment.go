@@ -44,7 +44,7 @@ func resourceThingPrincipalAttachment() *schema.Resource {
 	}
 }
 
-func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -67,7 +67,7 @@ func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceThingPrincipalAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -89,7 +89,7 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 

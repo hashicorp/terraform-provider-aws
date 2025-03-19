@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListConfigurationManagers(ctx, &ssmquicksetup.ListConfigurationManagersInput{},
+	input := ssmquicksetup.ListConfigurationManagersInput{}
+	_, err := client.ListConfigurationManagers(ctx, &input,
 		func(opts *ssmquicksetup.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
@@ -539,7 +540,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Service Principal")
+// @FrameworkDataSource("aws_service_principal", name="Service Principal")
 func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &servicePrincipalDataSource{}
 
@@ -25,10 +25,6 @@ func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithCo
 
 type servicePrincipalDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*servicePrincipalDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service_principal"
 }
 
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -79,7 +75,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
-		name := d.Meta().Region
+		name := d.Meta().Region(ctx)
 		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {

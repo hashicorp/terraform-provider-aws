@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,7 +73,6 @@ func resourceServerCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
@@ -82,7 +80,6 @@ func resourceServerCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
@@ -90,7 +87,6 @@ func resourceServerCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
-				ForceNew: true,
 			},
 			names.AttrPrivateKey: {
 				Type:             schema.TypeString,
@@ -107,12 +103,10 @@ func resourceServerCertificate() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -154,7 +148,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 		err := serverCertificateCreateTags(ctx, conn, sslCertName, tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 		}
 
@@ -166,7 +160,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -206,20 +200,62 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// Tags only.
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	if d.HasChanges(names.AttrName, names.AttrNamePrefix, names.AttrPath) {
+		input := &iam.UpdateServerCertificateInput{}
+
+		if d.HasChange(names.AttrName) {
+			oldName, newName := d.GetChange(names.AttrName)
+
+			// Handle both a name change and a switch to using a name prefix
+			newSSLCertName := create.Name(newName.(string), d.Get(names.AttrNamePrefix).(string))
+
+			input.ServerCertificateName = aws.String(oldName.(string))
+			input.NewServerCertificateName = aws.String(newSSLCertName)
+		} else if d.HasChange(names.AttrNamePrefix) {
+			oldName := d.Get(names.AttrName).(string)
+
+			// Handle only a name prefix change using an empty string as name (as it hasn't been changed)
+			newSSLCertName := create.Name("", d.Get(names.AttrNamePrefix).(string))
+
+			input.ServerCertificateName = aws.String(oldName)
+			input.NewServerCertificateName = aws.String(newSSLCertName)
+		}
+		nameChanged := input.NewServerCertificateName != nil
+
+		if d.HasChange(names.AttrPath) {
+			if !nameChanged {
+				name := d.Get(names.AttrName).(string)
+				input.ServerCertificateName = aws.String(name)
+			}
+			input.NewPath = aws.String(d.Get(names.AttrPath).(string))
+		}
+
+		_, err := conn.UpdateServerCertificate(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM Server Certificate (%s): %s", d.Id(), err)
+		}
+
+		// If the name was changed, the new name must be set in the state for tag update that precedes resource read
+		if nameChanged {
+			d.Set(names.AttrName, input.NewServerCertificateName)
+		}
+	}
 
 	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DeleteConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DeleteConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteServerCertificate(ctx, &iam.DeleteServerCertificateInput{
 			ServerCertificateName: aws.String(d.Get(names.AttrName).(string)),
 		})
@@ -236,7 +272,7 @@ func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	// private_key can't be fetched from any API call
 	return []*schema.ResourceData{d}, nil
@@ -267,7 +303,7 @@ func findServerCertificateByName(ctx context.Context, conn *iam.Client, name str
 	return output.ServerCertificate, nil
 }
 
-func normalizeCert(cert interface{}) string {
+func normalizeCert(cert any) string {
 	if cert == nil || cert == (*string)(nil) {
 		return ""
 	}

@@ -60,10 +60,6 @@ type appAuthorizationResource struct {
 	framework.WithImportByID
 }
 
-func (*appAuthorizationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_authorization"
-}
-
 func (r *appAuthorizationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -383,10 +379,11 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteAppAuthorization(ctx, &appfabric.DeleteAppAuthorizationInput{
+	input := appfabric.DeleteAppAuthorizationInput{
 		AppAuthorizationIdentifier: fwflex.StringFromFramework(ctx, data.AppAuthorizationARN),
 		AppBundleIdentifier:        fwflex.StringFromFramework(ctx, data.AppBundleARN),
-	})
+	}
+	_, err := conn.DeleteAppAuthorization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -403,10 +400,6 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 
 		return
 	}
-}
-
-func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
@@ -436,7 +429,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 }
 
 func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
 
 		if tfresource.NotFound(err) {

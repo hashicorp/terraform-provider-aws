@@ -140,7 +140,7 @@ func resourceType() *schema.Resource {
 	}
 }
 
-func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -155,8 +155,8 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfig = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfig = expandLoggingConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrType); ok {
@@ -181,7 +181,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
 
-func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -210,7 +210,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
-		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
+		if err := d.Set("logging_config", []any{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {
@@ -228,14 +228,15 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Type: %s", d.Id())
-	_, err := conn.DeregisterType(ctx, &cloudformation.DeregisterTypeInput{
+	input := cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterType(ctx, &input)
 
 	// Must deregister type if removing final LIVE version. This error can also occur
 	// when the type is already DEPRECATED.
@@ -370,7 +371,7 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 }
 
 func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTypeRegistrationByToken(ctx, conn, registrationToken)
 
 		if tfresource.NotFound(err) {
@@ -405,7 +406,7 @@ func waitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 	return nil, err
 }
 
-func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
+func expandLoggingConfig(tfMap map[string]any) *awstypes.LoggingConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -423,7 +424,7 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 	return apiObject
 }
 
-func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSetOperationPreferences {
+func expandOperationPreferences(tfMap map[string]any) *awstypes.StackSetOperationPreferences {
 	if tfMap == nil {
 		return nil
 	}
@@ -467,12 +468,12 @@ func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSet
 	return apiObject
 }
 
-func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]interface{} {
+func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LogGroupName; v != nil {
 		tfMap[names.AttrLogGroupName] = aws.ToString(v)

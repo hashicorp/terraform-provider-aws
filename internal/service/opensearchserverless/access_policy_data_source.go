@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Access Policy")
+// @FrameworkDataSource("aws_opensearchserverless_access_policy", name="Access Policy")
 func newDataSourceAccessPolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAccessPolicy{}, nil
 }
@@ -30,10 +30,6 @@ const (
 
 type dataSourceAccessPolicy struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceAccessPolicy) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_access_policy"
 }
 
 func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

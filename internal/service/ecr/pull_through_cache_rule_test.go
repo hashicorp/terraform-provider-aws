@@ -36,7 +36,7 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "credential_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -66,7 +66,7 @@ func TestAccECRPullThroughCacheRule_credentialARN(t *testing.T) {
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "credential_arn"),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "registry-1.docker.io"),
 				),
 			},
@@ -105,7 +105,6 @@ func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("ECR Pull Through Cache Rule is not supported in GovCloud partition")
@@ -118,10 +117,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
-				),
+				Config:      testAccPullThroughCacheRuleConfig_failWhenAlreadyExists(repositoryPrefix),
 				ExpectError: regexache.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
 			},
 		},
@@ -144,7 +140,7 @@ func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -222,7 +218,7 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
 `, repositoryPrefix)
 }
 
-func testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix string) string {
+func testAccPullThroughCacheRuleConfig_failWhenAlreadyExists(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = %[1]q

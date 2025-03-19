@@ -56,10 +56,6 @@ type applicationResource struct {
 	framework.WithTimeouts
 }
 
-func (*applicationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_m2_application"
-}
-
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -161,7 +157,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateApplication(ctx, &input)
 	}, "does not have proper Trust Policy for M2 service")
 
@@ -190,7 +186,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	data.CurrentVersion = fwflex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
+	data.CurrentVersion = fwflex.Int32ToFrameworkInt64(ctx, app.LatestVersion.ApplicationVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -241,7 +237,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Additional fields.
-	data.CurrentVersion = fwflex.Int32ToFramework(ctx, outputGAV.ApplicationVersion)
+	data.CurrentVersion = fwflex.Int32ToFrameworkInt64(ctx, outputGAV.ApplicationVersion)
 	data.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &definitionModel{
 		Content:    fwflex.StringToFramework(ctx, outputGAV.DefinitionContent),
 		S3Location: types.StringNull(),
@@ -266,7 +262,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	if !new.Definition.Equal(old.Definition) || !new.Description.Equal(old.Description) {
 		input := &m2.UpdateApplicationInput{
 			ApplicationId:             fwflex.StringFromFramework(ctx, new.ID),
-			CurrentApplicationVersion: fwflex.Int32FromFramework(ctx, old.CurrentVersion),
+			CurrentApplicationVersion: fwflex.Int32FromFrameworkInt64(ctx, old.CurrentVersion),
 		}
 
 		if !new.Definition.Equal(old.Definition) {
@@ -332,10 +328,6 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) { //nolint:unparam
@@ -433,7 +425,7 @@ func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id
 }
 
 func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -449,7 +441,7 @@ func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.St
 }
 
 func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationVersionByTwoPartKey(ctx, conn, id, version)
 
 		if tfresource.NotFound(err) {

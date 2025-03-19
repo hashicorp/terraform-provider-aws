@@ -62,7 +62,7 @@ func resourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 	}
 }
 
-func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -85,7 +85,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d
 	return append(diags, resourceWebsiteCertificateAuthorityAssociationRead(ctx, d, meta)...)
 }
 
-func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -114,7 +114,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *
 	return diags
 }
 
-func resourceWebsiteCertificateAuthorityAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebsiteCertificateAuthorityAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -177,13 +177,14 @@ func findWebsiteCertificateAuthorityByARNAndID(ctx context.Context, conn *workli
 }
 
 func websiteCertificateAuthorityAssociationStateRefresh(ctx context.Context, conn *worklink.Client, websiteCaID, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		emptyResp := &worklink.DescribeWebsiteCertificateAuthorityOutput{}
 
-		resp, err := conn.DescribeWebsiteCertificateAuthority(ctx, &worklink.DescribeWebsiteCertificateAuthorityInput{
+		input := worklink.DescribeWebsiteCertificateAuthorityInput{
 			FleetArn:    aws.String(arn),
 			WebsiteCaId: aws.String(websiteCaID),
-		})
+		}
+		resp, err := conn.DescribeWebsiteCertificateAuthority(ctx, &input)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return emptyResp, "DELETED", nil
 		}

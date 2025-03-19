@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_listener", name="Listener")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -39,7 +39,7 @@ func resourceListener() *schema.Resource {
 
 		// Id returned by GetListener does not contain required service name, use a custom import function
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("unexpected format of ID (%q), expected SERVICE-ID/LISTENER-ID", d.Id())
@@ -157,8 +157,6 @@ func resourceListener() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -166,13 +164,13 @@ const (
 	ResNameListener = "Listener"
 )
 
-func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateListenerInput{
 		Name:          aws.String(d.Get(names.AttrName).(string)),
-		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
+		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),
 		Tags:          getTagsIn(ctx),
 	}
@@ -214,7 +212,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -251,7 +249,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -266,7 +264,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		// Cannot edit listener name, protocol, or port after creation
 		if d.HasChanges(names.AttrDefaultAction) {
-			in.DefaultAction = expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{}))
+			in.DefaultAction = expandDefaultAction(d.Get(names.AttrDefaultAction).([]any))
 		}
 
 		log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
@@ -279,7 +277,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -287,10 +285,11 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	listenerId := d.Get("listener_id").(string)
 
 	log.Printf("[INFO] Deleting VPCLattice Listener %s", d.Id())
-	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
+	input := vpclattice.DeleteListenerInput{
 		ListenerIdentifier: aws.String(listenerId),
 		ServiceIdentifier:  aws.String(serviceId),
-	})
+	}
+	_, err := conn.DeleteListener(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -329,11 +328,11 @@ func findListenerByTwoPartKey(ctx context.Context, conn *vpclattice.Client, list
 }
 
 // Flatten function for listener rule actions
-func flattenListenerRuleActions(config types.RuleAction) []interface{} {
-	m := map[string]interface{}{}
+func flattenListenerRuleActions(config types.RuleAction) []any {
+	m := map[string]any{}
 
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	switch v := config.(type) {
@@ -343,43 +342,43 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 		m["forward"] = flattenComplexDefaultActionForward(&v.Value)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // Flatten function for fixed_response action
-func flattenFixedResponseAction(response *types.FixedResponseAction) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenFixedResponseAction(response *types.FixedResponseAction) []any {
+	tfMap := map[string]any{}
 
 	if v := response.StatusCode; v != nil {
 		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Flatten function for forward action
-func flattenComplexDefaultActionForward(forwardAction *types.ForwardAction) []interface{} {
+func flattenComplexDefaultActionForward(forwardAction *types.ForwardAction) []any {
 	if forwardAction == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"target_groups": flattenDefaultActionForwardTargetGroups(forwardAction.TargetGroups),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // Flatten function for target_groups
-func flattenDefaultActionForwardTargetGroups(groups []types.WeightedTargetGroup) []interface{} {
+func flattenDefaultActionForwardTargetGroups(groups []types.WeightedTargetGroup) []any {
 	if len(groups) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var targetGroups []interface{}
+	var targetGroups []any
 
 	for _, targetGroup := range groups {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"target_group_identifier": aws.ToString(targetGroup.TargetGroupIdentifier),
 			names.AttrWeight:          aws.ToInt32(targetGroup.Weight),
 		}
@@ -390,17 +389,17 @@ func flattenDefaultActionForwardTargetGroups(groups []types.WeightedTargetGroup)
 }
 
 // Expand function for default_action
-func expandDefaultAction(l []interface{}) types.RuleAction {
+func expandDefaultAction(l []any) types.RuleAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	lRaw := l[0].(map[string]interface{})
+	lRaw := l[0].(map[string]any)
 
-	if v, ok := lRaw["forward"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := lRaw["forward"].([]any); ok && len(v) > 0 {
 		return &types.RuleActionMemberForward{
 			Value: *expandDefaultActionForwardAction(v),
 		}
-	} else if v, ok := lRaw["fixed_response"].([]interface{}); ok && len(v) > 0 {
+	} else if v, ok := lRaw["fixed_response"].([]any); ok && len(v) > 0 {
 		return &types.RuleActionMemberFixedResponse{
 			Value: *expandDefaultActionFixedResponseStatus(v),
 		}
@@ -410,12 +409,12 @@ func expandDefaultAction(l []interface{}) types.RuleAction {
 }
 
 // Expand function for forward action
-func expandDefaultActionForwardAction(l []interface{}) *types.ForwardAction {
-	lRaw := l[0].(map[string]interface{})
+func expandDefaultActionForwardAction(l []any) *types.ForwardAction {
+	lRaw := l[0].(map[string]any)
 
 	forwardAction := &types.ForwardAction{}
 
-	if v, ok := lRaw["target_groups"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := lRaw["target_groups"].([]any); ok && len(v) > 0 {
 		forwardAction.TargetGroups = expandForwardTargetGroupList(v)
 	}
 
@@ -423,11 +422,11 @@ func expandDefaultActionForwardAction(l []interface{}) *types.ForwardAction {
 }
 
 // Expand function for target_groups
-func expandForwardTargetGroupList(tfList []interface{}) []types.WeightedTargetGroup {
+func expandForwardTargetGroupList(tfList []any) []types.WeightedTargetGroup {
 	var targetGroups []types.WeightedTargetGroup
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -444,8 +443,8 @@ func expandForwardTargetGroupList(tfList []interface{}) []types.WeightedTargetGr
 }
 
 // Expand function for fixed_response action
-func expandDefaultActionFixedResponseStatus(l []interface{}) *types.FixedResponseAction {
-	lRaw := l[0].(map[string]interface{})
+func expandDefaultActionFixedResponseStatus(l []any) *types.FixedResponseAction {
+	lRaw := l[0].(map[string]any)
 
 	fixedResponseAction := &types.FixedResponseAction{}
 

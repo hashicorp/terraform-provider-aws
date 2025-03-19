@@ -54,7 +54,7 @@ func resourceLambdaFunctionAssociation() *schema.Resource {
 	}
 }
 
-func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -79,7 +79,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceLambdaFunctionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -119,10 +119,11 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 	instanceID, functionARN := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Connect Lambda Function Association: %s", d.Id())
-	_, err = conn.DisassociateLambdaFunction(ctx, &connect.DisassociateLambdaFunctionInput{
+	input := connect.DisassociateLambdaFunctionInput{
 		InstanceId:  aws.String(instanceID),
 		FunctionArn: aws.String(functionARN),
-	})
+	}
+	_, err = conn.DisassociateLambdaFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

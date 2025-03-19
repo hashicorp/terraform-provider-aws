@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_service_network_vpc_association", name="Service Network VPC Association")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceServiceNetworkVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkVPCAssociationCreate,
@@ -79,8 +79,6 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -88,7 +86,7 @@ const (
 	ResNameServiceNetworkVPCAssociation = "ServiceNetworkVPCAssociation"
 )
 
-func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -100,7 +98,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
+		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	out, err := conn.CreateServiceNetworkVpcAssociation(ctx, in)
@@ -121,7 +119,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceServiceNetworkVPCAssociationRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -147,7 +145,7 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -156,7 +154,7 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 		}
 
 		if d.HasChange(names.AttrSecurityGroupIDs) {
-			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]interface{}))
+			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]any))
 		}
 
 		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork VPC Association (%s): %#v", d.Id(), in)
@@ -169,15 +167,16 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceServiceNetworkVPCAssociationRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
 
-	_, err := conn.DeleteServiceNetworkVpcAssociation(ctx, &vpclattice.DeleteServiceNetworkVpcAssociationInput{
+	input := vpclattice.DeleteServiceNetworkVpcAssociationInput{
 		ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteServiceNetworkVpcAssociation(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -253,7 +252,7 @@ func waitServiceNetworkVPCAssociationDeleted(ctx context.Context, conn *vpclatti
 }
 
 func statusServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findServiceNetworkVPCAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

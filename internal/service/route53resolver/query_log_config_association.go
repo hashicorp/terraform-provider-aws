@@ -49,7 +49,7 @@ func resourceQueryLogConfigAssociation() *schema.Resource {
 	}
 }
 
-func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -73,7 +73,7 @@ func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQueryLogConfigAssociationRead(ctx, d, meta)...)
 }
 
-func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -146,7 +146,7 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 }
 
 func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResolverQueryLogConfigAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

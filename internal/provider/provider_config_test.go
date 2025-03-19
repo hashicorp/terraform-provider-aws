@@ -28,6 +28,7 @@ import (
 // * https://github.com/aws/aws-sdk-go-v2/issues/2363: leading whitespace
 // * https://github.com/aws/aws-sdk-go-v2/issues/2369: trailing `#` in, e.g. SSO Start URLs
 func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
+	ctx := context.TODO()
 	testcases := map[string]struct {
 		Config                  map[string]any
 		SharedConfigurationFile string
@@ -40,7 +41,7 @@ region = us-west-2
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-west-2"; a != e {
+				if a, e := meta.Region(ctx), "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -53,7 +54,7 @@ region = us-west-2
 	`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-west-2"; a != e {
+				if a, e := meta.Region(ctx), "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -67,7 +68,7 @@ region = us-west-2
 		`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-west-2"; a != e {
+				if a, e := meta.Region(ctx), "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -87,7 +88,7 @@ region = us-west-2
 			`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-east-1"; a != e {
+				if a, e := meta.Region(ctx), "us-east-1"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -106,7 +107,7 @@ region = us-east-1
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-east-1"; a != e {
+				if a, e := meta.Region(ctx), "us-east-1"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -149,7 +150,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 			maps.Copy(config, tc.Config)
 
 			if tc.SharedConfigurationFile != "" {
-				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
+				file, err := os.CreateTemp(t.TempDir(), "aws-sdk-go-base-shared-configuration-file")
 
 				if err != nil {
 					t.Fatalf("unexpected error creating temporary shared configuration file: %s", err)

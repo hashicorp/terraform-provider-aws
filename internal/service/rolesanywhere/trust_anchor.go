@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -134,10 +133,7 @@ func resourceTrustAnchor() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			customizeDiffNotificationSettings,
-		),
+		CustomizeDiff: customizeDiffNotificationSettings,
 	}
 }
 
@@ -145,7 +141,7 @@ func resourceTrustAnchor() *schema.Resource {
 // Since notification settings cannot be updated, we need to force a resource recreation when they change, while at the same time allowing computed values.
 // Because both computed and user-defined arguments need to be supported, a custom diff function is required to handle this.
 // The function checks the diff, and if the difference is due to computed value change, the diff is suppressed based on the configuredBy attribute.
-func customizeDiffNotificationSettings(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func customizeDiffNotificationSettings(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	oldSet, newSet := diff.GetChange("notification_settings")
 
 	oldSetTyped, okOld := oldSet.(*schema.Set)
@@ -167,7 +163,7 @@ func customizeDiffNotificationSettings(_ context.Context, diff *schema.ResourceD
 			}
 		}
 		if !found {
-			if object, okNew := obj1.(map[string]interface{}); okNew && object["configured_by"] == configuredByDefault {
+			if object, okNew := obj1.(map[string]any); okNew && object["configured_by"] == configuredByDefault {
 				if err := diff.Clear("notification_settings"); err != nil {
 					return err
 				}
@@ -179,7 +175,7 @@ func customizeDiffNotificationSettings(_ context.Context, diff *schema.ResourceD
 	return nil
 }
 
-func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -187,7 +183,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &rolesanywhere.CreateTrustAnchorInput{
 		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		Name:    aws.String(name),
-		Source:  expandSource(d.Get(names.AttrSource).([]interface{})),
+		Source:  expandSource(d.Get(names.AttrSource).([]any)),
 		Tags:    getTagsIn(ctx),
 	}
 
@@ -207,7 +203,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTrustAnchorRead(ctx, d, meta)...)
 }
 
-func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -238,7 +234,7 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -246,7 +242,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &rolesanywhere.UpdateTrustAnchorInput{
 			TrustAnchorId: aws.String(d.Id()),
 			Name:          aws.String(d.Get(names.AttrName).(string)),
-			Source:        expandSource(d.Get(names.AttrSource).([]interface{})),
+			Source:        expandSource(d.Get(names.AttrSource).([]any)),
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
@@ -273,7 +269,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTrustAnchorRead(ctx, d, meta)...)
 }
 
-func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -318,25 +314,25 @@ func findTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id str
 	return out.TrustAnchor, nil
 }
 
-func flattenSource(apiObject *awstypes.Source) []interface{} {
+func flattenSource(apiObject *awstypes.Source) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m[names.AttrSourceType] = apiObject.SourceType
 	m["source_data"] = flattenSourceData(apiObject.SourceData)
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSourceData(apiObject awstypes.SourceData) []interface{} {
+func flattenSourceData(apiObject awstypes.SourceData) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	switch v := apiObject.(type) {
 	case *awstypes.SourceDataMemberAcmPcaArn:
@@ -349,15 +345,15 @@ func flattenSourceData(apiObject awstypes.SourceData) []interface{} {
 		log.Println("union is nil or unknown type")
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNotificationSettings(apiObjects []awstypes.NotificationSettingDetail) []map[string]interface{} {
+func flattenNotificationSettings(apiObjects []awstypes.NotificationSettingDetail) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenNotificationSetting(&apiObject))
@@ -366,12 +362,12 @@ func flattenNotificationSettings(apiObjects []awstypes.NotificationSettingDetail
 	return tfList
 }
 
-func flattenNotificationSetting(apiObject *awstypes.NotificationSettingDetail) map[string]interface{} {
+func flattenNotificationSetting(apiObject *awstypes.NotificationSettingDetail) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"channel": apiObject.Channel,
 		"event":   apiObject.Event,
 	}
@@ -391,12 +387,12 @@ func flattenNotificationSetting(apiObject *awstypes.NotificationSettingDetail) m
 	return tfMap
 }
 
-func expandSource(tfList []interface{}) *awstypes.Source {
+func expandSource(tfList []any) *awstypes.Source {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -407,18 +403,18 @@ func expandSource(tfList []interface{}) *awstypes.Source {
 		result.SourceType = awstypes.TrustAnchorType(v)
 	}
 
-	if v, ok := tfMap["source_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["source_data"].([]any); ok && len(v) > 0 && v[0] != nil {
 		if result.SourceType == awstypes.TrustAnchorTypeAwsAcmPca {
-			result.SourceData = expandSourceDataACMPCA(v[0].(map[string]interface{}))
+			result.SourceData = expandSourceDataACMPCA(v[0].(map[string]any))
 		} else if result.SourceType == awstypes.TrustAnchorTypeCertificateBundle {
-			result.SourceData = expandSourceDataCertificateBundle(v[0].(map[string]interface{}))
+			result.SourceData = expandSourceDataCertificateBundle(v[0].(map[string]any))
 		}
 	}
 
 	return result
 }
 
-func expandNotificationSettings(tfList []interface{}) []awstypes.NotificationSetting {
+func expandNotificationSettings(tfList []any) []awstypes.NotificationSetting {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -426,7 +422,7 @@ func expandNotificationSettings(tfList []interface{}) []awstypes.NotificationSet
 	apiObjects := make([]awstypes.NotificationSetting, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -437,7 +433,7 @@ func expandNotificationSettings(tfList []interface{}) []awstypes.NotificationSet
 	return apiObjects
 }
 
-func expandNotificationSetting(tfMap map[string]interface{}) awstypes.NotificationSetting {
+func expandNotificationSetting(tfMap map[string]any) awstypes.NotificationSetting {
 	apiObject := awstypes.NotificationSetting{}
 
 	if v, ok := tfMap["channel"].(string); ok {
@@ -459,7 +455,7 @@ func expandNotificationSetting(tfMap map[string]interface{}) awstypes.Notificati
 	return apiObject
 }
 
-func expandSourceDataACMPCA(tfMap map[string]interface{}) *awstypes.SourceDataMemberAcmPcaArn {
+func expandSourceDataACMPCA(tfMap map[string]any) *awstypes.SourceDataMemberAcmPcaArn {
 	result := &awstypes.SourceDataMemberAcmPcaArn{}
 
 	if v, ok := tfMap["acm_pca_arn"].(string); ok && v != "" {
@@ -469,7 +465,7 @@ func expandSourceDataACMPCA(tfMap map[string]interface{}) *awstypes.SourceDataMe
 	return result
 }
 
-func expandSourceDataCertificateBundle(tfMap map[string]interface{}) *awstypes.SourceDataMemberX509CertificateData {
+func expandSourceDataCertificateBundle(tfMap map[string]any) *awstypes.SourceDataMemberX509CertificateData {
 	result := &awstypes.SourceDataMemberX509CertificateData{}
 
 	if v, ok := tfMap["x509_certificate_data"].(string); ok && v != "" {
@@ -479,7 +475,7 @@ func expandSourceDataCertificateBundle(tfMap map[string]interface{}) *awstypes.S
 	return result
 }
 
-func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta interface{}) error {
+func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta any) error {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.DisableTrustAnchorInput{
@@ -490,7 +486,7 @@ func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta interfac
 	return err
 }
 
-func enableTrustAnchor(ctx context.Context, trustAnchorId string, meta interface{}) error {
+func enableTrustAnchor(ctx context.Context, trustAnchorId string, meta any) error {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.EnableTrustAnchorInput{

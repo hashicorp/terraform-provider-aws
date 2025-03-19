@@ -31,7 +31,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
-* `id` - ARN of the link.
+* `id` - ARN of the link. Use `arn` instead.
 * `label` - Label that is assigned to this link.
 * `label_template` - Human-readable name used to identify this source account when you are viewing data from it in the monitoring account.
 * `link_configuration` - Configuration for creating filters that specify that only some metric namespaces or log groups are to be shared from the source account to the monitoring account. See [`link_configuration` Block](#link_configuration-block) for details.

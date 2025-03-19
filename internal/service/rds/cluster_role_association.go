@@ -63,7 +63,7 @@ func resourceClusterRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -88,7 +88,7 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
-		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.AddRoleToDBCluster(ctx, input)
 		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
@@ -106,7 +106,7 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceClusterRoleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -209,7 +209,7 @@ func findDBClusterRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbClus
 }
 
 func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
 		if tfresource.NotFound(err) {

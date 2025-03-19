@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *kinesisvideo.Client, identifier string, optFns ...func(*kinesisvideo.Options)) (tftags.KeyValueTags, error) {
-	input := &kinesisvideo.ListTagsForStreamInput{
+	input := kinesisvideo.ListTagsForStreamInput{
 		StreamARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, input, optFns...)
+	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier strin
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.KinesisVideo)
 	if len(removedTags) > 0 {
-		input := &kinesisvideo.UntagStreamInput{
+		input := kinesisvideo.UntagStreamInput{
 			StreamARN:  aws.String(identifier),
 			TagKeyList: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagStream(ctx, input, optFns...)
+		_, err := conn.UntagStream(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -106,12 +106,12 @@ func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier strin
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.KinesisVideo)
 	if len(updatedTags) > 0 {
-		input := &kinesisvideo.TagStreamInput{
+		input := kinesisvideo.TagStreamInput{
 			StreamARN: aws.String(identifier),
 			Tags:      Tags(updatedTags),
 		}
 
-		_, err := conn.TagStream(ctx, input, optFns...)
+		_, err := conn.TagStream(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

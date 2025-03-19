@@ -62,10 +62,6 @@ type resourceAssociation struct {
 	framework.WithImportByID
 }
 
-func (r *resourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_association"
-}
-
 func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -287,7 +283,7 @@ func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, i
 }
 
 func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -299,10 +295,6 @@ func statusAssociation(ctx context.Context, conn *route53profiles.Client, id str
 
 		return out, string(out.Status), nil
 	}
-}
-
-func (r *resourceAssociation) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.ProfileAssociation, error) {

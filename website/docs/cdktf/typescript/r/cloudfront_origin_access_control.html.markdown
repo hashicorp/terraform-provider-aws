@@ -56,6 +56,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The Origin Access Control ARN.
 * `id` - The unique identifier of this Origin Access Control.
 * `etag` - The current version of this Origin Access Control.
 
@@ -91,4 +92,4 @@ Using `terraform import`, import CloudFront Origin Access Control using the `id`
 % terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-57d44c640b1c59b5d0c2dd1656c48370adc34d64a3f2a59ddd9fbaf2231990b2 -->
+<!-- cache-key: cdktf-0.20.8 input-84119df9c0ef5c39534bc354c0c23ee74e64c5021ca3de5e9ec9b153da78cc57 -->

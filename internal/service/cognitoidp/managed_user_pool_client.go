@@ -49,10 +49,6 @@ type managedUserPoolClientResource struct {
 	framework.WithNoOpDelete
 }
 
-func (r *managedUserPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cognito_managed_user_pool_client"
-}
-
 // Schema returns the schema for this resource.
 func (r *managedUserPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -467,7 +463,7 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 		const (
 			timeout = 2 * time.Minute
 		)
-		output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 			return conn.UpdateUserPoolClient(ctx, &input)
 		})
 		if err != nil {
@@ -569,7 +565,7 @@ func (r *managedUserPoolClientResource) Update(ctx context.Context, request reso
 	const (
 		timeout = 2 * time.Minute
 	)
-	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
 	if err != nil {

@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newClusterParameterGroupDataSource,
-			Name:    "Cluster Parameter Group",
+			Factory:  newClusterParameterGroupDataSource,
+			TypeName: "aws_rds_cluster_parameter_group",
+			Name:     "Cluster Parameter Group",
 		},
 	}
 }
@@ -26,18 +27,38 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newIntegrationResource,
-			Name:    "Integration",
+			Factory:  newResourceClusterSnapshotCopy,
+			TypeName: "aws_rds_cluster_snapshot_copy",
+			Name:     "Cluster Snapshot Copy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "db_cluster_snapshot_arn",
+			},
+		},
+		{
+			Factory:  newResourceExportTask,
+			TypeName: "aws_rds_export_task",
+			Name:     "Export Task",
+		},
+		{
+			Factory:  newResourceInstanceState,
+			TypeName: "aws_rds_instance_state",
+			Name:     "Instance State",
+		},
+		{
+			Factory:  newIntegrationResource,
+			TypeName: "aws_rds_integration",
+			Name:     "Integration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newResourceExportTask,
-		},
-		{
-			Factory: newResourceInstanceState,
-			Name:    "Instance State",
+			Factory:  newShardGroupResource,
+			TypeName: "aws_rds_shard_group",
+			Name:     "Shard Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
@@ -282,6 +303,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 			Name:     "Global Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceReservedInstance,
@@ -301,11 +325,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*rds.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return rds.NewFromConfig(cfg,
+	optFns := []func(*rds.Options){
 		rds.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return rds.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*rds.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*rds.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *rds.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*rds.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

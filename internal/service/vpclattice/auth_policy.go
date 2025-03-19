@@ -24,8 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_vpclattice_auth_policy")
+// @SDKResource("aws_vpclattice_auth_policy", name="Auth Policy")
 func ResourceAuthPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthPolicyPut,
@@ -49,7 +48,7 @@ func ResourceAuthPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -71,7 +70,7 @@ const (
 	ResNameAuthPolicy = "Auth Policy"
 )
 
-func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Get("resource_identifier").(string)
@@ -98,7 +97,7 @@ func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAuthPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Id()
@@ -133,14 +132,15 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AuthPolicy: %s", d.Id())
-	_, err := conn.DeleteAuthPolicy(ctx, &vpclattice.DeleteAuthPolicyInput{
+	input := vpclattice.DeleteAuthPolicyInput{
 		ResourceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAuthPolicy(ctx, &input)
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException

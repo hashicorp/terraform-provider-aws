@@ -27,6 +27,7 @@ import (
 )
 
 // @SDKResource("aws_vpclattice_target_group_attachment", name="Target Group Attachment")
+// @Testing(tagsTest=false)
 func resourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupAttachmentCreate,
@@ -72,12 +73,12 @@ func resourceTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
 	targetPort := int(aws.ToInt32(target.Port))
 	id := strings.Join([]string{targetGroupID, targetID, strconv.Itoa(targetPort)}, "/")
@@ -101,12 +102,12 @@ func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTargetGroupAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
 	targetPort := int(aws.ToInt32(target.Port))
 
@@ -122,7 +123,7 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTarget, []interface{}{flattenTargetSummary(output)}); err != nil {
+	if err := d.Set(names.AttrTarget, []any{flattenTargetSummary(output)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 	d.Set("target_group_identifier", targetGroupID)
@@ -130,20 +131,21 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
 	targetPort := int(aws.ToInt32(target.Port))
 
 	log.Printf("[INFO] Deleting VPC Lattice Target Group Attachment: %s", d.Id())
-	_, err := conn.DeregisterTargets(ctx, &vpclattice.DeregisterTargetsInput{
+	input := vpclattice.DeregisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets:               []types.Target{target},
-	})
+	}
+	_, err := conn.DeregisterTargets(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -195,7 +197,7 @@ func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targ
 }
 
 func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
 		if tfresource.NotFound(err) {
@@ -250,12 +252,12 @@ func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Clie
 	return nil, err
 }
 
-func flattenTargetSummary(apiObject *types.TargetSummary) map[string]interface{} {
+func flattenTargetSummary(apiObject *types.TargetSummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
 		tfMap[names.AttrID] = aws.ToString(v)
@@ -268,7 +270,7 @@ func flattenTargetSummary(apiObject *types.TargetSummary) map[string]interface{}
 	return tfMap
 }
 
-func expandTarget(tfMap map[string]interface{}) types.Target {
+func expandTarget(tfMap map[string]any) types.Target {
 	apiObject := types.Target{}
 
 	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {

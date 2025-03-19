@@ -40,6 +40,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The Origin Access Control ARN.
 * `id` - The unique identifier of this Origin Access Control.
 * `etag` - The current version of this Origin Access Control.
 

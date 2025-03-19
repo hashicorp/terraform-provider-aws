@@ -106,4 +106,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_trust_store.example arn:aws:elasticloadbalancing:us-west-2:187416307283:truststore/my-trust-store/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-89fe3c36bebef5470b9cbe4480f0a8400fa67f5a22bdf0570245d7e1606e84fa -->
+<!-- cache-key: cdktf-0.20.8 input-34bb0a1e9045deea914ea976441edea2890e4b73835aa15a907bb8a250bbb058 -->

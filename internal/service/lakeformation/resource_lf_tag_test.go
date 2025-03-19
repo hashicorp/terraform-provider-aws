@@ -54,7 +54,7 @@ func testAccResourceLFTag_basic(t *testing.T) {
 				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
 				),
@@ -256,7 +256,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnNames = cols
@@ -268,7 +268,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.0.excluded_column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_wildcard.0.excluded_column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{
@@ -365,7 +365,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnNames = cols
@@ -377,7 +377,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.0.excluded_column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_wildcard.0.excluded_column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{

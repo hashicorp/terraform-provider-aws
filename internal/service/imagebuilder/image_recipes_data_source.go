@@ -45,7 +45,7 @@ func dataSourceImageRecipes() *schema.Resource {
 	}
 }
 
-func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -65,7 +65,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipes: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(imageRecipes, func(v awstypes.ImageRecipeSummary) string {
 		return aws.ToString(v.Arn)
 	}))

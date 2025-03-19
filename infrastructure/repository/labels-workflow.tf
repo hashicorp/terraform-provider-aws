@@ -13,6 +13,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to AutoFlex."
     },
+    "aws-compatible-service" = {
+      color       = "ff9900", # color:aws
+      description = "Issues related to compatibility with AWS-compatible services."
+    },
     "aws-sdk-go-migration" = {
       color       = "844fba", # color:terraform (main)
       description = "Issues that are related to the providers migration to AWS SDK for Go v2."

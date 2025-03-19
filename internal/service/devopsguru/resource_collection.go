@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Collection")
+// @FrameworkResource("aws_devopsguru_resource_collection", name="Resource Collection")
 func newResourceResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceResourceCollection{}, nil
 }
@@ -39,10 +39,6 @@ const (
 
 type resourceResourceCollection struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceResourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_resource_collection"
 }
 
 func (r *resourceResourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

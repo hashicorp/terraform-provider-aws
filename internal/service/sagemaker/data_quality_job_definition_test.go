@@ -35,7 +35,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
@@ -607,7 +607,7 @@ func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.T
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Data Quality Job Definition (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Data Quality Job Definition (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -621,7 +621,7 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Data Quality Job Definition ID is set")
+			return fmt.Errorf("no SageMaker AI Data Quality Job Definition ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

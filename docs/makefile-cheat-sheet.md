@@ -121,14 +121,18 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
 | `go-misspell` | Provider Checks / misspell | ✔️ |  |  |
 | `golangci-lint`<sup>M</sup> | All golangci-lint Checks | ✔️ |  | `K`, `PKG`, `TEST` |
-| `golangci-lint1` | golangci-lint Checks / 1 of 2 | ✔️ |  | `K`, `PKG`, `TEST` |
-| `golangci-lint2` | golangci-lint Checks / 2 of 2 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint1` | golangci-lint Checks / 1 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint2` | golangci-lint Checks / 2 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint3` | golangci-lint Checks / 3 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint4` | golangci-lint Checks / 4 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint5` | golangci-lint Checks / 5 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `help` | Display help |  |  |  |
 | `import-lint` | Provider Checks / import-lint | ✔️ |  | `K`, `PKG`, `TEST` |
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
+| `modern-check` | Check for modern GO | ✔️ |  | `TEST` |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |

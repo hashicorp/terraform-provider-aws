@@ -283,9 +283,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAssociatedFleets(ctx, &appstream.ListAssociatedFleetsInput{
+	input := appstream.ListAssociatedFleetsInput{
 		StackName: aws.String("test"),
-	},
+	}
+	_, err := client.ListAssociatedFleets(ctx, &input,
 		func(opts *appstream.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
@@ -541,7 +542,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 

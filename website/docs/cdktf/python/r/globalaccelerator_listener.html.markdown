@@ -38,7 +38,7 @@ class MyConvertedCode(TerraformStack):
             name="Example"
         )
         aws_globalaccelerator_listener_example = GlobalacceleratorListener(self, "example_1",
-            accelerator_arn=example.id,
+            accelerator_arn=example.arn,
             client_affinity="SOURCE_IP",
             port_range=[GlobalacceleratorListenerPortRange(
                 from_port=80,
@@ -70,6 +70,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the listener.
+* `arn` - The Amazon Resource Name (ARN) of the listener.
 
 ## Timeouts
 
@@ -104,4 +105,4 @@ Using `terraform import`, import Global Accelerator listeners using the `id`. Fo
 % terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-916b1c351e05097e7ddc260e23377eafd367b2e2e899550a7d4798b0d81ab853 -->
+<!-- cache-key: cdktf-0.20.8 input-2e087db43a47da12d51211b2482f49e4584ad5db796d9301aee46b9711f85b79 -->

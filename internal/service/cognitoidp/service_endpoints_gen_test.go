@@ -337,9 +337,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListUserPools(ctx, &cognitoidentityprovider.ListUserPoolsInput{
+	input := cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int32(1),
-	},
+	}
+	_, err := client.ListUserPools(ctx, &input,
 		func(opts *cognitoidentityprovider.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
@@ -621,7 +622,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 

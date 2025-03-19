@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -124,7 +124,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -142,6 +142,13 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"resource_configuration_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrServiceName, "service_network_arn"},
+				ValidateFunc:  verify.ValidARN,
+			},
 			"route_table_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -155,8 +162,22 @@ func resourceVPCEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrServiceName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"resource_configuration_arn", "service_network_arn"},
+			},
+			"service_network_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrServiceName, "resource_configuration_arn"},
+				ValidateFunc:  verify.ValidARN,
+			},
+			"service_region": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			names.AttrState: {
@@ -212,12 +233,10 @@ func resourceVPCEndpoint() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -226,19 +245,18 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
-		ServiceName:       aws.String(serviceName),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 		// that support both gateway and interface endpoints, i.e. S3.
 		if isAmazonS3VPCEndpoint(serviceName) {
-			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]interface{})[0].(map[string]interface{}))
+			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]any)[0].(map[string]any))
 		} else {
-			input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+			input.DnsOptions = expandDNSOptionsSpecification(v.([]any)[0].(map[string]any))
 		}
 	}
 
@@ -256,6 +274,10 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PolicyDocument = aws.String(policy)
 	}
 
+	if v, ok := d.GetOk("resource_configuration_arn"); ok {
+		input.ResourceConfigurationArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("route_table_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.RouteTableIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -264,12 +286,24 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk(names.AttrServiceName); ok {
+		input.ServiceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("service_network_arn"); ok {
+		input.ServiceNetworkArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("subnet_configuration"); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetConfigurations = expandSubnetConfigurations(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("service_region"); ok {
+		input.ServiceRegion = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
@@ -287,7 +321,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	vpce := output.VpcEndpoint
 	d.SetId(aws.ToString(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && string(vpce.State) == vpcEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && strings.EqualFold(string(vpce.State), vpcEndpointStatePendingAcceptance) {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), aws.ToString(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -302,7 +336,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 		}
 
@@ -314,7 +348,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -330,20 +364,13 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.ToString(vpce.OwnerId),
-		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
-	}.String()
-	serviceName := aws.ToString(vpce.ServiceName)
-	d.Set(names.AttrARN, arn)
+	ownerID := aws.ToString(vpce.OwnerId)
+	d.Set(names.AttrARN, vpcEndpointARN(ctx, meta.(*conns.AWSClient), ownerID, d.Id()))
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
 	if vpce.DnsOptions != nil {
-		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
 		}
 	} else {
@@ -351,12 +378,14 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
 	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
-	d.Set(names.AttrOwnerID, vpce.OwnerId)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
+	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_network_arn", vpce.ServiceNetworkArn)
+	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
@@ -367,15 +396,24 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrVPCID, vpce.VpcId)
 
-	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-		if tfresource.NotFound(err) {
-			d.Set("cidr_blocks", nil)
+	if vpce.ServiceName != nil {
+		serviceName := aws.ToString(vpce.ServiceName)
+
+		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
+			if tfresource.NotFound(err) {
+				d.Set("cidr_blocks", nil)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
+			}
 		} else {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
+			d.Set("cidr_blocks", pl.Cidrs)
+			d.Set("prefix_list_id", pl.PrefixListId)
 		}
+
+		d.Set(names.AttrServiceName, serviceName)
 	} else {
-		d.Set("cidr_blocks", pl.Cidrs)
-		d.Set("prefix_list_id", pl.PrefixListId)
+		d.Set("cidr_blocks", nil)
+		d.Set(names.AttrServiceName, nil)
 	}
 
 	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
@@ -407,11 +445,11 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get(names.AttrState).(string) == vpcEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && strings.EqualFold(d.Get(names.AttrState).(string), vpcEndpointStatePendingAcceptance) {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get(names.AttrServiceName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -423,8 +461,8 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("dns_options") {
-			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 				// that support both gateway and interface endpoints, i.e. S3.
 				if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
@@ -486,14 +524,15 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
-	output, err := conn.DeleteVpcEndpoints(ctx, &ec2.DeleteVpcEndpointsInput{
+	input := ec2.DeleteVpcEndpointsInput{
 		VpcEndpointIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteVpcEndpoints(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)
@@ -566,11 +605,11 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 }
 
 func isAmazonS3VPCEndpoint(serviceName string) bool {
-	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
+	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9]{1,2})\\.s3", serviceName)
 	return ok
 }
 
-func expandDNSOptionsSpecification(tfMap map[string]interface{}) *awstypes.DnsOptionsSpecification {
+func expandDNSOptionsSpecification(tfMap map[string]any) *awstypes.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -584,7 +623,7 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *awstypes.DnsOp
 	return apiObject
 }
 
-func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{}) *awstypes.DnsOptionsSpecification {
+func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]any) *awstypes.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -602,7 +641,7 @@ func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandSubnetConfiguration(tfMap map[string]interface{}) *awstypes.SubnetConfiguration {
+func expandSubnetConfiguration(tfMap map[string]any) *awstypes.SubnetConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -624,7 +663,7 @@ func expandSubnetConfiguration(tfMap map[string]interface{}) *awstypes.SubnetCon
 	return apiObject
 }
 
-func expandSubnetConfigurations(tfList []interface{}) []awstypes.SubnetConfiguration {
+func expandSubnetConfigurations(tfList []any) []awstypes.SubnetConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -632,7 +671,7 @@ func expandSubnetConfigurations(tfList []interface{}) []awstypes.SubnetConfigura
 	var apiObjects []awstypes.SubnetConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -650,12 +689,12 @@ func expandSubnetConfigurations(tfList []interface{}) []awstypes.SubnetConfigura
 	return apiObjects
 }
 
-func flattenDNSEntry(apiObject *awstypes.DnsEntry) map[string]interface{} {
+func flattenDNSEntry(apiObject *awstypes.DnsEntry) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DnsName; v != nil {
 		tfMap[names.AttrDNSName] = aws.ToString(v)
@@ -668,12 +707,12 @@ func flattenDNSEntry(apiObject *awstypes.DnsEntry) map[string]interface{} {
 	return tfMap
 }
 
-func flattenDNSEntries(apiObjects []awstypes.DnsEntry) []interface{} {
+func flattenDNSEntries(apiObjects []awstypes.DnsEntry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDNSEntry(&apiObject))
@@ -682,12 +721,12 @@ func flattenDNSEntries(apiObjects []awstypes.DnsEntry) []interface{} {
 	return tfList
 }
 
-func flattenDNSOptions(apiObject *awstypes.DnsOptions) map[string]interface{} {
+func flattenDNSOptions(apiObject *awstypes.DnsOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"dns_record_ip_type": string(apiObject.DnsRecordIpType),
 	}
 
@@ -734,12 +773,12 @@ func flattenAddAndRemoveStringValueLists(d *schema.ResourceData, key string) ([]
 	return add, del
 }
 
-func flattenSubnetConfiguration(apiObject *subnetConfiguration) map[string]interface{} {
+func flattenSubnetConfiguration(apiObject *subnetConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ipv4; v != nil {
 		tfMap["ipv4"] = aws.ToString(v)
@@ -756,16 +795,20 @@ func flattenSubnetConfiguration(apiObject *subnetConfiguration) map[string]inter
 	return tfMap
 }
 
-func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []interface{} {
+func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenSubnetConfiguration(&apiObject))
 	}
 
 	return tfList
+}
+
+func vpcEndpointARN(ctx context.Context, c *conns.AWSClient, ownerID, vpceID string) string {
+	return c.RegionalARNWithAccount(ctx, "ec2", ownerID, "vpc-endpoint/"+vpceID)
 }

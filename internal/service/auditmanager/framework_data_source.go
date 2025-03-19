@@ -23,17 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("aws_auditmanager_framework", name="Framework")
 func newDataSourceFramework(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFramework{}, nil
 }
 
 type dataSourceFramework struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceFramework) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_auditmanager_framework"
 }
 
 func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

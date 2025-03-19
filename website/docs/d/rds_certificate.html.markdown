@@ -23,6 +23,7 @@ data "aws_rds_certificate" "example" {
 This data source supports the following arguments:
 
 * `id` - (Optional) Certificate identifier. For example, `rds-ca-2019`.
+* `default_for_new_launches` - (Optional) When enabled, returns the default certificate for new RDS instances.
 * `latest_valid_till` - (Optional) When enabled, returns the certificate with the latest `ValidTill`.
 
 ## Attribute Reference

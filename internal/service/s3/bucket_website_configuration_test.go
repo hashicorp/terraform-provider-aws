@@ -558,9 +558,9 @@ func TestAccS3BucketWebsiteConfiguration_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketWebsiteConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_website_configuration" {
 				continue
 			}
@@ -568,6 +568,10 @@ func testAccCheckBucketWebsiteConfigurationDestroy(ctx context.Context) resource
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
@@ -599,6 +603,10 @@ func testAccCheckBucketWebsiteConfigurationExists(ctx context.Context, n string)
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
+		}
+
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		_, err = tfs3.FindBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
@@ -933,7 +941,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 }
 
 func testAccBucketWebsiteConfigurationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

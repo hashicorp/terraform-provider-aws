@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks memcached layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -83,4 +85,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-05a372e54fd07197c1f42442567c63b5866c6980883edb9054bbf50151850fd4 -->
+<!-- cache-key: cdktf-0.20.8 input-febd0d66a4a4f4aa5d9665006adf9e12b9538b020b1ecde1ed1cc376a757915a -->

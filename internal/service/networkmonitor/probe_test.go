@@ -42,7 +42,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "packet_size"),
@@ -121,7 +121,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "packet_size", "256"),
@@ -140,7 +140,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.2"),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "packet_size", "512"),

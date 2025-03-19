@@ -38,7 +38,7 @@ func TestAccElasticTranscoderPreset_basic(t *testing.T) {
 				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(ctx, resourceName, &preset),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`preset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`preset/.+`)),
 				),
 			},
 			{

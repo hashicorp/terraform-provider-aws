@@ -273,7 +273,7 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "block_device_mappings.#", resourceName, "ebs_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_device_name", resourceName, "root_device_name"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_snapshot_id", resourceName, "root_snapshot_id"),

@@ -44,7 +44,7 @@ func resourceConnectionAssociation() *schema.Resource {
 	}
 }
 
-func resourceConnectionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -66,7 +66,7 @@ func resourceConnectionAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceConnectionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -86,7 +86,7 @@ func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceConnectionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -107,7 +107,7 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Cli
 		timeout = 1 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DirectConnectClientException](ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DisassociateConnectionFromLag(ctx, input)
 		}, "is in a transitioning state")
 

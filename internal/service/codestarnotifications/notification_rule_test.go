@@ -37,7 +37,7 @@ func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 				Config: testAccNotificationRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codestar-notifications", regexache.MustCompile("notificationrule/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codestar-notifications", regexache.MustCompile("notificationrule/.+")),
 					resource.TestCheckResourceAttr(resourceName, "detail_type", string(types.DetailTypeBasic)),
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

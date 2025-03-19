@@ -35,7 +35,7 @@ func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "approximate_creation_date_time_precision", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 				),
 			},
@@ -64,7 +64,7 @@ func TestAccDynamoDBKinesisStreamingDestination_approximateCreationDateTimePreci
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "approximate_creation_date_time_precision", "MICROSECOND"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 				),
 			},

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +27,7 @@ func testAccPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -64,7 +65,7 @@ func testAccPolicy_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -92,7 +93,7 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -126,7 +127,7 @@ func testAccPolicy_includeMap(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -161,7 +162,7 @@ func testAccPolicy_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -235,7 +236,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -271,7 +272,7 @@ func testAccPolicy_alb(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -305,7 +306,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -337,7 +338,7 @@ func testAccPolicy_rscSet(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -351,6 +352,54 @@ func testAccPolicy_rscSet(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPolicy_nacl(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_nacl(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Subnet"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.egress", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.rule_action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.0.from", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.0.to", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.egress", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.rule_action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.0.from", "2345"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.0.to", "2345"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.force_remediate_for_first_entries", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.force_remediate_for_last_entries", acctest.CtFalse),
 				),
 			},
 		},
@@ -824,6 +873,57 @@ resource "aws_fms_resource_set" "test" {
   resource_set {
     name               = %[1]q
     resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
+}
+`, policyName, ruleGroupName))
+}
+
+func testAccPolicyConfig_nacl(policyName, ruleGroupName string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  depends_on = [aws_fms_admin_account.test]
+
+  exclude_resource_tags = false
+  name                  = %[1]q
+  description           = "test description"
+  remediation_enabled   = false
+  resource_type         = "AWS::EC2::Subnet"
+
+  security_service_policy_data {
+    type = "NETWORK_ACL_COMMON"
+
+    managed_service_data = jsonencode({ type = "NETWORK_ACL_COMMON" })
+
+    policy_option {
+      network_acl_common_policy {
+        network_acl_entry_set {
+          first_entry {
+            egress      = false
+            protocol    = 6
+            rule_action = "deny"
+            cidr_block  = "0.0.0.0/0"
+            port_range {
+              from = 1234
+              to   = 1234
+            }
+          }
+
+          first_entry {
+            egress      = false
+            protocol    = 6
+            rule_action = "deny"
+            cidr_block  = "0.0.0.0/0"
+            port_range {
+              from = 2345
+              to   = 2345
+            }
+          }
+
+          force_remediate_for_first_entries = false
+          force_remediate_for_last_entries  = false
+        }
+      }
+    }
   }
 }
 `, policyName, ruleGroupName))

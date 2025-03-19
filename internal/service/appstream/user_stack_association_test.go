@@ -135,11 +135,12 @@ func testAccCheckUserStackAssociationExists(ctx context.Context, resourceName st
 			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		resp, err := conn.DescribeUserStackAssociations(ctx, &appstream.DescribeUserStackAssociationsInput{
+		input := appstream.DescribeUserStackAssociationsInput{
 			AuthenticationType: awstypes.AuthenticationType(authType),
 			StackName:          aws.String(stackName),
 			UserName:           aws.String(userName),
-		})
+		}
+		resp, err := conn.DescribeUserStackAssociations(ctx, &input)
 
 		if err != nil {
 			return err
@@ -167,11 +168,12 @@ func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestC
 				return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 			}
 
-			resp, err := conn.DescribeUserStackAssociations(ctx, &appstream.DescribeUserStackAssociationsInput{
+			input := appstream.DescribeUserStackAssociationsInput{
 				AuthenticationType: awstypes.AuthenticationType(authType),
 				StackName:          aws.String(stackName),
 				UserName:           aws.String(userName),
-			})
+			}
+			resp, err := conn.DescribeUserStackAssociations(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

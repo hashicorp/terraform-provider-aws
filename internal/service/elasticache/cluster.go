@@ -118,7 +118,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					// ElastiCache normalizes cluster ids to lowercase,
 					// so we have to do this too or else we can end up
 					// with non-converging diffs.
@@ -142,7 +142,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
+				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis, engineValkey}, false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -195,7 +195,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					// ElastiCache always changes the maintenance
 					// to lowercase
 					return strings.ToLower(val.(string))
@@ -342,12 +342,11 @@ func resourceCluster() *schema.Resource {
 			clusterValidateNumCacheNodes,
 			clusterForceNewOnMemcachedNodeTypeChange,
 			clusterValidateMemcachedSnapshotIdentifier,
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -419,7 +418,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("log_delivery_configuration"); ok {
 		input.LogDeliveryConfigurations = []awstypes.LogDeliveryConfigurationRequest{}
 		for _, v := range v.(*schema.Set).List() {
-			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, expandLogDeliveryConfigurationRequests(v.(map[string]interface{})))
+			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, expandLogDeliveryConfigurationRequests(v.(map[string]any)))
 		}
 	}
 
@@ -431,7 +430,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	if v := d.Get("snapshot_arns").([]interface{}); len(v) > 0 {
+	if v := d.Get("snapshot_arns").([]any); len(v) > 0 {
 		input.SnapshotArns = flex.ExpandStringValueList(v)
 		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", v)
 	}
@@ -452,8 +451,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
-		input.PreferredAvailabilityZones = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]any)) > 0 {
+		input.PreferredAvailabilityZones = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -484,7 +483,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceClusterRead(ctx, d, meta)...)
 		}
 
@@ -496,7 +495,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -560,7 +559,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -596,14 +595,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
 			for _, current := range currentLogDeliveryConfig {
-				logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]interface{}))
+				logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
 				logTypesToSubmit[string(logDeliveryConfigurationRequest.LogType)] = true
 				input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
 			}
 
 			previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
 			for _, previous := range previousLogDeliveryConfig {
-				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurationRequest(previous.(map[string]interface{}))
+				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurationRequest(previous.(map[string]any))
 				// if something was removed, send an empty request
 				if !logTypesToSubmit[string(logDeliveryConfigurationRequest.LogType)] {
 					input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
@@ -683,12 +682,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				// than the sum of the number of active cache nodes and the number of cache
 				// nodes pending creation (which may be zero). The number of Availability Zones
 				// supplied in this list must match the cache nodes being added in this request.
-				if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
+				if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]any)) > 0 {
 					// Here we check the list length to prevent a potential panic :)
-					if len(v.([]interface{})) != n {
-						return sdkdiag.AppendErrorf(diags, "length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
+					if len(v.([]any)) != n {
+						return sdkdiag.AppendErrorf(diags, "length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]any)), n)
 					}
-					input.NewAvailabilityZones = flex.ExpandStringValueList(v.([]interface{})[o:])
+					input.NewAvailabilityZones = flex.ExpandStringValueList(v.([]any)[o:])
 				}
 			}
 
@@ -715,7 +714,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -856,7 +855,7 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 }
 
 func statusCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCacheClusterByID(ctx, conn, cacheClusterID)
 
 		if tfresource.NotFound(err) {
@@ -949,13 +948,13 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 		return cmp.Compare(aws.ToString(a.CacheNodeId), aws.ToString(b.CacheNodeId))
 	})
 
-	cacheNodeData := make([]map[string]interface{}, 0, len(sortedCacheNodes))
+	cacheNodeData := make([]map[string]any, 0, len(sortedCacheNodes))
 
 	for _, node := range sortedCacheNodes {
 		if node.CacheNodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.CustomerAvailabilityZone == nil {
 			return fmt.Errorf("Unexpected nil pointer in: %+v", node)
 		}
-		cacheNodeData = append(cacheNodeData, map[string]interface{}{
+		cacheNodeData = append(cacheNodeData, map[string]any{
 			names.AttrID:               aws.ToString(node.CacheNodeId),
 			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
 			names.AttrPort:             aws.ToInt32(node.Endpoint.Port),
@@ -1001,7 +1000,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 }
 
 // clusterValidateAZMode validates that `num_cache_nodes` is greater than 1 when `az_mode` is "cross-az"
-func clusterValidateAZMode(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func clusterValidateAZMode(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if v, ok := diff.GetOk("az_mode"); !ok || awstypes.AZMode(v.(string)) != awstypes.AZModeCrossAz {
 		return nil
 	}
@@ -1012,7 +1011,7 @@ func clusterValidateAZMode(_ context.Context, diff *schema.ResourceDiff, v inter
 }
 
 // clusterValidateNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"
-func clusterValidateNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func clusterValidateNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	engine, ok := diff.GetOk(names.AttrEngine)
 	if !ok || engine.(string) == engineMemcached {
 		return nil
@@ -1024,7 +1023,7 @@ func clusterValidateNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, 
 }
 
 // clusterForceNewOnMemcachedNodeTypeChange causes re-creation when `node_type` is changed and `engine` is "memcached"
-func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// Engine memcached does not currently support vertical scaling
 	// https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Scaling.html#Scaling.Memcached.Vertically
 	if diff.Id() == "" || !diff.HasChange("node_type") {
@@ -1037,7 +1036,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 }
 
 // clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
-func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
 		return nil
 	}
