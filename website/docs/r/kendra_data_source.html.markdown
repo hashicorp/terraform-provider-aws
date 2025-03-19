@@ -335,7 +335,7 @@ resource "aws_kendra_data_source" "example" {
 }
 ```
 
-#### With WEBCRAWLERV2 Template
+#### With `WEBCRAWLERV2` Template
 
 ```terraform
 resource "aws_kendra_data_source" "example" {
@@ -392,11 +392,13 @@ The following arguments are optional:
 
 The `configuration` configuration block supports the following arguments:
 
-* `s3_configuration` - (Required if `type` is set to `S3`) A block that provides the configuration information to connect to an Amazon S3 bucket as your data source. [Detailed below](#s3_configuration-block).
-* `web_crawler_configuration` - (Required if `type` is set to `WEBCRAWLER`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#web_crawler_configuration-block).
+* `s3_configuration` - (**Deprecated**, Required if `type` is set to `S3`) A block that provides the configuration information to connect to an Amazon S3 bucket as your data source. [Detailed below](#s3_configuration-block).
 * `template_configuration` - (Required if `type` is set to `TEMPLATE`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#template_configuration-block).
+* `web_crawler_configuration` - (**Deprecated**, Required if `type` is set to `WEBCRAWLER`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#web_crawler_configuration-block).
 
 ### s3_configuration Block
+
+~> The `s3_configuration` argument is deprecated. Use [`template_configuration`](#template_configuration-block) instead, which supports the upgraded Amazon S3 connector. Amazon has ended support for the older architecture as of June 2024, and resources created with this argument cannot be edited or updated. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-s3.html) for additional details.
 
 The `s3_configuration` configuration block supports the following arguments:
 
@@ -421,6 +423,8 @@ The `documents_metadata_configuration` configuration block supports the followin
 
 ### web_crawler_configuration Block
 
+~> The `web_crawler_configuration` argument is deprecated. Use [`template_configuration`](#template_configuration-block) instead, which supports the Amazon Kendra Web Crawler connector v2.0. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-web-crawler.html) for additional details.
+
 The `web_crawler_configuration` configuration block supports the following arguments:
 
 * `authentication_configuration` - (Optional) A block with the configuration information required to connect to websites using authentication. You can connect to websites using basic authentication of user name and password. You use a secret in AWS Secrets Manager to store your authentication credentials. You must provide the website host name and port number. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"` and the port is `443`, the standard port for HTTPS. [Detailed below](#authentication_configuration-block).
@@ -437,7 +441,7 @@ The `web_crawler_configuration` configuration block supports the following argum
 
 The `template_configuration` configuration block supports the following arguments:
 
-* `template` - (Required) A JSON string that follows one of the [Data source template schemas](https://docs.aws.amazon.com/kendra/latest/dg/ds-schemas.html)
+* `template` - (Required) JSON string containing a [data source template schema](https://docs.aws.amazon.com/kendra/latest/dg/ds-schemas.html).
 
 ### authentication_configuration Block
 
@@ -556,12 +560,12 @@ The `condition_on_value` configuration blocks supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Source.
-* `created_at` - The Unix timestamp of when the Data Source was created.
+* `created_at` - The Unix time stamp of when the Data Source was created.
 * `data_source_id` - The unique identifiers of the Data Source.
-* `error_message` - When the Status field value is `FAILED`, the ErrorMessage field contains a description of the error that caused the Data Source to fail.
+* `error_message` - When the Status field value is `FAILED`, contains a description of the error that caused the Data Source to fail.
 * `id` - The unique identifiers of the Data Source and index separated by a slash (`/`).
 * `status` - The current status of the Data Source. When the status is `ACTIVE` the Data Source is ready to use. When the status is `FAILED`, the `error_message` field contains the reason that the Data Source failed.
-* `updated_at` - The Unix timestamp of when the Data Source was last updated.
+* `updated_at` - The Unix time stamp of when the Data Source was last updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
