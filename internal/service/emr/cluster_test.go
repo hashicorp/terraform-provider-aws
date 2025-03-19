@@ -1496,7 +1496,9 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 				Config: testAccClusterConfig_ebs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
 				),
 			},
@@ -3819,13 +3821,14 @@ resource "aws_emr_cluster" "test" {
     instance_count = 1
     instance_type  = "m5.xlarge"
     ebs_config {
-      size                 = 32
+      size                 = 33
       type                 = "gp2"
       volumes_per_instance = %[2]d
     }
     ebs_config {
-      size                 = 125
-      type                 = "sc1"
+      size                 = 50
+      iops                 = 3001
+      type                 = "gp3"
       volumes_per_instance = %[2]d
     }
   }

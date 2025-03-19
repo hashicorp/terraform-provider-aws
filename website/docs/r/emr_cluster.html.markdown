@@ -156,7 +156,9 @@ resource "aws_emr_cluster" "example" {
       bid_price_as_percentage_of_on_demand_price = 80
       ebs_config {
         size                 = 100
-        type                 = "gp2"
+        type                 = "gp3"
+        throughput           = 500
+        iops                 = 3000
         volumes_per_instance = 1
       }
       instance_type     = "m3.xlarge"
@@ -213,7 +215,9 @@ resource "aws_emr_instance_fleet" "task" {
     ebs_config {
       size                 = 100
       type                 = "gp2"
-      volumes_per_instance = 1
+      volumes_per_instance = 2
+      throughput           = 500
+      iops                 = 3000
     }
     instance_type     = "m4.2xlarge"
     weighted_capacity = 2
