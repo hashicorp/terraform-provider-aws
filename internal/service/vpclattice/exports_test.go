@@ -31,7 +31,6 @@ var (
 	FindTargetByThreePartKey                  = findTargetByThreePartKey
 	FindTargetGroupByID                       = findTargetGroupByID
 
-	IDFromIDOrARN                               = idFromIDOrARN
-	SuppressEquivalentCloudWatchLogsLogGroupARN = suppressEquivalentCloudWatchLogsLogGroupARN
-	SuppressEquivalentIDOrARN                   = suppressEquivalentIDOrARN
+	IDFromIDOrARN             = idFromIDOrARN
+	SuppressEquivalentIDOrARN = suppressEquivalentIDOrARN
 )
