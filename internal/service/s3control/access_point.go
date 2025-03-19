@@ -97,7 +97,7 @@ func resourceAccessPoint() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -158,7 +158,7 @@ func resourceAccessPoint() *schema.Resource {
 	}
 }
 
-func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -177,12 +177,12 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.BucketAccountId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("public_access_block_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.PublicAccessBlockConfiguration = expandPublicAccessBlockConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("public_access_block_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PublicAccessBlockConfiguration = expandPublicAccessBlockConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateAccessPoint(ctx, input)
@@ -225,7 +225,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -292,14 +292,14 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrName, output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
-		if err := d.Set("public_access_block_configuration", []interface{}{flattenPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)}); err != nil {
+		if err := d.Set("public_access_block_configuration", []any{flattenPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting public_access_block_configuration: %s", err)
 		}
 	} else {
 		d.Set("public_access_block_configuration", nil)
 	}
 	if output.VpcConfiguration != nil {
-		if err := d.Set(names.AttrVPCConfiguration, []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
+		if err := d.Set(names.AttrVPCConfiguration, []any{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 		}
 	} else {
@@ -331,7 +331,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -375,7 +375,7 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -470,7 +470,7 @@ func AccessPointParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, accessPointResourceIDSeparator)
 }
 
-func expandVPCConfiguration(tfMap map[string]interface{}) *types.VpcConfiguration {
+func expandVPCConfiguration(tfMap map[string]any) *types.VpcConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -484,12 +484,12 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.VpcConfiguratio
 	return apiObject
 }
 
-func flattenVPCConfiguration(apiObject *types.VpcConfiguration) map[string]interface{} {
+func flattenVPCConfiguration(apiObject *types.VpcConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.VpcId; v != nil {
 		tfMap[names.AttrVPCID] = aws.ToString(v)

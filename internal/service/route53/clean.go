@@ -26,7 +26,7 @@ func cleanZoneID(id string) string {
 //
 // The only difference between this helper and normalizeDomainName is that the single
 // dot (".") domain name is not passed through as-is.
-func normalizeAliasDomainName(v interface{}) string {
+func normalizeAliasDomainName(v any) string {
 	var s string
 	switch v := v.(type) {
 	case *string:
@@ -42,7 +42,7 @@ func normalizeAliasDomainName(v interface{}) string {
 
 // normalizeDomainName is a wrapper around the shared dns package normalization
 // function which handles interface values from Plugin SDK V2 based resources
-func normalizeDomainName(v interface{}) string {
+func normalizeDomainName(v any) string {
 	var s string
 	switch v := v.(type) {
 	case *string:

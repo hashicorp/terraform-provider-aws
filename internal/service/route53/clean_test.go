@@ -13,7 +13,7 @@ func TestNormalizeAliasDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		input  interface{}
+		input  any
 		output string
 	}{
 		{"www.example.com", "www.example.com"},
@@ -60,7 +60,7 @@ func TestNormalizeDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		input  interface{}
+		input  any
 		output string
 	}{
 		{"example.com", "example.com"},

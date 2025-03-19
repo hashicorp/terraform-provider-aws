@@ -810,7 +810,7 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	input.ClientToken = aws.String(id.UniqueId())
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -898,7 +898,7 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.UpdateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -970,7 +970,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 }
 
 func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
 		if tfresource.NotFound(err) {

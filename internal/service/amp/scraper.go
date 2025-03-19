@@ -447,7 +447,7 @@ func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstype
 }
 
 func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findScraperByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

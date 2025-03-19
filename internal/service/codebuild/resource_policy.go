@@ -41,7 +41,7 @@ func resourceResourcePolicy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -56,7 +56,7 @@ func resourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -83,7 +83,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -115,7 +115,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 

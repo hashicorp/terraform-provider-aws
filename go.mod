@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.45.1
@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/rum v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/rum v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.1
@@ -247,11 +247,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/sso v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17
 	github.com/aws/aws-sdk-go-v2/service/swf v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.30.1
@@ -261,7 +261,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/waf v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.1
@@ -275,8 +275,8 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.62
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.63
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.63
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.64
 	github.com/hashicorp/awspolicyequivalence v1.7.0
 	github.com/hashicorp/cli v1.1.7
 	github.com/hashicorp/go-cleanhttp v0.5.2

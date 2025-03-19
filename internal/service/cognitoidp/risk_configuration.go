@@ -293,7 +293,7 @@ func resourceRiskConfiguration() *schema.Resource {
 	}
 }
 
-func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -309,16 +309,16 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 		id = userPoolID + riskConfigurationResourceIDSeparator + v
 	}
 
-	if v, ok := d.GetOk("account_takeover_risk_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.AccountTakeoverRiskConfiguration = expandAccountTakeoverRiskConfigurationType(v.([]interface{}))
+	if v, ok := d.GetOk("account_takeover_risk_configuration"); ok && len(v.([]any)) > 0 {
+		input.AccountTakeoverRiskConfiguration = expandAccountTakeoverRiskConfigurationType(v.([]any))
 	}
 
-	if v, ok := d.GetOk("compromised_credentials_risk_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.CompromisedCredentialsRiskConfiguration = expandCompromisedCredentialsRiskConfigurationType(v.([]interface{}))
+	if v, ok := d.GetOk("compromised_credentials_risk_configuration"); ok && len(v.([]any)) > 0 {
+		input.CompromisedCredentialsRiskConfiguration = expandCompromisedCredentialsRiskConfigurationType(v.([]any))
 	}
 
-	if v, ok := d.GetOk("risk_exception_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.RiskExceptionConfiguration = expandRiskExceptionConfigurationType(v.([]interface{}))
+	if v, ok := d.GetOk("risk_exception_configuration"); ok && len(v.([]any)) > 0 {
+		input.RiskExceptionConfiguration = expandRiskExceptionConfigurationType(v.([]any))
 	}
 
 	_, err := conn.SetRiskConfiguration(ctx, input)
@@ -334,7 +334,7 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRiskConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -374,7 +374,7 @@ func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -448,12 +448,12 @@ func findRiskConfigurationByTwoPartKey(ctx context.Context, conn *cognitoidentit
 	return output.RiskConfiguration, nil
 }
 
-func expandRiskExceptionConfigurationType(tfList []interface{}) *awstypes.RiskExceptionConfigurationType {
+func expandRiskExceptionConfigurationType(tfList []any) *awstypes.RiskExceptionConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.RiskExceptionConfigurationType{}
 
 	if v, ok := tfMap["blocked_ip_range_list"].(*schema.Set); ok && v.Len() > 0 {
@@ -467,12 +467,12 @@ func expandRiskExceptionConfigurationType(tfList []interface{}) *awstypes.RiskEx
 	return apiObject
 }
 
-func flattenRiskExceptionConfiguration(apiObject *awstypes.RiskExceptionConfigurationType) []interface{} {
+func flattenRiskExceptionConfiguration(apiObject *awstypes.RiskExceptionConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BlockedIPRangeList; v != nil {
 		tfMap["blocked_ip_range_list"] = v
@@ -482,34 +482,34 @@ func flattenRiskExceptionConfiguration(apiObject *awstypes.RiskExceptionConfigur
 		tfMap["skipped_ip_range_list"] = v
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandCompromisedCredentialsRiskConfigurationType(tfList []interface{}) *awstypes.CompromisedCredentialsRiskConfigurationType {
+func expandCompromisedCredentialsRiskConfigurationType(tfList []any) *awstypes.CompromisedCredentialsRiskConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CompromisedCredentialsRiskConfigurationType{}
 
 	if v, ok := tfMap["event_filter"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.EventFilter = flex.ExpandStringyValueSet[awstypes.EventFilterType](v)
 	}
 
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandCompromisedCredentialsActionsType(v)
 	}
 
 	return apiObject
 }
 
-func flattenCompromisedCredentialsRiskConfiguration(apiObject *awstypes.CompromisedCredentialsRiskConfigurationType) []interface{} {
+func flattenCompromisedCredentialsRiskConfiguration(apiObject *awstypes.CompromisedCredentialsRiskConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EventFilter; v != nil {
 		tfMap["event_filter"] = v
@@ -519,15 +519,15 @@ func flattenCompromisedCredentialsRiskConfiguration(apiObject *awstypes.Compromi
 		tfMap[names.AttrActions] = flattenCompromisedCredentialsActions(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandCompromisedCredentialsActionsType(tfList []interface{}) *awstypes.CompromisedCredentialsActionsType {
+func expandCompromisedCredentialsActionsType(tfList []any) *awstypes.CompromisedCredentialsActionsType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CompromisedCredentialsActionsType{}
 
 	if v, ok := tfMap["event_action"].(string); ok && v != "" {
@@ -537,43 +537,43 @@ func expandCompromisedCredentialsActionsType(tfList []interface{}) *awstypes.Com
 	return apiObject
 }
 
-func flattenCompromisedCredentialsActions(apiObject *awstypes.CompromisedCredentialsActionsType) []interface{} {
+func flattenCompromisedCredentialsActions(apiObject *awstypes.CompromisedCredentialsActionsType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"event_action": apiObject.EventAction,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandAccountTakeoverRiskConfigurationType(tfList []interface{}) *awstypes.AccountTakeoverRiskConfigurationType {
+func expandAccountTakeoverRiskConfigurationType(tfList []any) *awstypes.AccountTakeoverRiskConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AccountTakeoverRiskConfigurationType{}
 
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandAccountTakeoverActionsType(v)
 	}
 
-	if v, ok := tfMap["notify_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["notify_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NotifyConfiguration = expandNotifyConfigurationType(v)
 	}
 
 	return apiObject
 }
 
-func flattenAccountTakeoverRiskConfigurationType(apiObject *awstypes.AccountTakeoverRiskConfigurationType) []interface{} {
+func flattenAccountTakeoverRiskConfigurationType(apiObject *awstypes.AccountTakeoverRiskConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Actions; v != nil {
 		tfMap[names.AttrActions] = flattenAccountTakeoverActionsType(v)
@@ -583,38 +583,38 @@ func flattenAccountTakeoverRiskConfigurationType(apiObject *awstypes.AccountTake
 		tfMap["notify_configuration"] = flattemNotifyConfigurationType(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandAccountTakeoverActionsType(tfList []interface{}) *awstypes.AccountTakeoverActionsType {
+func expandAccountTakeoverActionsType(tfList []any) *awstypes.AccountTakeoverActionsType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AccountTakeoverActionsType{}
 
-	if v, ok := tfMap["high_action"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["high_action"].([]any); ok && len(v) > 0 {
 		apiObject.HighAction = expandAccountTakeoverActionType(v)
 	}
 
-	if v, ok := tfMap["low_action"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["low_action"].([]any); ok && len(v) > 0 {
 		apiObject.LowAction = expandAccountTakeoverActionType(v)
 	}
 
-	if v, ok := tfMap["medium_action"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["medium_action"].([]any); ok && len(v) > 0 {
 		apiObject.MediumAction = expandAccountTakeoverActionType(v)
 	}
 
 	return apiObject
 }
 
-func flattenAccountTakeoverActionsType(apiObject *awstypes.AccountTakeoverActionsType) []interface{} {
+func flattenAccountTakeoverActionsType(apiObject *awstypes.AccountTakeoverActionsType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.HighAction; v != nil {
 		tfMap["high_action"] = flattenAccountTakeoverActionType(v)
@@ -628,15 +628,15 @@ func flattenAccountTakeoverActionsType(apiObject *awstypes.AccountTakeoverAction
 		tfMap["medium_action"] = flattenAccountTakeoverActionType(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandAccountTakeoverActionType(tfList []interface{}) *awstypes.AccountTakeoverActionType {
+func expandAccountTakeoverActionType(tfList []any) *awstypes.AccountTakeoverActionType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AccountTakeoverActionType{}
 
 	if v, ok := tfMap["event_action"].(string); ok && v != "" {
@@ -650,28 +650,28 @@ func expandAccountTakeoverActionType(tfList []interface{}) *awstypes.AccountTake
 	return apiObject
 }
 
-func flattenAccountTakeoverActionType(apiObject *awstypes.AccountTakeoverActionType) []interface{} {
+func flattenAccountTakeoverActionType(apiObject *awstypes.AccountTakeoverActionType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"event_action": apiObject.EventAction,
 		"notify":       apiObject.Notify,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandNotifyConfigurationType(tfList []interface{}) *awstypes.NotifyConfigurationType {
+func expandNotifyConfigurationType(tfList []any) *awstypes.NotifyConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.NotifyConfigurationType{}
 
-	if v, ok := tfMap["block_email"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["block_email"].([]any); ok && len(v) > 0 {
 		apiObject.BlockEmail = expandNotifyEmailType(v)
 	}
 
@@ -679,11 +679,11 @@ func expandNotifyConfigurationType(tfList []interface{}) *awstypes.NotifyConfigu
 		apiObject.From = aws.String(v)
 	}
 
-	if v, ok := tfMap["mfa_email"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["mfa_email"].([]any); ok && len(v) > 0 {
 		apiObject.MfaEmail = expandNotifyEmailType(v)
 	}
 
-	if v, ok := tfMap["no_action_email"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["no_action_email"].([]any); ok && len(v) > 0 {
 		apiObject.NoActionEmail = expandNotifyEmailType(v)
 	}
 
@@ -698,12 +698,12 @@ func expandNotifyConfigurationType(tfList []interface{}) *awstypes.NotifyConfigu
 	return apiObject
 }
 
-func flattemNotifyConfigurationType(apiObject *awstypes.NotifyConfigurationType) []interface{} {
+func flattemNotifyConfigurationType(apiObject *awstypes.NotifyConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BlockEmail; v != nil {
 		tfMap["block_email"] = flattenNotifyEmailType(v)
@@ -729,15 +729,15 @@ func flattemNotifyConfigurationType(apiObject *awstypes.NotifyConfigurationType)
 		tfMap["source_arn"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandNotifyEmailType(tfList []interface{}) *awstypes.NotifyEmailType {
+func expandNotifyEmailType(tfList []any) *awstypes.NotifyEmailType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.NotifyEmailType{}
 
 	if v, ok := tfMap["html_body"].(string); ok && v != "" {
@@ -755,12 +755,12 @@ func expandNotifyEmailType(tfList []interface{}) *awstypes.NotifyEmailType {
 	return apiObject
 }
 
-func flattenNotifyEmailType(apiObject *awstypes.NotifyEmailType) []interface{} {
+func flattenNotifyEmailType(apiObject *awstypes.NotifyEmailType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.HtmlBody; v != nil {
 		tfMap["html_body"] = aws.ToString(v)
@@ -774,5 +774,5 @@ func flattenNotifyEmailType(apiObject *awstypes.NotifyEmailType) []interface{} {
 		tfMap["text_body"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
@@ -54,7 +54,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDRAllocation_ipv4Description(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_ipv4Description(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocationV1, allocationV2 awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
@@ -91,7 +91,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Description(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
@@ -115,7 +115,7 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocationV1, allocationV2 awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
@@ -152,7 +152,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
@@ -182,7 +182,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocation1, allocation2 awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test1"
@@ -225,7 +225,7 @@ func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
+func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var allocation awstypes.IpamPoolAllocation
 	var providers []*schema.Provider

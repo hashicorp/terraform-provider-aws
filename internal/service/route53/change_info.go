@@ -42,7 +42,7 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 }
 
 func statusChange(ctx context.Context, conn *route53.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findChangeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

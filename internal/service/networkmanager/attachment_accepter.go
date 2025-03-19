@@ -92,7 +92,7 @@ func resourceAttachmentAccepter() *schema.Resource {
 	}
 }
 
-func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -202,7 +202,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAttachmentAccepterRead(ctx, d, meta)...)
 }
 
-func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -305,7 +305,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 

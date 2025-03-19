@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMScope_basic(t *testing.T) {
+func TestAccIPAMScope_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
@@ -58,7 +58,7 @@ func TestAccIPAMScope_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMScope_disappears(t *testing.T) {
+func TestAccIPAMScope_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
@@ -81,7 +81,7 @@ func TestAccIPAMScope_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIPAMScope_tags(t *testing.T) {
+func TestAccIPAMScope_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
@@ -131,10 +131,6 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *awstypes.Ipam
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Scope ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)

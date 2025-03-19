@@ -55,7 +55,7 @@ func resourceHSMClientCertificate() *schema.Resource {
 	}
 }
 
-func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceHSMClientCertificateRead(ctx, d, meta)...)
 }
 
-func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -110,7 +110,7 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceHSMClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -118,7 +118,7 @@ func resourceHSMClientCertificateUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceHSMClientCertificateRead(ctx, d, meta)...)
 }
 
-func resourceHSMClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

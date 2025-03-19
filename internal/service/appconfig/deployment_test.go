@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -156,42 +155,18 @@ func TestAccAppConfigDeployment_multiple(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
-
-		appID, envID, deploymentNum, err := tfappconfig.DeploymentParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		input := &appconfig.GetDeploymentInput{
-			ApplicationId:    aws.String(appID),
-			DeploymentNumber: aws.Int32(deploymentNum),
-			EnvironmentId:    aws.String(envID),
-		}
+		_, err := tfappconfig.FindDeploymentByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["environment_id"], flex.StringValueToInt32Value(rs.Primary.Attributes["deployment_number"]))
 
-		output, err := conn.GetDeployment(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Appconfig Deployment (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Deployment (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
