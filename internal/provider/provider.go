@@ -270,9 +270,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
-	// Acceptance test call this function multiple times, potentially in parallel.
+	// Acceptance tests call this function multiple times, potentially in parallel.
 	// To avoid "fatal error: concurrent map writes", take a lock.
-	if slices.Contains(os.Args, "test.v=true") {
+	if slices.Contains(os.Args, "-test.v=true") {
 		const mutexKey = "provider.New"
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey) // Runs at end of function, not end of block.
