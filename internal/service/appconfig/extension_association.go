@@ -65,7 +65,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 	}
 }
 
-func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -76,7 +76,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		in.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	out, err := conn.CreateExtensionAssociation(ctx, &in)
@@ -94,7 +94,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -120,7 +120,7 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
@@ -131,7 +131,7 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange(names.AttrParameters) {
-		in.Parameters = flex.ExpandStringValueMap(d.Get(names.AttrParameters).(map[string]interface{}))
+		in.Parameters = flex.ExpandStringValueMap(d.Get(names.AttrParameters).(map[string]any))
 		requestUpdate = true
 	}
 
@@ -150,7 +150,7 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)

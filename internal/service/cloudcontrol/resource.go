@@ -79,14 +79,14 @@ func resourceResource() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceResourceCustomizeDiffGetSchema,
 			resourceResourceCustomizeDiffSchemaDiff,
-			customdiff.ComputedIf(names.AttrProperties, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrProperties, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("desired_state")
 			}),
 		),
 	}
 }
 
-func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
@@ -129,7 +129,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
-func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
@@ -157,7 +157,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
@@ -201,7 +201,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
-func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
@@ -241,7 +241,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	resourceSchema := diff.Get(names.AttrSchema).(string)
@@ -265,7 +265,7 @@ func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.Re
 	return nil
 }
 
-func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	oldDesiredStateRaw, newDesiredStateRaw := diff.GetChange("desired_state")
 	newSchema := diff.Get(names.AttrSchema).(string)
 
@@ -393,7 +393,7 @@ func findProgressEventByRequestToken(ctx context.Context, conn *cloudcontrol.Cli
 }
 
 func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client, requestToken string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
 
 		if tfresource.NotFound(err) {

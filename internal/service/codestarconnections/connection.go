@@ -71,7 +71,7 @@ func resourceConnection() *schema.Resource {
 	}
 }
 
-func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
@@ -100,7 +100,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -135,7 +135,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 

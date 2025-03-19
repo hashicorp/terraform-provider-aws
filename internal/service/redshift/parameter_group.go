@@ -92,7 +92,7 @@ func resourceParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -174,7 +174,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -207,7 +207,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -260,9 +260,9 @@ func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name s
 	return &parameterGroup, nil
 }
 
-func resourceParameterHash(v interface{}) int {
+func resourceParameterHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrValue].(string))))
@@ -270,13 +270,13 @@ func resourceParameterHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func expandParameters(configured []interface{}) []awstypes.Parameter {
+func expandParameters(configured []any) []awstypes.Parameter {
 	var parameters []awstypes.Parameter
 
 	// Loop over our configured parameters and create
 	// an array of aws-sdk-go compatible objects
 	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
+		data := pRaw.(map[string]any)
 
 		if data[names.AttrName].(string) == "" {
 			continue
@@ -293,10 +293,10 @@ func expandParameters(configured []interface{}) []awstypes.Parameter {
 	return parameters
 }
 
-func flattenParameters(list []awstypes.Parameter) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenParameters(list []awstypes.Parameter) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 	for _, i := range list {
-		result = append(result, map[string]interface{}{
+		result = append(result, map[string]any{
 			names.AttrName:  aws.ToString(i.ParameterName),
 			names.AttrValue: aws.ToString(i.ParameterValue),
 		})

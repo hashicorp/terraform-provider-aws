@@ -52,7 +52,7 @@ func resourceQueryLog() *schema.Resource {
 	}
 }
 
-func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -72,7 +72,7 @@ func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceQueryLogRead(ctx, d, meta)...)
 }
 
-func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -95,7 +95,7 @@ func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceQueryLogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 

@@ -65,7 +65,7 @@ func resourceRuleGroupNamespace() *schema.Resource {
 	}
 }
 
-func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -93,7 +93,7 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -123,7 +123,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -148,7 +148,7 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -223,7 +223,7 @@ func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn stri
 }
 
 func statusRuleGroupNamespace(ctx context.Context, conn *amp.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRuleGroupNamespaceByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

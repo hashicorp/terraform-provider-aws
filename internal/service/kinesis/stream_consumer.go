@@ -58,7 +58,7 @@ func resourceStreamConsumer() *schema.Resource {
 	}
 }
 
-func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -83,7 +83,7 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceStreamConsumerRead(ctx, d, meta)...)
 }
 
-func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -157,7 +157,7 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 }
 
 func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStreamConsumerByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

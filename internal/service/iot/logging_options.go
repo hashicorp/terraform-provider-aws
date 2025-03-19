@@ -46,7 +46,7 @@ func resourceLoggingOptions() *schema.Resource {
 	}
 }
 
-func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
@@ -65,7 +65,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
 		return conn.SetV2LoggingOptions(ctx, input)
 	})
 
@@ -80,7 +80,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLoggingOptionsRead(ctx, d, meta)...)
 }
 
-func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)

@@ -40,7 +40,7 @@ func resourceAccount() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type: resourceV0.CoreConfigSchema().ImpliedType(),
-				Upgrade: func(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+				Upgrade: func(_ context.Context, rawState map[string]any, _ any) (map[string]any, error) {
 					if v, ok := rawState["enable_default_standards"]; !ok || v == nil {
 						rawState["enable_default_standards"] = "true"
 					}
@@ -77,7 +77,7 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -155,7 +155,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -176,12 +176,12 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountDeletedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountDeletedTimeout, func() (any, error) {
 		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
 	}, errCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
 

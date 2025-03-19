@@ -1,14 +1,23 @@
 ## 5.92.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_api_gateway_api_keys` ([#39335](https://github.com/hashicorp/terraform-provider-aws/issues/39335))
+* **New Data Source:** `aws_eks_cluster_versions` ([#40741](https://github.com/hashicorp/terraform-provider-aws/issues/40741))
+* **New Data Source:** `aws_identitystore_group_memberships` ([#31589](https://github.com/hashicorp/terraform-provider-aws/issues/31589))
+* **New Resource:** `aws_athena_capacity_reservation` ([#41858](https://github.com/hashicorp/terraform-provider-aws/issues/41858))
+
 ENHANCEMENTS:
 
 * data-source/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* data-source/aws_lb: Add `ipam_pools` attribute ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
 * provider: Support `aws-marketplace` as a valid account ID in ARNs ([#41867](https://github.com/hashicorp/terraform-provider-aws/issues/41867))
 * resource/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* resource/aws_lb:  Add `ipam_pools` configuration block ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
 
 BUG FIXES:
 

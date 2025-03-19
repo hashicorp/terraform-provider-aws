@@ -444,7 +444,7 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	const (
 		timeout = 2 * time.Minute
 	)
-	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
 	if err != nil {
@@ -479,7 +479,7 @@ func (r *userPoolClientResource) Delete(ctx context.Context, request resource.De
 
 	params := state.deleteInput(ctx)
 
-	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]any{
 		names.AttrID:         state.ID.ValueString(),
 		names.AttrUserPoolID: state.UserPoolID.ValueString(),
 	})

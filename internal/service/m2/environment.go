@@ -477,7 +477,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

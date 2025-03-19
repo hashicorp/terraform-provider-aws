@@ -32,13 +32,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Vpc Endpoint Associations",
 		},
 		{
-			Factory:  newVPCIPAMDataSource,
+			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  newVPCIPAMsDataSource,
+			Factory:  newIPAMsDataSource,
 			TypeName: "aws_vpc_ipams",
 			Name:     "IPAMs",
 		},
