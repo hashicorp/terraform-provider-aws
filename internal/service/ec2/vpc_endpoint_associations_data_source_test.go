@@ -75,18 +75,17 @@ func TestAccVPCEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
 
 func testAccVPCEndpointAssociationsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_resourceConfiguration(rName),
-		fmt.Sprintf(`
+		`
 data "aws_vpc_endpoint_associations" "test" {
   id = aws_vpc_endpoint.test.id
 }
-`),
+`,
 	)
 }
 
 func testAccVPCEndpointAssociationsDataSourceConfig_serviceNetwork(rName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_serviceNetwork(rName),
 		fmt.Sprintf(`
-
 resource "aws_vpclattice_resource_gateway" "test" {
   name       = %[1]q
   vpc_id     = aws_vpc.test.id

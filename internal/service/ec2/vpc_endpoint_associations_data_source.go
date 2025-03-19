@@ -116,7 +116,6 @@ func (d *dataSourceVPCEndpointAssociations) Read(ctx context.Context, req dataso
 }
 
 func findVPCEndpointAssociationsByID(ctx context.Context, conn *ec2.Client, id string) ([]types2.VpcEndpointAssociation, error) {
-
 	input := ec2.DescribeVpcEndpointAssociationsInput{
 		VpcEndpointIds: []string{id},
 	}
