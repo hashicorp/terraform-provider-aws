@@ -423,19 +423,19 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				regionSchema := &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
+					Computed: true,
+				}
+				// If the resource defines no Update handler then Region must be ForceNew
+				// otherwise for regional resources, a change of Region must ForceNew.
+				if r.UpdateWithoutTimeout == nil || !v.IsGlobal {
+					regionSchema.ForceNew = true
 				}
 
 				if v.IsValidateOverrideInPartition {
 					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
 				}
 
-				// If the resource defines no Update handler then Region must be ForceNew
-				// otherwise for regional resources, a change of Region must ForceNew.
-				if r.UpdateWithoutTimeout == nil {
-					regionSchema.ForceNew = true
-				} else if !v.IsGlobal {
-					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionChanges)
-				}
+				customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
 
 				if f := r.SchemaFunc; f != nil {
 					r.SchemaFunc = func() map[string]*schema.Schema {
