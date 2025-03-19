@@ -27,9 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
-			Factory:  newDataSourceVpcEndpointAssociations,
+			Factory:  newDataSourceVPCEndpointAssociations,
 			TypeName: "aws_vpc_endpoint_associations",
-			Name:     "Vpc Endpoint Associations",
+			Name:     "VPC Endpoint Associations",
 		},
 		{
 			Factory:  newIPAMDataSource,

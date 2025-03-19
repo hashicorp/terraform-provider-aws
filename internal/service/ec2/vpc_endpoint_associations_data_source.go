@@ -19,20 +19,20 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_vpc_endpoint_associations", name="Vpc Endpoint Associations")
-func newDataSourceVpcEndpointAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceVpcEndpointAssociations{}, nil
+// @FrameworkDataSource("aws_vpc_endpoint_associations", name="VPC Endpoint Associations")
+func newDataSourceVPCEndpointAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceVPCEndpointAssociations{}, nil
 }
 
 const (
-	DSNameVpcEndpointAssociations = "Vpc Endpoint Associations Data Source"
+	DSNameVPCEndpointAssociations = "VPC Endpoint Associations Data Source"
 )
 
-type dataSourceVpcEndpointAssociations struct {
+type dataSourceVPCEndpointAssociations struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceVpcEndpointAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceVPCEndpointAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: schema.StringAttribute{
@@ -41,7 +41,7 @@ func (d *dataSourceVpcEndpointAssociations) Schema(ctx context.Context, req data
 		},
 		Blocks: map[string]schema.Block{
 			"associations": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceVpcEndpointAssociationModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceVPCEndpointAssociationModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: framework.ARNAttributeComputedOnly(),
@@ -73,7 +73,7 @@ func (d *dataSourceVpcEndpointAssociations) Schema(ctx context.Context, req data
 
 func schemaDNSEntry(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceVpcEndpointAssociationDNSEntryModel](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceVPCEndpointAssociationDNSEntryModel](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrDNSName: schema.StringAttribute{
@@ -87,19 +87,19 @@ func schemaDNSEntry(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func (d *dataSourceVpcEndpointAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSourceVPCEndpointAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
 
-	var data dataSourceVpcEndpointAssociationsModel
+	var data dataSourceVPCEndpointAssociationsModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findVpcEndpointAssociationsByID(ctx, conn, data.ID.ValueString())
+	out, err := findVPCEndpointAssociationsByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameVpcEndpointAssociations, data.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameVPCEndpointAssociations, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -113,7 +113,7 @@ func (d *dataSourceVpcEndpointAssociations) Read(ctx context.Context, req dataso
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func findVpcEndpointAssociationsByID(ctx context.Context, conn *ec2.Client, id string) ([]types2.VpcEndpointAssociation, error) {
+func findVPCEndpointAssociationsByID(ctx context.Context, conn *ec2.Client, id string) ([]types2.VpcEndpointAssociation, error) {
 
 	input := ec2.DescribeVpcEndpointAssociationsInput{
 		VpcEndpointIds: []string{id},
@@ -128,23 +128,23 @@ func findVpcEndpointAssociationsByID(ctx context.Context, conn *ec2.Client, id s
 	return output.VpcEndpointAssociations, nil
 }
 
-type dataSourceVpcEndpointAssociationsModel struct {
-	Associations fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationModel] `tfsdk:"associations"`
+type dataSourceVPCEndpointAssociationsModel struct {
+	Associations fwtypes.ListNestedObjectValueOf[dataSourceVPCEndpointAssociationModel] `tfsdk:"associations"`
 	ID           types.String                                                           `tfsdk:"id"`
 }
 
-type dataSourceVpcEndpointAssociationModel struct {
+type dataSourceVPCEndpointAssociationModel struct {
 	AssociatedResourceAccessibility types.String                                                                   `tfsdk:"resource_accessibility"`
 	AssociatedResourceArn           types.String                                                                   `tfsdk:"resource_arn"`
-	DnsEntry                        fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationDNSEntryModel] `tfsdk:"dns_entry"`
+	DnsEntry                        fwtypes.ListNestedObjectValueOf[dataSourceVPCEndpointAssociationDNSEntryModel] `tfsdk:"dns_entry"`
 	ID                              types.String                                                                   `tfsdk:"id"`
-	PrivateDnsEntry                 fwtypes.ListNestedObjectValueOf[dataSourceVpcEndpointAssociationDNSEntryModel] `tfsdk:"private_dns_entry"`
+	PrivateDnsEntry                 fwtypes.ListNestedObjectValueOf[dataSourceVPCEndpointAssociationDNSEntryModel] `tfsdk:"private_dns_entry"`
 	ResourceConfigurationGroupArn   fwtypes.ARN                                                                    `tfsdk:"resource_configuration_group_arn"`
 	ServiceNetworkArn               fwtypes.ARN                                                                    `tfsdk:"service_network_arn"`
 	ServiceNetworkName              types.String                                                                   `tfsdk:"service_network_name"`
 }
 
-type dataSourceVpcEndpointAssociationDNSEntryModel struct {
+type dataSourceVPCEndpointAssociationDNSEntryModel struct {
 	DnsName      types.String `tfsdk:"dns_name"`
 	HostedZoneId types.String `tfsdk:"hosted_zone_id"`
 }
