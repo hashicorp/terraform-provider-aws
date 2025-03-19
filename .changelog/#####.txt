@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_availability_zone: Mark `region` as Optional, allowing a value to be configured
+```
+
+```release-note:enhancement
+data-source/aws_availability_zone: Add `group_long_name` attribute
+```
