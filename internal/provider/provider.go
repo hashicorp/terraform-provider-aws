@@ -10,6 +10,7 @@ import (
 	"log"
 	"maps"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -269,6 +270,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
+	// Acceptance test call this function multiple times, potentially in parallel.
+	// To avoid "fatal error: concurrent map writes", take a lock.
+	if slices.Contains(os.Args, "test.v=true") {
+		const mutexKey = "provider.New"
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey) // Runs at end of function, not end of block.
+	}
+
 	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
@@ -420,7 +429,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
 				}
 
-				if !v.IsGlobal {
+				// If the resource defines no Update handler then Region must be ForceNew
+				// otherwise for regional resources, a change of Region must ForceNew.
+				if r.UpdateWithoutTimeout == nil {
+					regionSchema.ForceNew = true
+				} else if !v.IsGlobal {
 					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionChanges)
 				}
 
