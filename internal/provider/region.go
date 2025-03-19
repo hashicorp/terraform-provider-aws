@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,4 +42,47 @@ func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) e
 	}
 
 	return nil
+}
+
+// regionDataSourceInterceptor implements per-resource Region override functionality for data sources.
+type regionDataSourceInterceptor struct {
+	validateRegionInPartition bool
+}
+
+func newRegionDataSourceInterceptor(validateRegionInPartition bool) interceptor {
+	return &regionDataSourceInterceptor{
+		validateRegionInPartition: validateRegionInPartition,
+	}
+}
+
+func (r regionDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch d, when, why := opts.d, opts.when, opts.why; when {
+	case Before:
+		switch why {
+		case Read:
+			// As data sources have no CustomizeDiff functionality we validate the per-resource Region override value here.
+			if r.validateRegionInPartition {
+				if inContext, ok := conns.FromContext(ctx); ok {
+					if v := inContext.OverrideRegion(); v != "" {
+						if err := validateRegionInPartition(ctx, c, v); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+					}
+				}
+			}
+		}
+	case After:
+		// Set region in state after R.
+		switch why {
+		case Read:
+			if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
+			}
+		}
+	}
+
+	return diags
 }

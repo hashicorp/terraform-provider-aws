@@ -301,6 +301,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			var interceptors interceptorItems
 			s := r.SchemaMap()
 
 			if v := v.Region; v != nil && v.IsOverrideEnabled {
@@ -325,9 +326,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				} else {
 					r.Schema[names.AttrRegion] = regionSchema
 				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when:        Before | After,
+					why:         Read,
+					interceptor: newRegionDataSourceInterceptor(v.IsValidateOverrideInPartition),
+				})
 			}
 
-			interceptors := interceptorItems{}
 			if v.Tags != nil {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -356,20 +362,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					if v := v.Region; v != nil && v.IsOverrideEnabled && getAttribute != nil {
 						if region, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = region.(string)
-
-							// As data sources have no CustomizeDiff functionality we validate the Region here.
-							if v.IsValidateOverrideInPartition {
-								if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), overrideRegion); err != nil {
-									return ctx, sdkdiag.AppendFromErr(diags, err)
-								}
-							}
 						}
 					}
 
 					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-					if v, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-						ctx = v.RegisterLogger(ctx)
+					if c, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
 					}
 
 					return ctx, diags
@@ -410,6 +409,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			var customizeDiffFuncs []schema.CustomizeDiffFunc
+			var interceptors interceptorItems
 			s := r.SchemaMap()
 
 			if v := v.Region; v != nil && v.IsOverrideEnabled {
@@ -448,7 +448,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				}
 			}
 
-			interceptors := interceptorItems{}
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
@@ -492,9 +491,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					}
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-					if v, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-						ctx = v.RegisterLogger(ctx)
+					if c, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
 					}
 
 					return ctx, diags
