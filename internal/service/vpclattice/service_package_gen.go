@@ -55,9 +55,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Auth Policy",
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_vpclattice_listener",
 			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  DataSourceResourcePolicy,
