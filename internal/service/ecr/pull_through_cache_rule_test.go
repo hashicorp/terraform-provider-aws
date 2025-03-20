@@ -369,22 +369,22 @@ resource "aws_ecr_registry_policy" "test" {
 }
 
 data "aws_iam_policy_document" "role_policy" {
-    statement {
-        actions = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchImportUpstreamImage",
-          "ecr:BatchGetImage",
-          "ecr:GetImageCopyStatus",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
-        ]
-        resources = [
-          "*"
-        ]
-    }
+  statement {
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchImportUpstreamImage",
+      "ecr:BatchGetImage",
+      "ecr:GetImageCopyStatus",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "assume_role_policy" {
@@ -450,22 +450,22 @@ resource "aws_ecr_registry_policy" "test" {
 }
 
 data "aws_iam_policy_document" "role_policy" {
-    statement {
-        actions = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchImportUpstreamImage",
-          "ecr:BatchGetImage",
-          "ecr:GetImageCopyStatus",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
-        ]
-        resources = [
-          "*"
-        ]
-    }
+  statement {
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchImportUpstreamImage",
+      "ecr:BatchGetImage",
+      "ecr:GetImageCopyStatus",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "assume_role_policy" {
@@ -482,7 +482,7 @@ resource "aws_iam_role" "test_updated" {
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 resource "aws_iam_role_policy" "test_updated" {
-  role = aws_iam_role.test_updated.name
+  role   = aws_iam_role.test_updated.name
   policy = data.aws_iam_policy_document.role_policy.json
 }
 

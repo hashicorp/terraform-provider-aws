@@ -229,22 +229,22 @@ resource "aws_ecr_registry_policy" "test" {
 }
 
 data "aws_iam_policy_document" "role_policy" {
-    statement {
-        actions = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchImportUpstreamImage",
-          "ecr:BatchGetImage",
-          "ecr:GetImageCopyStatus",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
-        ]
-        resources = [
-          "*"
-        ]
-    }
+  statement {
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchImportUpstreamImage",
+      "ecr:BatchGetImage",
+      "ecr:GetImageCopyStatus",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "assume_role_policy" {
