@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"log"
 	"time"
 
@@ -69,6 +70,59 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.DeviceTrustProviderType](),
 			},
+			"native_application_oidc_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authorization_endpoint": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+						names.AttrClientID: {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+						},
+						names.AttrClientSecret: {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+						},
+						names.AttrIssuer: {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+						"public_signing_key_endpoint": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+						names.AttrScope: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"token_endpoint": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+						"user_info_endpoint": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+					},
+				},
+			},
 			"oidc_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -123,6 +177,25 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"sse_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"customer_managed_key_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						names.AttrKMSKeyARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"trust_provider_type": {
 				Type:             schema.TypeString,
 				ForceNew:         true,
@@ -162,8 +235,16 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		input.DeviceTrustProviderType = types.DeviceTrustProviderType(v.(string))
 	}
 
+	if v, ok := d.GetOk("native_application_oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NativeApplicationOidcOptions = expandCreateVerifiedAccessTrustProviderNativeApplicationOIDCOptions(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SseSpecification = expandCreateVerifiedAccessGenericSseSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("user_trust_provider_type"); ok {
@@ -213,8 +294,20 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	} else {
 		d.Set("oidc_options", nil)
 	}
+
+	if v := output.NativeApplicationOidcOptions; v != nil {
+		if err := d.Set("native_application_oidc_options", flattenNativeApplicationOIDCOptions(v, d.Get("native_application_oidc_options.0.client_secret").(string))); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting native_application_oidc_options: %s", err)
+		}
+	} else {
+		d.Set("native_application_oidc_options", nil)
+	}
+
 	d.Set("policy_reference_name", output.PolicyReferenceName)
 	d.Set("trust_provider_type", output.TrustProviderType)
+	if err := d.Set("sse_specification", flattenVerifiedAccessSseSpecificationRequest(output.SseSpecification)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
+	}
 	d.Set("user_trust_provider_type", output.UserTrustProviderType)
 
 	setTagsOut(ctx, output.Tags)
@@ -239,6 +332,12 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 		if d.HasChange("oidc_options") {
 			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("native_application_oidc_options") {
+			if v, ok := d.GetOk("native_application_oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.NativeApplicationOidcOptions = expandModifyVerifiedAccessTrustProviderNativeApplicationOIDCOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -283,6 +382,40 @@ func flattenDeviceOptions(apiObject *types.DeviceOptions) []any {
 
 	if v := apiObject.TenantId; v != nil {
 		tfMap["tenant_id"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenNativeApplicationOIDCOptions(apiObject *types.NativeApplicationOidcOptions, clientSecret string) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrClientSecret: clientSecret,
+	}
+
+	if v := apiObject.AuthorizationEndpoint; v != nil {
+		tfMap["authorization_endpoint"] = aws.ToString(v)
+	}
+	if v := apiObject.ClientId; v != nil {
+		tfMap[names.AttrClientID] = aws.ToString(v)
+	}
+	if v := apiObject.Issuer; v != nil {
+		tfMap[names.AttrIssuer] = aws.ToString(v)
+	}
+	if v := apiObject.PublicSigningKeyEndpoint; v != nil {
+		tfMap["public_signing_key_endpoint"] = aws.ToString(v)
+	}
+	if v := apiObject.Scope; v != nil {
+		tfMap[names.AttrScope] = aws.ToString(v)
+	}
+	if v := apiObject.TokenEndpoint; v != nil {
+		tfMap["token_endpoint"] = aws.ToString(v)
+	}
+	if v := apiObject.UserInfoEndpoint; v != nil {
+		tfMap["user_info_endpoint"] = aws.ToString(v)
 	}
 
 	return []any{tfMap}
@@ -360,6 +493,55 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *t
 	}
 	if v, ok := tfMap["user_info_endpoint"].(string); ok && v != "" {
 		apiObject.UserInfoEndpoint = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandCreateVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap map[string]any) *types.CreateVerifiedAccessNativeApplicationOidcOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CreateVerifiedAccessNativeApplicationOidcOptions{}
+
+	if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
+		apiObject.AuthorizationEndpoint = aws.String(v)
+	}
+	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
+		apiObject.ClientId = aws.String(v)
+	}
+	if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
+		apiObject.ClientSecret = aws.String(v)
+	}
+	if v, ok := tfMap["public_signing_key_endpoint"].(string); ok && v != "" {
+		apiObject.PublicSigningKeyEndpoint = aws.String(v)
+	}
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
+		apiObject.Issuer = aws.String(v)
+	}
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
+		apiObject.Scope = aws.String(v)
+	}
+	if v, ok := tfMap["token_endpoint"].(string); ok && v != "" {
+		apiObject.TokenEndpoint = aws.String(v)
+	}
+	if v, ok := tfMap["user_info_endpoint"].(string); ok && v != "" {
+		apiObject.UserInfoEndpoint = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandModifyVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap map[string]any) *types.ModifyVerifiedAccessNativeApplicationOidcOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ModifyVerifiedAccessNativeApplicationOidcOptions{}
+
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
+		apiObject.Scope = aws.String(v)
 	}
 
 	return apiObject
