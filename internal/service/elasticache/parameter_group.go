@@ -64,7 +64,7 @@ func resourceParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
@@ -75,7 +75,7 @@ func resourceParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
@@ -109,7 +109,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &elasticache.CreateCacheParameterGroupInput{
 		CacheParameterGroupName:   aws.String(name),
 		CacheParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
