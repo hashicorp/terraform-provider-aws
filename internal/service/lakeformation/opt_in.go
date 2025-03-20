@@ -6,6 +6,7 @@ package lakeformation
 import (
 	"context"
 	"errors"
+	"reflect"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -195,7 +196,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	tableLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[Table](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[tableOptIn](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -1009,8 +1010,18 @@ func (d *tbResource) findOptIn(ctx context.Context, input *lakeformation.ListLak
 			if aws.ToString(v.Resource.Table.Name) == tb.Name.ValueString() &&
 				aws.ToString(v.Resource.Table.DatabaseName) == tb.DatabaseName.ValueString() {
 				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &Table{
+					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tableOptIn{
 						Name: fwflex.StringToFramework(ctx, v.Resource.Table.Name),
+					}),
+				})
+				return out
+			}
+
+			if v.Resource.Table.TableWildcard != nil && aws.ToString(v.Resource.Table.DatabaseName) == tb.DatabaseName.ValueString() {
+				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
+					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tableOptIn{
+						Name:     fwflex.StringValueToFramework(ctx, "ALL_TABLES"),
+						Wildcard: fwflex.BoolValueToFramework(ctx, true),
 					}),
 				})
 				return out
@@ -1081,7 +1092,7 @@ type ResourceData struct {
 	LFTag            fwtypes.ListNestedObjectValueOf[LFTag]            `tfsdk:"lf_tag"`
 	LFTagExpression  fwtypes.ListNestedObjectValueOf[LFTagExpression]  `tfsdk:"lf_tag_expression"`
 	LFTagPolicy      fwtypes.ListNestedObjectValueOf[LFTagPolicy]      `tfsdk:"lf_tag_policy"`
-	Table            fwtypes.ListNestedObjectValueOf[Table]            `tfsdk:"table"`
+	Table            fwtypes.ListNestedObjectValueOf[tableOptIn]       `tfsdk:"table"`
 	TableWithColumns fwtypes.ListNestedObjectValueOf[TableWithColumns] `tfsdk:"table_with_columns"`
 }
 
@@ -1117,11 +1128,48 @@ type LFTagPolicy struct {
 	ExpressionName types.String                              `tfsdk:"expression_name"`
 }
 
-type Table struct {
+type tableOptIn struct {
 	CatalogID    types.String `tfsdk:"catalog_id"`
 	DatabaseName types.String `tfsdk:"database_name"`
 	Name         types.String `tfsdk:"name"`
 	Wildcard     types.Bool   `tfsdk:"wildcard"`
+}
+
+var (
+	_ fwflex.Expander  = tableOptIn{}
+	_ fwflex.Flattener = &tableOptIn{}
+)
+
+func (m tableOptIn) Expand(_ context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.TableResource
+
+	r.CatalogId = m.CatalogID.ValueStringPointer()
+	r.DatabaseName = m.DatabaseName.ValueStringPointer()
+	r.Name = m.Name.ValueStringPointer()
+
+	if m.Wildcard.ValueBool() {
+		r.TableWildcard = &awstypes.TableWildcard{}
+	}
+
+	return &r, diags
+}
+
+func (m *tableOptIn) Flatten(ctx context.Context, input any) (diags diag.Diagnostics) {
+	tbOpt, ok := input.(awstypes.TableResource)
+	if !ok {
+		diags.Append(fwflex.DiagFlatteningIncompatibleTypes(reflect.TypeOf(input), reflect.TypeFor[tableOptIn]()))
+		return diags
+	}
+
+	m.CatalogID = fwflex.StringToFramework(ctx, tbOpt.CatalogId)
+	m.DatabaseName = fwflex.StringToFramework(ctx, tbOpt.DatabaseName)
+	m.Name = fwflex.StringToFramework(ctx, tbOpt.Name)
+	if tbOpt.TableWildcard != nil {
+		m.Wildcard = fwflex.BoolValueToFramework(ctx, true)
+		m.Name = types.StringNull()
+	}
+
+	return diags
 }
 
 type TableWithColumns struct {

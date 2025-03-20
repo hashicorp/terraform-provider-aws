@@ -33,6 +33,10 @@ func BoolToFramework(ctx context.Context, v *bool) types.Bool {
 	return types.BoolPointerValue(v)
 }
 
+func BoolValueToFramework(ctx context.Context, v bool) types.Bool {
+	return types.BoolValue(v)
+}
+
 // BoolToFrameworkLegacy converts a bool pointer to a Framework Bool value.
 // A nil bool pointer is converted to a false Bool.
 func BoolToFrameworkLegacy(_ context.Context, v *bool) types.Bool {
