@@ -256,7 +256,7 @@ func testAccCheckPullThroughCacheRuleExists(ctx context.Context, n string) resou
 
 func testAccCheckRepositoryUpstreamRegistryURL(ctx context.Context, resourceName, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", acctest.AccountID(ctx), region)
+		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", acctest.AccountID(ctx), region) //lintignore:AWSR001
 		return resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", attributeValue)(s)
 	}
 }
@@ -274,7 +274,7 @@ func testAccCheckRepositoryUpstreamRegistryURLCrossAccount(resourceName, region 
 			return fmt.Errorf("account_id not found in %s", callerIdentityDataSourceName)
 		}
 
-		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", anotherAccountId, region)
+		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", anotherAccountId, region) //lintignore:AWSR001
 		return resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", attributeValue)(s)
 	}
 }
