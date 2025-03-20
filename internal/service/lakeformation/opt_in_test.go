@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,6 +52,58 @@ func testAccOptIn_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_data.0.database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_data.0.database.0.name", databaseName, names.AttrName),
 				),
+			},
+		},
+	})
+}
+
+func testAccOptIn_table(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var optin lakeformation.ListLakeFormationOptInsOutput
+	resourceName := "aws_lakeformation_opt_in.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	roleName := "aws_iam_role.test"
+	databaseName := "aws_glue_catalog_database.test"
+	tableName := "aws_glue_catalog_table.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptInDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOptInConfig_Table(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptInExists(ctx, resourceName, &optin),
+					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "resource_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_data.0.table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_data.0.table.0.name", tableName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_data.0.table.0.database_name", databaseName, names.AttrName),
+				),
+			},
+			{
+				Config: testAccOptInConfig_Table_wildcard(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptInExists(ctx, resourceName, &optin),
+					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "resource_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_data.0.table.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_data.0.table.0.wildcard", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_data.0.table.0.database_name", databaseName, names.AttrName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -206,16 +259,19 @@ func constructOptInResource(rs *terraform.ResourceState) *awstypes.Resource {
 			}
 		},
 		"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
-			table := awstypes.TableResource{
-				DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
-				Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
-			}
-			if rs.Primary.Attributes["resource_data.0.table.0.wildcard"] == "true" {
-				table.TableWildcard = &awstypes.TableWildcard{}
-				table.Name = nil
-			}
 			return &awstypes.Resource{
-				Table: &table,
+				Table: &awstypes.TableResource{
+					DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
+					Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
+				},
+			}
+		},
+		"resource_data.0.table.0.wildcard": func(rs *terraform.ResourceState) *awstypes.Resource {
+			return &awstypes.Resource{
+				Table: &awstypes.TableResource{
+					DatabaseName:  aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
+					TableWildcard: &awstypes.TableWildcard{},
+				},
 			}
 		},
 		"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
@@ -239,7 +295,7 @@ func constructOptInResource(rs *terraform.ResourceState) *awstypes.Resource {
 	return resource
 }
 
-func testAccOptInConfig_basic(rName string) string {
+func testAccOptInConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -250,7 +306,8 @@ data "aws_iam_session_context" "current" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_iam_role" "test" {
@@ -318,14 +375,19 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   }
 }
 
-resource "aws_glue_catalog_database" "test" {
-  name       = %[1]q
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
 resource "aws_lakeformation_resource" "test" {
   arn        = aws_s3_bucket.test.arn
   role_arn   = aws_iam_role.test.arn
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
+func testAccOptInConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccOptInConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name       = %[1]q
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -341,5 +403,103 @@ resource "aws_lakeformation_opt_in" "test" {
     }
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccOptInConfig_Table(rName string) string {
+	return acctest.ConfigCompose(testAccOptInConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name       = %[1]q
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name    = "my_column_12"
+      type    = "date"
+      comment = "my_column1_comment2"
+    }
+
+    columns {
+      name    = "my_column_22"
+      type    = "timestamp"
+      comment = "my_column2_comment2"
+    }
+
+    columns {
+      name    = "my_column_23"
+      type    = "string"
+      comment = "my_column23_comment2"
+    }
+  }
+}
+
+resource "aws_lakeformation_opt_in" "test" {
+  principal {
+    data_lake_principal_identifier = aws_iam_role.test.arn
+  }
+
+  resource_data {
+    table {
+      database_name = aws_glue_catalog_database.test.name
+      catalog_id    = data.aws_caller_identity.current.account_id
+      name          = aws_glue_catalog_table.test.name
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOptInConfig_Table_wildcard(rName string) string {
+	return acctest.ConfigCompose(testAccOptInConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name       = %[1]q
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name    = "my_column_12"
+      type    = "date"
+      comment = "my_column1_comment2"
+    }
+
+    columns {
+      name    = "my_column_22"
+      type    = "timestamp"
+      comment = "my_column2_comment2"
+    }
+
+    columns {
+      name    = "my_column_23"
+      type    = "string"
+      comment = "my_column23_comment2"
+    }
+  }
+}
+
+resource "aws_lakeformation_opt_in" "test" {
+  principal {
+    data_lake_principal_identifier = aws_iam_role.test.arn
+  }
+
+  resource_data {
+    table {
+      database_name = aws_glue_catalog_database.test.name
+      catalog_id    = data.aws_caller_identity.current.account_id
+      wildcard      = true
+    }
+  }
+}
+`, rName))
 }
