@@ -59,7 +59,7 @@ type resourceOptIn struct {
 
 func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	catalogLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[Catalog](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[catalogOptIn](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrID: schema.StringAttribute{
@@ -70,7 +70,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	dataCellsFilterLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[DataCellsFilter](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataCellsFilterOptIn](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrDatabaseName: schema.StringAttribute{
@@ -90,7 +90,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	dataLocationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[DataLocation](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataLocationOptIn](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrResourceARN: schema.StringAttribute{
@@ -105,7 +105,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	databaseLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[Database](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[databaseOptIn](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -126,7 +126,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	lfTagLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTag](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[lfTagOptIn](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -160,7 +160,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	lftagExpressionLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTagExpression](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[lfTagExpressionOptIn](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrCatalogID: catalogIDSchemaOptional(),
@@ -175,7 +175,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	lfTagPolicyLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[LFTagPolicy](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[lfTagPolicyOptIn](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrResourceType: schema.StringAttribute{
@@ -241,7 +241,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 
 	tableWCLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[TableWithColumns](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[tableWithColumnsOptIn](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -280,7 +280,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			Blocks: map[string]schema.Block{
 				"column_wildcard": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[columnWildcardData](ctx),
+					CustomType: fwtypes.NewListNestedObjectTypeOf[columnWildcardDataOptIn](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
 						listvalidator.AtLeastOneOf(
@@ -319,7 +319,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrCondition: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[Condition](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[conditionOptIn](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrExpression: schema.StringAttribute{
@@ -329,7 +329,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			names.AttrPrincipal: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[DataLakePrincipal](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 				},
@@ -342,7 +342,7 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			"resource_data": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ResourceData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"catalog":            catalogLNB,
@@ -619,42 +619,42 @@ type optInResourcer interface {
 }
 
 type catalogResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type dbResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type dcfResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type dlResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type lftagResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type lfteResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type lftpResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type tbResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
 type tbcResource struct {
-	data *ResourceData
+	data *resourceData
 }
 
-func newOptInResourcer(data *ResourceData, diags *diag.Diagnostics) optInResourcer {
+func newOptInResourcer(data *resourceData, diags *diag.Diagnostics) optInResourcer {
 	switch {
 	case !data.Catalog.IsNull():
 		return &catalogResource{data: data}
@@ -844,55 +844,66 @@ func (d *tbcResource) expandOptInResource(ctx context.Context, diags *diag.Diagn
 }
 
 type resourceOptInData struct {
-	Principal     fwtypes.ListNestedObjectValueOf[DataLakePrincipal] `tfsdk:"principal"`
-	Resource      fwtypes.ListNestedObjectValueOf[ResourceData]      `tfsdk:"resource_data"`
-	Condition     fwtypes.ListNestedObjectValueOf[Condition]         `tfsdk:"condition"`
+	Principal     fwtypes.ListNestedObjectValueOf[dataLakePrincipal] `tfsdk:"principal"`
+	Resource      fwtypes.ListNestedObjectValueOf[resourceData]      `tfsdk:"resource_data"`
+	Condition     fwtypes.ListNestedObjectValueOf[conditionOptIn]    `tfsdk:"condition"`
 	LastUpdatedBy types.String                                       `tfsdk:"last_updated_by"`
 	LastModified  timetypes.RFC3339                                  `tfsdk:"last_modified"`
 }
 
-type DataLakePrincipal struct {
+type dataLakePrincipal struct {
 	DataLakePrincipalIdentifier types.String `tfsdk:"data_lake_principal_identifier"`
 }
 
-type ResourceData struct {
-	Catalog          fwtypes.ListNestedObjectValueOf[Catalog]          `tfsdk:"catalog"`
-	DataCellsFilter  fwtypes.ListNestedObjectValueOf[DataCellsFilter]  `tfsdk:"data_cells_filter"`
-	DataLocation     fwtypes.ListNestedObjectValueOf[DataLocation]     `tfsdk:"data_location"`
-	Database         fwtypes.ListNestedObjectValueOf[Database]         `tfsdk:"database"`
-	LFTag            fwtypes.ListNestedObjectValueOf[LFTag]            `tfsdk:"lf_tag"`
-	LFTagExpression  fwtypes.ListNestedObjectValueOf[LFTagExpression]  `tfsdk:"lf_tag_expression"`
-	LFTagPolicy      fwtypes.ListNestedObjectValueOf[LFTagPolicy]      `tfsdk:"lf_tag_policy"`
-	Table            fwtypes.ListNestedObjectValueOf[tableOptIn]       `tfsdk:"table"`
-	TableWithColumns fwtypes.ListNestedObjectValueOf[TableWithColumns] `tfsdk:"table_with_columns"`
+type resourceData struct {
+	Catalog          fwtypes.ListNestedObjectValueOf[catalogOptIn]          `tfsdk:"catalog"`
+	DataCellsFilter  fwtypes.ListNestedObjectValueOf[dataCellsFilterOptIn]  `tfsdk:"data_cells_filter"`
+	DataLocation     fwtypes.ListNestedObjectValueOf[dataLocationOptIn]     `tfsdk:"data_location"`
+	Database         fwtypes.ListNestedObjectValueOf[databaseOptIn]         `tfsdk:"database"`
+	LFTag            fwtypes.ListNestedObjectValueOf[lfTagOptIn]            `tfsdk:"lf_tag"`
+	LFTagExpression  fwtypes.ListNestedObjectValueOf[lfTagExpressionOptIn]  `tfsdk:"lf_tag_expression"`
+	LFTagPolicy      fwtypes.ListNestedObjectValueOf[lfTagPolicyOptIn]      `tfsdk:"lf_tag_policy"`
+	Table            fwtypes.ListNestedObjectValueOf[tableOptIn]            `tfsdk:"table"`
+	TableWithColumns fwtypes.ListNestedObjectValueOf[tableWithColumnsOptIn] `tfsdk:"table_with_columns"`
 }
 
-type Catalog struct {
+type catalogOptIn struct {
 	ID types.String `tfsdk:"id"`
 }
 
-type Condition struct {
+type conditionOptIn struct {
 	Expression types.String `tfsdk:"expression"`
 }
 
-type DataCellsFilter struct {
+type dataCellsFilterOptIn struct {
 	DatabaseName   types.String `tfsdk:"database_name"`
 	Name           types.String `tfsdk:"name"`
 	TableCatalogID types.String `tfsdk:"table_catalog_id"`
 	TableName      types.String `tfsdk:"table_name"`
 }
 
-type DataLocation struct {
+type databaseOptIn struct {
+	CatalogID types.String `tfsdk:"catalog_id"`
+	Name      types.String `tfsdk:"name"`
+}
+
+type dataLocationOptIn struct {
 	ResourceArn types.String `tfsdk:"resource_arn"`
 	CatalogID   types.String `tfsdk:"catalog_id"`
 }
 
-type LFTagExpression struct {
+type lfTagOptIn struct {
+	CatalogID types.String `tfsdk:"catalog_id"`
+	Key       types.String `tfsdk:"key"`
+	Value     types.String `tfsdk:"value"`
+}
+
+type lfTagExpressionOptIn struct {
 	Name      types.String `tfsdk:"name"`
 	CatalogID types.String `tfsdk:"catalog_id"`
 }
 
-type LFTagPolicy struct {
+type lfTagPolicyOptIn struct {
 	ResourceType   fwtypes.StringEnum[awstypes.ResourceType] `tfsdk:"resource_type"`
 	CatalogID      types.String                              `tfsdk:"catalog_id"`
 	Expression     fwtypes.ListValueOf[types.String]         `tfsdk:"expression"`
@@ -943,10 +954,14 @@ func (m *tableOptIn) Flatten(ctx context.Context, input any) (diags diag.Diagnos
 	return diags
 }
 
-type TableWithColumns struct {
-	CatalogID      types.String                                        `tfsdk:"catalog_id"`
-	ColumnNames    fwtypes.SetValueOf[types.String]                    `tfsdk:"column_names"`
-	ColumnWildcard fwtypes.ListNestedObjectValueOf[columnWildcardData] `tfsdk:"column_wildcard"`
-	DatabaseName   types.String                                        `tfsdk:"database_name"`
-	Name           types.String                                        `tfsdk:"name"`
+type tableWithColumnsOptIn struct {
+	CatalogID      types.String                                             `tfsdk:"catalog_id"`
+	ColumnNames    fwtypes.SetValueOf[types.String]                         `tfsdk:"column_names"`
+	ColumnWildcard fwtypes.ListNestedObjectValueOf[columnWildcardDataOptIn] `tfsdk:"column_wildcard"`
+	DatabaseName   types.String                                             `tfsdk:"database_name"`
+	Name           types.String                                             `tfsdk:"name"`
+}
+
+type columnWildcardDataOptIn struct {
+	ExcludedColumnNames fwtypes.SetValueOf[types.String] `tfsdk:"excluded_column_names"`
 }
