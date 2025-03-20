@@ -33,6 +33,7 @@ func BoolToFramework(ctx context.Context, v *bool) types.Bool {
 	return types.BoolPointerValue(v)
 }
 
+// BoolValueToFramework converts a bool value to a Framework Bool value.
 func BoolValueToFramework(ctx context.Context, v bool) types.Bool {
 	return types.BoolValue(v)
 }
