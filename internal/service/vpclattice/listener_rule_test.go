@@ -34,7 +34,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_basic(rName),
@@ -67,7 +67,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_fixedResponse(rName),
@@ -97,7 +97,7 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_methodMatch(rName),
@@ -126,7 +126,7 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -154,7 +154,7 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 	})
 }
 
-func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -163,7 +163,7 @@ func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfvpclattice.FindListenerRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_id"], rs.Primary.Attributes["rule_id"])
+			_, err := tfvpclattice.FindListenerRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_identifier"], rs.Primary.Attributes["rule_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -189,7 +189,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, v *vpclattice
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
-		output, err := tfvpclattice.FindListenerRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_id"], rs.Primary.Attributes["rule_id"])
+		output, err := tfvpclattice.FindListenerRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_identifier"], rs.Primary.Attributes["rule_id"])
 
 		if err != nil {
 			return err
