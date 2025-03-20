@@ -145,9 +145,11 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	input := vpclattice.DeregisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets: []types.Target{{
-			Id:   aws.String(targetID),
-			Port: aws.Int32(targetPort),
+			Id: aws.String(targetID),
 		}},
+	}
+	if targetPort > 0 {
+		input.Targets[0].Port = aws.Int32(targetPort)
 	}
 	_, err = conn.DeregisterTargets(ctx, &input)
 
