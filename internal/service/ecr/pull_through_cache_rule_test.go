@@ -342,12 +342,13 @@ data "aws_caller_identity" "alternate" {
   provider = awsalternate
 }
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "registry_policy" {
   statement {
     principals {
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       ]
       type = "AWS"
     }
@@ -358,7 +359,7 @@ data "aws_iam_policy_document" "registry_policy" {
       "ecr:GetImageCopyStatus"
     ]
     resources = [
-      "arn:aws:ecr:%[3]s:${data.aws_caller_identity.alternate.account_id}:repository/*",
+      "arn:${data.aws_partition.current.partition}:ecr:%[3]s:${data.aws_caller_identity.alternate.account_id}:repository/*",
     ]
   }
 }
@@ -423,12 +424,13 @@ data "aws_caller_identity" "alternate" {
   provider = awsalternate
 }
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "registry_policy" {
   statement {
     principals {
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       ]
       type = "AWS"
     }
@@ -439,7 +441,7 @@ data "aws_iam_policy_document" "registry_policy" {
       "ecr:GetImageCopyStatus"
     ]
     resources = [
-      "arn:aws:ecr:%[3]s:${data.aws_caller_identity.alternate.account_id}:repository/*",
+      "arn:${data.aws_partition.current.partition}:ecr:%[3]s:${data.aws_caller_identity.alternate.account_id}:repository/*",
     ]
   }
 }
