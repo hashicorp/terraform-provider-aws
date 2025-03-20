@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_ecr_pull_through_cache_rule: Add arguments `upstream_repository_prefix` and `custom_role_arn` to support ECR private registry as an upstream registry.
+```
+```release-note:enhancement
+data-source/aws_ecr_pull_through_cache_rule: Add support for `upstream_repository_prefix` and `custom_role_arn` used when the upstream registry is an ECR private registry.
+```
