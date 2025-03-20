@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLakeFormationOptIn_basic(t *testing.T) {
+func testAccOptIn_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
@@ -32,7 +32,7 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 	roleName := "aws_iam_role.test"
 	databaseName := "aws_glue_catalog_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
@@ -56,14 +56,14 @@ func TestAccLakeFormationOptIn_basic(t *testing.T) {
 	})
 }
 
-func TestAccLakeFormationOptIn_disappears(t *testing.T) {
+func testAccOptIn_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
@@ -206,11 +206,16 @@ func constructOptInResource(rs *terraform.ResourceState) *awstypes.Resource {
 			}
 		},
 		"resource_data.0.table.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
+			table := awstypes.TableResource{
+				DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
+				Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
+			}
+			if rs.Primary.Attributes["resource_data.0.table.0.wildcard"] == "true" {
+				table.TableWildcard = &awstypes.TableWildcard{}
+				table.Name = nil
+			}
 			return &awstypes.Resource{
-				Table: &awstypes.TableResource{
-					Name:         aws.String(rs.Primary.Attributes["resource_data.0.table.0.name"]),
-					DatabaseName: aws.String(rs.Primary.Attributes["resource_data.0.table.0.database_name"]),
-				},
+				Table: &table,
 			}
 		},
 		"resource_data.0.table_with_columns.0.name": func(rs *terraform.ResourceState) *awstypes.Resource {
