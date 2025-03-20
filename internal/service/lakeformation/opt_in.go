@@ -599,9 +599,9 @@ func findOptInByID(ctx context.Context, conn *lakeformation.Client, id string, r
 		Resource: resource,
 	}
 
-	return findOptIn(ctx, conn, in, tfslices.Predicate[*awstypes.LakeFormationOptInsInfo](func(v *awstypes.LakeFormationOptInsInfo) bool {
+	return findOptIn(ctx, conn, in, func(v *awstypes.LakeFormationOptInsInfo) bool {
 		return aws.ToString(v.Principal.DataLakePrincipalIdentifier) == id
-	}))
+	})
 }
 
 func findOptIn(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListLakeFormationOptInsInput, filter tfslices.Predicate[*awstypes.LakeFormationOptInsInfo]) (*awstypes.LakeFormationOptInsInfo, error) {
@@ -616,7 +616,6 @@ func findOptIn(ctx context.Context, conn *lakeformation.Client, input *lakeforma
 
 type optInResourcer interface {
 	expandOptInResource(context.Context, *diag.Diagnostics) *awstypes.Resource
-	findOptIn(context.Context, *lakeformation.ListLakeFormationOptInsOutput, *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData]
 }
 
 type catalogResource struct {
@@ -700,29 +699,6 @@ func (d *catalogResource) expandOptInResource(ctx context.Context, diags *diag.D
 	return &r
 }
 
-func (d *catalogResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	catalog, err := d.data.Catalog.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.Catalog != nil {
-			if aws.ToString(v.Resource.Catalog.Id) == catalog.ID.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					Catalog: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &Catalog{
-						ID: fwflex.StringToFramework(ctx, v.Resource.Catalog.Id),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-}
-
 func (d *dbResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	dbptr, err := d.data.Database.ToPtr(ctx)
@@ -739,31 +715,6 @@ func (d *dbResource) expandOptInResource(ctx context.Context, diags *diag.Diagno
 
 	r.Database = &db
 	return &r
-}
-
-func (d *dbResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	db, err := d.data.Database.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.Database != nil {
-			if aws.ToString(v.Resource.Database.Name) == db.Name.ValueString() &&
-				aws.ToString(v.Resource.Database.CatalogId) == db.CatalogID.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					Database: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &Database{
-						Name:      fwflex.StringToFramework(ctx, v.Resource.Database.Name),
-						CatalogID: fwflex.StringToFramework(ctx, v.Resource.Database.CatalogId),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
 func (d *dcfResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
@@ -784,34 +735,6 @@ func (d *dcfResource) expandOptInResource(ctx context.Context, diags *diag.Diagn
 	return &r
 }
 
-func (d *dcfResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	dcf, err := d.data.DataCellsFilter.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.DataCellsFilter != nil {
-			if aws.ToString(v.Resource.DataCellsFilter.Name) == dcf.Name.ValueString() &&
-				aws.ToString(v.Resource.DataCellsFilter.DatabaseName) == dcf.DatabaseName.ValueString() &&
-				aws.ToString(v.Resource.DataCellsFilter.TableCatalogId) == dcf.TableCatalogID.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					DataCellsFilter: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &DataCellsFilter{
-						Name:           fwflex.StringToFramework(ctx, v.Resource.DataCellsFilter.Name),
-						DatabaseName:   fwflex.StringToFramework(ctx, v.Resource.DataCellsFilter.DatabaseName),
-						TableCatalogID: fwflex.StringToFramework(ctx, v.Resource.DataCellsFilter.TableCatalogId),
-						TableName:      fwflex.StringToFramework(ctx, v.Resource.DataCellsFilter.TableName),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-}
-
 func (d *dlResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	dlptr, err := d.data.DataLocation.ToPtr(ctx)
@@ -828,30 +751,6 @@ func (d *dlResource) expandOptInResource(ctx context.Context, diags *diag.Diagno
 
 	r.DataLocation = &dl
 	return &r
-}
-
-func (d *dlResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	dl, err := d.data.DataLocation.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.DataLocation != nil {
-			if aws.ToString(v.Resource.DataLocation.ResourceArn) == dl.ResourceArn.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					DataLocation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &DataLocation{
-						ResourceArn: fwflex.StringToFramework(ctx, v.Resource.DataLocation.ResourceArn),
-						CatalogID:   fwflex.StringToFramework(ctx, v.Resource.DataLocation.CatalogId),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
 func (d *lftagResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
@@ -872,29 +771,6 @@ func (d *lftagResource) expandOptInResource(ctx context.Context, diags *diag.Dia
 	return &r
 }
 
-func (d *lftagResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	lftag, err := d.data.LFTag.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.LFTag != nil {
-			if aws.ToString(v.Resource.LFTag.TagKey) == lftag.Key.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					LFTag: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &LFTag{
-						Key: fwflex.StringToFramework(ctx, v.Resource.LFTag.TagKey),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-}
-
 func (d *lfteResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	lfteptr, err := d.data.LFTagExpression.ToPtr(ctx)
@@ -911,30 +787,6 @@ func (d *lfteResource) expandOptInResource(ctx context.Context, diags *diag.Diag
 
 	r.LFTagExpression = &lfte
 	return &r
-}
-
-func (d *lfteResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	lfte, err := d.data.LFTagExpression.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.LFTagExpression != nil {
-			if aws.ToString(v.Resource.LFTagExpression.Name) == lfte.Name.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					LFTagExpression: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &LFTagExpression{
-						Name:      fwflex.StringToFramework(ctx, v.Resource.LFTagExpression.Name),
-						CatalogID: fwflex.StringToFramework(ctx, v.Resource.LFTagExpression.CatalogId),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
 func (d *lftpResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
@@ -955,31 +807,6 @@ func (d *lftpResource) expandOptInResource(ctx context.Context, diags *diag.Diag
 	return &r
 }
 
-func (d *lftpResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	lftp, err := d.data.LFTagPolicy.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.LFTagPolicy != nil {
-			if aws.ToString((*string)(&v.Resource.LFTagPolicy.ResourceType)) == lftp.ResourceType.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					LFTagPolicy: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &LFTagPolicy{
-						ResourceType:   fwtypes.StringEnumValue(v.Resource.LFTagPolicy.ResourceType),
-						CatalogID:      fwflex.StringToFramework(ctx, v.Resource.LFTagPolicy.CatalogId),
-						ExpressionName: fwflex.StringToFramework(ctx, v.Resource.LFTagPolicy.ExpressionName),
-					}),
-				})
-				return out
-			}
-		}
-	}
-
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-}
-
 func (d *tbResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	tableptr, err := d.data.Table.ToPtr(ctx)
@@ -998,39 +825,6 @@ func (d *tbResource) expandOptInResource(ctx context.Context, diags *diag.Diagno
 	return &r
 }
 
-func (d *tbResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	tb, err := d.data.Table.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.Table != nil {
-			if aws.ToString(v.Resource.Table.Name) == tb.Name.ValueString() &&
-				aws.ToString(v.Resource.Table.DatabaseName) == tb.DatabaseName.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tableOptIn{
-						Name: fwflex.StringToFramework(ctx, v.Resource.Table.Name),
-					}),
-				})
-				return out
-			}
-
-			if v.Resource.Table.TableWildcard != nil && aws.ToString(v.Resource.Table.DatabaseName) == tb.DatabaseName.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					Table: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tableOptIn{
-						Name:     fwflex.StringValueToFramework(ctx, "ALL_TABLES"),
-						Wildcard: fwflex.BoolValueToFramework(ctx, true),
-					}),
-				})
-				return out
-			}
-		}
-	}
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-}
-
 func (d *tbcResource) expandOptInResource(ctx context.Context, diags *diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
 	tbcptr, err := d.data.TableWithColumns.ToPtr(ctx)
@@ -1047,29 +841,6 @@ func (d *tbcResource) expandOptInResource(ctx context.Context, diags *diag.Diagn
 
 	r.TableWithColumns = &tbc
 	return &r
-}
-
-func (d *tbcResource) findOptIn(ctx context.Context, input *lakeformation.ListLakeFormationOptInsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[ResourceData] {
-	tbc, err := d.data.TableWithColumns.ToPtr(ctx)
-	if err != nil {
-		diags.Append(err...)
-		return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
-	}
-
-	for _, v := range input.LakeFormationOptInsInfoList {
-		if v.Resource != nil && v.Resource.TableWithColumns != nil {
-			if aws.ToString(v.Resource.TableWithColumns.Name) == tbc.Name.ValueString() &&
-				aws.ToString(v.Resource.TableWithColumns.DatabaseName) == tbc.DatabaseName.ValueString() {
-				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ResourceData{
-					TableWithColumns: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TableWithColumns{
-						Name: fwflex.StringToFramework(ctx, v.Resource.TableWithColumns.Name),
-					}),
-				})
-				return out
-			}
-		}
-	}
-	return fwtypes.NewListNestedObjectValueOfNull[ResourceData](ctx)
 }
 
 type resourceOptInData struct {
