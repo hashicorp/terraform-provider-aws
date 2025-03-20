@@ -6,7 +6,6 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -107,11 +106,11 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	targetGroupID, targetID, targetPort, err := targetGroupAttachmentParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
+	// Can't use targetGroupAttachmentParseResourceID as targetID ALB ARN includes '/'.
+	targetGroupID := d.Get("target_group_identifier").(string)
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
+	targetID := aws.ToString(target.Id)
+	targetPort := aws.ToInt32(target.Port)
 	output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -136,12 +135,11 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	targetGroupID, targetID, targetPort, err := targetGroupAttachmentParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	log.Printf("[INFO] Deleting VPC Lattice Target Group Attachment: %s", d.Id())
+	targetGroupID := d.Get("target_group_identifier").(string)
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
+	targetID := aws.ToString(target.Id)
+	targetPort := aws.ToInt32(target.Port)
 	input := vpclattice.DeregisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets: []types.Target{{
@@ -151,7 +149,7 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	if targetPort > 0 {
 		input.Targets[0].Port = aws.Int32(targetPort)
 	}
-	_, err = conn.DeregisterTargets(ctx, &input)
+	_, err := conn.DeregisterTargets(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -175,16 +173,6 @@ func targetGroupAttachmentCreateResourceID(targetGroupID, targetID string, targe
 	id := strings.Join(parts, targetGroupAttachmentResourceIDSeparator)
 
 	return id
-}
-
-func targetGroupAttachmentParseResourceID(id string) (string, string, int32, error) {
-	parts := strings.SplitN(id, targetGroupAttachmentResourceIDSeparator, 3)
-
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", 0, fmt.Errorf("unexpected format for ID (%[1]s), expected TARGET-GROUP-ID%[2]sTARGET-ID%[2]sTARGET-PORT", id, targetGroupAttachmentResourceIDSeparator)
-	}
-
-	return parts[0], parts[1], flex.StringValueToInt32Value(parts[2]), nil
 }
 
 func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) (*types.TargetSummary, error) {
