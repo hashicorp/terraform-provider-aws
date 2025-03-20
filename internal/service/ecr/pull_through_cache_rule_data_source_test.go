@@ -122,7 +122,7 @@ func TestAccECRPullThroughCacheRuleDataSource_privateRepositoryCrossAccount(t *t
 					testAccCheckRepositoryUpstreamRegistryURLCrossAccount(dataSource, acctest.Region()),
 					resource.TestCheckResourceAttr(dataSource, "ecr_repository_prefix", repositoryPrefix),
 					resource.TestCheckResourceAttr(dataSource, "upstream_repository_prefix", "ROOT"),
-					resource.TestCheckResourceAttrPair(dataSource, "custom_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(dataSource, "custom_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 		},

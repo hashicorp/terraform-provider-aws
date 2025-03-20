@@ -195,7 +195,7 @@ func TestAccECRPullThroughCacheRule_privateRepositoryCrossAccount(t *testing.T) 
 					testAccCheckRepositoryUpstreamRegistryURLCrossAccount(resourceName, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
 					resource.TestCheckResourceAttr(resourceName, "upstream_repository_prefix", "ROOT"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -206,7 +206,7 @@ func TestAccECRPullThroughCacheRule_privateRepositoryCrossAccount(t *testing.T) 
 					testAccCheckRepositoryUpstreamRegistryURLCrossAccount(resourceName, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
 					resource.TestCheckResourceAttr(resourceName, "upstream_repository_prefix", "ROOT"),
-					resource.TestCheckResourceAttrPair(resourceName, "custom_role_arn", "aws_iam_role.test_updated", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_role_arn", "aws_iam_role.test_updated", names.AttrARN),
 				),
 			},
 		},
@@ -269,7 +269,7 @@ func testAccCheckRepositoryUpstreamRegistryURLCrossAccount(resourceName, region 
 			return err
 		}
 
-		anotherAccountId, ok := callerIdentity.Attributes["account_id"]
+		anotherAccountId, ok := callerIdentity.Attributes[names.AttrAccountID]
 		if !ok {
 			return fmt.Errorf("account_id not found in %s", callerIdentityDataSourceName)
 		}
