@@ -1,4 +1,9 @@
 ## 5.93.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lakeformation_opt_in: Fix error when expanding `resource_data.table_wildcard` attribute ([#41939](https://github.com/hashicorp/terraform-provider-aws/issues/41939))
+
 ## 5.92.0 (March 20, 2025)
 
 NOTES:
