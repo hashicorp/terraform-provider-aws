@@ -198,6 +198,17 @@ func TestAccECRPullThroughCacheRule_privateRepositoryCrossAccount(t *testing.T) 
 					resource.TestCheckResourceAttrPair(resourceName, "custom_role_arn", "aws_iam_role.test", "arn"),
 				),
 			},
+			{
+				Config: testAccPullThroughCacheRuleConfig_privateRepositoryCrossAccountUpdated(repositoryPrefix, "ROOT", acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					testAccCheckRepositoryUpstreamRegistryURLCrossAccount(resourceName, acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
+					resource.TestCheckResourceAttr(resourceName, "upstream_repository_prefix", "ROOT"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_role_arn", "aws_iam_role.test_updated", "arn"),
+				),
+			},
 		},
 	})
 }
@@ -400,6 +411,87 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
   upstream_registry_url      = "${data.aws_caller_identity.alternate.account_id}.dkr.ecr.%[3]s.amazonaws.com"
   custom_role_arn            = aws_iam_role.test.arn
   depends_on                 = [aws_ecr_registry_policy.test, aws_iam_role_policy.test, aws_iam_role.test]
+}
+`, ecrRepositoryPrefix, upstreamRepositoryPrefix, region),
+	)
+}
+
+func testAccPullThroughCacheRuleConfig_privateRepositoryCrossAccountUpdated(ecrRepositoryPrefix, upstreamRepositoryPrefix, region string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "alternate" {
+  provider = awsalternate
+}
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "registry_policy" {
+  statement {
+    principals {
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+      type = "AWS"
+    }
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchImportUpstreamImage",
+      "ecr:GetImageCopyStatus"
+    ]
+    resources = [
+      "arn:aws:ecr:%[3]s:${data.aws_caller_identity.alternate.account_id}:repository/*",
+    ]
+  }
+}
+
+resource "aws_ecr_registry_policy" "test" {
+  provider = awsalternate
+  policy   = data.aws_iam_policy_document.registry_policy.json
+}
+
+data "aws_iam_policy_document" "role_policy" {
+    statement {
+        actions = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchImportUpstreamImage",
+          "ecr:BatchGetImage",
+          "ecr:GetImageCopyStatus",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+        ]
+        resources = [
+          "*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["pullthroughcache.ecr.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test_updated" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+resource "aws_iam_role_policy" "test_updated" {
+  role = aws_iam_role.test_updated.name
+  policy = data.aws_iam_policy_document.role_policy.json
+}
+
+resource "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix      = %[1]q
+  upstream_repository_prefix = %[2]q
+  upstream_registry_url      = "${data.aws_caller_identity.alternate.account_id}.dkr.ecr.%[3]s.amazonaws.com"
+  custom_role_arn            = aws_iam_role.test_updated.arn
+  depends_on                 = [aws_ecr_registry_policy.test, aws_iam_role_policy.test_updated, aws_iam_role.test_updated]
 }
 `, ecrRepositoryPrefix, upstreamRepositoryPrefix, region),
 	)
