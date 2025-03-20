@@ -102,12 +102,12 @@ func DataSourceScript() *schema.Resource {
 	}
 }
 
-func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	dagEdge := d.Get("dag_edge").([]interface{})
-	dagNode := d.Get("dag_node").([]interface{})
+	dagEdge := d.Get("dag_edge").([]any)
+	dagNode := d.Get("dag_node").([]any)
 
 	input := &glue.CreateScriptInput{
 		DagEdges: expandCodeGenEdges(dagEdge),
@@ -135,11 +135,11 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func expandCodeGenNodeArgs(l []interface{}) []awstypes.CodeGenNodeArg {
+func expandCodeGenNodeArgs(l []any) []awstypes.CodeGenNodeArg {
 	args := []awstypes.CodeGenNodeArg{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 		arg := awstypes.CodeGenNodeArg{
 			Name:  aws.String(m[names.AttrName].(string)),
 			Param: m["param"].(bool),
@@ -151,11 +151,11 @@ func expandCodeGenNodeArgs(l []interface{}) []awstypes.CodeGenNodeArg {
 	return args
 }
 
-func expandCodeGenEdges(l []interface{}) []awstypes.CodeGenEdge {
+func expandCodeGenEdges(l []any) []awstypes.CodeGenEdge {
 	edges := []awstypes.CodeGenEdge{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 		edge := awstypes.CodeGenEdge{
 			Source: aws.String(m[names.AttrSource].(string)),
 			Target: aws.String(m[names.AttrTarget].(string)),
@@ -169,13 +169,13 @@ func expandCodeGenEdges(l []interface{}) []awstypes.CodeGenEdge {
 	return edges
 }
 
-func expandCodeGenNodes(l []interface{}) []awstypes.CodeGenNode {
+func expandCodeGenNodes(l []any) []awstypes.CodeGenNode {
 	nodes := []awstypes.CodeGenNode{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 		node := awstypes.CodeGenNode{
-			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
+			Args:     expandCodeGenNodeArgs(m["args"].([]any)),
 			Id:       aws.String(m[names.AttrID].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}

@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenAccessLog(apiObject *awstypes.AccessLog) []interface{} {
+func flattenAccessLog(apiObject *awstypes.AccessLog) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, 1)
-	tfMap := make(map[string]interface{})
+	tfList := make([]any, 0, 1)
+	tfMap := make(map[string]any)
 
 	if apiObject.S3BucketName != nil {
 		tfMap[names.AttrBucket] = aws.ToString(apiObject.S3BucketName)
@@ -53,13 +53,13 @@ func flattenBackendServerDescriptionPolicies(apiObjects []awstypes.BackendServer
 	return tfMap
 }
 
-func flattenHealthCheck(apiObject *awstypes.HealthCheck) []interface{} {
+func flattenHealthCheck(apiObject *awstypes.HealthCheck) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, 1)
-	tfMap := make(map[string]interface{})
+	tfList := make([]any, 0, 1)
+	tfMap := make(map[string]any)
 
 	tfMap["unhealthy_threshold"] = aws.ToInt32(apiObject.UnhealthyThreshold)
 	tfMap["healthy_threshold"] = aws.ToInt32(apiObject.HealthyThreshold)
@@ -78,19 +78,19 @@ func flattenInstances(apiObjects []awstypes.Instance) []string {
 	})
 }
 
-func expandInstances(tfList []interface{}) []awstypes.Instance {
-	return tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.Instance {
+func expandInstances(tfList []any) []awstypes.Instance {
+	return tfslices.ApplyToAll(tfList, func(v any) awstypes.Instance {
 		return awstypes.Instance{
 			InstanceId: aws.String(v.(string)),
 		}
 	})
 }
 
-func expandListeners(tfList []interface{}) ([]awstypes.Listener, error) {
+func expandListeners(tfList []any) ([]awstypes.Listener, error) {
 	apiObjects := make([]awstypes.Listener, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -129,11 +129,11 @@ func expandListeners(tfList []interface{}) ([]awstypes.Listener, error) {
 	return apiObjects, nil
 }
 
-func flattenListenerDescriptions(apiObjects []awstypes.ListenerDescription) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenListenerDescriptions(apiObjects []awstypes.ListenerDescription) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"instance_port":     aws.ToInt32(apiObject.Listener.InstancePort),
 			"instance_protocol": strings.ToLower(aws.ToString(apiObject.Listener.InstanceProtocol)),
 			"lb_port":           apiObject.Listener.LoadBalancerPort,
@@ -150,11 +150,11 @@ func flattenListenerDescriptions(apiObjects []awstypes.ListenerDescription) []in
 	return tfList
 }
 
-func expandPolicyAttributes(tfList []interface{}) []awstypes.PolicyAttribute {
+func expandPolicyAttributes(tfList []any) []awstypes.PolicyAttribute {
 	apiObjects := make([]awstypes.PolicyAttribute, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -170,8 +170,8 @@ func expandPolicyAttributes(tfList []interface{}) []awstypes.PolicyAttribute {
 	return apiObjects
 }
 
-func flattenPolicyAttributeDescriptions(apiObjects []awstypes.PolicyAttributeDescription) []interface{} {
-	var tfList []interface{}
+func flattenPolicyAttributeDescriptions(apiObjects []awstypes.PolicyAttributeDescription) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]string{

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -263,7 +264,7 @@ func resourceIntent() *schema.Resource {
 	}
 }
 
-func updateComputedAttributesOnIntentCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func updateComputedAttributesOnIntentCreateVersion(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	createVersion := d.Get("create_version").(bool)
 	if createVersion && hasIntentConfigChanges(d) {
 		d.SetNewComputed(names.AttrVersion)
@@ -272,7 +273,7 @@ func updateComputedAttributesOnIntentCreateVersion(_ context.Context, d *schema.
 }
 
 func hasIntentConfigChanges(d sdkv2.ResourceDiffer) bool {
-	for _, key := range []string{
+	return slices.ContainsFunc([]string{
 		names.AttrDescription,
 		"conclusion_statement",
 		"confirmation_prompt",
@@ -283,15 +284,10 @@ func hasIntentConfigChanges(d sdkv2.ResourceDiffer) bool {
 		"rejection_statement",
 		"sample_utterances",
 		"slot",
-	} {
-		if d.HasChange(key) {
-			return true
-		}
-	}
-	return false
+	}, d.HasChange)
 }
 
-func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -338,7 +334,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.PutIntent(ctx, input)
 	})
 
@@ -351,7 +347,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceIntentRead(ctx, d, meta)...)
 }
 
-func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
@@ -426,7 +422,7 @@ func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
@@ -497,12 +493,12 @@ func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceIntentRead(ctx, d, meta)...)
 }
 
-func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Lex Model Intent: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteIntent(ctx, &lexmodelbuildingservice.DeleteIntentInput{
 			Name: aws.String(d.Id()),
 		})
@@ -597,8 +593,8 @@ var statementResource = &schema.Resource{
 	},
 }
 
-func flattenCodeHook(hook *awstypes.CodeHook) (flattened []map[string]interface{}) {
-	return []map[string]interface{}{
+func flattenCodeHook(hook *awstypes.CodeHook) (flattened []map[string]any) {
+	return []map[string]any{
 		{
 			"message_version": aws.ToString(hook.MessageVersion),
 			names.AttrURI:     aws.ToString(hook.Uri),
@@ -606,8 +602,8 @@ func flattenCodeHook(hook *awstypes.CodeHook) (flattened []map[string]interface{
 	}
 }
 
-func expandCodeHook(rawObject interface{}) (hook *awstypes.CodeHook) {
-	m := rawObject.([]interface{})[0].(map[string]interface{})
+func expandCodeHook(rawObject any) (hook *awstypes.CodeHook) {
+	m := rawObject.([]any)[0].(map[string]any)
 
 	return &awstypes.CodeHook{
 		MessageVersion: aws.String(m["message_version"].(string)),
@@ -615,8 +611,8 @@ func expandCodeHook(rawObject interface{}) (hook *awstypes.CodeHook) {
 	}
 }
 
-func flattenFollowUpPrompt(followUp *awstypes.FollowUpPrompt) (flattened []map[string]interface{}) {
-	return []map[string]interface{}{
+func flattenFollowUpPrompt(followUp *awstypes.FollowUpPrompt) (flattened []map[string]any) {
+	return []map[string]any{
 		{
 			"prompt":              flattenPrompt(followUp.Prompt),
 			"rejection_statement": flattenStatement(followUp.RejectionStatement),
@@ -624,8 +620,8 @@ func flattenFollowUpPrompt(followUp *awstypes.FollowUpPrompt) (flattened []map[s
 	}
 }
 
-func expandFollowUpPrompt(rawObject interface{}) (followUp *awstypes.FollowUpPrompt) {
-	m := rawObject.([]interface{})[0].(map[string]interface{})
+func expandFollowUpPrompt(rawObject any) (followUp *awstypes.FollowUpPrompt) {
+	m := rawObject.([]any)[0].(map[string]any)
 
 	return &awstypes.FollowUpPrompt{
 		Prompt:             expandPrompt(m["prompt"]),
@@ -633,8 +629,8 @@ func expandFollowUpPrompt(rawObject interface{}) (followUp *awstypes.FollowUpPro
 	}
 }
 
-func flattenFulfilmentActivity(activity *awstypes.FulfillmentActivity) (flattened []map[string]interface{}) {
-	flattened = []map[string]interface{}{
+func flattenFulfilmentActivity(activity *awstypes.FulfillmentActivity) (flattened []map[string]any) {
+	flattened = []map[string]any{
 		{
 			names.AttrType: string(activity.Type),
 		},
@@ -647,22 +643,22 @@ func flattenFulfilmentActivity(activity *awstypes.FulfillmentActivity) (flattene
 	return
 }
 
-func expandFulfilmentActivity(rawObject interface{}) (activity *awstypes.FulfillmentActivity) {
-	m := rawObject.([]interface{})[0].(map[string]interface{})
+func expandFulfilmentActivity(rawObject any) (activity *awstypes.FulfillmentActivity) {
+	m := rawObject.([]any)[0].(map[string]any)
 
 	activity = &awstypes.FulfillmentActivity{}
 	activity.Type = awstypes.FulfillmentActivityType(m[names.AttrType].(string))
 
-	if v, ok := m["code_hook"]; ok && len(v.([]interface{})) != 0 {
+	if v, ok := m["code_hook"]; ok && len(v.([]any)) != 0 {
 		activity.CodeHook = expandCodeHook(v)
 	}
 
 	return
 }
 
-func flattenMessages(messages []awstypes.Message) (flattenedMessages []map[string]interface{}) {
+func flattenMessages(messages []awstypes.Message) (flattenedMessages []map[string]any) {
 	for _, message := range messages {
-		flattenedMessages = append(flattenedMessages, map[string]interface{}{
+		flattenedMessages = append(flattenedMessages, map[string]any{
 			names.AttrContent:     aws.ToString(message.Content),
 			names.AttrContentType: string(message.ContentType),
 			"group_number":        aws.ToInt32(message.GroupNumber),
@@ -675,11 +671,11 @@ func flattenMessages(messages []awstypes.Message) (flattenedMessages []map[strin
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[content: test content_type: PlainText group_number: 1]
-func expandMessages(rawValues []interface{}) []awstypes.Message {
+func expandMessages(rawValues []any) []awstypes.Message {
 	messages := make([]awstypes.Message, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
-		value, ok := rawValue.(map[string]interface{})
+		value, ok := rawValue.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -699,8 +695,8 @@ func expandMessages(rawValues []interface{}) []awstypes.Message {
 	return messages
 }
 
-func flattenPrompt(prompt *awstypes.Prompt) (flattened []map[string]interface{}) {
-	flattened = []map[string]interface{}{
+func flattenPrompt(prompt *awstypes.Prompt) (flattened []map[string]any) {
+	flattened = []map[string]any{
 		{
 			"max_attempts":    aws.ToInt32(prompt.MaxAttempts),
 			names.AttrMessage: flattenMessages(prompt.Messages),
@@ -714,8 +710,8 @@ func flattenPrompt(prompt *awstypes.Prompt) (flattened []map[string]interface{})
 	return
 }
 
-func expandPrompt(rawObject interface{}) (prompt *awstypes.Prompt) {
-	m := rawObject.([]interface{})[0].(map[string]interface{})
+func expandPrompt(rawObject any) (prompt *awstypes.Prompt) {
+	m := rawObject.([]any)[0].(map[string]any)
 
 	prompt = &awstypes.Prompt{}
 	prompt.MaxAttempts = aws.Int32(int32(m["max_attempts"].(int)))
@@ -728,9 +724,9 @@ func expandPrompt(rawObject interface{}) (prompt *awstypes.Prompt) {
 	return
 }
 
-func flattenSlots(slots []awstypes.Slot) (flattenedSlots []map[string]interface{}) {
+func flattenSlots(slots []awstypes.Slot) (flattenedSlots []map[string]any) {
 	for _, slot := range slots {
-		flattenedSlot := map[string]interface{}{
+		flattenedSlot := map[string]any{
 			names.AttrName:     aws.ToString(slot.Name),
 			names.AttrPriority: aws.ToInt32(slot.Priority),
 			"slot_constraint":  string(slot.SlotConstraint),
@@ -766,11 +762,11 @@ func flattenSlots(slots []awstypes.Slot) (flattenedSlots []map[string]interface{
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[name: test priority: 0 ...]
-func expandSlots(rawValues []interface{}) []awstypes.Slot {
+func expandSlots(rawValues []any) []awstypes.Slot {
 	slots := make([]awstypes.Slot, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
-		value, ok := rawValue.(map[string]interface{})
+		value, ok := rawValue.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -794,15 +790,15 @@ func expandSlots(rawValues []interface{}) []awstypes.Slot {
 			slot.ResponseCard = aws.String(v.(string))
 		}
 
-		if v, ok := value["sample_utterances"]; ok && len(v.([]interface{})) != 0 {
-			slot.SampleUtterances = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := value["sample_utterances"]; ok && len(v.([]any)) != 0 {
+			slot.SampleUtterances = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := value["slot_type_version"]; ok && v != "" {
 			slot.SlotTypeVersion = aws.String(v.(string))
 		}
 
-		if v, ok := value["value_elicitation_prompt"]; ok && len(v.([]interface{})) != 0 {
+		if v, ok := value["value_elicitation_prompt"]; ok && len(v.([]any)) != 0 {
 			slot.ValueElicitationPrompt = expandPrompt(v)
 		}
 
@@ -812,8 +808,8 @@ func expandSlots(rawValues []interface{}) []awstypes.Slot {
 	return slots
 }
 
-func flattenStatement(statement *awstypes.Statement) (flattened []map[string]interface{}) {
-	flattened = []map[string]interface{}{
+func flattenStatement(statement *awstypes.Statement) (flattened []map[string]any) {
+	flattened = []map[string]any{
 		{
 			names.AttrMessage: flattenMessages(statement.Messages),
 		},
@@ -826,8 +822,8 @@ func flattenStatement(statement *awstypes.Statement) (flattened []map[string]int
 	return
 }
 
-func expandStatement(rawObject interface{}) (statement *awstypes.Statement) {
-	m := rawObject.([]interface{})[0].(map[string]interface{})
+func expandStatement(rawObject any) (statement *awstypes.Statement) {
+	m := rawObject.([]any)[0].(map[string]any)
 
 	statement = &awstypes.Statement{}
 	statement.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())

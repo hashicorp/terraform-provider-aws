@@ -841,7 +841,7 @@ func dataSourcePrebuiltECRImage() *schema.Resource {
 	}
 }
 
-func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {

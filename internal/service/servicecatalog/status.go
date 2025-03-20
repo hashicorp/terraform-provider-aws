@@ -16,7 +16,7 @@ import (
 )
 
 func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(productID),
 		}
@@ -48,7 +48,7 @@ func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLangu
 }
 
 func statusTagOption(ctx context.Context, conn *servicecatalog.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(id),
 		}
@@ -72,7 +72,7 @@ func statusTagOption(ctx context.Context, conn *servicecatalog.Client, id string
 }
 
 func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Client, token string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribePortfolioShareStatusInput{
 			PortfolioShareToken: aws.String(token),
 		}
@@ -95,7 +95,7 @@ func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Cli
 }
 
 func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPortfolioShare(ctx, conn, portfolioID, shareType, principalID)
 
 		if tfresource.NotFound(err) {
@@ -115,7 +115,7 @@ func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, port
 }
 
 func statusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.GetAWSOrganizationsAccessStatusInput{}
 
 		output, err := conn.GetAWSOrganizationsAccessStatus(ctx, input)
@@ -137,7 +137,7 @@ func statusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client)
 }
 
 func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(id),
 		}
@@ -169,7 +169,7 @@ func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 }
 
 func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -193,7 +193,7 @@ func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 }
 
 func statusServiceAction(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(id),
 		}
@@ -221,7 +221,7 @@ func statusServiceAction(ctx context.Context, conn *servicecatalog.Client, accep
 }
 
 func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBudgetResourceAssociation(ctx, conn, budgetName, resourceID)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -245,7 +245,7 @@ func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.C
 }
 
 func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -269,7 +269,7 @@ func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 }
 
 func statusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client, id, productID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribeProvisioningArtifactInput{
 			ProvisioningArtifactId: aws.String(id),
 			ProductId:              aws.String(productID),
@@ -294,7 +294,7 @@ func statusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client
 }
 
 func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.ListLaunchPathsInput{
 			AcceptLanguage: aws.String(acceptLanguage),
 			ProductId:      aws.String(productID),
@@ -322,7 +322,7 @@ func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptL
 }
 
 func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.DescribeProvisionedProductInput{}
 
 		if acceptLanguage != "" {
@@ -355,7 +355,7 @@ func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 }
 
 func statusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &servicecatalog.ListConstraintsForPortfolioInput{
 			PortfolioId: aws.String(portfolioID),
 		}

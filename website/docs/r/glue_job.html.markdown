@@ -18,11 +18,13 @@ Provides a Glue Job resource.
 
 ```terraform
 resource "aws_glue_job" "example" {
-  name     = "example"
-  role_arn = aws_iam_role.example.arn
+  name         = "example"
+  glue_version = "5.0"
+  role_arn     = aws_iam_role.example.arn
 
   command {
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
+    python_version  = "3"
   }
 }
 ```
@@ -133,7 +135,7 @@ This resource supports the following arguments:
 
 * `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `glueray` for Ray Job Type, or `gluestreaming` for Streaming Job Type. `max_capacity` needs to be set if `pythonshell` is chosen.
 * `script_location` - (Required) Specifies the S3 path to a script that executes a job.
-* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.6.
+* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.11 when `glue_version` is set to 5.0.
 * `runtime` - (Optional) In Ray jobs, runtime is used to specify the versions of Ray, Python and additional libraries available in your environment. This field is not used in other job types. For supported runtime environment values, see [Working with Ray jobs](https://docs.aws.amazon.com/glue/latest/dg/ray-jobs-section.html#author-job-ray-runtimes) in the Glue Developer Guide.
 
 ### execution_property Argument Reference

@@ -313,7 +313,7 @@ func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findInferenceProfileByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

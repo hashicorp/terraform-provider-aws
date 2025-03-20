@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
+func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var rda awstypes.IpamResourceDiscoveryAssociation
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
@@ -52,7 +52,7 @@ func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
+func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var rda awstypes.IpamResourceDiscoveryAssociation
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
@@ -95,7 +95,7 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 	})
 }
 
-func testAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) {
+func testAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var rda awstypes.IpamResourceDiscoveryAssociation
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
@@ -123,10 +123,6 @@ func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, n s
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Resource Discovery Association ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)

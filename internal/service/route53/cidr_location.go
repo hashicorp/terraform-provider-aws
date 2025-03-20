@@ -251,7 +251,7 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

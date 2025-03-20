@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
+func TestAccIPAMPoolsDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc_ipam_pools.test"
 	dataSourceNameTwo := "data.aws_vpc_ipam_pools.testtwo"
@@ -59,7 +59,7 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolsDataSource_empty(t *testing.T) {
+func TestAccIPAMPoolsDataSource_empty(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc_ipam_pools.test"
 

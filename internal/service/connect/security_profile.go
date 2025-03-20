@@ -81,7 +81,7 @@ func resourceSecurityProfile() *schema.Resource {
 	}
 }
 
-func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
-func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -187,7 +187,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
-func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 

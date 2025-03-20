@@ -73,7 +73,7 @@ func resourceOriginAccessControl() *schema.Resource {
 	}
 }
 
-func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -152,7 +152,7 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 

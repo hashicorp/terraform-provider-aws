@@ -49,7 +49,7 @@ func ResourceWorkingStorage() *schema.Resource {
 	}
 }
 
-func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -72,7 +72,7 @@ func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceWorkingStorageRead(ctx, d, meta)...)
 }
 
-func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 

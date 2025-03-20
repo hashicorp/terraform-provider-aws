@@ -104,7 +104,7 @@ func resourceSecretVersion() *schema.Resource {
 	}
 }
 
-func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -149,7 +149,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
 		return findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 	})
 
@@ -160,7 +160,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
-func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -208,7 +208,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -295,7 +295,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
-func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -333,7 +333,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (any, error) {
 		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 
 		if err != nil {

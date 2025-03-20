@@ -376,7 +376,7 @@ func findGraph(ctx context.Context, conn *neptunegraph.Client, input *neptunegra
 }
 
 func statusGraph(ctx context.Context, conn *neptunegraph.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGraphByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
