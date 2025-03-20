@@ -6,6 +6,9 @@ package elasticache
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"log"
 	"slices"
 	"strings"
@@ -57,12 +60,26 @@ func resourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
 				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				StateFunc: func(val any) string {
+					return strings.ToLower(val.(string))
+				},
+				ValidateFunc: validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
 			},
 			names.AttrParameter: {
 				Type:     schema.TypeSet,
@@ -92,7 +109,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &elasticache.CreateCacheParameterGroupInput{
 		CacheParameterGroupName:   aws.String(name),
 		CacheParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
@@ -115,6 +132,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(output.CacheParameterGroup.CacheParameterGroupName))
 	d.Set(names.AttrARN, output.CacheParameterGroup.ARN)
+	d.Set(names.AttrName, name)
 
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
@@ -139,6 +157,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDescription, parameterGroup.Description)
 	d.Set(names.AttrFamily, parameterGroup.CacheParameterGroupFamily)
 	d.Set(names.AttrName, parameterGroup.CacheParameterGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(parameterGroup.CacheParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &elasticache.DescribeCacheParametersInput{
