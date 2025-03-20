@@ -98,7 +98,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsValidateOverrideInPartition: false,
 			},
 		},
 		{
