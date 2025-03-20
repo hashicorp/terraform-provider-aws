@@ -74,7 +74,8 @@ func resourceCluster() *schema.Resource {
 				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
 				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
 
-				if oldRoleARN != newRoleARN {
+				// only force new if an existing role has changed, not if a new role is added
+				if oldRoleARN != "" && oldRoleARN != newRoleARN {
 					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
 						return err
 					}
