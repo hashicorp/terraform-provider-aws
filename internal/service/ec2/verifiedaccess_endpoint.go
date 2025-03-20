@@ -81,11 +81,13 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						},
 						names.AttrProtocol: {
 							Type:         schema.TypeString,
+							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{verifiedAccessEndpointProtocolTCP}, false),
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
+							ForceNew: true,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -155,6 +157,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
+							ForceNew: true,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -240,6 +243,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},

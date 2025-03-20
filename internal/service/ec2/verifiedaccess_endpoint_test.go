@@ -323,7 +323,7 @@ func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.port_range.#", "1"),
 				),
 			},
 			{
@@ -339,7 +339,7 @@ func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.port_range.#", "2"),
 				),
 			},
 		},
@@ -791,7 +791,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
 	 to_port          = 443
     }
 	protocol          = "tcp"
-    subnet_ids        = [for subnet in slice(aws_subnet.test, 0, 1) : subnet.id]
+    subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -820,6 +820,10 @@ resource "aws_verifiedaccess_endpoint" "test" {
 	port_range {
 	 from_port 		  = 443
 	 to_port          = 443
+    }
+	port_range {
+	 from_port 		  = 9443
+	 to_port          = 9446
     }
 	protocol          = "tcp"
     subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
