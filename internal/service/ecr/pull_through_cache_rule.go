@@ -69,6 +69,12 @@ func resourcePullThroughCacheRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(2, 30),
+					validation.StringMatch(
+						regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
+						"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
+				),
 			},
 		},
 	}
