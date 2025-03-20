@@ -139,9 +139,15 @@ func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceD
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
 	input := &ecr.UpdatePullThroughCacheRuleInput{
-		CredentialArn:       aws.String(d.Get("credential_arn").(string)),
-		CustomRoleArn:       aws.String(d.Get("custom_role_arn").(string)),
 		EcrRepositoryPrefix: aws.String(repositoryPrefix),
+	}
+
+	if v, ok := d.GetOk("credential_arn"); ok && v != "" {
+		input.CredentialArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_role_arn"); ok && v != "" {
+		input.CustomRoleArn = aws.String(v.(string))
 	}
 
 	_, err := conn.UpdatePullThroughCacheRule(ctx, input)
