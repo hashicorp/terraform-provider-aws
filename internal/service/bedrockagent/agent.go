@@ -133,7 +133,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 8000),
+					stringvalidator.UTF8LengthBetween(40, 8000),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
@@ -537,7 +537,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 }
 
 func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

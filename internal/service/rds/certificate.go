@@ -41,7 +41,7 @@ func resourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificatePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificatePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -63,7 +63,7 @@ func resourceCertificatePut(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -84,7 +84,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 

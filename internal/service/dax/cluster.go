@@ -73,7 +73,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
 				ValidateFunc: validation.All(
@@ -123,7 +123,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
@@ -204,7 +204,7 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
@@ -251,9 +251,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AvailabilityZones = flex.ExpandStringValueSet(preferredAZs)
 	}
 
-	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]interface{})) > 0 {
-		options := v.([]interface{})
-		s := options[0].(map[string]interface{})
+	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]any)) > 0 {
+		options := v.([]any)
+		s := options[0].(map[string]any)
 		input.SSESpecification = expandEncryptAtRestOptions(s)
 	}
 
@@ -303,7 +303,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
@@ -370,7 +370,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
@@ -477,10 +477,10 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 		return cmp.Compare(aws.ToString(a.NodeId), aws.ToString(b.NodeId))
 	})
 
-	nodeData := make([]map[string]interface{}, 0, len(sortedNodes))
+	nodeData := make([]map[string]any, 0, len(sortedNodes))
 
 	for _, node := range sortedNodes {
-		nodeData = append(nodeData, map[string]interface{}{
+		nodeData = append(nodeData, map[string]any{
 			names.AttrID:               aws.ToString(node.NodeId),
 			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
 			names.AttrPort:             node.Endpoint.Port,
@@ -491,7 +491,7 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 	return d.Set("nodes", nodeData)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
@@ -542,7 +542,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := dax.DescribeClustersInput{
 			ClusterNames: []string{clusterID},
 		}

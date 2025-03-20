@@ -84,7 +84,7 @@ func dataSourceMountTarget() *schema.Resource {
 	}
 }
 
-func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 

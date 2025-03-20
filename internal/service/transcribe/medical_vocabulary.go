@@ -76,7 +76,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 	}
 }
 
-func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMedicalVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -166,7 +166,7 @@ func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMedicalVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -249,7 +249,7 @@ func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, 
 }
 
 func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindMedicalVocabularyByName(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

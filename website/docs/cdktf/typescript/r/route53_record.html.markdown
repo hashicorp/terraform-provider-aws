@@ -322,6 +322,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The name of the record.
 * `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
@@ -412,4 +420,4 @@ If the record also contains a set identifier, append it:
 % terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS_dev
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-37915b689e1cd3b1e10df9abf4ab20199477069f6d48f7e6adb34f0bfce9a0f8 -->
+<!-- cache-key: cdktf-0.20.8 input-47008bdfa82262bef10281c4c8e59c8f735fd64ade80f4344f0ffc2561b5818e -->

@@ -60,7 +60,7 @@ func ResourcePublishingDestination() *schema.Resource {
 	}
 }
 
-func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -91,7 +91,7 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
 }
 
-func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -123,7 +123,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -149,7 +149,7 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
 }
 
-func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 

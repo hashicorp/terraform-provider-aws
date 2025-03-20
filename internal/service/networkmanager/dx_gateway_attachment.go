@@ -338,7 +338,7 @@ func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkma
 }
 
 func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

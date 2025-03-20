@@ -182,7 +182,7 @@ func resourceWorkteam() *schema.Resource {
 	}
 }
 
-func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -190,23 +190,23 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &sagemaker.CreateWorkteamInput{
 		WorkteamName:      aws.String(name),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
-		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
+		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]any)),
 		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("notification_configuration"); ok {
-		input.NotificationConfiguration = expandWorkteamNotificationConfiguration(v.([]interface{}))
+		input.NotificationConfiguration = expandWorkteamNotificationConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("worker_access_configuration"); ok {
-		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]interface{}))
+		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("workforce_name"); ok {
 		input.WorkforceName = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
 		return conn.CreateWorkteam(ctx, input)
 	}, ErrCodeValidationException)
 
@@ -219,7 +219,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
-func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -255,14 +255,14 @@ func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateWorkteamInput{
 			WorkteamName:      aws.String(d.Id()),
-			MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
+			MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]any)),
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -270,11 +270,11 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("notification_configuration") {
-			input.NotificationConfiguration = expandWorkteamNotificationConfiguration(d.Get("notification_configuration").([]interface{}))
+			input.NotificationConfiguration = expandWorkteamNotificationConfiguration(d.Get("notification_configuration").([]any))
 		}
 
 		if d.HasChange("worker_access_configuration") {
-			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]interface{}))
+			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]any))
 		}
 
 		_, err := conn.UpdateWorkteam(ctx, input)
@@ -287,7 +287,7 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
-func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -332,7 +332,7 @@ func findWorkteamByName(ctx context.Context, conn *sagemaker.Client, name string
 	return output.Workteam, nil
 }
 
-func expandWorkteamMemberDefinition(l []interface{}) []awstypes.MemberDefinition {
+func expandWorkteamMemberDefinition(l []any) []awstypes.MemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -340,14 +340,14 @@ func expandWorkteamMemberDefinition(l []interface{}) []awstypes.MemberDefinition
 	var members []awstypes.MemberDefinition
 
 	for _, mem := range l {
-		memRaw := mem.(map[string]interface{})
+		memRaw := mem.(map[string]any)
 		member := awstypes.MemberDefinition{}
 
-		if v, ok := memRaw["cognito_member_definition"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := memRaw["cognito_member_definition"].([]any); ok && len(v) > 0 {
 			member.CognitoMemberDefinition = expandWorkteamCognitoMemberDefinition(v)
 		}
 
-		if v, ok := memRaw["oidc_member_definition"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := memRaw["oidc_member_definition"].([]any); ok && len(v) > 0 {
 			member.OidcMemberDefinition = expandWorkteamOIDCMemberDefinition(v)
 		}
 
@@ -357,11 +357,11 @@ func expandWorkteamMemberDefinition(l []interface{}) []awstypes.MemberDefinition
 	return members
 }
 
-func flattenWorkteamMemberDefinition(config []awstypes.MemberDefinition) []map[string]interface{} {
-	members := make([]map[string]interface{}, 0, len(config))
+func flattenWorkteamMemberDefinition(config []awstypes.MemberDefinition) []map[string]any {
+	members := make([]map[string]any, 0, len(config))
 
 	for _, raw := range config {
-		member := make(map[string]interface{})
+		member := make(map[string]any)
 
 		if raw.CognitoMemberDefinition != nil {
 			member["cognito_member_definition"] = flattenWorkteamCognitoMemberDefinition(raw.CognitoMemberDefinition)
@@ -377,12 +377,12 @@ func flattenWorkteamMemberDefinition(config []awstypes.MemberDefinition) []map[s
 	return members
 }
 
-func expandWorkteamCognitoMemberDefinition(l []interface{}) *awstypes.CognitoMemberDefinition {
+func expandWorkteamCognitoMemberDefinition(l []any) *awstypes.CognitoMemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.CognitoMemberDefinition{
 		ClientId:  aws.String(m[names.AttrClientID].(string)),
@@ -393,26 +393,26 @@ func expandWorkteamCognitoMemberDefinition(l []interface{}) *awstypes.CognitoMem
 	return config
 }
 
-func flattenWorkteamCognitoMemberDefinition(config *awstypes.CognitoMemberDefinition) []map[string]interface{} {
+func flattenWorkteamCognitoMemberDefinition(config *awstypes.CognitoMemberDefinition) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrClientID: aws.ToString(config.ClientId),
 		"user_pool":        aws.ToString(config.UserPool),
 		"user_group":       aws.ToString(config.UserGroup),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandWorkteamOIDCMemberDefinition(l []interface{}) *awstypes.OidcMemberDefinition {
+func expandWorkteamOIDCMemberDefinition(l []any) *awstypes.OidcMemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.OidcMemberDefinition{
 		Groups: flex.ExpandStringValueSet(m["groups"].(*schema.Set)),
@@ -421,24 +421,24 @@ func expandWorkteamOIDCMemberDefinition(l []interface{}) *awstypes.OidcMemberDef
 	return config
 }
 
-func flattenWorkteamOIDCMemberDefinition(config *awstypes.OidcMemberDefinition) []map[string]interface{} {
+func flattenWorkteamOIDCMemberDefinition(config *awstypes.OidcMemberDefinition) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"groups": flex.FlattenStringValueSet(config.Groups),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandWorkteamNotificationConfiguration(l []interface{}) *awstypes.NotificationConfiguration {
+func expandWorkteamNotificationConfiguration(l []any) *awstypes.NotificationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.NotificationConfiguration{}
 
@@ -451,28 +451,28 @@ func expandWorkteamNotificationConfiguration(l []interface{}) *awstypes.Notifica
 	return config
 }
 
-func flattenWorkteamNotificationConfiguration(config *awstypes.NotificationConfiguration) []map[string]interface{} {
+func flattenWorkteamNotificationConfiguration(config *awstypes.NotificationConfiguration) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"notification_topic_arn": aws.ToString(config.NotificationTopicArn),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandWorkerAccessConfiguration(l []interface{}) *awstypes.WorkerAccessConfiguration {
+func expandWorkerAccessConfiguration(l []any) *awstypes.WorkerAccessConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.WorkerAccessConfiguration{}
 
-	if v, ok := m["s3_presign"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m["s3_presign"].([]any); ok && len(v) > 0 && v[0] != nil {
 		config.S3Presign = expandS3Presign(v)
 	} else {
 		return nil
@@ -481,28 +481,28 @@ func expandWorkerAccessConfiguration(l []interface{}) *awstypes.WorkerAccessConf
 	return config
 }
 
-func flattenWorkerAccessConfiguration(config *awstypes.WorkerAccessConfiguration) []map[string]interface{} {
+func flattenWorkerAccessConfiguration(config *awstypes.WorkerAccessConfiguration) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_presign": flattenS3Presign(config.S3Presign),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandS3Presign(l []interface{}) *awstypes.S3Presign {
+func expandS3Presign(l []any) *awstypes.S3Presign {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.S3Presign{}
 
-	if v, ok := m["iam_policy_constraints"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m["iam_policy_constraints"].([]any); ok && len(v) > 0 && v[0] != nil {
 		config.IamPolicyConstraints = expandIAMPolicyConstraints(v)
 	} else {
 		return nil
@@ -511,24 +511,24 @@ func expandS3Presign(l []interface{}) *awstypes.S3Presign {
 	return config
 }
 
-func flattenS3Presign(config *awstypes.S3Presign) []map[string]interface{} {
+func flattenS3Presign(config *awstypes.S3Presign) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"iam_policy_constraints": flattenIAMPolicyConstraints(config.IamPolicyConstraints),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandIAMPolicyConstraints(l []interface{}) *awstypes.IamPolicyConstraints {
+func expandIAMPolicyConstraints(l []any) *awstypes.IamPolicyConstraints {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.IamPolicyConstraints{}
 
@@ -543,15 +543,15 @@ func expandIAMPolicyConstraints(l []interface{}) *awstypes.IamPolicyConstraints 
 	return config
 }
 
-func flattenIAMPolicyConstraints(config *awstypes.IamPolicyConstraints) []map[string]interface{} {
+func flattenIAMPolicyConstraints(config *awstypes.IamPolicyConstraints) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"source_ip":     config.SourceIp,
 		"vpc_source_ip": config.VpcSourceIp,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

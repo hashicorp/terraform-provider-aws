@@ -27,22 +27,22 @@ func TestDiffPortSettings(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Old           []interface{}
-		New           []interface{}
+		Old           []any
+		New           []any
 		ExpectedAuths []awstypes.IpPermission
 		ExpectedRevs  []awstypes.IpPermission
 	}{
 		{ // No change
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
@@ -53,22 +53,22 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedRevs:  nil,
 		},
 		{ // Addition
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"from_port":        8888,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
@@ -86,15 +86,15 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedRevs: nil,
 		},
 		{ // Removal
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New:           []interface{}{},
+			New:           []any{},
 			ExpectedAuths: nil,
 			ExpectedRevs: []awstypes.IpPermission{
 				{
@@ -106,16 +106,16 @@ func TestDiffPortSettings(t *testing.T) {
 			},
 		},
 		{ // Removal + Addition
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "UDP",

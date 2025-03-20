@@ -104,7 +104,7 @@ func resourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -239,7 +239,7 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *nept
 }
 
 func statusClusterSnapshot(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

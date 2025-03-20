@@ -56,7 +56,7 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 	}
 }
 
-func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 

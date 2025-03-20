@@ -90,21 +90,21 @@ func resourceInvocation() *schema.Resource {
 	}
 }
 
-func resourceInvocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvocationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	return append(diags, invoke(ctx, conn, d, invocationActionCreate)...)
 }
 
-func resourceInvocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvocationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	return append(diags, invoke(ctx, conn, d, invocationActionUpdate)...)
 }
 
-func resourceInvocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvocationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -135,18 +135,18 @@ func buildInput(d *schema.ResourceData, action invocationAction) ([]byte, error)
 		return nil, err
 	}
 
-	newInputMap[d.Get("terraform_key").(string)] = map[string]interface{}{
+	newInputMap[d.Get("terraform_key").(string)] = map[string]any{
 		names.AttrAction: action,
 		"prev_input":     oldInputMap,
 	}
 	return json.Marshal(&newInputMap)
 }
 
-func getObjectFromJSONString(s string) (map[string]interface{}, error) {
+func getObjectFromJSONString(s string) (map[string]any, error) {
 	if len(s) == 0 {
 		return nil, nil
 	}
-	var mapObject map[string]interface{}
+	var mapObject map[string]any
 	if err := json.Unmarshal([]byte(s), &mapObject); err != nil {
 		log.Printf("[ERROR] input JSON deserialization '%s'", s)
 		return nil, err
@@ -155,7 +155,7 @@ func getObjectFromJSONString(s string) (map[string]interface{}, error) {
 }
 
 // getInputChange gets old an new input as maps
-func getInputChange(d *schema.ResourceData) (map[string]interface{}, map[string]interface{}, error) {
+func getInputChange(d *schema.ResourceData) (map[string]any, map[string]any, error) {
 	old, new := d.GetChange("input")
 	oldMap, err := getObjectFromJSONString(old.(string))
 	if err != nil {
@@ -213,7 +213,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 
 // customizeDiffValidateInput validates that `input` is JSON object when
 // `lifecycle_scope` is not "CREATE_ONLY"
-func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if lifecycleScope(diff.Get("lifecycle_scope").(string)) == lifecycleScopeCreateOnly {
 		return nil
 	}
@@ -233,7 +233,7 @@ func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v 
 
 // customizeDiffInputChangeWithCreateOnlyScope forces a new resource when `input` has
 // a change and `lifecycle_scope` is set to "CREATE_ONLY"
-func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.HasChange("input") && lifecycleScope(diff.Get("lifecycle_scope").(string)) == lifecycleScopeCreateOnly {
 		return diff.ForceNew("input")
 	}
@@ -242,7 +242,7 @@ func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema
 
 // customizeDiffInputChangedWithCRUDScope invalidates the result of the previous invocation for any changes
 // to the input, causing any dependent resources to refresh their own state, when `lifecycle_scope` is set to "CRUD"
-func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.HasChange("input") && lifecycleScope(diff.Get("lifecycle_scope").(string)) == lifecycleScopeCRUD {
 		return diff.SetNewComputed("result")
 	}

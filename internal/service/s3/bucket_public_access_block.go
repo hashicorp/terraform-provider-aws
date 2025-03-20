@@ -62,7 +62,7 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -80,7 +80,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -94,7 +94,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 
@@ -105,7 +105,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceBucketPublicAccessBlockRead(ctx, d, meta)...)
 }
 
-func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -135,7 +135,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -173,7 +173,7 @@ func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -195,7 +195,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 

@@ -362,7 +362,7 @@ func (r *resourceClusterSnapshotCopy) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("deleting %s", ResNameClusterSnapshotCopy), map[string]interface{}{
+	tflog.Debug(ctx, fmt.Sprintf("deleting %s", ResNameClusterSnapshotCopy), map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
