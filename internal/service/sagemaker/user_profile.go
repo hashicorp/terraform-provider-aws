@@ -925,7 +925,7 @@ func resourceUserProfile() *schema.Resource {
 	}
 }
 
-func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -937,7 +937,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
-		input.UserSettings = expandUserSettings(v.([]interface{}))
+		input.UserSettings = expandUserSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk("single_sign_on_user_identifier"); ok {
@@ -969,7 +969,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1003,7 +1003,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1016,7 +1016,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &sagemaker.UpdateUserProfileInput{
 			DomainId:        aws.String(domainID),
 			UserProfileName: aws.String(userProfileName),
-			UserSettings:    expandUserSettings(d.Get("user_settings").([]interface{})),
+			UserSettings:    expandUserSettings(d.Get("user_settings").([]any)),
 		}
 
 		_, err := conn.UpdateUserProfile(ctx, input)
@@ -1033,7 +1033,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1108,7 +1108,7 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 }
 
 func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
 		if tfresource.NotFound(err) {

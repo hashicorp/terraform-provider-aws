@@ -487,7 +487,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 }
 
 func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -507,7 +507,7 @@ const (
 )
 
 func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

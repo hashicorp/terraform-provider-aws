@@ -97,7 +97,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 	}
 }
 
-func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -106,13 +106,13 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	policyARN := d.Get("policy_arn").(string)
 	id := accessPolicyAssociationCreateResourceID(clusterName, principalARN, policyARN)
 	input := &eks.AssociateAccessPolicyInput{
-		AccessScope:  expandAccessScope(d.Get("access_scope").([]interface{})),
+		AccessScope:  expandAccessScope(d.Get("access_scope").([]any)),
 		ClusterName:  aws.String(clusterName),
 		PolicyArn:    aws.String(policyARN),
 		PrincipalArn: aws.String(principalARN),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ResourceNotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ResourceNotFoundException](ctx, propagationTimeout, func() (any, error) {
 		return conn.AssociateAccessPolicy(ctx, input)
 	}, "The specified principalArn could not be found")
 
@@ -125,7 +125,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceAccessPolicyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -156,7 +156,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -251,12 +251,12 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 	return output, nil
 }
 
-func expandAccessScope(l []interface{}) *types.AccessScope {
+func expandAccessScope(l []any) *types.AccessScope {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	accessScope := &types.AccessScope{}
 
@@ -271,15 +271,15 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 	return accessScope
 }
 
-func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
+func flattenAccessScope(apiObject *types.AccessScope) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: (*string)(&apiObject.Type),
 		"namespaces":   apiObject.Namespaces,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

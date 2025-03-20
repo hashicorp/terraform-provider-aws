@@ -387,7 +387,7 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 }
 
 func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationID, mergedAPIID)
 
 		if tfresource.NotFound(err) {

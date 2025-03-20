@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
@@ -113,10 +114,16 @@ func resourceZone() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
-func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -148,8 +155,9 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(cleanZoneID(aws.ToString(output.HostedZone.Id)))
 
+	timeout := d.Timeout(schema.TimeoutCreate)
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -161,7 +169,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	// Associate additional VPCs beyond the first.
 	if len(vpcs) > 1 {
 		for _, v := range vpcs[1:] {
-			if err := hostedZoneAssociateVPC(ctx, conn, d.Id(), v); err != nil {
+			if err := hostedZoneAssociateVPC(ctx, conn, d.Id(), v, timeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -170,7 +178,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceZoneRead(ctx, d, meta)...)
 }
 
-func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -225,7 +233,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -244,28 +252,29 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("vpc") {
 		region := meta.(*conns.AWSClient).Region(ctx)
+		timeout := d.Timeout(schema.TimeoutUpdate)
 		o, n := d.GetChange("vpc")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// VPCs cannot be empty, so add first and then remove.
 		for _, tfMapRaw := range ns.Difference(os).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
 
-			if err := hostedZoneAssociateVPC(ctx, conn, d.Id(), expandVPC(tfMap, region)); err != nil {
+			if err := hostedZoneAssociateVPC(ctx, conn, d.Id(), expandVPC(tfMap, region), timeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
 		for _, tfMapRaw := range os.Difference(ns).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
 
-			if err := hostedZoneDisassociateVPC(ctx, conn, d.Id(), expandVPC(tfMap, region)); err != nil {
+			if err := hostedZoneDisassociateVPC(ctx, conn, d.Id(), expandVPC(tfMap, region), timeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -274,11 +283,11 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceZoneRead(ctx, d, meta)...)
 }
 
-func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	if err := deleteHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrForceDestroy).(bool)); err != nil {
+	if err := deleteHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrForceDestroy).(bool), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -310,9 +319,9 @@ func findHostedZoneByID(ctx context.Context, conn *route53.Client, id string) (*
 	return output, nil
 }
 
-func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string, force bool) error {
+func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string, force bool, timeout time.Duration) error {
 	if force {
-		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, hostedZoneID, hostedZoneName); err != nil {
+		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, hostedZoneID, hostedZoneName, timeout); err != nil {
 			return err
 		}
 
@@ -325,7 +334,7 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 		case err != nil:
 			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", hostedZoneID, err)
 		case aws.ToString(hostedZoneDNSSEC.Status.ServeSignature) == serveSignatureSigning:
-			err := hostedZoneDNSSECDisable(ctx, conn, hostedZoneID)
+			err := hostedZoneDNSSECDisable(ctx, conn, hostedZoneID, timeout)
 
 			switch {
 			case errs.IsA[*awstypes.DNSSECNotFound](err), errs.IsA[*awstypes.NoSuchHostedZone](err), errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"):
@@ -349,7 +358,7 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone (%s) synchronize: %w", hostedZoneID, err)
 		}
 	}
@@ -357,7 +366,7 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 	return nil
 }
 
-func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string) error {
+func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string, timeout time.Duration) error {
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -407,7 +416,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 		}
 
 		if output.ChangeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 				return fmt.Errorf("waiting for Route 53 Hosted Zone (%s) synchronize: %w", hostedZoneID, err)
 			}
 		}
@@ -441,7 +450,7 @@ func findNameServersByZone(ctx context.Context, conn *route53.Client, zoneID, zo
 	return ns, nil
 }
 
-func hostedZoneAssociateVPC(ctx context.Context, conn *route53.Client, zoneID string, vpc *awstypes.VPC) error {
+func hostedZoneAssociateVPC(ctx context.Context, conn *route53.Client, zoneID string, vpc *awstypes.VPC, timeout time.Duration) error {
 	input := &route53.AssociateVPCWithHostedZoneInput{
 		HostedZoneId: aws.String(zoneID),
 		VPC:          vpc,
@@ -454,7 +463,7 @@ func hostedZoneAssociateVPC(ctx context.Context, conn *route53.Client, zoneID st
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone (%s) synchronize: %w", zoneID, err)
 		}
 	}
@@ -462,7 +471,7 @@ func hostedZoneAssociateVPC(ctx context.Context, conn *route53.Client, zoneID st
 	return nil
 }
 
-func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Client, zoneID string, vpc *awstypes.VPC) error {
+func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Client, zoneID string, vpc *awstypes.VPC, timeout time.Duration) error {
 	input := &route53.DisassociateVPCFromHostedZoneInput{
 		HostedZoneId: aws.String(zoneID),
 		VPC:          vpc,
@@ -475,7 +484,7 @@ func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Client, zoneID
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone (%s) synchronize: %w", zoneID, err)
 		}
 	}
@@ -483,11 +492,11 @@ func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Client, zoneID
 	return nil
 }
 
-func expandVPCs(tfList []interface{}, currentRegion string) []*awstypes.VPC {
+func expandVPCs(tfList []any, currentRegion string) []*awstypes.VPC {
 	apiObjects := []*awstypes.VPC{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -498,7 +507,7 @@ func expandVPCs(tfList []interface{}, currentRegion string) []*awstypes.VPC {
 	return apiObjects
 }
 
-func expandVPC(tfMap map[string]interface{}, currentRegion string) *awstypes.VPC {
+func expandVPC(tfMap map[string]any, currentRegion string) *awstypes.VPC {
 	apiObject := &awstypes.VPC{
 		VPCId:     aws.String(tfMap[names.AttrVPCID].(string)),
 		VPCRegion: awstypes.VPCRegion(currentRegion),
@@ -511,11 +520,11 @@ func expandVPC(tfMap map[string]interface{}, currentRegion string) *awstypes.VPC
 	return apiObject
 }
 
-func flattenVPCs(apiObjects []awstypes.VPC) []interface{} {
-	tfList := []interface{}{}
+func flattenVPCs(apiObjects []awstypes.VPC) []any {
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrVPCID: aws.ToString(apiObject.VPCId),
 			"vpc_region":    apiObject.VPCRegion,
 		}

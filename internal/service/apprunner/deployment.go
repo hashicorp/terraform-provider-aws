@@ -196,7 +196,7 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 }
 
 func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
 		if tfresource.NotFound(err) {

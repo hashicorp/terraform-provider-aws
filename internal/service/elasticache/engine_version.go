@@ -232,7 +232,7 @@ func diffVersion(n, o *gversion.Version) (result versionDiff) {
 	segmentsNew := n.Segments64()
 	segmentsOld := o.Segments64()
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		lhs := segmentsNew[i]
 		rhs := segmentsOld[i]
 		if lhs < rhs {

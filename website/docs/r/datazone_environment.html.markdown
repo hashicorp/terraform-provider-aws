@@ -45,7 +45,6 @@ resource "aws_datazone_environment" "example" {
 
 The following arguments are required:
 
-* `account_identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `domain_identifier` - (Required) The ID of the domain where the environment exists.
 * `name` - (Required) The name of the environment.
 * `profile_identifier` - (Required) The ID of the profile with which the environment is created.
@@ -56,7 +55,7 @@ The following arguments are optional:
 * `account_identifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
 * `account_region` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
-* `descrioption` - (Optional) The description of the environment.
+* `description` - (Optional) The description of the environment.
 * `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
 * `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
 

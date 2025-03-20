@@ -69,7 +69,7 @@ func dataSourceDataSet() *schema.Resource {
 	}
 }
 
-func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 

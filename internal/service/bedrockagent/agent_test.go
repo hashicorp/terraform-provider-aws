@@ -444,7 +444,7 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -462,7 +462,7 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check", "prepare_agent"},
 			},
 			{
-				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),

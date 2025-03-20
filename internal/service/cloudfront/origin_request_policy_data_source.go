@@ -122,7 +122,7 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -170,7 +170,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
-		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
+		if err := d.Set("cookies_config", []any{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
 		}
 	} else {
@@ -178,7 +178,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("etag", output.ETag)
 	if apiObject.HeadersConfig != nil {
-		if err := d.Set("headers_config", []interface{}{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
+		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
 		}
 	} else {
@@ -186,7 +186,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
-		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
+		if err := d.Set("query_strings_config", []any{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
 		}
 	} else {

@@ -3005,10 +3005,8 @@ func findVPCEndpointRouteTableAssociationExists(ctx context.Context, conn *ec2.C
 		return err
 	}
 
-	for _, vpcEndpointRouteTableID := range vpcEndpoint.RouteTableIds {
-		if vpcEndpointRouteTableID == routeTableID {
-			return nil
-		}
+	if slices.Contains(vpcEndpoint.RouteTableIds, routeTableID) {
+		return nil
 	}
 
 	return &retry.NotFoundError{
@@ -3043,10 +3041,8 @@ func findVPCEndpointSubnetAssociationExists(ctx context.Context, conn *ec2.Clien
 		return err
 	}
 
-	for _, vpcEndpointSubnetID := range vpcEndpoint.SubnetIds {
-		if vpcEndpointSubnetID == subnetID {
-			return nil
-		}
+	if slices.Contains(vpcEndpoint.SubnetIds, subnetID) {
+		return nil
 	}
 
 	return &retry.NotFoundError{
@@ -3940,6 +3936,22 @@ func findIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, a
 	}
 
 	return output, nil
+}
+
+func findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx context.Context, conn *ec2.Client, ipamPoolID, resourceID string) ([]awstypes.IpamPoolAllocation, error) {
+	input := ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(ipamPoolID),
+	}
+
+	output, err := findIPAMPoolAllocations(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
+		return aws.ToString(v.ResourceId) == resourceID
+	}), nil
 }
 
 func findIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {

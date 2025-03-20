@@ -106,7 +106,7 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -170,7 +170,7 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceTransitGatewayVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -248,7 +248,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -308,7 +308,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

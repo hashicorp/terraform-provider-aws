@@ -226,7 +226,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	input.Tags = getTagsIn(ctx)
 
 	// Retry for IAM eventual consistency.
-	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreatePipeline(ctx, &input)
 	})
 
@@ -397,7 +397,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 }
 
 func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPipelineByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

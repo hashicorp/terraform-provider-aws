@@ -171,7 +171,7 @@ func resourceTargetGroup() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								return strings.ToUpper(v.(string))
 							},
 							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocolVersion](),
@@ -211,7 +211,7 @@ const (
 	ResNameTargetGroup = "Target Group"
 )
 
-func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -223,8 +223,8 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		Type:        types.TargetGroupType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Config = expandTargetGroupConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Config = expandTargetGroupConfig(v.([]any)[0].(map[string]any))
 	}
 
 	out, err := conn.CreateTargetGroup(ctx, &in)
@@ -242,7 +242,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -260,7 +260,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, out.Arn)
 	if out.Config != nil {
-		if err := d.Set("config", []interface{}{flattenTargetGroupConfig(out.Config)}); err != nil {
+		if err := d.Set("config", []any{flattenTargetGroupConfig(out.Config)}); err != nil {
 			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
 		}
 	} else {
@@ -273,7 +273,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -283,8 +283,8 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("config") {
-			if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				config := expandTargetGroupConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				config := expandTargetGroupConfig(v.([]any)[0].(map[string]any))
 
 				if v := config.HealthCheck; v != nil {
 					in.HealthCheck = v
@@ -306,7 +306,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -316,7 +316,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Draining the targets can take a moment, so we need to retry on conflict.
-	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteTargetGroup(ctx, &input)
 	})
 
@@ -374,7 +374,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 }
 
 func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findTargetGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -413,12 +413,12 @@ func findTargetGroupByID(ctx context.Context, conn *vpclattice.Client, id string
 	return out, nil
 }
 
-func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]interface{} {
+func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrIPAddressType:          apiObject.IpAddressType,
 		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
 		names.AttrProtocol:               apiObject.Protocol,
@@ -426,7 +426,7 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	if v := apiObject.HealthCheck; v != nil {
-		tfMap[names.AttrHealthCheck] = []interface{}{flattenHealthCheckConfig(v)}
+		tfMap[names.AttrHealthCheck] = []any{flattenHealthCheckConfig(v)}
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -440,12 +440,12 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	return tfMap
 }
 
-func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]interface{} {
+func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrProtocol: apiObject.Protocol,
 		"protocol_version": apiObject.ProtocolVersion,
 	}
@@ -467,7 +467,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	if v := apiObject.Matcher; v != nil {
-		tfMap["matcher"] = []interface{}{flattenMatcherMemberHTTPCode(v.(*types.MatcherMemberHttpCode))}
+		tfMap["matcher"] = []any{flattenMatcherMemberHTTPCode(v.(*types.MatcherMemberHttpCode))}
 	}
 
 	if v := apiObject.Path; v != nil {
@@ -485,27 +485,27 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	return tfMap
 }
 
-func flattenMatcherMemberHTTPCode(apiObject *types.MatcherMemberHttpCode) map[string]interface{} {
+func flattenMatcherMemberHTTPCode(apiObject *types.MatcherMemberHttpCode) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrValue: apiObject.Value,
 	}
 
 	return tfMap
 }
 
-func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupConfig {
+func expandTargetGroupConfig(tfMap map[string]any) *types.TargetGroupConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.TargetGroupConfig{}
 
-	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrHealthCheck].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
@@ -535,7 +535,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 	return apiObject
 }
 
-func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckConfig {
+func expandHealthCheckConfig(tfMap map[string]any) *types.HealthCheckConfig {
 	apiObject := &types.HealthCheckConfig{}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
@@ -554,8 +554,8 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 		apiObject.HealthyThresholdCount = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["matcher"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Matcher = expandMatcherMemberHTTPCode(v[0].(map[string]interface{}))
+	if v, ok := tfMap["matcher"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Matcher = expandMatcherMemberHTTPCode(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
@@ -581,7 +581,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 	return apiObject
 }
 
-func expandMatcherMemberHTTPCode(tfMap map[string]interface{}) types.Matcher {
+func expandMatcherMemberHTTPCode(tfMap map[string]any) types.Matcher {
 	apiObject := &types.MatcherMemberHttpCode{}
 
 	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {

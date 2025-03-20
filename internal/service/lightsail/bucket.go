@@ -80,7 +80,7 @@ func ResourceBucket() *schema.Resource {
 	}
 }
 
-func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -109,7 +109,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -140,7 +140,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -166,7 +166,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

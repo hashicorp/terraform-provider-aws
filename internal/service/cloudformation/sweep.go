@@ -113,7 +113,7 @@ func sweepStackSetInstances(region string) error {
 					d.SetId(id)
 					d.Set("call_as", awstypes.CallAsSelf)
 					if ouID != "" {
-						d.Set("deployment_targets", []interface{}{map[string]interface{}{"organizational_unit_ids": schema.NewSet(schema.HashString, []interface{}{ouID})}})
+						d.Set("deployment_targets", []any{map[string]any{"organizational_unit_ids": schema.NewSet(schema.HashString, []any{ouID})}})
 					}
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
