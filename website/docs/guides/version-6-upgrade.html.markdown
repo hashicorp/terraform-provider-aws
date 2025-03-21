@@ -75,7 +75,7 @@ As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-g
 
 ## AWS OpsWorks Stacks End of Life
 
-As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), we removed these resources:
+As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the following resources have been removed:
 
 * `aws_opsworks_application`
 * `aws_opsworks_custom_layer`
