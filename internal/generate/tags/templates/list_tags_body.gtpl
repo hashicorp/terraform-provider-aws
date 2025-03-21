@@ -26,7 +26,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 {{- if .ListTagsOpPaginated }}
-    {{ if .RetryTagOps }}
+    {{- if .RetryTagOps }}
 	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
 		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
 			var output []awstypes.{{ or .TagType2 .TagType }}
