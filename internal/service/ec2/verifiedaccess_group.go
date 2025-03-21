@@ -41,7 +41,7 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_time": {
+			attrVerifiedAccessGroup_DeletionTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,18 +58,18 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy_document": {
+			attrVerifiedAccessGroup_PolicyDocument: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"sse_configuration": {
+			attrVerifiedAccessGroup_SseConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"customer_managed_key_enabled": {
+						attrVerifiedAccessGroup_SseConfiguration_CustomerManagedKeyEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -83,15 +83,15 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"verifiedaccess_group_arn": {
+			attrVerifiedAccessGroupArn: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"verifiedaccess_group_id": {
+			attrVerifiedAccessGroupId: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"verifiedaccess_instance_id": {
+			attrVerifiedAccessInstanceId: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -106,18 +106,18 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	input := &ec2.CreateVerifiedAccessGroupInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		TagSpecifications:        getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessGroup),
-		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
+		VerifiedAccessInstanceId: aws.String(d.Get(attrVerifiedAccessInstanceId).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy_document"); ok {
+	if v, ok := d.GetOk(attrVerifiedAccessGroup_PolicyDocument); ok {
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrVerifiedAccessGroup_SseConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]any)[0].(map[string]any))
 	}
 
@@ -149,20 +149,20 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set(names.AttrCreationTime, group.CreationTime)
-	d.Set("deletion_time", group.DeletionTime)
+	d.Set(attrVerifiedAccessGroup_DeletionTime, group.DeletionTime)
 	d.Set(names.AttrDescription, group.Description)
 	d.Set(names.AttrLastUpdatedTime, group.LastUpdatedTime)
 	d.Set(names.AttrOwner, group.Owner)
 	if v := group.SseSpecification; v != nil {
-		if err := d.Set("sse_configuration", flattenVerifiedAccessSseSpecificationResponse(v)); err != nil {
+		if err := d.Set(attrVerifiedAccessGroup_SseConfiguration, flattenVerifiedAccessSseSpecificationResponse(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting sse_configuration: %s", err)
 		}
 	} else {
-		d.Set("sse_configuration", nil)
+		d.Set(attrVerifiedAccessGroup_SseConfiguration, nil)
 	}
-	d.Set("verifiedaccess_group_arn", group.VerifiedAccessGroupArn)
-	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
-	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
+	d.Set(attrVerifiedAccessGroupArn, group.VerifiedAccessGroupArn)
+	d.Set(attrVerifiedAccessGroupId, group.VerifiedAccessGroupId)
+	d.Set(attrVerifiedAccessInstanceId, group.VerifiedAccessInstanceId)
 
 	setTagsOut(ctx, group.Tags)
 
@@ -172,7 +172,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s) policy: %s", d.Id(), err)
 	}
 
-	d.Set("policy_document", output.PolicyDocument)
+	d.Set(attrVerifiedAccessGroup_PolicyDocument, output.PolicyDocument)
 
 	return diags
 }
@@ -181,7 +181,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll, "sse_configuration") {
+	if d.HasChangesExcept(attrVerifiedAccessGroup_PolicyDocument, names.AttrTags, names.AttrTagsAll, attrVerifiedAccessGroup_SseConfiguration) {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
 			ClientToken:           aws.String(id.UniqueId()),
 			VerifiedAccessGroupId: aws.String(d.Id()),
@@ -191,7 +191,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("verified_access_instance_id") {
+		if d.HasChange(names.AttrVerifiedAccessInstanceID) {
 			input.VerifiedAccessInstanceId = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
@@ -202,9 +202,9 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChange("policy_document") {
+	if d.HasChange(attrVerifiedAccessGroup_PolicyDocument) {
 		in := &ec2.ModifyVerifiedAccessGroupPolicyInput{
-			PolicyDocument:        aws.String(d.Get("policy_document").(string)),
+			PolicyDocument:        aws.String(d.Get(attrVerifiedAccessGroup_PolicyDocument).(string)),
 			VerifiedAccessGroupId: aws.String(d.Id()),
 			PolicyEnabled:         aws.Bool(true),
 		}
@@ -216,12 +216,12 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChange("sse_configuration") {
+	if d.HasChange(attrVerifiedAccessGroup_SseConfiguration) {
 		in := &ec2.ModifyVerifiedAccessGroupPolicyInput{
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v, ok := d.GetOk(attrVerifiedAccessGroup_SseConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			in.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]any)[0].(map[string]any))
 		}
 
@@ -268,7 +268,7 @@ func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *types.Ve
 		apiObject.KmsKeyArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["customer_managed_key_enabled"].(bool); ok {
+	if v, ok := tfMap[attrVerifiedAccessGroup_SseConfiguration_CustomerManagedKeyEnabled].(bool); ok {
 		apiObject.CustomerManagedKeyEnabled = aws.Bool(v)
 	}
 
@@ -283,7 +283,7 @@ func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAcce
 	tfMap := map[string]any{}
 
 	if v := apiObject.CustomerManagedKeyEnabled; v != nil {
-		tfMap["customer_managed_key_enabled"] = aws.ToBool(v)
+		tfMap[attrVerifiedAccessGroup_SseConfiguration_CustomerManagedKeyEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {

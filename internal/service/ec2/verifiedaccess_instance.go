@@ -40,11 +40,15 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"fips_enabled": {
+			attrVerifiedAccessInstance_FipsEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -53,7 +57,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"verified_access_trust_providers": {
+			attrVerifiedAccessInstance_TrustProviders: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -96,11 +100,15 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessInstance),
 	}
 
+	if v, ok := d.GetOk(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain); ok {
+		input.CidrEndpointsCustomSubDomain = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("fips_enabled"); ok {
+	if v, ok := d.GetOk(attrVerifiedAccessInstance_FipsEnabled); ok {
 		input.FIPSEnabled = aws.Bool(v.(bool))
 	}
 
@@ -132,16 +140,17 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set(names.AttrCreationTime, output.CreationTime)
+	d.Set(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain, output.CidrEndpointsCustomSubDomain)
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("fips_enabled", output.FipsEnabled)
+	d.Set(attrVerifiedAccessInstance_FipsEnabled, output.FipsEnabled)
 	d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime)
 
 	if v := output.VerifiedAccessTrustProviders; v != nil {
-		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {
+		if err := d.Set(attrVerifiedAccessInstance_TrustProviders, flattenVerifiedAccessTrustProviders(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting verified_access_trust_providers: %s", err)
 		}
 	} else {
-		d.Set("verified_access_trust_providers", nil)
+		d.Set(attrVerifiedAccessInstance_TrustProviders, nil)
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -157,6 +166,10 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 		input := &ec2.ModifyVerifiedAccessInstanceInput{
 			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessInstanceId: aws.String(d.Id()),
+		}
+
+		if d.HasChange(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain) {
+			input.CidrEndpointsCustomSubDomain = aws.String(d.Get(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain).(string))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -215,9 +228,9 @@ func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustP
 
 func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProviderCondensed) map[string]any {
 	tfMap := map[string]any{
-		"device_trust_provider_type": string(apiObject.DeviceTrustProviderType),
-		"trust_provider_type":        string(apiObject.TrustProviderType),
-		"user_trust_provider_type":   string(apiObject.UserTrustProviderType),
+		attrVerifiedAccessInstance_TrustProviders_DeviceTrustProviderType: string(apiObject.DeviceTrustProviderType),
+		attrVerifiedAccessInstance_TrustProviders_TrustProviderType:       string(apiObject.TrustProviderType),
+		attrVerifiedAccessInstance_TrustProviders_UserTrustProviderType:   string(apiObject.UserTrustProviderType),
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -225,7 +238,7 @@ func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProvi
 	}
 
 	if v := apiObject.VerifiedAccessTrustProviderId; v != nil {
-		tfMap["verified_access_trust_provider_id"] = aws.ToString(v)
+		tfMap[names.AttrVerifiedAccessTrustProviderID] = aws.ToString(v)
 	}
 
 	return tfMap

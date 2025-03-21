@@ -32,12 +32,12 @@ func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"verifiedaccess_instance_id": {
+			attrVerifiedAccessInstanceId: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"verifiedaccess_trust_provider_id": {
+			attrVerifiedAccessTrustProviderId: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -50,8 +50,8 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vaiID := d.Get("verifiedaccess_instance_id").(string)
-	vatpID := d.Get("verifiedaccess_trust_provider_id").(string)
+	vaiID := d.Get(attrVerifiedAccessInstanceId).(string)
+	vatpID := d.Get(attrVerifiedAccessTrustProviderId).(string)
 	resourceID := verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID)
 	input := &ec2.AttachVerifiedAccessTrustProviderInput{
 		ClientToken:                   aws.String(id.UniqueId()),
@@ -91,8 +91,8 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance Trust Provider Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("verifiedaccess_instance_id", vaiID)
-	d.Set("verifiedaccess_trust_provider_id", vatpID)
+	d.Set(attrVerifiedAccessInstanceId, vaiID)
+	d.Set(attrVerifiedAccessTrustProviderId, vatpID)
 
 	return diags
 }

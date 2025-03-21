@@ -219,6 +219,46 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 	})
 }
 
+func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v1 types.VerifiedAccessInstance
+	resourceName := "aws_verifiedaccess_instance.test"
+	cidrEndpointCustomSubDomainV1 := "test1.example.com"
+	cidrEndpointCustomSubDomainV2 := "test2.example.com"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(cidrEndpointCustomSubDomainV1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", cidrEndpointCustomSubDomainV1),
+				),
+			},
+			{
+				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(cidrEndpointCustomSubDomainV2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", cidrEndpointCustomSubDomainV2),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before != after {
@@ -341,4 +381,13 @@ resource "aws_verifiedaccess_instance" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(cidrEndpointsCustomSubDomain string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_instance" "test" {
+  
+  cidr_endpoints_custom_subdomain = %[1]q
+}
+`, cidrEndpointsCustomSubDomain)
 }

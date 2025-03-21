@@ -221,6 +221,10 @@ username,Username
 value,Value
 values,Values
 version,Version
+verified_access_group_id,VerifiedAccessGroupID
+verified_access_instance_id,VerifiedAccessInstanceID
+verified_access_group_arn,VerifiedAccessGroupARN
+verified_access_trust_provider_id,VerifiedAccessTrustProviderID
 virtual_name,VirtualName
 volume_size,VolumeSize
 volume_type,VolumeType

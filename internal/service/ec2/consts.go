@@ -348,3 +348,75 @@ func verifiedAccessEndpointProtocol_Values() []string {
 const (
 	supportedRegionServiceStateAvailable = "Available"
 )
+
+const (
+	// Verified Access General Attribute names
+	attrVerifiedAccessInstanceId      = "verifiedaccess_instance_id"
+	attrVerifiedAccessTrustProviderId = "verifiedaccess_trust_provider_id"
+
+	// Verified Access Endpoint Attribute names
+	attrVerifiedAccessEndpoint_PortRange                                = "port_range"
+	attrVerifiedAccessEndpoint_PortRange_FromPort                       = "from_port"
+	attrVerifiedAccessEndpoint_PortRange_ToPort                         = "to_port"
+	attrVerifiedAccessEndpoint_ApplicationDomain                        = "application_domain"
+	attrVerifiedAccessEndpoint_AttachmentType                           = "attachment_type"
+	attrVerifiedAccessEndpoint_CidrOptions_Cidr                         = "cidr"
+	attrVerifiedAccessEndpoint_DeviceValidationDomain                   = "device_validation_domain"
+	attrVerifiedAccessEndpoint_DomainCertificateArn                     = "domain_certificate_arn"
+	attrVerifiedAccessEndpoint_EndpointDomainPrefix                     = "endpoint_domain_prefix"
+	attrVerifiedAccessEndpoint_EndpointDomain                           = "endpoint_domain"
+	attrVerifiedAccessEndpoint_LoadBalancerOptions                      = "load_balancer_options"
+	attrVerifiedAccessEndpoint_LoadBalancerOptions_LoadBalancerArn      = "load_balancer_arn"
+	attrVerifiedAccessEndpoint_NetworkInterfaceOptions                  = "network_interface_options"
+	attrVerifiedAccessEndpoint_PolicyDocument                           = "policy_document"
+	attrVerifiedAccessEndpoint_RdsOptions                               = "rds_options"
+	attrVerifiedAccessEndpoint_RdsOptions_ClusterArn                    = "cluster_arn"
+	attrVerifiedAccessEndpoint_RdsOptions_InstanceArn                   = "instance_arn"
+	attrVerifiedAccessEndpoint_RdsOptions_ProxyArn                      = "proxy_arn"
+	attrVerifiedAccessEndpoint_SseSpecification                         = "sse_specification"
+	attrVerifiedAccessEndpoint_SseSpecification_CustomManagedKeyEnabled = "customer_managed_key_enabled"
+
+	// Verified Access Group Attribute names
+	attrVerifiedAccessGroup_DeletionTime                               = "deletion_time"
+	attrVerifiedAccessGroup_PolicyDocument                             = attrVerifiedAccessEndpoint_PolicyDocument
+	attrVerifiedAccessGroup_SseConfiguration                           = "sse_configuration"
+	attrVerifiedAccessGroup_SseConfiguration_CustomerManagedKeyEnabled = attrVerifiedAccessEndpoint_SseSpecification_CustomManagedKeyEnabled
+	attrVerifiedAccessGroupArn                                         = "verifiedaccess_group_arn"
+	attrVerifiedAccessGroupId                                          = "verifiedaccess_group_id"
+
+	// Verified Access Instance
+	attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain           = "cidr_endpoints_custom_subdomain"
+	attrVerifiedAccessInstance_FipsEnabled                            = "fips_enabled"
+	attrVerifiedAccessInstance_TrustProviders                         = "verified_access_trust_providers"
+	attrVerifiedAccessInstance_TrustProviders_DeviceTrustProviderType = "device_trust_provider_type"
+	attrVerifiedAccessInstance_TrustProviders_TrustProviderType       = "trust_provider_type"
+	attrVerifiedAccessInstance_TrustProviders_UserTrustProviderType   = "user_trust_provider_type"
+
+	// Verified Access Instance Logging Configuration
+	attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs                                    = "access_logs"
+	attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_CloudWatchLogs_LogGroup            = "log_group"
+	attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_IncludeTrustContext                = "include_trust_context"
+	attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose                = "kinesis_data_firehose"
+	attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose_DeliveryStream = "delivery_stream"
+	attrVerifiedAccessInstanceLoggingConfiguration_LogVersion                                    = "log_version"
+	attrVerifiedAccessInstanceLoggingConfiguration_S3                                            = "s3"
+	attrVerifiedAccessInstanceLoggingConfiguration_S3_BucketOwner                                = "bucket_owner"
+
+	// Verified Access Instance Trust Provider
+	attrVerifiedAccessTrustProvider_DeviceOptions                                         = "device_options"
+	attrVerifiedAccessTrustProvider_DeviceOptions_TenantId                                = "tenant_id"
+	attrVerifiedAccessTrustProvider_DeviceTrustProviderType                               = "device_trust_provider_type"
+	attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions                          = "native_application_oidc_options"
+	attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_AuthorizationEndpoint    = "authorization_endpoint"
+	attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_PublicSigningKeyEndpoint = "public_signing_key_endpoint"
+	attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_TokenEndpoint            = "token_endpoint"
+	attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_UserInfoEndpoint         = "user_info_endpoint"
+	attrVerifiedAccessTrustProdiver_OidcOptions                                           = "oidc_options"
+	attrVerifiedAccessTrustProvider_OidcOptions_AuthorizationEndpoint                     = attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_AuthorizationEndpoint
+	attrVerifiedAccessTrustProvider_OidcOptions_TokenEndpoint                             = attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_TokenEndpoint
+	attrVerifiedAccessTrustProvider_OidcOptions_UserInfoEndpoint                          = attrVerifiedAccessTrustProvider_NativeApplicationOidcOptions_UserInfoEndpoint
+	attrVerifiedAccessTrustProvider_PolicyReferenceName                                   = "policy_reference_name"
+	attrVerifiedAccessTrustProvider_SseSpecification                                      = attrVerifiedAccessEndpoint_SseSpecification
+	attrVerifiedAccessTrustProvider_Type                                                  = attrVerifiedAccessInstance_TrustProviders_TrustProviderType
+	attrVerifiedAccessTrustProvider_UserType                                              = attrVerifiedAccessInstance_TrustProviders_UserTrustProviderType
+)
