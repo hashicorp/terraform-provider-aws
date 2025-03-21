@@ -953,7 +953,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 	applicationName := d.Get(names.AttrName).(string)
 
-	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
+	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "runtime_environment", "service_execution_role") {
 		currentApplicationVersionID := int64(d.Get("version_id").(int))
 		updateApplication := false
 
