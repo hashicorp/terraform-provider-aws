@@ -64,7 +64,7 @@ func resourceSSHKey() *schema.Resource {
 	}
 }
 
-func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSSHKeyRead(ctx, d, meta)...)
 }
 
-func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 

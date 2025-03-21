@@ -199,7 +199,7 @@ func findEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) (*
 }
 
 func statusEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnrollmentStatus(ctx, conn)
 
 		if tfresource.NotFound(err) {

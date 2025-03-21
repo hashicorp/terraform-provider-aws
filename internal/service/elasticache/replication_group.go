@@ -791,23 +791,34 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		// updateFuncs collects all update operations to be performed so they can be executed
+		// in the appropriate order. An update may involve one or more operations, but
+		// the order should always be:
+		//
+		// 1. Shard configuration changes
+		// 2. Replica count increases
+		// 3. Standard updates
+		// 4. Auth token changes
+		// 5. Replica count decreases
+		var updateFuncs []func() error
+
 		o, n := d.GetChange("num_cache_clusters")
 		oldCacheClusterCount, newCacheClusterCount := o.(int), n.(int)
 
 		if d.HasChanges("num_node_groups", "replicas_per_node_group") {
-			if err := modifyReplicationGroupShardConfiguration(ctx, conn, d); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+			updateFuncs = append(updateFuncs, func() error {
+				return modifyReplicationGroupShardConfiguration(ctx, conn, d)
+			})
 		} else if d.HasChange("num_cache_clusters") {
 			if newCacheClusterCount > oldCacheClusterCount {
-				if err := increaseReplicationGroupReplicaCount(ctx, conn, d.Id(), newCacheClusterCount, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
-			} // Else defer until after all other modifications are made.
+				updateFuncs = append(updateFuncs, func() error {
+					return increaseReplicationGroupReplicaCount(ctx, conn, d.Id(), newCacheClusterCount, d.Timeout(schema.TimeoutUpdate))
+				})
+			} // Replica count decreases are deferred until after all other modifications are made.
 		}
 
 		requestUpdate := false
-		input := &elasticache.ModifyReplicationGroupInput{
+		input := elasticache.ModifyReplicationGroupInput{
 			ApplyImmediately:   aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			ReplicationGroupId: aws.String(d.Id()),
 		}
@@ -966,57 +977,54 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if requestUpdate {
-			// tagging may cause this resource to not yet be available, so wait for it to be available
-			const (
-				delay = 30 * time.Second
-			)
-			if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) update: %s", d.Id(), err)
-			}
-
-			_, err := conn.ModifyReplicationGroup(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
-			}
-
-			if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) update: %s", d.Id(), err)
-			}
+			updateFuncs = append(updateFuncs, func() error {
+				_, err := conn.ModifyReplicationGroup(ctx, &input)
+				if err != nil {
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
+				}
+				return nil
+			})
 		}
 
 		if d.HasChanges("auth_token", "auth_token_update_strategy") {
-			input := &elasticache.ModifyReplicationGroupInput{
+			authInput := elasticache.ModifyReplicationGroupInput{
 				ApplyImmediately:        aws.Bool(true),
 				AuthToken:               aws.String(d.Get("auth_token").(string)),
 				AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
 				ReplicationGroupId:      aws.String(d.Id()),
 			}
 
-			// tagging may cause this resource to not yet be available, so wait for it to be available
-			const (
-				delay = 0 * time.Second
-			)
-			if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) update: %s", d.Id(), err)
-			}
-
-			_, err := conn.ModifyReplicationGroup(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
-			}
-
-			if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) update: %s", d.Id(), err)
-			}
+			updateFuncs = append(updateFuncs, func() error {
+				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
+				if err != nil {
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
+				}
+				return nil
+			})
 		}
 
 		if d.HasChange("num_cache_clusters") {
 			if newCacheClusterCount < oldCacheClusterCount {
-				if err := decreaseReplicationGroupReplicaCount(ctx, conn, d.Id(), newCacheClusterCount, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
+				updateFuncs = append(updateFuncs, func() error {
+					return decreaseReplicationGroupReplicaCount(ctx, conn, d.Id(), newCacheClusterCount, d.Timeout(schema.TimeoutUpdate))
+				})
+			}
+		}
+
+		const delay = 0 * time.Second
+		for _, fn := range updateFuncs {
+			// tagging may cause this resource to not yet be available, so wrap each update operation
+			// in a waiter
+			if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to become available: %s", d.Id(), err)
+			}
+
+			if err := fn(); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) update: %s", d.Id(), err)
 			}
 		}
 	}

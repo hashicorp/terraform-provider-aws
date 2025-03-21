@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAM_basic(t *testing.T) {
+func TestAccIPAM_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -58,7 +58,7 @@ func TestAccIPAM_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_disappears(t *testing.T) {
+func TestAccIPAM_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -81,7 +81,7 @@ func TestAccIPAM_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_description(t *testing.T) {
+func TestAccIPAM_description(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -115,7 +115,7 @@ func TestAccIPAM_description(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_operatingRegions(t *testing.T) {
+func TestAccIPAM_operatingRegions(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -156,7 +156,7 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_cascade(t *testing.T) {
+func TestAccIPAM_cascade(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -184,7 +184,7 @@ func TestAccIPAM_cascade(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_tier(t *testing.T) {
+func TestAccIPAM_tier(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -218,7 +218,7 @@ func TestAccIPAM_tier(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_tags(t *testing.T) {
+func TestAccIPAM_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"
@@ -263,7 +263,7 @@ func TestAccIPAM_tags(t *testing.T) {
 	})
 }
 
-func TestAccIPAM_enablePrivateGUA(t *testing.T) {
+func TestAccIPAM_enablePrivateGUA(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
 	resourceName := "aws_vpc_ipam.test"

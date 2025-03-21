@@ -83,7 +83,7 @@ func ResourceSegment() *schema.Resource {
 					validation.StringIsJSON,
 				),
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -94,7 +94,7 @@ func ResourceSegment() *schema.Resource {
 	}
 }
 
-func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -121,7 +121,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceSegmentRead(ctx, d, meta)...)
 }
 
-func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -152,12 +152,12 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceSegmentRead(ctx, d, meta)
 }
 
-func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)

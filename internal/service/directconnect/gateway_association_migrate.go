@@ -78,7 +78,7 @@ func resourceGatewayAssociationResourceV0() *schema.Resource {
 	}
 }
 
-func gatewayAssociationStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func gatewayAssociationStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Println("[INFO] Found Direct Connect Gateway Association state v0; migrating to v1")

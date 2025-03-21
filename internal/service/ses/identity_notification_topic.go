@@ -63,7 +63,7 @@ func resourceIdentityNotificationTopic() *schema.Resource {
 	}
 }
 
-func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceIdentityNotificationTopicRead(ctx, d, meta)...)
 }
 
-func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -143,7 +143,7 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

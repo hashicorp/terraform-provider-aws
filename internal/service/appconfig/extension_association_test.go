@@ -9,16 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -136,67 +133,45 @@ func testAccCheckExtensionAssociationDestroy(ctx context.Context) resource.TestC
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_appconfig_environment" {
+			if rs.Type != "aws_appconfig_extension_association" {
 				continue
 			}
 
-			input := &appconfig.GetExtensionAssociationInput{
-				ExtensionAssociationId: aws.String(rs.Primary.ID),
-			}
+			_, err := tfappconfig.FindExtensionByID(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetExtensionAssociation(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading AppConfig ExtensionAssociation (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("AppConfig ExtensionAssociation (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("AppConfig Extension Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckExtensionAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckExtensionAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		in := &appconfig.GetExtensionAssociationInput{
-			ExtensionAssociationId: aws.String(rs.Primary.ID),
-		}
+		_, err := tfappconfig.FindExtensionAssociationByID(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.GetExtensionAssociation(ctx, in)
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig ExtensionAssociation (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig ExtensionAssociation (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccExtensionAssociationConfigBase(rName string) string {
+func testAccExtensionAssociationConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name = %[1]q
@@ -206,7 +181,7 @@ resource "aws_appconfig_application" "test" {
 
 func testAccExtensionAssociationConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionAssociationConfigBase(rName),
+		testAccExtensionAssociationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name        = %[1]q
@@ -229,7 +204,7 @@ resource "aws_appconfig_extension_association" "test" {
 
 func testAccExtensionAssociationConfig_parameters1(rName string, pName string, pDescription string, pRequired string, pValue string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionAssociationConfigBase(rName),
+		testAccExtensionAssociationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
@@ -259,7 +234,7 @@ resource "aws_appconfig_extension_association" "test" {
 
 func testAccExtensionAssociationConfig_parameters2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionAssociationConfigBase(rName),
+		testAccExtensionAssociationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
@@ -295,7 +270,7 @@ resource "aws_appconfig_extension_association" "test" {
 
 func testAccExtensionAssociationConfig_parametersNotRequired(rName string, pName string, pDescription string, pRequired string, pValue string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionAssociationConfigBase(rName),
+		testAccExtensionAssociationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
