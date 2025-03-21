@@ -279,7 +279,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	case tfresource.NotFound(err):
 		d.Set("ptr_record", nil)
 	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service"):
-		// Effectively ignoring the error as we handle errors from GovCloud/Secret Regions
+		d.Set("ptr_record", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
 	}
