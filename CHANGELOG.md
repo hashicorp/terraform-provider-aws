@@ -1,5 +1,9 @@
 ## 5.93.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_elasticache_cluster: Add configurable timeouts for create, update, and delete operations ([#41940](https://github.com/hashicorp/terraform-provider-aws/issues/41940))
+
 BUG FIXES:
 
 * resource/aws_lakeformation_opt_in: Fix error when expanding `resource_data.table_wildcard` attribute ([#41939](https://github.com/hashicorp/terraform-provider-aws/issues/41939))
