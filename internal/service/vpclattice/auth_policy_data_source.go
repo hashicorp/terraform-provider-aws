@@ -6,6 +6,7 @@ package vpclattice
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,8 +49,13 @@ func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Auth Policy (%s): %s", resourceID, err)
 	}
 
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	d.SetId(resourceID)
-	d.Set(names.AttrPolicy, output.Policy)
+	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("resource_identifier", resourceID)
 
 	return diags
