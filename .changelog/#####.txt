@@ -5,3 +5,7 @@ data-source/aws_availability_zone: Mark `region` as Optional, allowing a value t
 ```release-note:enhancement
 data-source/aws_availability_zone: Add `group_long_name` attribute
 ```
+
+```release-note:note
+resource/aws_config_aggregate_authorization: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead
+```

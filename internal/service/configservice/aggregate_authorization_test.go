@@ -35,15 +35,42 @@ func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 				Config: testAccAggregateAuthorizationConfig_basic(accountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{region}"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{authorized_aws_region}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "authorized_aws_region", acctest.Region()),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrRegion),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var aa types.AggregationAuthorization
+	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	resourceName := "aws_config_aggregate_authorization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAggregateAuthorizationConfig_deprecatedRegion(accountID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{region}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
+					resource.TestCheckNoResourceAttr(resourceName, "authorized_aws_region"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
+				),
 			},
 		},
 	})
@@ -128,7 +155,11 @@ func testAccCheckAggregateAuthorizationExists(ctx context.Context, n string, v *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-		output, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrRegion])
+		authorizedRegion := rs.Primary.Attributes["authorized_aws_region"]
+		if authorizedRegion == "" {
+			authorizedRegion = rs.Primary.Attributes[names.AttrRegion]
+		}
+		output, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], authorizedRegion)
 
 		if err != nil {
 			return err
@@ -149,7 +180,11 @@ func testAccCheckAggregateAuthorizationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrRegion])
+			authorizedRegion := rs.Primary.Attributes["authorized_aws_region"]
+			if authorizedRegion == "" {
+				authorizedRegion = rs.Primary.Attributes[names.AttrRegion]
+			}
+			_, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], authorizedRegion)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -169,6 +204,15 @@ func testAccCheckAggregateAuthorizationDestroy(ctx context.Context) resource.Tes
 func testAccAggregateAuthorizationConfig_basic(accountID string) string {
 	return fmt.Sprintf(`
 resource "aws_config_aggregate_authorization" "test" {
+  account_id            = %[1]q
+  authorized_aws_region = %[2]q
+}
+`, accountID, acctest.Region())
+}
+
+func testAccAggregateAuthorizationConfig_deprecatedRegion(accountID string) string {
+	return fmt.Sprintf(`
+resource "aws_config_aggregate_authorization" "test" {
   account_id = %[1]q
   region     = %[2]q
 }
@@ -178,8 +222,8 @@ resource "aws_config_aggregate_authorization" "test" {
 func testAccAggregateAuthorizationConfig_tags1(accountID, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_config_aggregate_authorization" "test" {
-  account_id = %[1]q
-  region     = %[2]q
+  account_id            = %[1]q
+  authorized_aws_region = %[2]q
 
   tags = {
     %[3]q = %[4]q
@@ -191,8 +235,8 @@ resource "aws_config_aggregate_authorization" "test" {
 func testAccAggregateAuthorizationConfig_tags2(accountID, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_config_aggregate_authorization" "test" {
-  account_id = %[1]q
-  region     = %[2]q
+  account_id            = %[1]q
+  authorized_aws_region = %[2]q
 
   tags = {
     %[3]q = %[4]q
