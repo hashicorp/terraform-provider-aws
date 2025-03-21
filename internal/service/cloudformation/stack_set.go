@@ -139,6 +139,11 @@ func resourceStackSet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"concurrency_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
+						},
 						"failure_tolerance_count": {
 							Type:          schema.TypeInt,
 							Optional:      true,
