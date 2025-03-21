@@ -73,11 +73,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Orderable Cluster",
 		},
 		{
-			Factory:  dataSourceServiceAccount,
-			TypeName: "aws_redshift_service_account",
-			Name:     "Service Account",
-		},
-		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
 			Name:     "Subnet Group",
