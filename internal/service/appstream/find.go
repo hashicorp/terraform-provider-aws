@@ -6,6 +6,7 @@ package appstream
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
@@ -148,11 +149,9 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.Client, flee
 			return !lastPage
 		}
 
-		for _, name := range page.Names {
-			if stackName == name {
-				found = true
-				return false
-			}
+		if slices.Contains(page.Names, stackName) {
+			found = true
+			return false
 		}
 
 		return !lastPage

@@ -118,7 +118,7 @@ func resourceOrganizationManagedRule() *schema.Resource {
 	}
 }
 
-func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -162,7 +162,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 		input.OrganizationManagedRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (any, error) {
 		return conn.PutOrganizationConfigRule(ctx, input)
 	})
 
@@ -179,7 +179,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceOrganizationManagedRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -211,7 +211,7 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -267,7 +267,7 @@ func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceOrganizationManagedRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -275,7 +275,7 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Managed Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
 		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
 			OrganizationConfigRuleName: aws.String(d.Id()),
 		})
@@ -398,7 +398,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 		const (
 			timeout = 15 * time.Second
 		)
-		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (any, error) {
 			return pages.NextPage(ctx)
 		})
 
@@ -455,7 +455,7 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 }
 
 func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOrganizationConfigRuleStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

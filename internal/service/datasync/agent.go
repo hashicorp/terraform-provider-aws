@@ -94,7 +94,7 @@ func ResourceAgent() *schema.Resource {
 	}
 }
 
-func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -205,7 +205,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.AgentArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return FindAgentByARN(ctx, conn, d.Id())
 	})
 
@@ -216,7 +216,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -249,7 +249,7 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -269,7 +269,7 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 

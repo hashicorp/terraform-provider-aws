@@ -610,7 +610,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 			plannedRegions := make([]awstypes.RegionOfInterest, len(planRegions))
 
-			for i := 0; i < len(planRegions); i++ {
+			for i := range planRegions {
 				planRegion := planRegions[i]
 				plannedRegions[i] = awstypes.RegionOfInterest{}
 
@@ -632,7 +632,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 					plannedPolygons := make([]awstypes.Point, len(polygons))
 
-					for i := 0; i < len(polygons); i++ {
+					for i := range polygons {
 						polygon := polygons[i]
 						plannedPolygons[i] = awstypes.Point{
 							X: aws.Float32(float32(polygon.X.ValueFloat64())),
@@ -775,7 +775,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 }
 
 func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

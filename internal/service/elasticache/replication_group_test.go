@@ -3404,7 +3404,7 @@ func testAccReplicationGroupCheckMemberClusterTags(resourceName, dataSourceNameP
 	checks := testAccCheckResourceTags(resourceName, kvs)
 	checks = append(checks, resource.TestCheckResourceAttr(resourceName, "member_clusters.#", strconv.Itoa(memberCount))) // sanity check
 
-	for i := 0; i < memberCount; i++ {
+	for i := range memberCount {
 		dataSourceName := fmt.Sprintf("%s.%d", dataSourceNamePrefix, i)
 		checks = append(checks, testAccCheckResourceTags(dataSourceName, kvs)...)
 	}

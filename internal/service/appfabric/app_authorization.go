@@ -429,7 +429,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 }
 
 func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
 
 		if tfresource.NotFound(err) {

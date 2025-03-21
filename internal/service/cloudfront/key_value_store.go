@@ -279,7 +279,7 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 }
 
 func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKeyValueStoreByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

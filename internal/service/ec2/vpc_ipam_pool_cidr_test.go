@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMPoolCIDR_basic(t *testing.T) {
+func TestAccIPAMPoolCIDR_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
@@ -52,7 +52,7 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
+func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
@@ -85,7 +85,7 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
+func TestAccIPAMPoolCIDR_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
@@ -109,7 +109,7 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
+func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"

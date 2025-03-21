@@ -711,7 +711,7 @@ ts: testacc-short ## Alias to testacc-short
 update: ## Update dependencies
 	@echo "make: Updating dependencies..."
 	$(GO_VER) get -u ./...
-	go mod tidy	
+	go mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && go mod tidy
 	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && go mod tidy
 	cd .ci/tools && $(GO_VER) get -u && go mod tidy

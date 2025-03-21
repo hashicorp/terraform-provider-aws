@@ -118,7 +118,7 @@ func resourceSafetyRule() *schema.Resource {
 	}
 }
 
-func resourceSafetyRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSafetyRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if _, ok := d.GetOk("asserted_controls"); ok {
 		return append(diags, createAssertionRule(ctx, d, meta)...)
@@ -131,7 +131,7 @@ func resourceSafetyRuleCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -160,7 +160,7 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if result.RuleConfig != nil {
-			d.Set("rule_config", []interface{}{flattenRuleConfig(result.RuleConfig)})
+			d.Set("rule_config", []any{flattenRuleConfig(result.RuleConfig)})
 		} else {
 			d.Set("rule_config", nil)
 		}
@@ -185,7 +185,7 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if result.RuleConfig != nil {
-			d.Set("rule_config", []interface{}{flattenRuleConfig(result.RuleConfig)})
+			d.Set("rule_config", []any{flattenRuleConfig(result.RuleConfig)})
 		} else {
 			d.Set("rule_config", nil)
 		}
@@ -194,7 +194,7 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceSafetyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSafetyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if _, ok := d.GetOk("asserted_controls"); ok {
 		return append(diags, updateAssertionRule(ctx, d, meta)...)
@@ -207,7 +207,7 @@ func resourceSafetyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -237,7 +237,7 @@ func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -245,8 +245,8 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int32(int32(d.Get("wait_period_ms").(int))),
-		RuleConfig:       testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
-		AssertedControls: flex.ExpandStringValueList(d.Get("asserted_controls").([]interface{})),
+		RuleConfig:       testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]any)[0].(map[string]any)),
+		AssertedControls: flex.ExpandStringValueList(d.Get("asserted_controls").([]any)),
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
@@ -274,7 +274,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceSafetyRuleRead(ctx, d, meta)...)
 }
 
-func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func createGatingRule(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -282,9 +282,9 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int32(int32(d.Get("wait_period_ms").(int))),
-		RuleConfig:      testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
-		GatingControls:  flex.ExpandStringValueList(d.Get("gating_controls").([]interface{})),
-		TargetControls:  flex.ExpandStringValueList(d.Get("target_controls").([]interface{})),
+		RuleConfig:      testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]any)[0].(map[string]any)),
+		GatingControls:  flex.ExpandStringValueList(d.Get("gating_controls").([]any)),
+		TargetControls:  flex.ExpandStringValueList(d.Get("target_controls").([]any)),
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
@@ -312,7 +312,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 	return append(diags, resourceSafetyRuleRead(ctx, d, meta)...)
 }
 
-func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -341,7 +341,7 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
 }
 
-func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -393,7 +393,7 @@ func findSafetyRuleByARN(ctx context.Context, conn *r53rcc.Client, arn string) (
 	return output, nil
 }
 
-func testAccSafetyRuleConfig_expandRule(tfMap map[string]interface{}) *awstypes.RuleConfig {
+func testAccSafetyRuleConfig_expandRule(tfMap map[string]any) *awstypes.RuleConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -414,12 +414,12 @@ func testAccSafetyRuleConfig_expandRule(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenRuleConfig(apiObject *awstypes.RuleConfig) map[string]interface{} {
+func flattenRuleConfig(apiObject *awstypes.RuleConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Inverted; v != nil {
 		tfMap["inverted"] = aws.ToBool(v)

@@ -401,7 +401,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]interface{}{
+	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -410,7 +410,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 		FinalSnapshotName:   nil,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -474,7 +474,7 @@ func findServerlessCacheByID(ctx context.Context, conn *elasticache.Client, id s
 }
 
 func statusServerlessCache(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServerlessCacheByID(ctx, conn, cacheClusterID)
 
 		if tfresource.NotFound(err) {

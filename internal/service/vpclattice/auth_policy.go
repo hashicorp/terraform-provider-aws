@@ -48,7 +48,7 @@ func ResourceAuthPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -70,7 +70,7 @@ const (
 	ResNameAuthPolicy = "Auth Policy"
 )
 
-func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Get("resource_identifier").(string)
@@ -97,7 +97,7 @@ func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAuthPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Id()
@@ -132,7 +132,7 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
