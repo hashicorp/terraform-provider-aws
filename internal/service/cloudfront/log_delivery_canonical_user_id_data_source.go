@@ -19,12 +19,7 @@ func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
+		Schema: map[string]*schema.Schema{},
 	}
 }
 
