@@ -39,6 +39,7 @@ const (
 )
 
 // @SDKResource("aws_cloudformation_stack_set_instance", name="Stack Set Instance")
+// @Region(overrideEnabled=false)
 func resourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetInstanceCreate,
