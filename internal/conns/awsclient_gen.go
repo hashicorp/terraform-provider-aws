@@ -172,7 +172,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opsworks"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -933,10 +932,6 @@ func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis.Client 
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless.Client {
 	return errs.Must(client[*opensearchserverless.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
-}
-
-func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks.Client {
-	return errs.Must(client[*opsworks.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations.Client {

@@ -251,7 +251,6 @@ provider "aws" {
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
-|OpsWorks|`opsworks`|`AWS_ENDPOINT_URL_OPSWORKS`|`opsworks`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
 |OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
