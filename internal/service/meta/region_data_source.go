@@ -21,7 +21,6 @@ import (
 )
 
 // @FrameworkDataSource("aws_region", name="Region")
-// @Region(overrideEnabled=false)
 func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &regionDataSource{}
 
