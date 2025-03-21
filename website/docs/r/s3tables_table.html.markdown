@@ -16,14 +16,14 @@ Terraform resource for managing an Amazon S3 Tables Table.
 
 ```terraform
 resource "aws_s3tables_table" "example" {
-  name             = "example-table"
+  name             = "example_table"
   namespace        = aws_s3tables_namespace.example.namespace
   table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
   format           = "ICEBERG"
 }
 
 resource "aws_s3tables_namespace" "example" {
-  namespace        = "example-namespace"
+  namespace        = "example_namespace"
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
 }
 
