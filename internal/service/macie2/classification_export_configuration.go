@@ -59,7 +59,7 @@ func resourceClassificationExportConfiguration() *schema.Resource {
 	}
 }
 
-func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -79,8 +79,8 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 		Configuration: &awstypes.ClassificationExportConfiguration{},
 	}
 
-	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	log.Printf("[DEBUG] Creating Macie classification export configuration: %+v", input)
@@ -94,7 +94,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 	return append(diags, resourceClassificationExportConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -103,8 +103,8 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 		Configuration: &awstypes.ClassificationExportConfiguration{},
 	}
 
-	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]any)[0].(map[string]any))
 	} else {
 		input.Configuration.S3Destination = nil
 	}
@@ -120,7 +120,7 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 	return append(diags, resourceClassificationExportConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceClassificationExportConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -135,7 +135,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 	if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 		if (awstypes.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			var flattenedS3Destination = flattenClassificationExportConfigurationS3DestinationResult(output.Configuration.S3Destination)
-			if err := d.Set("s3_destination", []interface{}{flattenedS3Destination}); err != nil {
+			if err := d.Set("s3_destination", []any{flattenedS3Destination}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting Macie classification export configuration s3_destination: %s", err)
 			}
 		}
@@ -145,7 +145,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 	return diags
 }
 
-func resourceClassificationExportConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -165,7 +165,7 @@ func resourceClassificationExportConfigurationDelete(ctx context.Context, d *sch
 	return diags
 }
 
-func expandClassificationExportConfiguration(tfMap map[string]interface{}) *awstypes.S3Destination {
+func expandClassificationExportConfiguration(tfMap map[string]any) *awstypes.S3Destination {
 	if tfMap == nil {
 		return nil
 	}
@@ -187,12 +187,12 @@ func expandClassificationExportConfiguration(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func flattenClassificationExportConfigurationS3DestinationResult(apiObject *awstypes.S3Destination) map[string]interface{} {
+func flattenClassificationExportConfigurationS3DestinationResult(apiObject *awstypes.S3Destination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
 		tfMap[names.AttrBucketName] = aws.ToString(v)

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -4243,10 +4244,8 @@ func testAccCheckInstanceRefreshStatus(ctx context.Context, v *awstypes.AutoScal
 
 		status := output[index].Status
 
-		for _, v := range expected {
-			if status == v {
-				return nil
-			}
+		if slices.Contains(expected, status) {
+			return nil
 		}
 
 		return fmt.Errorf("Expected Instance Refresh at index %d to be in %q, got %q", index, expected, status)

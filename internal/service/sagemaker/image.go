@@ -74,7 +74,7 @@ func resourceImage() *schema.Resource {
 	}
 }
 
-func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 	needsUpdate := false
@@ -180,7 +180,7 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

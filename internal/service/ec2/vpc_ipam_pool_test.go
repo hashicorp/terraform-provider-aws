@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMPool_basic(t *testing.T) {
+func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -81,7 +81,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_disappears(t *testing.T) {
+func TestAccIPAMPool_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -104,7 +104,7 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_ipv6Basic(t *testing.T) {
+func TestAccIPAMPool_ipv6Basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -132,7 +132,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_ipv6PublicIPAmazon(t *testing.T) {
+func TestAccIPAMPool_ipv6PublicIPAmazon(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -162,7 +162,7 @@ func TestAccIPAMPool_ipv6PublicIPAmazon(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
+func TestAccIPAMPool_ipv6Contiguous(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -191,7 +191,7 @@ func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_cascade(t *testing.T) {
+func TestAccIPAMPool_cascade(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -219,7 +219,7 @@ func TestAccIPAMPool_cascade(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_tags(t *testing.T) {
+func TestAccIPAMPool_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -264,7 +264,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_ipv6PrivateScope(t *testing.T) {
+func TestAccIPAMPool_ipv6PrivateScope(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -290,10 +290,6 @@ func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamP
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Pool ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)

@@ -68,7 +68,7 @@ func resourceLicenseAssociation() *schema.Resource {
 	}
 }
 
-func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -97,7 +97,7 @@ func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceLicenseAssociationRead(ctx, d, meta)...)
 }
 
-func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 

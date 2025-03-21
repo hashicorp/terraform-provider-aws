@@ -76,7 +76,7 @@ const (
 	trustStoreRevocationResourceIDPartCount = 2
 )
 
-func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -109,7 +109,7 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
 	})
 
@@ -120,7 +120,7 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceTrustStoreRevocationRead(ctx, d, meta)...)
 }
 
-func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -153,7 +153,7 @@ func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 

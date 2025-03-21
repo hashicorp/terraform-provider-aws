@@ -61,7 +61,7 @@ func resourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	}
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d
 	return append(diags, resourceNotebookInstanceLifeCycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *
 	return diags
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -162,7 +162,7 @@ func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d
 	return append(diags, resourceNotebookInstanceLifeCycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceLifeCycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

@@ -72,7 +72,7 @@ func ResourceDirectoryConfig() *schema.Resource {
 	}
 }
 
-func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -81,7 +81,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &appstream.CreateDirectoryConfigInput{
 		DirectoryName:                        aws.String(directoryName),
 		OrganizationalUnitDistinguishedNames: flex.ExpandStringValueSet(d.Get("organizational_unit_distinguished_names").(*schema.Set)),
-		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]interface{})),
+		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]any)),
 	}
 
 	output, err := conn.CreateDirectoryConfig(ctx, input)
@@ -98,7 +98,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDirectoryConfigRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -137,7 +137,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -150,7 +150,7 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("service_account_credentials") {
-		input.ServiceAccountCredentials = expandServiceAccountCredentials(d.Get("service_account_credentials").([]interface{}))
+		input.ServiceAccountCredentials = expandServiceAccountCredentials(d.Get("service_account_credentials").([]any))
 	}
 
 	_, err := conn.UpdateDirectoryConfig(ctx, input)
@@ -161,7 +161,7 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDirectoryConfigRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -183,12 +183,12 @@ func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandServiceAccountCredentials(tfList []interface{}) *awstypes.ServiceAccountCredentials {
+func expandServiceAccountCredentials(tfList []any) *awstypes.ServiceAccountCredentials {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	attr := tfList[0].(map[string]interface{})
+	attr := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.ServiceAccountCredentials{
 		AccountName:     aws.String(attr["account_name"].(string)),
@@ -198,14 +198,14 @@ func expandServiceAccountCredentials(tfList []interface{}) *awstypes.ServiceAcco
 	return apiObject
 }
 
-func flattenServiceAccountCredentials(apiObject *awstypes.ServiceAccountCredentials, d *schema.ResourceData) []interface{} {
+func flattenServiceAccountCredentials(apiObject *awstypes.ServiceAccountCredentials, d *schema.ResourceData) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := map[string]interface{}{}
+	tfList := map[string]any{}
 	tfList["account_name"] = aws.ToString(apiObject.AccountName)
 	tfList["account_password"] = d.Get("service_account_credentials.0.account_password").(string)
 
-	return []interface{}{tfList}
+	return []any{tfList}
 }

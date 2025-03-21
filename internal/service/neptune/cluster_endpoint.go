@@ -83,7 +83,7 @@ func resourceClusterEndpoint() *schema.Resource {
 	}
 }
 
-func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -123,7 +123,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -155,7 +155,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -195,7 +195,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -286,7 +286,7 @@ func findClusterEndpoints(ctx context.Context, conn *neptune.Client, input *nept
 }
 
 func statusClusterEndpoint(ctx context.Context, conn *neptune.Client, clusterID, clusterEndpointID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
 		if tfresource.NotFound(err) {

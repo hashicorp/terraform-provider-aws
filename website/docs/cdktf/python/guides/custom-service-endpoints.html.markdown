@@ -190,6 +190,7 @@ class MyConvertedCode(TerraformStack):
 |DocumentDB Elastic|`docdbelastic`|`AWS_ENDPOINT_URL_DOCDB_ELASTIC`|`docdb_elastic`|
 |DRS (Elastic Disaster Recovery)|`drs`|`AWS_ENDPOINT_URL_DRS`|`drs`|
 |Directory Service|`ds`(or `directoryservice`)|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE`|`directory_service`|
+|DSQL|`dsql`|`AWS_ENDPOINT_URL_DSQL`|`dsql`|
 |DynamoDB|`dynamodb`|`AWS_ENDPOINT_URL_DYNAMODB`|`dynamodb`|
 |EC2 (Elastic Compute Cloud)|`ec2`|`AWS_ENDPOINT_URL_EC2`|`ec2`|
 |ECR (Elastic Container Registry)|`ecr`|`AWS_ENDPOINT_URL_ECR`|`ecr`|
@@ -457,4 +458,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-11399ce897c01f5968f8952f815f4ac55d3fb7cbb6ba03da989e19ca3c04e49f -->
+<!-- cache-key: cdktf-0.20.8 input-7b4792ab176c16f174d183613f2375533beb97cc77ccb4894d601d3404c9495e -->

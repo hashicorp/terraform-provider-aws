@@ -120,7 +120,7 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -137,7 +137,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
-		if err := d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
+		if err := d.Set("instance_metadata_options", []any{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_metadata_options: %s", err)
 		}
 	} else {
@@ -147,7 +147,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	d.Set("instance_types", infrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		if err := d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
+		if err := d.Set("logging", []any{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
 		}
 	} else {

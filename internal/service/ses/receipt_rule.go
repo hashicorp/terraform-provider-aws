@@ -281,7 +281,7 @@ func resourceReceiptRule() *schema.Resource {
 	}
 }
 
-func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -296,7 +296,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -320,7 +320,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
-func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -350,17 +350,17 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("scan_enabled", rule.ScanEnabled)
 	d.Set("tls_policy", rule.TlsPolicy)
 
-	addHeaderActionList := []map[string]interface{}{}
-	bounceActionList := []map[string]interface{}{}
-	lambdaActionList := []map[string]interface{}{}
-	s3ActionList := []map[string]interface{}{}
-	snsActionList := []map[string]interface{}{}
-	stopActionList := []map[string]interface{}{}
-	workmailActionList := []map[string]interface{}{}
+	addHeaderActionList := []map[string]any{}
+	bounceActionList := []map[string]any{}
+	lambdaActionList := []map[string]any{}
+	s3ActionList := []map[string]any{}
+	snsActionList := []map[string]any{}
+	stopActionList := []map[string]any{}
+	workmailActionList := []map[string]any{}
 
 	for i, apiObject := range rule.Actions {
 		if apiObject := apiObject.AddHeaderAction; apiObject != nil {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"header_name":  aws.ToString(apiObject.HeaderName),
 				"header_value": aws.ToString(apiObject.HeaderValue),
 				"position":     i + 1,
@@ -369,7 +369,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if apiObject := apiObject.BounceAction; apiObject != nil {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				names.AttrMessage: aws.ToString(apiObject.Message),
 				"sender":          aws.ToString(apiObject.Sender),
 				"smtp_reply_code": aws.ToString(apiObject.SmtpReplyCode),
@@ -388,7 +388,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if apiObject := apiObject.LambdaAction; apiObject != nil {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				names.AttrFunctionARN: aws.ToString(apiObject.FunctionArn),
 				"invocation_type":     apiObject.InvocationType,
 				"position":            i + 1,
@@ -402,7 +402,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if apiObject := apiObject.S3Action; apiObject != nil {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				names.AttrBucketName: aws.ToString(apiObject.BucketName),
 				"position":           i + 1,
 			}
@@ -427,7 +427,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if apiObject := apiObject.SNSAction; apiObject != nil {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				names.AttrTopicARN: aws.ToString(apiObject.TopicArn),
 				"encoding":         apiObject.Encoding,
 				"position":         i + 1,
@@ -437,7 +437,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if apiObject := apiObject.StopAction; apiObject != nil {
-			stopAction := map[string]interface{}{
+			stopAction := map[string]any{
 				names.AttrScope: apiObject.Scope,
 				"position":      i + 1,
 			}
@@ -450,7 +450,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if apiObject := apiObject.WorkmailAction; apiObject != nil {
-			workmailAction := map[string]interface{}{
+			workmailAction := map[string]any{
 				"organization_arn": aws.ToString(apiObject.OrganizationArn),
 				"position":         i + 1,
 			}
@@ -488,7 +488,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -498,7 +498,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.UpdateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -534,7 +534,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
-func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -555,7 +555,7 @@ func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ":")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
@@ -626,7 +626,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("add_header_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				AddHeaderAction: &awstypes.AddHeaderAction{
@@ -639,7 +639,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("bounce_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			bounceAction := &awstypes.BounceAction{
 				Message:       aws.String(elem[names.AttrMessage].(string)),
@@ -663,7 +663,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("lambda_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			lambdaAction := &awstypes.LambdaAction{
 				FunctionArn: aws.String(elem[names.AttrFunctionARN].(string)),
@@ -685,7 +685,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("s3_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			s3Action := &awstypes.S3Action{
 				BucketName: aws.String(elem[names.AttrBucketName].(string)),
@@ -715,7 +715,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("sns_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			snsAction := &awstypes.SNSAction{
 				TopicArn: aws.String(elem[names.AttrTopicARN].(string)),
@@ -730,7 +730,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("stop_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			stopAction := &awstypes.StopAction{
 				Scope: awstypes.StopScope(elem[names.AttrScope].(string)),
@@ -748,7 +748,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	if v, ok := d.GetOk("workmail_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
-			elem := element.(map[string]interface{})
+			elem := element.(map[string]any)
 
 			workmailAction := &awstypes.WorkmailAction{
 				OrganizationArn: aws.String(elem["organization_arn"].(string)),

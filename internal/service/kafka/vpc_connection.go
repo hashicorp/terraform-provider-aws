@@ -75,7 +75,7 @@ func resourceVPCConnection() *schema.Resource {
 	}
 }
 
-func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -131,7 +131,7 @@ func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -139,7 +139,7 @@ func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -198,7 +198,7 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn strin
 }
 
 func statusVPCConnection(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

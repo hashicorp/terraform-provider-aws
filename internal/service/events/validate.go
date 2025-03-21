@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func validateRuleName(v interface{}, k string) (ws []string, errors []error) {
+func validateRuleName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {
 		errors = append(errors, fmt.Errorf(
@@ -31,7 +31,7 @@ func validateRuleName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validateTargetID(v interface{}, k string) (ws []string, errors []error) {
+func validateTargetID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {
 		errors = append(errors, fmt.Errorf(

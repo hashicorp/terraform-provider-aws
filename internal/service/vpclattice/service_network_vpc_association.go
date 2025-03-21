@@ -86,7 +86,7 @@ const (
 	ResNameServiceNetworkVPCAssociation = "ServiceNetworkVPCAssociation"
 )
 
-func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
+		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	out, err := conn.CreateServiceNetworkVpcAssociation(ctx, in)
@@ -119,7 +119,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceServiceNetworkVPCAssociationRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -145,7 +145,7 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -154,7 +154,7 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 		}
 
 		if d.HasChange(names.AttrSecurityGroupIDs) {
-			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]interface{}))
+			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]any))
 		}
 
 		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork VPC Association (%s): %#v", d.Id(), in)
@@ -167,7 +167,7 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceServiceNetworkVPCAssociationRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -252,7 +252,7 @@ func waitServiceNetworkVPCAssociationDeleted(ctx context.Context, conn *vpclatti
 }
 
 func statusServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findServiceNetworkVPCAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
