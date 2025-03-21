@@ -13,7 +13,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
@@ -75,6 +79,11 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccApplicationConfig_basicFlink(rName, "FLINK-1_8"),
@@ -117,6 +126,11 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccApplicationConfig_basicFlink(rName, "FLINK-1_11"),
@@ -159,6 +173,11 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccApplicationConfig_basicFlink(rName, "FLINK-1_13"),
@@ -201,6 +220,11 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccApplicationConfig_basicFlink(rName, "FLINK-1_15"),
@@ -243,6 +267,11 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccApplicationConfig_basicFlink(rName, "FLINK-1_18"),
@@ -285,6 +314,11 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1038,10 +1072,6 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update_runtime(t *tes
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
-	iamRoleResourceName := "aws_iam_role.test.0"
-	s3BucketResourceName := "aws_s3_bucket.test"
-	s3Object1ResourceName := "aws_s3_object.test.0"
-	s3Object2ResourceName := "aws_s3_object.test.1"
 	runtime1 := "FLINK-1_15"
 	runtime2 := "FLINK-1_18"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1056,97 +1086,31 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update_runtime(t *tes
 				Config: testAccApplicationConfig_flinkConfiguration(rName, "", runtime1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object1ResourceName, names.AttrKey),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object1ResourceName, "version_id"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.checkpoint_interval", "60000"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.configuration_type", "DEFAULT"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.min_pause_between_checkpoints", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.0.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.0.log_level", "DEBUG"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.0.metrics_level", "TASK"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.auto_scaling_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.parallelism", "10"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.parallelism_per_kpu", "4"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.run_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.vpc_configuration.#", "0"),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", runtime1),
-					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("runtime_environment"), knownvalue.StringExact(runtime1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("version_id"), knownvalue.StringExact("1")),
+				},
 			},
 			{
 				Config: testAccApplicationConfig_flinkConfigurationUpdated(rName, "", runtime2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object2ResourceName, names.AttrKey),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object2ResourceName, "version_id"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.checkpointing_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.checkpoint_interval", "55000"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.0.min_pause_between_checkpoints", "5500"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.0.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.0.log_level", "ERROR"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.0.metrics_level", "OPERATOR"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.auto_scaling_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.configuration_type", "DEFAULT"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.parallelism", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.0.parallelism_per_kpu", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.run_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.vpc_configuration.#", "0"),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", runtime2),
-					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("runtime_environment"), knownvalue.StringExact(runtime2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("version_id"), knownvalue.StringExact("2")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -4527,7 +4491,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccApplicationConfigBaseFlinkApplication(rName string) string {
+func testAccApplicationConfig_baseFlinkApplication(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4543,7 +4507,7 @@ resource "aws_s3_object" "test" {
 `, rName)
 }
 
-func testAccApplicationConfigBaseSQLApplication(rName string) string {
+func testAccApplicationConfig_baseSQLApplication(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4576,30 +4540,8 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccApplicationConfigBaseVPC(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccApplicationConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = 2
 
@@ -4727,7 +4669,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_environmentProperties(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4774,7 +4716,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_environmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4827,7 +4769,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_environmentPropertiesNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4857,7 +4799,7 @@ func testAccApplicationConfig_flinkConfiguration(rName, startApplication, runtim
 
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4913,7 +4855,7 @@ func testAccApplicationConfig_flinkConfigurationUpdated(rName, startApplication,
 
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4965,7 +4907,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_flinkConfigurationEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5040,7 +4982,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_flinkConfigurationEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5299,7 +5241,7 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 func testAccApplicationConfig_sqlConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5322,7 +5264,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationInput(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5373,7 +5315,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationInputUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5436,7 +5378,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationInputProcessingConfiguration(rName string, lambdaIndex int) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5502,7 +5444,7 @@ func testAccApplicationConfig_sqlConfigurationMultiple(rName, startApplication, 
 
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -5603,7 +5545,7 @@ func testAccApplicationConfig_sqlConfigurationMultipleUpdated(rName, startApplic
 
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5728,7 +5670,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationOutput(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5765,7 +5707,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationOutputUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5814,7 +5756,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationReferenceDataSource(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5866,7 +5808,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationReferenceDataSourceUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5926,7 +5868,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_sqlConfigurationStart(rName string, start bool) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfig_baseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -6016,8 +5958,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_vpcConfiguration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseVPC(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseVPC(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -6048,8 +5990,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_vpcConfigurationUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseVPC(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseVPC(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -6080,8 +6022,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_vpcConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
-		testAccApplicationConfigBaseVPC(rName),
-		testAccApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfig_baseVPC(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q

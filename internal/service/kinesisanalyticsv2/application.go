@@ -846,7 +846,6 @@ func resourceApplication() *schema.Resource {
 				"runtime_environment": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ForceNew:         false,
 					ValidateDiagFunc: enum.Validate[awstypes.RuntimeEnvironment](),
 				},
 				"service_execution_role": {
