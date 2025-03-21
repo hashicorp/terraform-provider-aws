@@ -2552,8 +2552,8 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 
 	s := &schema.Set{F: schema.HashString}
 
-	parts := strings.Split(extra, ";")
-	for _, part := range parts {
+	parts := strings.SplitSeq(extra, ";")
+	for part := range parts {
 		kvParts := strings.Split(part, "=")
 		if len(kvParts) != 2 {
 			continue
