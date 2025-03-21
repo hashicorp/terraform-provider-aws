@@ -724,7 +724,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_20"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -788,7 +788,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_20"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -841,7 +841,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_20"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -870,7 +870,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_flinkConfiguration(rName, "", "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfiguration(rName, "", "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -909,7 +909,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -918,7 +918,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccApplicationConfig_flinkConfigurationUpdated(rName, "", "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfigurationUpdated(rName, "", "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -957,7 +957,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -978,8 +978,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update_runtime(t *tes
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
-	runtime1 := "FLINK-1_15"
-	runtime2 := "FLINK-1_18"
+	runtime1 := "FLINK-1_18"
+	runtime2 := "FLINK-1_19"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1097,7 +1097,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_20"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRole1ResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -1162,7 +1162,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_20"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRole2ResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -1253,7 +1253,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_11"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_18"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -1312,7 +1312,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "force_stop", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_11"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_18"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -1382,7 +1382,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "force_stop", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_11"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_18"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -1441,7 +1441,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "force_stop", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_11"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_18"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -1469,7 +1469,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCre
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -1512,7 +1512,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCre
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -1546,7 +1546,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtFalse, "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtFalse, "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -1585,7 +1585,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -1600,7 +1600,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 				ImportStateVerifyIgnore: []string{"start_application"},
 			},
 			{
-				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -1643,7 +1643,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -1652,7 +1652,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 				),
 			},
 			{
-				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtFalse, "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtFalse, "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -1691,7 +1691,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -1720,7 +1720,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -1763,7 +1763,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -1778,7 +1778,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 				ImportStateVerifyIgnore: []string{"start_application"},
 			},
 			{
-				Config: testAccApplicationConfig_flinkConfigurationUpdated(rName, acctest.CtTrue, "FLINK-1_8"),
+				Config: testAccApplicationConfig_flinkConfigurationUpdated(rName, acctest.CtTrue, "FLINK-1_19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -1821,7 +1821,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -3727,7 +3727,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testin
 	})
 }
 
-func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplicationVPC_add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
@@ -3783,7 +3783,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -3835,7 +3835,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -3852,7 +3852,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 	})
 }
 
-func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplicationVPC_delete(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
@@ -3912,7 +3912,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -3960,7 +3960,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -3977,7 +3977,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 	})
 }
 
-func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplicationVPC_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
@@ -4037,7 +4037,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -4089,7 +4089,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_8"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_19"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
@@ -4177,7 +4177,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_11"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_18"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -4241,7 +4241,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 					resource.TestCheckNoResourceAttr(resourceName, "force_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_11"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "FLINK-1_18"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "start_application", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
@@ -4491,7 +4491,7 @@ func testAccApplicationConfig_applicationMode(rName string) string {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   application_mode       = "STREAMING"
-  runtime_environment    = "FLINK-1_13"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[0].arn
 }
 `, rName))
@@ -4579,7 +4579,7 @@ func testAccApplicationConfig_environmentProperties(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -4626,7 +4626,7 @@ func testAccApplicationConfig_environmentPropertiesUpdated(rName string) string 
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -4679,7 +4679,7 @@ func testAccApplicationConfig_environmentPropertiesNotSpecified(rName string) st
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -4754,7 +4754,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, runtimeEnvironment, startApplication))
 }
 
-func testAccApplicationConfig_flinkConfigurationUpdated(rName, startApplication, runtimeExecution string) string {
+func testAccApplicationConfig_flinkConfigurationUpdated(rName, startApplication, runtimeEnvironment string) string {
 	if startApplication == "" {
 		startApplication = "null"
 	}
@@ -4807,7 +4807,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
   start_application = %[3]s
 }
-`, rName, runtimeExecution, startApplication))
+`, rName, runtimeEnvironment, startApplication))
 }
 
 func testAccApplicationConfig_flinkConfigurationEnvironmentProperties(rName string) string {
@@ -4817,7 +4817,7 @@ func testAccApplicationConfig_flinkConfigurationEnvironmentProperties(rName stri
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -4892,7 +4892,7 @@ func testAccApplicationConfig_flinkConfigurationEnvironmentPropertiesUpdated(rNa
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[1].arn
 
   application_configuration {
@@ -5001,7 +5001,7 @@ resource "aws_kinesis_stream" "output" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_11"
+  runtime_environment    = "FLINK-1_18"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -5091,7 +5091,7 @@ resource "aws_kinesis_stream" "output" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_11"
+  runtime_environment    = "FLINK-1_18"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -5869,7 +5869,7 @@ func testAccApplicationConfig_vpcConfiguration(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_19"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -5901,7 +5901,7 @@ func testAccApplicationConfig_vpcConfigurationUpdated(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_19"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
@@ -5933,7 +5933,7 @@ func testAccApplicationConfig_vpcConfigurationNotSpecified(rName string) string 
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_19"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
