@@ -38,7 +38,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			},
 		},
 		{
-			Factory:  newVPCIPAMDataSource,
+			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
 			Tags:     &itypes.ServicePackageResourceTags{},
@@ -49,7 +49,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			},
 		},
 		{
-			Factory:  newVPCIPAMsDataSource,
+			Factory:  newIPAMsDataSource,
 			TypeName: "aws_vpc_ipams",
 			Name:     "IPAMs",
 			Region: &itypes.ServicePackageResourceRegion{

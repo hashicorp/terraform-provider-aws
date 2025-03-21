@@ -119,16 +119,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  dataSourceServiceAccount,
-			TypeName: "aws_redshift_service_account",
-			Name:     "Service Account",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
-		},
-		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
 			Name:     "Subnet Group",

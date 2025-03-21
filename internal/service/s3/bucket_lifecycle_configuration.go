@@ -653,7 +653,7 @@ func lifecycleRulesEqual(rules1, rules2 []awstypes.LifecycleRule) bool {
 }
 
 func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 		if tfresource.NotFound(err) {

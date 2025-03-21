@@ -171,7 +171,7 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findGlossaryTermByID(ctx, conn, *out.Id, *out.DomainId)
 	})
 

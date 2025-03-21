@@ -20,7 +20,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+	return []*itypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceCapacityReservation,
+			TypeName: "aws_athena_capacity_reservation",
+			Name:     "Capacity Reservation",
+			Tags: &itypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {

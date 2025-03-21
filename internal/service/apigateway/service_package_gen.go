@@ -16,7 +16,18 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+	return []*itypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceAPIKeys,
+			TypeName: "aws_api_gateway_api_keys",
+			Name:     "API Keys",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {

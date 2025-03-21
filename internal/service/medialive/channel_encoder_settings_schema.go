@@ -3095,61 +3095,61 @@ func m2tsSettingsSchema() *schema.Schema {
 	}
 }
 
-func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
+func expandChannelEncoderSettings(tfList []any) *types.EncoderSettings {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.EncoderSettings
 	if v, ok := m["audio_descriptions"].(*schema.Set); ok {
 		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v.List())
 	}
-	if v, ok := m["output_groups"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["output_groups"].([]any); ok && len(v) > 0 {
 		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v)
 	}
-	if v, ok := m["timecode_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["timecode_config"].([]any); ok && len(v) > 0 {
 		settings.TimecodeConfig = expandChannelEncoderSettingsTimecodeConfig(v)
 	}
-	if v, ok := m["video_descriptions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["video_descriptions"].([]any); ok && len(v) > 0 {
 		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v)
 	}
-	if v, ok := m["avail_blanking"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["avail_blanking"].([]any); ok && len(v) > 0 {
 		settings.AvailBlanking = expandChannelEncoderSettingsAvailBlanking(v)
 	}
-	if v, ok := m["avail_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["avail_configuration"].([]any); ok && len(v) > 0 {
 		settings.AvailConfiguration = nil // TODO expandChannelEncoderSettingsAvailConfiguration(v)
 	}
-	if v, ok := m["blackout_slate"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["blackout_slate"].([]any); ok && len(v) > 0 {
 		settings.BlackoutSlate = nil // TODO expandChannelEncoderSettingsBlackoutSlate(v)
 	}
-	if v, ok := m["caption_descriptions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["caption_descriptions"].([]any); ok && len(v) > 0 {
 		settings.CaptionDescriptions = expandChannelEncoderSettingsCaptionDescriptions(v)
 	}
-	if v, ok := m["feature_activations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["feature_activations"].([]any); ok && len(v) > 0 {
 		settings.FeatureActivations = nil // TODO expandChannelEncoderSettingsFeatureActivations(v)
 	}
-	if v, ok := m["global_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["global_configuration"].([]any); ok && len(v) > 0 {
 		settings.GlobalConfiguration = expandChannelEncoderSettingsGlobalConfiguration(v)
 	}
-	if v, ok := m["motion_graphics_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["motion_graphics_configuration"].([]any); ok && len(v) > 0 {
 		settings.MotionGraphicsConfiguration = expandChannelEncoderSettingsMotionGraphicsConfiguration(v)
 	}
-	if v, ok := m["nielsen_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["nielsen_configuration"].([]any); ok && len(v) > 0 {
 		settings.NielsenConfiguration = expandChannelEncoderSettingsNielsenConfiguration(v)
 	}
 
 	return &settings
 }
 
-func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types.AudioDescription {
+func expandChannelEncoderSettingsAudioDescriptions(tfList []any) []types.AudioDescription {
 	if tfList == nil {
 		return nil
 	}
 
 	audioDesc := []types.AudioDescription{}
 	for _, tfItem := range tfList {
-		m, ok := tfItem.(map[string]interface{})
+		m, ok := tfItem.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -3161,7 +3161,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			a.Name = aws.String(v)
 		}
-		if v, ok := m["audio_normalization_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["audio_normalization_settings"].([]any); ok && len(v) > 0 {
 			a.AudioNormalizationSettings = expandAudioDescriptionsAudioNormalizationSettings(v)
 		}
 		if v, ok := m["audio_type"].(string); ok && v != "" {
@@ -3170,10 +3170,10 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		if v, ok := m["audio_type_control"].(string); ok && v != "" {
 			a.AudioTypeControl = types.AudioDescriptionAudioTypeControl(v)
 		}
-		if v, ok := m["audio_watermark_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["audio_watermark_settings"].([]any); ok && len(v) > 0 {
 			a.AudioWatermarkingSettings = expandAudioWatermarkSettings(v)
 		}
-		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["codec_settings"].([]any); ok && len(v) > 0 {
 			a.CodecSettings = expandChannelEncoderSettingsAudioDescriptionsCodecSettings(v)
 		}
 		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
@@ -3182,7 +3182,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		if v, ok := m["language_code_control"].(string); ok && v != "" {
 			a.LanguageCodeControl = types.AudioDescriptionLanguageCodeControl(v)
 		}
-		if v, ok := m["remix_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["remix_settings"].([]any); ok && len(v) > 0 {
 			a.RemixSettings = expandChannelEncoderSettingsAudioDescriptionsRemixSettings(v)
 		}
 		if v, ok := m["stream_name"].(string); ok && v != "" {
@@ -3195,23 +3195,23 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 	return audioDesc
 }
 
-func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.OutputGroup {
+func expandChannelEncoderSettingsOutputGroups(tfList []any) []types.OutputGroup {
 	if tfList == nil {
 		return nil
 	}
 
 	var outputGroups []types.OutputGroup
 	for _, tfItem := range tfList {
-		m, ok := tfItem.(map[string]interface{})
+		m, ok := tfItem.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var o types.OutputGroup
-		if v, ok := m["output_group_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["output_group_settings"].([]any); ok && len(v) > 0 {
 			o.OutputGroupSettings = expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(v)
 		}
-		if v, ok := m["outputs"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["outputs"].([]any); ok && len(v) > 0 {
 			o.Outputs = expandChannelEncoderSettingsOutputGroupsOutputs(v)
 		}
 		if v, ok := m[names.AttrName].(string); ok && v != "" {
@@ -3224,12 +3224,12 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 	return outputGroups
 }
 
-func expandAudioDescriptionsAudioNormalizationSettings(tfList []interface{}) *types.AudioNormalizationSettings {
+func expandAudioDescriptionsAudioNormalizationSettings(tfList []any) *types.AudioNormalizationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioNormalizationSettings
 	if v, ok := m["algorithm"].(string); ok && v != "" {
@@ -3245,45 +3245,45 @@ func expandAudioDescriptionsAudioNormalizationSettings(tfList []interface{}) *ty
 	return &out
 }
 
-func expandChannelEncoderSettingsAudioDescriptionsCodecSettings(tfList []interface{}) *types.AudioCodecSettings {
+func expandChannelEncoderSettingsAudioDescriptionsCodecSettings(tfList []any) *types.AudioCodecSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioCodecSettings
-	if v, ok := m["aac_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["aac_settings"].([]any); ok && len(v) > 0 {
 		out.AacSettings = expandAudioDescriptionsCodecSettingsAacSettings(v)
 	}
-	if v, ok := m["ac3_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ac3_settings"].([]any); ok && len(v) > 0 {
 		out.Ac3Settings = expandAudioDescriptionsCodecSettingsAc3Settings(v)
 	}
-	if v, ok := m["eac3_atmos_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["eac3_atmos_settings"].([]any); ok && len(v) > 0 {
 		out.Eac3AtmosSettings = expandAudioDescriptionsCodecSettingsEac3AtmosSettings(v)
 	}
-	if v, ok := m["eac3_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["eac3_settings"].([]any); ok && len(v) > 0 {
 		out.Eac3Settings = expandAudioDescriptionsCodecSettingsEac3Settings(v)
 	}
-	if v, ok := m["vp2_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["vp2_settings"].([]any); ok && len(v) > 0 {
 		out.Mp2Settings = expandAudioDescriptionsCodecSettingsMp2Settings(v)
 	}
-	if v, ok := m["pass_through_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["pass_through_settings"].([]any); ok && len(v) > 0 {
 		out.PassThroughSettings = &types.PassThroughSettings{} // no exported fields
 	}
-	if v, ok := m["wav_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["wav_settings"].([]any); ok && len(v) > 0 {
 		out.WavSettings = expandAudioDescriptionsCodecSettingsWavSettings(v)
 	}
 
 	return &out
 }
 
-func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *types.AacSettings {
+func expandAudioDescriptionsCodecSettingsAacSettings(tfList []any) *types.AacSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AacSettings
 	if v, ok := m["bitrate"].(float64); ok && v != 0.0 {
@@ -3317,12 +3317,12 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	return &out
 }
 
-func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *types.Ac3Settings {
+func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []any) *types.Ac3Settings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Ac3Settings
 	if v, ok := m["bitrate"].(float64); ok && v != 0.0 {
@@ -3350,12 +3350,12 @@ func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *type
 	return &out
 }
 
-func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []interface{}) *types.Eac3AtmosSettings {
+func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []any) *types.Eac3AtmosSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Eac3AtmosSettings
 	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
@@ -3383,12 +3383,12 @@ func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []interface{})
 	return &out
 }
 
-func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []interface{}) *types.Eac3Settings {
+func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []any) *types.Eac3Settings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Eac3Settings
 	if v, ok := m["attenuation_control"].(string); ok && v != "" {
@@ -3452,12 +3452,12 @@ func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []interface{}) *typ
 	return &out
 }
 
-func expandAudioDescriptionsCodecSettingsMp2Settings(tfList []interface{}) *types.Mp2Settings {
+func expandAudioDescriptionsCodecSettingsMp2Settings(tfList []any) *types.Mp2Settings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Mp2Settings
 	if v, ok := m["bitrate"].(float32); ok && v != 0.0 {
@@ -3473,12 +3473,12 @@ func expandAudioDescriptionsCodecSettingsMp2Settings(tfList []interface{}) *type
 	return &out
 }
 
-func expandAudioDescriptionsCodecSettingsWavSettings(tfList []interface{}) *types.WavSettings {
+func expandAudioDescriptionsCodecSettingsWavSettings(tfList []any) *types.WavSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.WavSettings
 	if v, ok := m["bit_depth"].(float32); ok && v != 0.0 {
@@ -3494,12 +3494,12 @@ func expandAudioDescriptionsCodecSettingsWavSettings(tfList []interface{}) *type
 	return &out
 }
 
-func expandChannelEncoderSettingsAudioDescriptionsRemixSettings(tfList []interface{}) *types.RemixSettings {
+func expandChannelEncoderSettingsAudioDescriptionsRemixSettings(tfList []any) *types.RemixSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.RemixSettings
 	if v, ok := m["channel_mappings"].(*schema.Set); ok && v.Len() > 0 {
@@ -3515,14 +3515,14 @@ func expandChannelEncoderSettingsAudioDescriptionsRemixSettings(tfList []interfa
 	return &out
 }
 
-func expandChannelMappings(tfList []interface{}) []types.AudioChannelMapping {
+func expandChannelMappings(tfList []any) []types.AudioChannelMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var out []types.AudioChannelMapping
 	for _, item := range tfList {
-		m, ok := item.(map[string]interface{})
+		m, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -3541,14 +3541,14 @@ func expandChannelMappings(tfList []interface{}) []types.AudioChannelMapping {
 	return out
 }
 
-func expandInputChannelLevels(tfList []interface{}) []types.InputChannelLevel {
+func expandInputChannelLevels(tfList []any) []types.InputChannelLevel {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var out []types.InputChannelLevel
 	for _, item := range tfList {
-		m, ok := item.(map[string]interface{})
+		m, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -3567,49 +3567,49 @@ func expandInputChannelLevels(tfList []interface{}) []types.InputChannelLevel {
 	return out
 }
 
-func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interface{}) *types.OutputGroupSettings {
+func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []any) *types.OutputGroupSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var o types.OutputGroupSettings
 
-	if v, ok := m["archive_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["archive_group_settings"].([]any); ok && len(v) > 0 {
 		o.ArchiveGroupSettings = expandArchiveGroupSettings(v)
 	}
-	if v, ok := m["frame_capture_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["frame_capture_group_settings"].([]any); ok && len(v) > 0 {
 		o.FrameCaptureGroupSettings = expandFrameCaptureGroupSettings(v)
 	}
-	if v, ok := m["hls_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_group_settings"].([]any); ok && len(v) > 0 {
 		o.HlsGroupSettings = expandHLSGroupSettings(v)
 	}
-	if v, ok := m["ms_smooth_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ms_smooth_group_settings"].([]any); ok && len(v) > 0 {
 		o.MsSmoothGroupSettings = expandMsSmoothGroupSettings(v)
 	}
-	if v, ok := m["media_package_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["media_package_group_settings"].([]any); ok && len(v) > 0 {
 		o.MediaPackageGroupSettings = expandMediaPackageGroupSettings(v)
 	}
-	if v, ok := m["multiplex_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["multiplex_group_settings"].([]any); ok && len(v) > 0 {
 		o.MultiplexGroupSettings = &types.MultiplexGroupSettings{} // only unexported fields
 	}
-	if v, ok := m["rtmp_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rtmp_group_settings"].([]any); ok && len(v) > 0 {
 		o.RtmpGroupSettings = expandRtmpGroupSettings(v)
 	}
-	if v, ok := m["udp_group_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["udp_group_settings"].([]any); ok && len(v) > 0 {
 		o.UdpGroupSettings = expandUdpGroupSettings(v)
 	}
 
 	return &o
 }
 
-func expandDestination(in []interface{}) *types.OutputLocationRef {
+func expandDestination(in []any) *types.OutputLocationRef {
 	if len(in) == 0 {
 		return nil
 	}
 
-	m := in[0].(map[string]interface{})
+	m := in[0].(map[string]any)
 
 	var out types.OutputLocationRef
 	if v, ok := m["destination_ref_id"].(string); ok && v != "" {
@@ -3619,35 +3619,35 @@ func expandDestination(in []interface{}) *types.OutputLocationRef {
 	return &out
 }
 
-func expandMediaPackageGroupSettings(tfList []interface{}) *types.MediaPackageGroupSettings {
+func expandMediaPackageGroupSettings(tfList []any) *types.MediaPackageGroupSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var o types.MediaPackageGroupSettings
 
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
 
 	return &o
 }
 
-func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSettings {
+func expandArchiveGroupSettings(tfList []any) *types.ArchiveGroupSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var o types.ArchiveGroupSettings
 
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
-	if v, ok := m["archive_cdn_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["archive_cdn_settings"].([]any); ok && len(v) > 0 {
 		o.ArchiveCdnSettings = expandArchiveCDNSettings(v)
 	}
 	if v, ok := m["rollover_interval"].(int); ok && v != 0 {
@@ -3657,44 +3657,44 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 	return &o
 }
 
-func expandFrameCaptureGroupSettings(tfList []interface{}) *types.FrameCaptureGroupSettings {
+func expandFrameCaptureGroupSettings(tfList []any) *types.FrameCaptureGroupSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.FrameCaptureGroupSettings
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
-	if v, ok := m["frame_capture_cdn_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["frame_capture_cdn_settings"].([]any); ok && len(v) > 0 {
 		out.FrameCaptureCdnSettings = expandFrameCaptureCDNSettings(v)
 	}
 	return &out
 }
 
-func expandFrameCaptureCDNSettings(tfList []interface{}) *types.FrameCaptureCdnSettings {
+func expandFrameCaptureCDNSettings(tfList []any) *types.FrameCaptureCdnSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.FrameCaptureCdnSettings
-	if v, ok := m["frame_capture_s3_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["frame_capture_s3_settings"].([]any); ok && len(v) > 0 {
 		out.FrameCaptureS3Settings = expandFrameCaptureS3Settings(v)
 	}
 
 	return &out
 }
 
-func expandFrameCaptureS3Settings(tfList []interface{}) *types.FrameCaptureS3Settings {
+func expandFrameCaptureS3Settings(tfList []any) *types.FrameCaptureS3Settings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.FrameCaptureS3Settings
 	if v, ok := m["canned_acl"].(string); ok && v != "" {
@@ -3704,18 +3704,18 @@ func expandFrameCaptureS3Settings(tfList []interface{}) *types.FrameCaptureS3Set
 	return &out
 }
 
-func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
+func expandHLSGroupSettings(tfList []any) *types.HlsGroupSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsGroupSettings
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
-	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ad_markers"].([]any); ok && len(v) > 0 {
 		out.AdMarkers = expandHLSAdMarkers(v)
 	}
 	if v, ok := m["base_url_content"].(string); ok && v != "" {
@@ -3754,7 +3754,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["encryption_type"].(string); ok && v != "" {
 		out.EncryptionType = types.HlsEncryptionType(v)
 	}
-	if v, ok := m["hls_cdn_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_cdn_settings"].([]any); ok && len(v) > 0 {
 		out.HlsCdnSettings = expandHLSCDNSettings(v)
 	}
 	if v, ok := m["hls_id3_segment_tagging"].(string); ok && v != "" {
@@ -3787,7 +3787,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["key_format_versions"].(string); ok && v != "" {
 		out.KeyFormatVersions = aws.String(v)
 	}
-	if v, ok := m["key_provider_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["key_provider_settings"].([]any); ok && len(v) > 0 {
 		out.KeyProviderSettings = expandHLSGroupSettingsKeyProviderSettings(v)
 	}
 	if v, ok := m["manifest_compression"].(string); ok && v != "" {
@@ -3842,15 +3842,15 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	return &out
 }
 
-func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSettings {
+func expandMsSmoothGroupSettings(tfList []any) *types.MsSmoothGroupSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.MsSmoothGroupSettings
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["acquisition_point_id"].(string); ok && v != "" {
@@ -3911,38 +3911,38 @@ func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSetti
 	return &out
 }
 
-func expandHLSCDNSettings(tfList []interface{}) *types.HlsCdnSettings {
+func expandHLSCDNSettings(tfList []any) *types.HlsCdnSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsCdnSettings
-	if v, ok := m["hls_akamai_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_akamai_settings"].([]any); ok && len(v) > 0 {
 		out.HlsAkamaiSettings = expandHSLAkamaiSettings(v)
 	}
-	if v, ok := m["hls_basic_put_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_basic_put_settings"].([]any); ok && len(v) > 0 {
 		out.HlsBasicPutSettings = expandHSLBasicPutSettings(v)
 	}
-	if v, ok := m["hls_media_store_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_media_store_settings"].([]any); ok && len(v) > 0 {
 		out.HlsMediaStoreSettings = expandHLSMediaStoreSettings(v)
 	}
-	if v, ok := m["hls_s3_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_s3_settings"].([]any); ok && len(v) > 0 {
 		out.HlsS3Settings = expandHSLS3Settings(v)
 	}
-	if v, ok := m["hls_webdav_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_webdav_settings"].([]any); ok && len(v) > 0 {
 		out.HlsWebdavSettings = expandHLSWebdavSettings(v)
 	}
 	return &out
 }
 
-func expandHSLAkamaiSettings(tfList []interface{}) *types.HlsAkamaiSettings {
+func expandHSLAkamaiSettings(tfList []any) *types.HlsAkamaiSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsAkamaiSettings
 	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
@@ -3970,12 +3970,12 @@ func expandHSLAkamaiSettings(tfList []interface{}) *types.HlsAkamaiSettings {
 	return &out
 }
 
-func expandHSLBasicPutSettings(tfList []interface{}) *types.HlsBasicPutSettings {
+func expandHSLBasicPutSettings(tfList []any) *types.HlsBasicPutSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsBasicPutSettings
 	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
@@ -3994,12 +3994,12 @@ func expandHSLBasicPutSettings(tfList []interface{}) *types.HlsBasicPutSettings 
 	return &out
 }
 
-func expandHLSMediaStoreSettings(tfList []interface{}) *types.HlsMediaStoreSettings {
+func expandHLSMediaStoreSettings(tfList []any) *types.HlsMediaStoreSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsMediaStoreSettings
 	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
@@ -4021,12 +4021,12 @@ func expandHLSMediaStoreSettings(tfList []interface{}) *types.HlsMediaStoreSetti
 	return &out
 }
 
-func expandHSLS3Settings(tfList []interface{}) *types.HlsS3Settings {
+func expandHSLS3Settings(tfList []any) *types.HlsS3Settings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsS3Settings
 	if v, ok := m["canned_acl"].(string); ok && v != "" {
@@ -4036,12 +4036,12 @@ func expandHSLS3Settings(tfList []interface{}) *types.HlsS3Settings {
 	return &out
 }
 
-func expandHLSWebdavSettings(tfList []interface{}) *types.HlsWebdavSettings {
+func expandHLSWebdavSettings(tfList []any) *types.HlsWebdavSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsWebdavSettings
 	if v, ok := m["connection_retry_interval"].(int); ok && v != 0 {
@@ -4062,14 +4062,14 @@ func expandHLSWebdavSettings(tfList []interface{}) *types.HlsWebdavSettings {
 	return &out
 }
 
-func expandHSLGroupSettingsCaptionLanguageMappings(tfList []interface{}) []types.CaptionLanguageMapping {
+func expandHSLGroupSettingsCaptionLanguageMappings(tfList []any) []types.CaptionLanguageMapping {
 	if tfList == nil {
 		return nil
 	}
 
 	var out []types.CaptionLanguageMapping
 	for _, item := range tfList {
-		m, ok := item.(map[string]interface{})
+		m, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -4091,45 +4091,45 @@ func expandHSLGroupSettingsCaptionLanguageMappings(tfList []interface{}) []types
 	return out
 }
 
-func expandHLSGroupSettingsKeyProviderSettings(tfList []interface{}) *types.KeyProviderSettings {
+func expandHLSGroupSettingsKeyProviderSettings(tfList []any) *types.KeyProviderSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.KeyProviderSettings
-	if v, ok := m["static_key_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["static_key_settings"].([]any); ok && len(v) > 0 {
 		out.StaticKeySettings = expandKeyProviderSettingsStaticKeySettings(v)
 	}
 
 	return &out
 }
 
-func expandKeyProviderSettingsStaticKeySettings(tfList []interface{}) *types.StaticKeySettings {
+func expandKeyProviderSettingsStaticKeySettings(tfList []any) *types.StaticKeySettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.StaticKeySettings
 	if v, ok := m["static_key_value"].(string); ok && v != "" {
 		out.StaticKeyValue = aws.String(v)
 	}
-	if v, ok := m["key_provider_server"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["key_provider_server"].([]any); ok && len(v) > 0 {
 		out.KeyProviderServer = expandInputLocation(v)
 	}
 
 	return &out
 }
 
-func expandInputLocation(tfList []interface{}) *types.InputLocation {
+func expandInputLocation(tfList []any) *types.InputLocation {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.InputLocation
 	if v, ok := m[names.AttrURI].(string); ok && v != "" {
@@ -4145,21 +4145,21 @@ func expandInputLocation(tfList []interface{}) *types.InputLocation {
 	return &out
 }
 
-func expandArchiveCDNSettings(tfList []interface{}) *types.ArchiveCdnSettings {
+func expandArchiveCDNSettings(tfList []any) *types.ArchiveCdnSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.ArchiveCdnSettings
-	if v, ok := m["archive_s3_settings"].([]interface{}); ok && len(v) > 0 {
-		out.ArchiveS3Settings = func(in []interface{}) *types.ArchiveS3Settings {
+	if v, ok := m["archive_s3_settings"].([]any); ok && len(v) > 0 {
+		out.ArchiveS3Settings = func(in []any) *types.ArchiveS3Settings {
 			if len(in) == 0 {
 				return nil
 			}
 
-			m := in[0].(map[string]interface{})
+			m := in[0].(map[string]any)
 
 			var o types.ArchiveS3Settings
 			if v, ok := m["canned_acl"].(string); ok && v != "" {
@@ -4173,30 +4173,30 @@ func expandArchiveCDNSettings(tfList []interface{}) *types.ArchiveCdnSettings {
 	return &out
 }
 
-func expandAudioWatermarkSettings(tfList []interface{}) *types.AudioWatermarkSettings {
+func expandAudioWatermarkSettings(tfList []any) *types.AudioWatermarkSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var o types.AudioWatermarkSettings
-	if v, ok := m["nielsen_watermark_settings"].([]interface{}); ok && len(v) > 0 {
-		o.NielsenWatermarksSettings = func(n []interface{}) *types.NielsenWatermarksSettings {
+	if v, ok := m["nielsen_watermark_settings"].([]any); ok && len(v) > 0 {
+		o.NielsenWatermarksSettings = func(n []any) *types.NielsenWatermarksSettings {
 			if len(n) == 0 {
 				return nil
 			}
 
-			inner := n[0].(map[string]interface{})
+			inner := n[0].(map[string]any)
 
 			var ns types.NielsenWatermarksSettings
 			if v, ok := inner["nielsen_distribution_type"].(string); ok && v != "" {
 				ns.NielsenDistributionType = types.NielsenWatermarksDistributionTypes(v)
 			}
-			if v, ok := inner["nielsen_cbet_settings"].([]interface{}); ok && len(v) > 0 {
+			if v, ok := inner["nielsen_cbet_settings"].([]any); ok && len(v) > 0 {
 				ns.NielsenCbetSettings = expandNielsenCbetSettings(v)
 			}
-			if v, ok := inner["nielsen_naes_ii_nw_settings"].([]interface{}); ok && len(v) > 0 {
+			if v, ok := inner["nielsen_naes_ii_nw_settings"].([]any); ok && len(v) > 0 {
 				ns.NielsenNaesIiNwSettings = expandNielsenNaseIiNwSettings(v)
 			}
 
@@ -4207,15 +4207,15 @@ func expandAudioWatermarkSettings(tfList []interface{}) *types.AudioWatermarkSet
 	return &o
 }
 
-func expandRtmpGroupSettings(tfList []interface{}) *types.RtmpGroupSettings {
+func expandRtmpGroupSettings(tfList []any) *types.RtmpGroupSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.RtmpGroupSettings
-	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ad_markers"].([]any); ok && len(v) > 0 {
 		out.AdMarkers = expandRTMPAdMarkers(v)
 	}
 	if v, ok := m["authentication_scheme"].(string); ok && v != "" {
@@ -4240,12 +4240,12 @@ func expandRtmpGroupSettings(tfList []interface{}) *types.RtmpGroupSettings {
 	return &out
 }
 
-func expandUdpGroupSettings(tfList []interface{}) *types.UdpGroupSettings {
+func expandUdpGroupSettings(tfList []any) *types.UdpGroupSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.UdpGroupSettings
 	if v, ok := m["input_loss_action"].(string); ok && v != "" {
@@ -4261,7 +4261,7 @@ func expandUdpGroupSettings(tfList []interface{}) *types.UdpGroupSettings {
 	return &out
 }
 
-func expandRTMPAdMarkers(tfList []interface{}) []types.RtmpAdMarkers {
+func expandRTMPAdMarkers(tfList []any) []types.RtmpAdMarkers {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -4274,7 +4274,7 @@ func expandRTMPAdMarkers(tfList []interface{}) []types.RtmpAdMarkers {
 	return out
 }
 
-func expandHLSAdMarkers(tfList []interface{}) []types.HlsAdMarkers {
+func expandHLSAdMarkers(tfList []any) []types.HlsAdMarkers {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -4287,20 +4287,20 @@ func expandHLSAdMarkers(tfList []interface{}) []types.HlsAdMarkers {
 	return out
 }
 
-func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []types.Output {
+func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []any) []types.Output {
 	if tfList == nil {
 		return nil
 	}
 
 	var outputs []types.Output
 	for _, item := range tfList {
-		m, ok := item.(map[string]interface{})
+		m, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var o types.Output
-		if v, ok := m["output_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["output_settings"].([]any); ok && len(v) > 0 {
 			o.OutputSettings = expandOutputsOutputSettings(v)
 		}
 		if v, ok := m["audio_description_names"].(*schema.Set); ok && v.Len() > 0 {
@@ -4321,63 +4321,63 @@ func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []typ
 	return outputs
 }
 
-func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
+func expandOutputsOutputSettings(tfList []any) *types.OutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var os types.OutputSettings
-	if v, ok := m["archive_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["archive_output_settings"].([]any); ok && len(v) > 0 {
 		os.ArchiveOutputSettings = expandOutputsOutputSettingsArchiveOutputSettings(v)
 	}
-	if v, ok := m["frame_capture_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["frame_capture_output_settings"].([]any); ok && len(v) > 0 {
 		os.FrameCaptureOutputSettings = expandOutputsOutSettingsFrameCaptureOutputSettings(v)
 	}
-	if v, ok := m["hls_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_output_settings"].([]any); ok && len(v) > 0 {
 		os.HlsOutputSettings = expandOutputsOutSettingsHLSOutputSettings(v)
 	}
-	if v, ok := m["media_package_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["media_package_output_settings"].([]any); ok && len(v) > 0 {
 		os.MediaPackageOutputSettings = &types.MediaPackageOutputSettings{} // no exported fields
 	}
-	if v, ok := m["ms_smooth_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ms_smooth_output_settings"].([]any); ok && len(v) > 0 {
 		os.MsSmoothOutputSettings = expandOutputsOutSettingsMsSmoothOutputSettings(v)
 	}
-	if v, ok := m["multiplex_output_settings"].([]interface{}); ok && len(v) > 0 {
-		os.MultiplexOutputSettings = func(inner []interface{}) *types.MultiplexOutputSettings {
+	if v, ok := m["multiplex_output_settings"].([]any); ok && len(v) > 0 {
+		os.MultiplexOutputSettings = func(inner []any) *types.MultiplexOutputSettings {
 			if len(inner) == 0 {
 				return nil
 			}
 
-			data := inner[0].(map[string]interface{})
+			data := inner[0].(map[string]any)
 			var mos types.MultiplexOutputSettings
-			if v, ok := data[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+			if v, ok := data[names.AttrDestination].([]any); ok && len(v) > 0 {
 				mos.Destination = expandDestination(v)
 			}
 			return &mos
 		}(v)
 	}
 
-	if v, ok := m["rtmp_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rtmp_output_settings"].([]any); ok && len(v) > 0 {
 		os.RtmpOutputSettings = expandOutputsOutputSettingsRtmpOutputSettings(v)
 	}
-	if v, ok := m["udp_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["udp_output_settings"].([]any); ok && len(v) > 0 {
 		os.UdpOutputSettings = expandOutputsOutputSettingsUdpOutputSettings(v)
 	}
 
 	return &os
 }
 
-func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *types.ArchiveOutputSettings {
+func expandOutputsOutputSettingsArchiveOutputSettings(tfList []any) *types.ArchiveOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.ArchiveOutputSettings
-	if v, ok := m["container_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_settings"].([]any); ok && len(v) > 0 {
 		settings.ContainerSettings = expandOutputsOutputSettingsArchiveSettingsContainerSettings(v)
 	}
 	if v, ok := m["extension"].(string); ok && v != "" {
@@ -4389,12 +4389,12 @@ func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *typ
 	return &settings
 }
 
-func expandOutputsOutSettingsFrameCaptureOutputSettings(tfList []interface{}) *types.FrameCaptureOutputSettings {
+func expandOutputsOutSettingsFrameCaptureOutputSettings(tfList []any) *types.FrameCaptureOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.FrameCaptureOutputSettings
 	if v, ok := m["name_modifier"].(string); ok && v != "" {
@@ -4404,15 +4404,15 @@ func expandOutputsOutSettingsFrameCaptureOutputSettings(tfList []interface{}) *t
 	return &out
 }
 
-func expandOutputsOutSettingsHLSOutputSettings(tfList []interface{}) *types.HlsOutputSettings {
+func expandOutputsOutSettingsHLSOutputSettings(tfList []any) *types.HlsOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsOutputSettings
-	if v, ok := m["hls_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_settings"].([]any); ok && len(v) > 0 {
 		out.HlsSettings = expandHLSOutputSettingsHLSSettings(v)
 	}
 	if v, ok := m["h265_packaging_type"].(string); ok && v != "" {
@@ -4428,12 +4428,12 @@ func expandOutputsOutSettingsHLSOutputSettings(tfList []interface{}) *types.HlsO
 	return &out
 }
 
-func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []interface{}) *types.MsSmoothOutputSettings {
+func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []any) *types.MsSmoothOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.MsSmoothOutputSettings
 	if v, ok := m["h265_packaging_type"].(string); ok && v != "" {
@@ -4446,42 +4446,42 @@ func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []interface{}) *types
 	return &out
 }
 
-func expandHLSOutputSettingsHLSSettings(tfList []interface{}) *types.HlsSettings {
+func expandHLSOutputSettingsHLSSettings(tfList []any) *types.HlsSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.HlsSettings
-	if v, ok := m["audio_only_hls_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_only_hls_settings"].([]any); ok && len(v) > 0 {
 		out.AudioOnlyHlsSettings = expandHLSSettingsAudioOnlyHLSSettings(v)
 	}
-	if v, ok := m["fmp4_hls_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["fmp4_hls_settings"].([]any); ok && len(v) > 0 {
 		out.Fmp4HlsSettings = expandHLSSettingsFmp4HLSSettings(v)
 	}
-	if v, ok := m["frame_capture_hls_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["frame_capture_hls_settings"].([]any); ok && len(v) > 0 {
 		out.FrameCaptureHlsSettings = &types.FrameCaptureHlsSettings{} // no exported types
 	}
-	if v, ok := m["standard_hls_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["standard_hls_settings"].([]any); ok && len(v) > 0 {
 		out.StandardHlsSettings = expandHLSSettingsStandardHLSSettings(v)
 	}
 
 	return &out
 }
 
-func expandHLSSettingsAudioOnlyHLSSettings(tfList []interface{}) *types.AudioOnlyHlsSettings {
+func expandHLSSettingsAudioOnlyHLSSettings(tfList []any) *types.AudioOnlyHlsSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AudioOnlyHlsSettings
 	if v, ok := m["audio_group_id"].(string); ok && v != "" {
 		out.AudioGroupId = aws.String(v)
 	}
-	if v, ok := m["audio_only_image"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["audio_only_image"].([]any); ok && len(v) > 0 {
 		out.AudioOnlyImage = expandInputLocation(v)
 	}
 	if v, ok := m["audio_track_type"].(string); ok && v != "" {
@@ -4494,12 +4494,12 @@ func expandHLSSettingsAudioOnlyHLSSettings(tfList []interface{}) *types.AudioOnl
 	return &out
 }
 
-func expandHLSSettingsFmp4HLSSettings(tfList []interface{}) *types.Fmp4HlsSettings {
+func expandHLSSettingsFmp4HLSSettings(tfList []any) *types.Fmp4HlsSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Fmp4HlsSettings
 	if v, ok := m["audio_rendition_sets"].(string); ok && v != "" {
@@ -4515,15 +4515,15 @@ func expandHLSSettingsFmp4HLSSettings(tfList []interface{}) *types.Fmp4HlsSettin
 	return &out
 }
 
-func expandHLSSettingsStandardHLSSettings(tfList []interface{}) *types.StandardHlsSettings {
+func expandHLSSettingsStandardHLSSettings(tfList []any) *types.StandardHlsSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.StandardHlsSettings
-	if v, ok := m["m3u8_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["m3u8_settings"].([]any); ok && len(v) > 0 {
 		out.M3u8Settings = expandStandardHLSSettingsH3u8Settings(v)
 	}
 	if v, ok := m["audio_rendition_sets"].(string); ok && v != "" {
@@ -4533,12 +4533,12 @@ func expandHLSSettingsStandardHLSSettings(tfList []interface{}) *types.StandardH
 	return &out
 }
 
-func expandStandardHLSSettingsH3u8Settings(tfList []interface{}) *types.M3u8Settings {
+func expandStandardHLSSettingsH3u8Settings(tfList []any) *types.M3u8Settings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.M3u8Settings
 	if v, ok := m["audio_frames_per_pes"].(int); ok && v != 0 {
@@ -4596,15 +4596,15 @@ func expandStandardHLSSettingsH3u8Settings(tfList []interface{}) *types.M3u8Sett
 	return &out
 }
 
-func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.RtmpOutputSettings {
+func expandOutputsOutputSettingsRtmpOutputSettings(tfList []any) *types.RtmpOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.RtmpOutputSettings
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
 	if v, ok := m["certificate_mode"].(string); ok && v != "" {
@@ -4620,69 +4620,69 @@ func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.
 	return &settings
 }
 
-func expandOutputsOutputSettingsUdpOutputSettings(tfList []interface{}) *types.UdpOutputSettings {
+func expandOutputsOutputSettingsUdpOutputSettings(tfList []any) *types.UdpOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.UdpOutputSettings
-	if v, ok := m["container_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_settings"].([]any); ok && len(v) > 0 {
 		settings.ContainerSettings = expandOutputsOutputSettingsUdpSettingsContainerSettings(v)
 	}
-	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]any); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
 	if v, ok := m["buffer_msec"].(int); ok && v != 0 {
 		settings.BufferMsec = aws.Int32(int32(v))
 	}
-	if v, ok := m["fec_output_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["fec_output_settings"].([]any); ok && len(v) > 0 {
 		settings.FecOutputSettings = expandFecOutputSettings(v)
 	}
 
 	return &settings
 }
 
-func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []interface{}) *types.ArchiveContainerSettings {
+func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []any) *types.ArchiveContainerSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.ArchiveContainerSettings
-	if v, ok := m["m2ts_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["m2ts_settings"].([]any); ok && len(v) > 0 {
 		settings.M2tsSettings = expandM2tsSettings(v)
 	}
 
-	if v, ok := m["raw_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["raw_settings"].([]any); ok && len(v) > 0 {
 		settings.RawSettings = &types.RawSettings{}
 	}
 	return &settings
 }
 
-func expandOutputsOutputSettingsUdpSettingsContainerSettings(tfList []interface{}) *types.UdpContainerSettings {
+func expandOutputsOutputSettingsUdpSettingsContainerSettings(tfList []any) *types.UdpContainerSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.UdpContainerSettings
-	if v, ok := m["m2ts_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["m2ts_settings"].([]any); ok && len(v) > 0 {
 		settings.M2tsSettings = expandM2tsSettings(v)
 	}
 
 	return &settings
 }
 
-func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
+func expandFecOutputSettings(tfList []any) *types.FecOutputSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var settings types.FecOutputSettings
 	if v, ok := m["column_depth"].(int); ok && v != 0 {
@@ -4698,12 +4698,12 @@ func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
 	return &settings
 }
 
-func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
+func expandM2tsSettings(tfList []any) *types.M2tsSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var s types.M2tsSettings
 	if v, ok := m["absent_input_audio_behavior"].(string); ok && v != "" {
@@ -4739,22 +4739,22 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["cc_descriptor"].(string); ok && v != "" {
 		s.CcDescriptor = types.M2tsCcDescriptor(v)
 	}
-	if v, ok := m["dvb_nit_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dvb_nit_settings"].([]any); ok && len(v) > 0 {
 		s.DvbNitSettings = expandM2tsDvbNitSettings(v)
 	}
-	if v, ok := m["dvb_sdt_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dvb_sdt_settings"].([]any); ok && len(v) > 0 {
 		s.DvbSdtSettings = expandM2tsDvbSdtSettings(v)
 	}
 	if v, ok := m["dvb_sub_pids"].(string); ok && v != "" {
 		s.DvbSubPids = aws.String(v)
 	}
-	if v, ok := m["dvb_tdt_settings"].([]interface{}); ok && len(v) > 0 {
-		s.DvbTdtSettings = func(tfList []interface{}) *types.DvbTdtSettings {
+	if v, ok := m["dvb_tdt_settings"].([]any); ok && len(v) > 0 {
+		s.DvbTdtSettings = func(tfList []any) *types.DvbTdtSettings {
 			if tfList == nil {
 				return nil
 			}
 
-			m := tfList[0].(map[string]interface{})
+			m := tfList[0].(map[string]any)
 
 			var s types.DvbTdtSettings
 			if v, ok := m["rep_interval"].(int); ok && v != 0 {
@@ -4863,12 +4863,12 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	return &s
 }
 
-func expandM2tsDvbNitSettings(tfList []interface{}) *types.DvbNitSettings {
+func expandM2tsDvbNitSettings(tfList []any) *types.DvbNitSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var s types.DvbNitSettings
 	if v, ok := m["network_ids"].(int); ok && v != 0 {
@@ -4883,12 +4883,12 @@ func expandM2tsDvbNitSettings(tfList []interface{}) *types.DvbNitSettings {
 	return &s
 }
 
-func expandM2tsDvbSdtSettings(tfList []interface{}) *types.DvbSdtSettings {
+func expandM2tsDvbSdtSettings(tfList []any) *types.DvbSdtSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var s types.DvbSdtSettings
 	if v, ok := m["output_sdt"].(string); ok && v != "" {
@@ -4907,11 +4907,11 @@ func expandM2tsDvbSdtSettings(tfList []interface{}) *types.DvbSdtSettings {
 	return &s
 }
 
-func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.TimecodeConfig {
+func expandChannelEncoderSettingsTimecodeConfig(tfList []any) *types.TimecodeConfig {
 	if tfList == nil {
 		return nil
 	}
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var config types.TimecodeConfig
 	if v, ok := m[names.AttrSource].(string); ok && v != "" {
@@ -4924,14 +4924,14 @@ func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.Tim
 	return &config
 }
 
-func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types.VideoDescription {
+func expandChannelEncoderSettingsVideoDescriptions(tfList []any) []types.VideoDescription {
 	if tfList == nil {
 		return nil
 	}
 
 	var videoDesc []types.VideoDescription
 	for _, tfItem := range tfList {
-		m, ok := tfItem.(map[string]interface{})
+		m, ok := tfItem.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -4940,7 +4940,7 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			d.Name = aws.String(v)
 		}
-		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["codec_settings"].([]any); ok && len(v) > 0 {
 			d.CodecSettings = expandChannelEncoderSettingsVideoDescriptionsCodecSettings(v)
 		}
 		if v, ok := m["height"].(int); ok && v != 0 {
@@ -4965,15 +4965,15 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 	return videoDesc
 }
 
-func expandChannelEncoderSettingsAvailBlanking(tfList []interface{}) *types.AvailBlanking {
+func expandChannelEncoderSettingsAvailBlanking(tfList []any) *types.AvailBlanking {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.AvailBlanking
-	if v, ok := m["avail_blanking_image"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["avail_blanking_image"].([]any); ok && len(v) > 0 {
 		out.AvailBlankingImage = expandInputLocation(v)
 	}
 	if v, ok := m[names.AttrState].(string); ok && v != "" {
@@ -4983,14 +4983,14 @@ func expandChannelEncoderSettingsAvailBlanking(tfList []interface{}) *types.Avai
 	return &out
 }
 
-func expandChannelEncoderSettingsCaptionDescriptions(tfList []interface{}) []types.CaptionDescription {
+func expandChannelEncoderSettingsCaptionDescriptions(tfList []any) []types.CaptionDescription {
 	if tfList == nil {
 		return nil
 	}
 
 	var captionDesc []types.CaptionDescription
 	for _, tfItem := range tfList {
-		m, ok := tfItem.(map[string]interface{})
+		m, ok := tfItem.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -5005,7 +5005,7 @@ func expandChannelEncoderSettingsCaptionDescriptions(tfList []interface{}) []typ
 		if v, ok := m["accessibility"].(string); ok && v != "" {
 			d.Accessibility = types.AccessibilityType(v)
 		}
-		if v, ok := m["destination_settings"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["destination_settings"].([]any); ok && len(v) > 0 {
 			d.DestinationSettings = expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(v)
 		}
 		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
@@ -5021,63 +5021,63 @@ func expandChannelEncoderSettingsCaptionDescriptions(tfList []interface{}) []typ
 	return captionDesc
 }
 
-func expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(tfList []interface{}) *types.CaptionDestinationSettings {
+func expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(tfList []any) *types.CaptionDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.CaptionDestinationSettings
-	if v, ok := m["arib_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["arib_destination_settings"].([]any); ok && len(v) > 0 {
 		out.AribDestinationSettings = &types.AribDestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["burn_in_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["burn_in_destination_settings"].([]any); ok && len(v) > 0 {
 		out.BurnInDestinationSettings = expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(v)
 	}
-	if v, ok := m["dvb_sub_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dvb_sub_destination_settings"].([]any); ok && len(v) > 0 {
 		out.DvbSubDestinationSettings = expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(v)
 	}
-	if v, ok := m["ebu_tt_d_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ebu_tt_d_destination_settings"].([]any); ok && len(v) > 0 {
 		out.EbuTtDDestinationSettings = expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(v)
 	}
-	if v, ok := m["embedded_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["embedded_destination_settings"].([]any); ok && len(v) > 0 {
 		out.EmbeddedDestinationSettings = &types.EmbeddedDestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["embedded_plus_scte20_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["embedded_plus_scte20_destination_settings"].([]any); ok && len(v) > 0 {
 		out.EmbeddedPlusScte20DestinationSettings = &types.EmbeddedPlusScte20DestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["rtmp_caption_info_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rtmp_caption_info_destination_settings"].([]any); ok && len(v) > 0 {
 		out.RtmpCaptionInfoDestinationSettings = &types.RtmpCaptionInfoDestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["scte20_plus_embedded_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["scte20_plus_embedded_destination_settings"].([]any); ok && len(v) > 0 {
 		out.Scte20PlusEmbeddedDestinationSettings = &types.Scte20PlusEmbeddedDestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["scte27_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["scte27_destination_settings"].([]any); ok && len(v) > 0 {
 		out.Scte27DestinationSettings = &types.Scte27DestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["smpte_tt_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["smpte_tt_destination_settings"].([]any); ok && len(v) > 0 {
 		out.SmpteTtDestinationSettings = &types.SmpteTtDestinationSettings{} // only unexported fields
 	}
-	if v, ok := m["teletext_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["teletext_destination_settings"].([]any); ok && len(v) > 0 {
 		out.TeletextDestinationSettings = expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(v)
 	}
-	if v, ok := m["ttml_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ttml_destination_settings"].([]any); ok && len(v) > 0 {
 		out.TtmlDestinationSettings = expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(v)
 	}
-	if v, ok := m["webvtt_destination_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["webvtt_destination_settings"].([]any); ok && len(v) > 0 {
 		out.WebvttDestinationSettings = expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(v)
 	}
 
 	return &out
 }
 
-func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfList []interface{}) *types.BurnInDestinationSettings {
+func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfList []any) *types.BurnInDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.BurnInDestinationSettings
 	if v, ok := m["alignment"].(string); ok && len(v) > 0 {
@@ -5089,7 +5089,7 @@ func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfLi
 	if v, ok := m["background_opacity"].(int); ok && v != 0 {
 		out.BackgroundOpacity = aws.Int32(int32(v))
 	}
-	if v, ok := m["font"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["font"].([]any); ok && len(v) > 0 {
 		out.Font = expandInputLocation(v)
 	}
 	if v, ok := m["font_color"].(string); ok && len(v) > 0 {
@@ -5135,12 +5135,12 @@ func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfLi
 	return &out
 }
 
-func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfList []interface{}) *types.DvbSubDestinationSettings {
+func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfList []any) *types.DvbSubDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.DvbSubDestinationSettings
 	if v, ok := m["alignment"].(string); ok && len(v) > 0 {
@@ -5152,7 +5152,7 @@ func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfLi
 	if v, ok := m["background_opacity"].(int); ok && v != 0 {
 		out.BackgroundOpacity = aws.Int32(int32(v))
 	}
-	if v, ok := m["font"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["font"].([]any); ok && len(v) > 0 {
 		out.Font = expandInputLocation(v)
 	}
 	if v, ok := m["font_color"].(string); ok && len(v) > 0 {
@@ -5198,12 +5198,12 @@ func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfLi
 	return &out
 }
 
-func expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(tfList []interface{}) *types.EbuTtDDestinationSettings {
+func expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(tfList []any) *types.EbuTtDDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.EbuTtDDestinationSettings
 	if v, ok := m["copyright_holder"].(string); ok && v != "" {
@@ -5225,7 +5225,7 @@ func expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(tfLi
 	return &out
 }
 
-func expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(tfList []interface{}) *types.TeletextDestinationSettings {
+func expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(tfList []any) *types.TeletextDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
@@ -5235,12 +5235,12 @@ func expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(tf
 	return &out
 }
 
-func expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(tfList []interface{}) *types.TtmlDestinationSettings {
+func expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(tfList []any) *types.TtmlDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.TtmlDestinationSettings
 	if v, ok := m["style_control"].(string); ok && len(v) > 0 {
@@ -5250,12 +5250,12 @@ func expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(tfList
 	return &out
 }
 
-func expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(tfList []interface{}) *types.WebvttDestinationSettings {
+func expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(tfList []any) *types.WebvttDestinationSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.WebvttDestinationSettings
 	if v, ok := m["style_control"].(string); ok && len(v) > 0 {
@@ -5264,12 +5264,12 @@ func expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(tfLi
 	return &out
 }
 
-func expandChannelEncoderSettingsGlobalConfiguration(tfList []interface{}) *types.GlobalConfiguration {
+func expandChannelEncoderSettingsGlobalConfiguration(tfList []any) *types.GlobalConfiguration {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.GlobalConfiguration
 
@@ -5281,7 +5281,7 @@ func expandChannelEncoderSettingsGlobalConfiguration(tfList []interface{}) *type
 		out.InputEndAction = types.GlobalConfigurationInputEndAction(v)
 	}
 
-	if v, ok := m["input_loss_behavior"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["input_loss_behavior"].([]any); ok && len(v) > 0 {
 		out.InputLossBehavior = expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(v)
 	}
 
@@ -5300,12 +5300,12 @@ func expandChannelEncoderSettingsGlobalConfiguration(tfList []interface{}) *type
 	return &out
 }
 
-func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []interface{}) *types.InputLossBehavior {
+func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []any) *types.InputLossBehavior {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.InputLossBehavior
 
@@ -5317,7 +5317,7 @@ func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []i
 		out.InputLossImageColor = aws.String(v)
 	}
 
-	if v, ok := m["input_loss_image_slate"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["input_loss_image_slate"].([]any); ok && len(v) > 0 {
 		out.InputLossImageSlate = expandInputLocation(v)
 	}
 
@@ -5332,16 +5332,16 @@ func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []i
 	return &out
 }
 
-func expandChannelEncoderSettingsMotionGraphicsConfiguration(tfList []interface{}) *types.MotionGraphicsConfiguration {
+func expandChannelEncoderSettingsMotionGraphicsConfiguration(tfList []any) *types.MotionGraphicsConfiguration {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.MotionGraphicsConfiguration
 
-	if v, ok := m["motion_graphics_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["motion_graphics_settings"].([]any); ok && len(v) > 0 {
 		out.MotionGraphicsSettings = expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettings(v)
 	}
 
@@ -5352,27 +5352,27 @@ func expandChannelEncoderSettingsMotionGraphicsConfiguration(tfList []interface{
 	return &out
 }
 
-func expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettings(tfList []interface{}) *types.MotionGraphicsSettings {
+func expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettings(tfList []any) *types.MotionGraphicsSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.MotionGraphicsSettings
-	if v, ok := m["html_motion_graphics_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["html_motion_graphics_settings"].([]any); ok && len(v) > 0 {
 		out.HtmlMotionGraphicsSettings = &types.HtmlMotionGraphicsSettings{} // no exported elements in this list
 	}
 
 	return &out
 }
 
-func expandChannelEncoderSettingsNielsenConfiguration(tfList []interface{}) *types.NielsenConfiguration {
+func expandChannelEncoderSettingsNielsenConfiguration(tfList []any) *types.NielsenConfiguration {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.NielsenConfiguration
 	if v, ok := m["distributor_id"].(string); ok && v != "" {
@@ -5386,33 +5386,33 @@ func expandChannelEncoderSettingsNielsenConfiguration(tfList []interface{}) *typ
 	return &out
 }
 
-func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []interface{}) *types.VideoCodecSettings {
+func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []any) *types.VideoCodecSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.VideoCodecSettings
-	if v, ok := m["frame_capture_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["frame_capture_settings"].([]any); ok && len(v) > 0 {
 		out.FrameCaptureSettings = expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(v)
 	}
-	if v, ok := m["h264_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["h264_settings"].([]any); ok && len(v) > 0 {
 		out.H264Settings = expandsVideoDescriptionsCodecSettingsH264Settings(v)
 	}
-	if v, ok := m["h265_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["h265_settings"].([]any); ok && len(v) > 0 {
 		out.H265Settings = expandsVideoDescriptionsCodecSettingsH265Settings(v)
 	}
 
 	return &out
 }
 
-func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []interface{}) *types.FrameCaptureSettings {
+func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []any) *types.FrameCaptureSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.FrameCaptureSettings
 	if v, ok := m["capture_interval"].(int); ok && v != 0 {
@@ -5425,12 +5425,12 @@ func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []interfac
 	return &out
 }
 
-func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *types.H264Settings {
+func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []any) *types.H264Settings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.H264Settings
 	if v, ok := m["adaptive_quantization"].(string); ok && v != "" {
@@ -5454,7 +5454,7 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["entropy_encoding"].(string); ok && v != "" {
 		out.EntropyEncoding = types.H264EntropyEncoding(v)
 	}
-	if v, ok := m["filter_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["filter_settings"].([]any); ok && len(v) > 0 {
 		out.FilterSettings = expandH264SettingsFilterSettings(v)
 	}
 	if v, ok := m["fixed_afd"].(string); ok && v != "" {
@@ -5557,27 +5557,27 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	return &out
 }
 
-func expandH264SettingsFilterSettings(tfList []interface{}) *types.H264FilterSettings {
+func expandH264SettingsFilterSettings(tfList []any) *types.H264FilterSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.H264FilterSettings
-	if v, ok := m["temporal_filter_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["temporal_filter_settings"].([]any); ok && len(v) > 0 {
 		out.TemporalFilterSettings = expandH264FilterSettingsTemporalFilterSettings(v)
 	}
 
 	return &out
 }
 
-func expandH264FilterSettingsTemporalFilterSettings(tfList []interface{}) *types.TemporalFilterSettings {
+func expandH264FilterSettingsTemporalFilterSettings(tfList []any) *types.TemporalFilterSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.TemporalFilterSettings
 	if v, ok := m["post_filter_sharpening"].(string); ok && v != "" {
@@ -5590,12 +5590,12 @@ func expandH264FilterSettingsTemporalFilterSettings(tfList []interface{}) *types
 	return &out
 }
 
-func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *types.H265Settings {
+func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []any) *types.H265Settings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.H265Settings
 	if v, ok := m["framerate_denominator"].(int); ok && v != 0 {
@@ -5622,10 +5622,10 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["color_metadata"].(string); ok && v != "" {
 		out.ColorMetadata = types.H265ColorMetadata(v)
 	}
-	if v, ok := m["color_space_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["color_space_settings"].([]any); ok && len(v) > 0 {
 		out.ColorSpaceSettings = expandH265ColorSpaceSettings(v)
 	}
-	if v, ok := m["filter_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["filter_settings"].([]any); ok && len(v) > 0 {
 		out.FilterSettings = expandH265FilterSettings(v)
 	}
 	if v, ok := m["fixed_afd"].(string); ok && v != "" {
@@ -5700,7 +5700,7 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["tile_width"].(int); ok && v != 0 {
 		out.TileWidth = aws.Int32(int32(v))
 	}
-	if v, ok := m["timecode_burnin_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["timecode_burnin_settings"].([]any); ok && len(v) > 0 {
 		out.TimecodeBurninSettings = expandH265TimecodeBurninSettings(v)
 	}
 	if v, ok := m["timecode_insertion"].(string); ok && v != "" {
@@ -5713,39 +5713,39 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	return &out
 }
 
-func expandH265ColorSpaceSettings(tfList []interface{}) *types.H265ColorSpaceSettings {
+func expandH265ColorSpaceSettings(tfList []any) *types.H265ColorSpaceSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.H265ColorSpaceSettings
-	if v, ok := m["color_space_passthrough_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["color_space_passthrough_settings"].([]any); ok && len(v) > 0 {
 		out.ColorSpacePassthroughSettings = &types.ColorSpacePassthroughSettings{} // no exported elements in this list
 	}
-	if v, ok := m["dolby_vision81_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dolby_vision81_settings"].([]any); ok && len(v) > 0 {
 		out.DolbyVision81Settings = &types.DolbyVision81Settings{} // no exported elements in this list
 	}
-	if v, ok := m["hdr10_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hdr10_settings"].([]any); ok && len(v) > 0 {
 		out.Hdr10Settings = expandH265Hdr10Settings(v)
 	}
-	if v, ok := m["rec601_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rec601_settings"].([]any); ok && len(v) > 0 {
 		out.Rec601Settings = &types.Rec601Settings{} // no exported elements in this list
 	}
-	if v, ok := m["rec709_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rec709_settings"].([]any); ok && len(v) > 0 {
 		out.Rec709Settings = &types.Rec709Settings{} // no exported elements in this list
 	}
 
 	return &out
 }
 
-func expandH265Hdr10Settings(tfList []interface{}) *types.Hdr10Settings {
+func expandH265Hdr10Settings(tfList []any) *types.Hdr10Settings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.Hdr10Settings
 	if v, ok := m["max_cll"].(int); ok && v != 0 {
@@ -5758,27 +5758,27 @@ func expandH265Hdr10Settings(tfList []interface{}) *types.Hdr10Settings {
 	return &out
 }
 
-func expandH265FilterSettings(tfList []interface{}) *types.H265FilterSettings {
+func expandH265FilterSettings(tfList []any) *types.H265FilterSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.H265FilterSettings
-	if v, ok := m["temporal_filter_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["temporal_filter_settings"].([]any); ok && len(v) > 0 {
 		out.TemporalFilterSettings = expandH265FilterSettingsTemporalFilterSettings(v)
 	}
 
 	return &out
 }
 
-func expandH265FilterSettingsTemporalFilterSettings(tfList []interface{}) *types.TemporalFilterSettings {
+func expandH265FilterSettingsTemporalFilterSettings(tfList []any) *types.TemporalFilterSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.TemporalFilterSettings
 	if v, ok := m["post_filter_sharpening"].(string); ok && v != "" {
@@ -5791,12 +5791,12 @@ func expandH265FilterSettingsTemporalFilterSettings(tfList []interface{}) *types
 	return &out
 }
 
-func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurninSettings {
+func expandH265TimecodeBurninSettings(tfList []any) *types.TimecodeBurninSettings {
 	if tfList == nil {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.TimecodeBurninSettings
 	if v, ok := m["timecode_burnin_font_size"].(string); ok && v != "" {
@@ -5812,12 +5812,12 @@ func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurni
 	return &out
 }
 
-func expandNielsenCbetSettings(tfList []interface{}) *types.NielsenCBET {
+func expandNielsenCbetSettings(tfList []any) *types.NielsenCBET {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.NielsenCBET
 	if v, ok := m["cbet_check_digit_string"].(string); ok && v != "" {
@@ -5833,12 +5833,12 @@ func expandNielsenCbetSettings(tfList []interface{}) *types.NielsenCBET {
 	return &out
 }
 
-func expandNielsenNaseIiNwSettings(tfList []interface{}) *types.NielsenNaesIiNw {
+func expandNielsenNaseIiNwSettings(tfList []any) *types.NielsenNaesIiNw {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	var out types.NielsenNaesIiNw
 	if v, ok := m["check_digit_string"].(string); ok && v != "" {
@@ -5851,12 +5851,12 @@ func expandNielsenNaseIiNwSettings(tfList []interface{}) *types.NielsenNaesIiNw 
 	return &out
 }
 
-func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface{} {
+func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_descriptions": flattenAudioDescriptions(apiObject.AudioDescriptions),
 		"output_groups":      flattenOutputGroups(apiObject.OutputGroups),
 		"timecode_config":    flattenTimecodeConfig(apiObject.TimecodeConfig),
@@ -5871,18 +5871,18 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 		"nielsen_configuration":         flattenNielsenConfiguration(apiObject.NielsenConfiguration),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
+func flattenAudioDescriptions(od []types.AudioDescription) []any {
 	if len(od) == 0 {
 		return nil
 	}
 
-	var ml []interface{}
+	var ml []any
 
 	for _, v := range od {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"audio_selector_name":          aws.ToString(v.AudioSelectorName),
 			names.AttrName:                 aws.ToString(v.Name),
 			"audio_normalization_settings": flattenAudioNormalization(v.AudioNormalizationSettings),
@@ -5902,15 +5902,15 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 	return ml
 }
 
-func flattenOutputGroups(op []types.OutputGroup) []interface{} {
+func flattenOutputGroups(op []types.OutputGroup) []any {
 	if len(op) == 0 {
 		return nil
 	}
 
-	var ol []interface{}
+	var ol []any
 
 	for _, v := range op {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"output_group_settings": flattenOutputGroupSettings(v.OutputGroupSettings),
 			"outputs":               flattenOutputs(v.Outputs),
 			names.AttrName:          aws.ToString(v.Name),
@@ -5922,39 +5922,39 @@ func flattenOutputGroups(op []types.OutputGroup) []interface{} {
 	return ol
 }
 
-func flattenOutputGroupSettings(os *types.OutputGroupSettings) []interface{} {
+func flattenOutputGroupSettings(os *types.OutputGroupSettings) []any {
 	if os == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"archive_group_settings":       flattenOutputGroupSettingsArchiveGroupSettings(os.ArchiveGroupSettings),
 		"frame_capture_group_settings": flattenOutputGroupSettingsFrameCaptureGroupSettings(os.FrameCaptureGroupSettings),
 		"hls_group_settings":           flattenOutputGroupSettingsHLSGroupSettings(os.HlsGroupSettings),
 		"ms_smooth_group_settings":     flattenOutputGroupSettingsMsSmoothGroupSettings(os.MsSmoothGroupSettings),
 		"media_package_group_settings": flattenOutputGroupSettingsMediaPackageGroupSettings(os.MediaPackageGroupSettings),
-		"multiplex_group_settings": func(inner *types.MultiplexGroupSettings) []interface{} {
+		"multiplex_group_settings": func(inner *types.MultiplexGroupSettings) []any {
 			if inner == nil {
 				return nil
 			}
-			return []interface{}{} // no exported attributes
+			return []any{} // no exported attributes
 		}(os.MultiplexGroupSettings),
 		"rtmp_group_settings": flattenOutputGroupSettingsRtmpGroupSettings(os.RtmpGroupSettings),
 		"udp_group_settings":  flattenOutputGroupSettingsUdpGroupSettings(os.UdpGroupSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputs(os []types.Output) []interface{} {
+func flattenOutputs(os []types.Output) []any {
 	if len(os) == 0 {
 		return nil
 	}
 
-	var outputs []interface{}
+	var outputs []any
 
 	for _, item := range os {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"audio_description_names":   flex.FlattenStringValueSet(item.AudioDescriptionNames),
 			"caption_description_names": flex.FlattenStringValueSet(item.CaptionDescriptionNames),
 			"output_name":               aws.ToString(item.OutputName),
@@ -5968,161 +5968,161 @@ func flattenOutputs(os []types.Output) []interface{} {
 	return outputs
 }
 
-func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
+func flattenOutputsOutputSettings(in *types.OutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"archive_output_settings":       flattenOutputsOutputSettingsArchiveOutputSettings(in.ArchiveOutputSettings),
 		"frame_capture_output_settings": flattenOutputsOutputSettingsFrameCaptureOutputSettings(in.FrameCaptureOutputSettings),
 		"hls_output_settings":           flattenOutputsOutputSettingsHLSOutputSettings(in.HlsOutputSettings),
-		"media_package_output_settings": func(inner *types.MediaPackageOutputSettings) []interface{} {
+		"media_package_output_settings": func(inner *types.MediaPackageOutputSettings) []any {
 			if inner == nil {
 				return nil
 			}
-			return []interface{}{} // no exported attributes
+			return []any{} // no exported attributes
 		}(in.MediaPackageOutputSettings),
 		"ms_smooth_output_settings": flattenOutputsOutputSettingsMsSmoothOutputSettings(in.MsSmoothOutputSettings),
-		"multiplex_output_settings": func(inner *types.MultiplexOutputSettings) []interface{} {
+		"multiplex_output_settings": func(inner *types.MultiplexOutputSettings) []any {
 			if inner == nil {
 				return nil
 			}
-			data := map[string]interface{}{
+			data := map[string]any{
 				names.AttrDestination: flattenDestination(inner.Destination),
 			}
 
-			return []interface{}{data}
+			return []any{data}
 		}(in.MultiplexOutputSettings),
 		"rtmp_output_settings": flattenOutputsOutputSettingsRtmpOutputSettings(in.RtmpOutputSettings),
 		"udp_output_settings":  flattenOutputsOutputSettingsUdpOutputSettings(in.UdpOutputSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsArchiveOutputSettings(in *types.ArchiveOutputSettings) []interface{} {
+func flattenOutputsOutputSettingsArchiveOutputSettings(in *types.ArchiveOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"container_settings": flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in.ContainerSettings),
 		"extension":          aws.ToString(in.Extension),
 		"name_modifier":      aws.ToString(in.NameModifier),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsFrameCaptureOutputSettings(in *types.FrameCaptureOutputSettings) []interface{} {
+func flattenOutputsOutputSettingsFrameCaptureOutputSettings(in *types.FrameCaptureOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"name_modifier": aws.ToString(in.NameModifier),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsHLSOutputSettings(in *types.HlsOutputSettings) []interface{} {
+func flattenOutputsOutputSettingsHLSOutputSettings(in *types.HlsOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"hls_settings":        flattenHLSOutputSettingsHLSSettings(in.HlsSettings),
 		"h265_packaging_type": string(in.H265PackagingType),
 		"name_modifier":       aws.ToString(in.NameModifier),
 		"segment_modifier":    aws.ToString(in.SegmentModifier),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsMsSmoothOutputSettings(in *types.MsSmoothOutputSettings) []interface{} {
+func flattenOutputsOutputSettingsMsSmoothOutputSettings(in *types.MsSmoothOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"h265_packaging_type": string(in.H265PackagingType),
 		"name_modifier":       aws.ToString(in.NameModifier),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSOutputSettingsHLSSettings(in *types.HlsSettings) []interface{} {
+func flattenHLSOutputSettingsHLSSettings(in *types.HlsSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_only_hls_settings": flattenHLSSettingsAudioOnlyHLSSettings(in.AudioOnlyHlsSettings),
 		"fmp4_hls_settings":       flattenHLSSettingsFmp4HLSSettings(in.Fmp4HlsSettings),
-		"frame_capture_hls_settings": func(inner *types.FrameCaptureHlsSettings) []interface{} {
+		"frame_capture_hls_settings": func(inner *types.FrameCaptureHlsSettings) []any {
 			if inner == nil {
 				return nil
 			}
-			return []interface{}{} // no exported fields
+			return []any{} // no exported fields
 		}(in.FrameCaptureHlsSettings),
 		"standard_hls_settings": flattenHLSSettingsStandardHLSSettings(in.StandardHlsSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSSettingsAudioOnlyHLSSettings(in *types.AudioOnlyHlsSettings) []interface{} {
+func flattenHLSSettingsAudioOnlyHLSSettings(in *types.AudioOnlyHlsSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_group_id":   aws.ToString(in.AudioGroupId),
 		"audio_only_image": flattenInputLocation(in.AudioOnlyImage),
 		"audio_track_type": string(in.AudioTrackType),
 		"segment_type":     string(in.AudioTrackType),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSSettingsFmp4HLSSettings(in *types.Fmp4HlsSettings) []interface{} {
+func flattenHLSSettingsFmp4HLSSettings(in *types.Fmp4HlsSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_rendition_sets":    aws.ToString(in.AudioRenditionSets),
 		"nielsen_id3_behavior":    string(in.NielsenId3Behavior),
 		"timed_metadata_behavior": string(in.TimedMetadataBehavior),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSSettingsStandardHLSSettings(in *types.StandardHlsSettings) []interface{} {
+func flattenHLSSettingsStandardHLSSettings(in *types.StandardHlsSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"m3u8_settings":        flattenStandardHLSSettingsM3u8Settings(in.M3u8Settings),
 		"audio_rendition_sets": aws.ToString(in.AudioRenditionSets),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenStandardHLSSettingsM3u8Settings(in *types.M3u8Settings) []interface{} {
+func flattenStandardHLSSettingsM3u8Settings(in *types.M3u8Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"audio_frames_per_pes":    int(aws.ToInt32(in.AudioFramesPerPes)),
 		"audio_pids":              aws.ToString(in.AudioPids),
 		"ecm_pid":                 aws.ToString(in.EcmPid),
@@ -6142,84 +6142,84 @@ func flattenStandardHLSSettingsM3u8Settings(in *types.M3u8Settings) []interface{
 		"video_pid":               aws.ToString(in.VideoPid),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsRtmpOutputSettings(in *types.RtmpOutputSettings) []interface{} {
+func flattenOutputsOutputSettingsRtmpOutputSettings(in *types.RtmpOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination:       flattenDestination(in.Destination),
 		"certificate_mode":          string(in.CertificateMode),
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"num_retries":               int(aws.ToInt32(in.NumRetries)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsUdpOutputSettings(in *types.UdpOutputSettings) []interface{} {
+func flattenOutputsOutputSettingsUdpOutputSettings(in *types.UdpOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"container_settings":  flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in.ContainerSettings),
 		names.AttrDestination: flattenDestination(in.Destination),
 		"buffer_msec":         int(aws.ToInt32(in.BufferMsec)),
 		"fec_output_settings": flattenFecOutputSettings(in.FecOutputSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in *types.ArchiveContainerSettings) []interface{} {
+func flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in *types.ArchiveContainerSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"m2ts_settings": flattenM2tsSettings(in.M2tsSettings),
-		"raw_settings":  []interface{}{}, // attribute has no exported fields
+		"raw_settings":  []any{}, // attribute has no exported fields
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in *types.UdpContainerSettings) []interface{} {
+func flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in *types.UdpContainerSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"m2ts_settings": flattenM2tsSettings(in.M2tsSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenFecOutputSettings(in *types.FecOutputSettings) []interface{} {
+func flattenFecOutputSettings(in *types.FecOutputSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"column_depth": int(aws.ToInt32(in.ColumnDepth)),
 		"include_fec":  string(in.IncludeFec),
 		"row_length":   int(aws.ToInt32(in.RowLength)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenM2tsSettings(in *types.M2tsSettings) []interface{} {
+func flattenM2tsSettings(in *types.M2tsSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"absent_input_audio_behavior": string(in.AbsentInputAudioBehavior),
 		"arib":                        string(in.Arib),
 		"arib_captions_pid":           aws.ToString(in.AribCaptionsPid),
@@ -6269,83 +6269,83 @@ func flattenM2tsSettings(in *types.M2tsSettings) []interface{} {
 		"video_pid":                   aws.ToString(in.VideoPid),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDvbNitSettings(in *types.DvbNitSettings) []interface{} {
+func flattenDvbNitSettings(in *types.DvbNitSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"network_id":   int(aws.ToInt32(in.NetworkId)),
 		"network_name": aws.ToString(in.NetworkName),
 		"rep_interval": int(aws.ToInt32(in.RepInterval)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDvbSdtSettings(in *types.DvbSdtSettings) []interface{} {
+func flattenDvbSdtSettings(in *types.DvbSdtSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"output_sdt":            string(in.OutputSdt),
 		"rep_interval":          int(aws.ToInt32(in.RepInterval)),
 		names.AttrServiceName:   aws.ToString(in.ServiceName),
 		"service_provider_name": aws.ToString(in.ServiceProviderName),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDvbTdtSettings(in *types.DvbTdtSettings) []interface{} {
+func flattenDvbTdtSettings(in *types.DvbTdtSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"rep_interval": int(aws.ToInt32(in.RepInterval)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsArchiveGroupSettings(in *types.ArchiveGroupSettings) []interface{} {
+func flattenOutputGroupSettingsArchiveGroupSettings(in *types.ArchiveGroupSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination:  flattenDestination(in.Destination),
 		"archive_cdn_settings": flattenOutputGroupSettingsArchiveCDNSettings(in.ArchiveCdnSettings),
 		"rollover_interval":    int(aws.ToInt32(in.RolloverInterval)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsFrameCaptureGroupSettings(in *types.FrameCaptureGroupSettings) []interface{} {
+func flattenOutputGroupSettingsFrameCaptureGroupSettings(in *types.FrameCaptureGroupSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination:        flattenDestination(in.Destination),
 		"frame_capture_cdn_settings": flattenFrameCaptureCDNSettings(in.FrameCaptureCdnSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []interface{} {
+func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination:          flattenDestination(in.Destination),
 		"ad_markers":                   flattenHLSAdMarkers(in.AdMarkers),
 		"base_url_content":             aws.ToString(in.BaseUrlContent),
@@ -6390,15 +6390,15 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 		"ts_file_mode":                 string(in.TsFileMode),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsMsSmoothGroupSettings(in *types.MsSmoothGroupSettings) []interface{} {
+func flattenOutputGroupSettingsMsSmoothGroupSettings(in *types.MsSmoothGroupSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination:         flattenDestination(in.Destination),
 		"acquisition_point_id":        aws.ToString(in.AcquisitionPointId),
 		"audio_only_timecode_control": string(in.AudioOnlyTimecodeControl),
@@ -6420,15 +6420,15 @@ func flattenOutputGroupSettingsMsSmoothGroupSettings(in *types.MsSmoothGroupSett
 		"timestamp_offset_mode":       string(in.TimestampOffsetMode),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSAdMarkers(in []types.HlsAdMarkers) []interface{} {
+func flattenHLSAdMarkers(in []types.HlsAdMarkers) []any {
 	if len(in) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 	for _, item := range in {
 		out = append(out, string(item))
 	}
@@ -6436,14 +6436,14 @@ func flattenHLSAdMarkers(in []types.HlsAdMarkers) []interface{} {
 	return out
 }
 
-func flattenHLSCaptionLanguageMappings(in []types.CaptionLanguageMapping) []interface{} {
+func flattenHLSCaptionLanguageMappings(in []types.CaptionLanguageMapping) []any {
 	if len(in) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 	for _, item := range in {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"caption_channel":      int(aws.ToInt32(item.CaptionChannel)),
 			names.AttrLanguageCode: aws.ToString(item.LanguageCode),
 			"language_description": aws.ToString(item.LanguageDescription),
@@ -6455,12 +6455,12 @@ func flattenHLSCaptionLanguageMappings(in []types.CaptionLanguageMapping) []inte
 	return out
 }
 
-func flattenHLSCDNSettings(in *types.HlsCdnSettings) []interface{} {
+func flattenHLSCDNSettings(in *types.HlsCdnSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"hls_akamai_settings":      flattenHLSAkamaiSettings(in.HlsAkamaiSettings),
 		"hls_basic_put_settings":   flattenHLSBasicPutSettings(in.HlsBasicPutSettings),
 		"hls_media_store_settings": flattenHLSMediaStoreSettings(in.HlsMediaStoreSettings),
@@ -6468,15 +6468,15 @@ func flattenHLSCDNSettings(in *types.HlsCdnSettings) []interface{} {
 		"hls_webdav_settings":      flattenHLSWebdavSettings(in.HlsWebdavSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSAkamaiSettings(in *types.HlsAkamaiSettings) []interface{} {
+func flattenHLSAkamaiSettings(in *types.HlsAkamaiSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"filecache_duration":        int(aws.ToInt32(in.FilecacheDuration)),
 		"http_transfer_mode":        string(in.HttpTransferMode),
@@ -6486,30 +6486,30 @@ func flattenHLSAkamaiSettings(in *types.HlsAkamaiSettings) []interface{} {
 		"token":                     aws.ToString(in.Token),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSBasicPutSettings(in *types.HlsBasicPutSettings) []interface{} {
+func flattenHLSBasicPutSettings(in *types.HlsBasicPutSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"filecache_duration":        int(aws.ToInt32(in.FilecacheDuration)),
 		"num_retries":               int(aws.ToInt32(in.NumRetries)),
 		"restart_delay":             int(aws.ToInt32(in.RestartDelay)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSMediaStoreSettings(in *types.HlsMediaStoreSettings) []interface{} {
+func flattenHLSMediaStoreSettings(in *types.HlsMediaStoreSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"filecache_duration":        int(aws.ToInt32(in.FilecacheDuration)),
 		"media_store_storage_class": string(in.MediaStoreStorageClass),
@@ -6517,39 +6517,39 @@ func flattenHLSMediaStoreSettings(in *types.HlsMediaStoreSettings) []interface{}
 		"restart_delay":             int(aws.ToInt32(in.RestartDelay)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSS3Settings(in *types.HlsS3Settings) []interface{} {
+func flattenHLSS3Settings(in *types.HlsS3Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"canned_acl": string(in.CannedAcl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenFrameCaptureCDNSettings(in *types.FrameCaptureCdnSettings) []interface{} {
+func flattenFrameCaptureCDNSettings(in *types.FrameCaptureCdnSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"frame_capture_s3_settings": flattenFrameCaptureS3Settings(in.FrameCaptureS3Settings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSWebdavSettings(in *types.HlsWebdavSettings) []interface{} {
+func flattenHLSWebdavSettings(in *types.HlsWebdavSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"filecache_duration":        int(aws.ToInt32(in.FilecacheDuration)),
 		"http_transfer_mode":        string(in.HttpTransferMode),
@@ -6557,78 +6557,78 @@ func flattenHLSWebdavSettings(in *types.HlsWebdavSettings) []interface{} {
 		"restart_delay":             int(aws.ToInt32(in.RestartDelay)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenHLSKeyProviderSettings(in *types.KeyProviderSettings) []interface{} {
+func flattenHLSKeyProviderSettings(in *types.KeyProviderSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"static_key_settings": flattenKeyProviderSettingsStaticKeySettings(in.StaticKeySettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenKeyProviderSettingsStaticKeySettings(in *types.StaticKeySettings) []interface{} {
+func flattenKeyProviderSettingsStaticKeySettings(in *types.StaticKeySettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"static_key_value":    aws.ToString(in.StaticKeyValue),
 		"key_provider_server": flattenInputLocation(in.KeyProviderServer),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenInputLocation(in *types.InputLocation) []interface{} {
+func flattenInputLocation(in *types.InputLocation) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrURI:      aws.ToString(in.Uri),
 		"password_param":   aws.ToString(in.PasswordParam),
 		names.AttrUsername: aws.ToString(in.Username),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenFrameCaptureS3Settings(in *types.FrameCaptureS3Settings) []interface{} {
+func flattenFrameCaptureS3Settings(in *types.FrameCaptureS3Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"canned_acl": string(in.CannedAcl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsMediaPackageGroupSettings(mp *types.MediaPackageGroupSettings) []interface{} {
+func flattenOutputGroupSettingsMediaPackageGroupSettings(mp *types.MediaPackageGroupSettings) []any {
 	if mp == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination: flattenDestination(mp.Destination),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsRtmpGroupSettings(in *types.RtmpGroupSettings) []interface{} {
+func flattenOutputGroupSettingsRtmpGroupSettings(in *types.RtmpGroupSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"ad_markers":            flattenAdMakers(in.AdMarkers),
 		"authentication_scheme": string(in.AuthenticationScheme),
 		"cache_full_behavior":   string(in.CacheFullBehavior),
@@ -6638,21 +6638,21 @@ func flattenOutputGroupSettingsRtmpGroupSettings(in *types.RtmpGroupSettings) []
 		"restart_delay":         int(aws.ToInt32(in.RestartDelay)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsUdpGroupSettings(in *types.UdpGroupSettings) []interface{} {
+func flattenOutputGroupSettingsUdpGroupSettings(in *types.UdpGroupSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"input_loss_action":         string(in.InputLossAction),
 		"timed_metadata_id3_frame":  string(in.TimedMetadataId3Frame),
 		"timed_metadata_id3_period": int(aws.ToInt32(in.TimedMetadataId3Period)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func flattenAdMakers(l []types.RtmpAdMarkers) []string {
@@ -6668,62 +6668,62 @@ func flattenAdMakers(l []types.RtmpAdMarkers) []string {
 	return out
 }
 
-func flattenDestination(des *types.OutputLocationRef) []interface{} {
+func flattenDestination(des *types.OutputLocationRef) []any {
 	if des == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"destination_ref_id": aws.ToString(des.DestinationRefId),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOutputGroupSettingsArchiveCDNSettings(as *types.ArchiveCdnSettings) []interface{} {
+func flattenOutputGroupSettingsArchiveCDNSettings(as *types.ArchiveCdnSettings) []any {
 	if as == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"archive_s3_settings": func(in *types.ArchiveS3Settings) []interface{} {
+	m := map[string]any{
+		"archive_s3_settings": func(in *types.ArchiveS3Settings) []any {
 			if in == nil {
 				return nil
 			}
 
-			inner := map[string]interface{}{
+			inner := map[string]any{
 				"canned_acl": string(in.CannedAcl),
 			}
 
-			return []interface{}{inner}
+			return []any{inner}
 		}(as.ArchiveS3Settings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenTimecodeConfig(in *types.TimecodeConfig) []interface{} {
+func flattenTimecodeConfig(in *types.TimecodeConfig) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrSource: string(in.Source),
 		"sync_threshold": int(aws.ToInt32(in.SyncThreshold)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenVideoDescriptions(tfList []types.VideoDescription) []interface{} {
+func flattenVideoDescriptions(tfList []types.VideoDescription) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, item := range tfList {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName:     aws.ToString(item.Name),
 			"codec_settings":   flattenVideoDescriptionsCodecSettings(item.CodecSettings),
 			"height":           int(aws.ToInt32(item.Height)),
@@ -6738,28 +6738,28 @@ func flattenVideoDescriptions(tfList []types.VideoDescription) []interface{} {
 	return out
 }
 
-func flattenAvailBlanking(in *types.AvailBlanking) []interface{} {
+func flattenAvailBlanking(in *types.AvailBlanking) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"avail_blanking_image": flattenInputLocation(in.AvailBlankingImage),
 		names.AttrState:        string(in.State),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptions(tfList []types.CaptionDescription) []interface{} {
+func flattenCaptionDescriptions(tfList []types.CaptionDescription) []any {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 
 	for _, item := range tfList {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"caption_selector_name": aws.ToString(item.CaptionSelectorName),
 			names.AttrName:          aws.ToString(item.Name),
 			"accessibility":         string(item.Accessibility),
@@ -6773,36 +6773,36 @@ func flattenCaptionDescriptions(tfList []types.CaptionDescription) []interface{}
 	return out
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettings(in *types.CaptionDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettings(in *types.CaptionDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"arib_destination_settings":                 []interface{}{}, // attribute has no exported fields
+	m := map[string]any{
+		"arib_destination_settings":                 []any{}, // attribute has no exported fields
 		"burn_in_destination_settings":              flattenCaptionDescriptionsCaptionDestinationSettingsBurnInDestinationSettings(in.BurnInDestinationSettings),
 		"dvb_sub_destination_settings":              flattenCaptionDescriptionsCaptionDestinationSettingsDvbSubDestinationSettings(in.DvbSubDestinationSettings),
 		"ebu_tt_d_destination_settings":             flattenCaptionDescriptionsCaptionDestinationSettingsEbuTtDDestinationSettings(in.EbuTtDDestinationSettings),
-		"embedded_destination_settings":             []interface{}{}, // attribute has no exported fields
-		"embedded_plus_scte20_destination_settings": []interface{}{}, // attribute has no exported fields
-		"rtmp_caption_info_destination_settings":    []interface{}{}, // attribute has no exported fields
-		"scte20_plus_embedded_destination_settings": []interface{}{}, // attribute has no exported fields
-		"scte27_destination_settings":               []interface{}{}, // attribute has no exported fields
-		"smpte_tt_destination_settings":             []interface{}{}, // attribute has no exported fields
+		"embedded_destination_settings":             []any{}, // attribute has no exported fields
+		"embedded_plus_scte20_destination_settings": []any{}, // attribute has no exported fields
+		"rtmp_caption_info_destination_settings":    []any{}, // attribute has no exported fields
+		"scte20_plus_embedded_destination_settings": []any{}, // attribute has no exported fields
+		"scte27_destination_settings":               []any{}, // attribute has no exported fields
+		"smpte_tt_destination_settings":             []any{}, // attribute has no exported fields
 		"teletext_destination_settings":             flattenCaptionDescriptionsCaptionDestinationSettingsTeletextDestinationSettings(in.TeletextDestinationSettings),
 		"ttml_destination_settings":                 flattenCaptionDescriptionsCaptionDestinationSettingsTtmlDestinationSettings(in.TtmlDestinationSettings),
 		"webvtt_destination_settings":               flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in.WebvttDestinationSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettingsBurnInDestinationSettings(in *types.BurnInDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettingsBurnInDestinationSettings(in *types.BurnInDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"alignment":             string(in.Alignment),
 		"background_color":      string(in.BackgroundColor),
 		"background_opacity":    int(aws.ToInt32(in.BackgroundOpacity)),
@@ -6822,15 +6822,15 @@ func flattenCaptionDescriptionsCaptionDestinationSettingsBurnInDestinationSettin
 		"y_position":            int(aws.ToInt32(in.YPosition)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettingsDvbSubDestinationSettings(in *types.DvbSubDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettingsDvbSubDestinationSettings(in *types.DvbSubDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"alignment":             string(in.Alignment),
 		"background_color":      string(in.BackgroundColor),
 		"background_opacity":    int(aws.ToInt32(in.BackgroundOpacity)),
@@ -6850,64 +6850,64 @@ func flattenCaptionDescriptionsCaptionDestinationSettingsDvbSubDestinationSettin
 		"y_position":            int(aws.ToInt32(in.YPosition)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettingsEbuTtDDestinationSettings(in *types.EbuTtDDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettingsEbuTtDDestinationSettings(in *types.EbuTtDDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"copyright_holder": aws.ToString(in.CopyrightHolder),
 		"fill_line_gap":    string(in.FillLineGap),
 		"font_family":      aws.ToString(in.FontFamily),
 		"style_control":    string(in.StyleControl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettingsTeletextDestinationSettings(in *types.TeletextDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettingsTeletextDestinationSettings(in *types.TeletextDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettingsTtmlDestinationSettings(in *types.TtmlDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettingsTtmlDestinationSettings(in *types.TtmlDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"style_control": string(in.StyleControl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in *types.WebvttDestinationSettings) []interface{} {
+func flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in *types.WebvttDestinationSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"style_control": string(in.StyleControl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenGlobalConfiguration(in *types.GlobalConfiguration) []interface{} {
+func flattenGlobalConfiguration(in *types.GlobalConfiguration) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"initial_audio_gain":           int(aws.ToInt32(in.InitialAudioGain)),
 		"input_end_action":             string(in.InputEndAction),
 		"input_loss_behavior":          flattenGlobalConfigurationInputLossBehavior(in.InputLossBehavior),
@@ -6916,15 +6916,15 @@ func flattenGlobalConfiguration(in *types.GlobalConfiguration) []interface{} {
 		"support_low_framerate_inputs": string(in.SupportLowFramerateInputs),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenGlobalConfigurationInputLossBehavior(in *types.InputLossBehavior) []interface{} {
+func flattenGlobalConfigurationInputLossBehavior(in *types.InputLossBehavior) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"black_frame_msec":       int(aws.ToInt32(in.BlackFrameMsec)),
 		"input_loss_image_color": aws.ToString(in.InputLossImageColor),
 		"input_loss_image_slate": flattenInputLocation(in.InputLossImageSlate),
@@ -6932,80 +6932,80 @@ func flattenGlobalConfigurationInputLossBehavior(in *types.InputLossBehavior) []
 		"repeat_frame_msec":      int(aws.ToInt32(in.RepeatFrameMsec)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenMotionGraphicsConfiguration(apiObject *types.MotionGraphicsConfiguration) []interface{} {
+func flattenMotionGraphicsConfiguration(apiObject *types.MotionGraphicsConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"motion_graphics_settings":  flattenMotionGraphicsConfigurationMotionGraphicsSettings(apiObject.MotionGraphicsSettings),
 		"motion_graphics_insertion": string(apiObject.MotionGraphicsInsertion),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenMotionGraphicsConfigurationMotionGraphicsSettings(in *types.MotionGraphicsSettings) []interface{} {
+func flattenMotionGraphicsConfigurationMotionGraphicsSettings(in *types.MotionGraphicsSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"html_motion_graphics_settings": []interface{}{}, // attribute has no exported fields
+	m := map[string]any{
+		"html_motion_graphics_settings": []any{}, // attribute has no exported fields
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNielsenConfiguration(apiObject *types.NielsenConfiguration) []interface{} {
+func flattenNielsenConfiguration(apiObject *types.NielsenConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"distributor_id":             aws.ToString(apiObject.DistributorId),
 		"nielsen_pcm_to_id3_tagging": string(apiObject.NielsenPcmToId3Tagging),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenVideoDescriptionsCodecSettings(in *types.VideoCodecSettings) []interface{} {
+func flattenVideoDescriptionsCodecSettings(in *types.VideoCodecSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"frame_capture_settings": flattenCodecSettingsFrameCaptureSettings(in.FrameCaptureSettings),
 		"h264_settings":          flattenCodecSettingsH264Settings(in.H264Settings),
 		"h265_settings":          flattenCodecSettingsH265Settings(in.H265Settings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsFrameCaptureSettings(in *types.FrameCaptureSettings) []interface{} {
+func flattenCodecSettingsFrameCaptureSettings(in *types.FrameCaptureSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"capture_interval":       int(aws.ToInt32(in.CaptureInterval)),
 		"capture_interval_units": string(in.CaptureIntervalUnits),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
+func flattenCodecSettingsH264Settings(in *types.H264Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"adaptive_quantization":   string(in.AdaptiveQuantization),
 		"afd_signaling":           string(in.AfdSignaling),
 		"bitrate":                 int(aws.ToInt32(in.Bitrate)),
@@ -7047,40 +7047,40 @@ func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
 		"timecode_insertion":      string(in.TimecodeInsertion),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenH264SettingsFilterSettings(in *types.H264FilterSettings) []interface{} {
+func flattenH264SettingsFilterSettings(in *types.H264FilterSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"temporal_filter_settings": flattenFilterSettingsTemporalFilterSettings(in.TemporalFilterSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenFilterSettingsTemporalFilterSettings(in *types.TemporalFilterSettings) []interface{} {
+func flattenFilterSettingsTemporalFilterSettings(in *types.TemporalFilterSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"post_filter_sharpening": string(in.PostFilterSharpening),
 		"strength":               string(in.Strength),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
+func flattenCodecSettingsH265Settings(in *types.H265Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"framerate_denominator":         int(aws.ToInt32(in.FramerateDenominator)),
 		"framerate_numerator":           int(aws.ToInt32(in.FramerateNumerator)),
 		"adaptive_quantization":         string(in.AdaptiveQuantization),
@@ -7119,130 +7119,130 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 		"timecode_insertion":            string(in.TimecodeInsertion),
 		"treeblock_size":                string(in.TreeblockSize),
 	}
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenH265ColorSpaceSettings(in *types.H265ColorSpaceSettings) []interface{} {
+func flattenH265ColorSpaceSettings(in *types.H265ColorSpaceSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	if in.ColorSpacePassthroughSettings != nil {
-		m["color_space_passthrough_settings"] = []interface{}{} // no exported fields
+		m["color_space_passthrough_settings"] = []any{} // no exported fields
 	}
 	if in.DolbyVision81Settings != nil {
-		m["dolby_vision81_settings"] = []interface{}{} // no exported fields
+		m["dolby_vision81_settings"] = []any{} // no exported fields
 	}
 	if in.Hdr10Settings != nil {
 		m["hdr10_settings"] = flattenH265Hdr10Settings(in.Hdr10Settings)
 	}
 	if in.Rec601Settings != nil {
-		m["rec601_settings"] = []interface{}{} // no exported fields
+		m["rec601_settings"] = []any{} // no exported fields
 	}
 	if in.Rec709Settings != nil {
-		m["rec709_settings"] = []interface{}{} // no exported fields
+		m["rec709_settings"] = []any{} // no exported fields
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenH265Hdr10Settings(in *types.Hdr10Settings) []interface{} {
+func flattenH265Hdr10Settings(in *types.Hdr10Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"max_cll":  int(aws.ToInt32(in.MaxCll)),
 		"max_fall": int(aws.ToInt32(in.MaxFall)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenH265FilterSettings(in *types.H265FilterSettings) []interface{} {
+func flattenH265FilterSettings(in *types.H265FilterSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"temporal_filter_settings": flattenH265FilterSettingsTemporalFilterSettings(in.TemporalFilterSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenH265FilterSettingsTemporalFilterSettings(in *types.TemporalFilterSettings) []interface{} {
+func flattenH265FilterSettingsTemporalFilterSettings(in *types.TemporalFilterSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"post_filter_sharpening": in.PostFilterSharpening,
 		"strength":               string(in.Strength),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []interface{} {
+func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"timecode_burnin_font_size": string(in.FontSize),
 		"timecode_burnin_position":  string(in.Position),
 		names.AttrPrefix:            in.Prefix,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAudioNormalization(ns *types.AudioNormalizationSettings) []interface{} {
+func flattenAudioNormalization(ns *types.AudioNormalizationSettings) []any {
 	if ns == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"algorithm":         ns.Algorithm,
 		"algorithm_control": ns.AlgorithmControl,
 		"target_lkfs":       ns.TargetLkfs,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAudioWatermarkSettings(ns *types.AudioWatermarkSettings) []interface{} {
+func flattenAudioWatermarkSettings(ns *types.AudioWatermarkSettings) []any {
 	if ns == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"nielsen_watermark_settings": func(n *types.NielsenWatermarksSettings) []interface{} {
+	m := map[string]any{
+		"nielsen_watermark_settings": func(n *types.NielsenWatermarksSettings) []any {
 			if n == nil {
 				return nil
 			}
 
-			m := map[string]interface{}{
+			m := map[string]any{
 				"nielsen_distribution_type":   string(n.NielsenDistributionType),
 				"nielsen_cbet_settings":       flattenNielsenCbetSettings(n.NielsenCbetSettings),
 				"nielsen_naes_ii_nw_settings": flattenNielsenNaesIiNwSettings(n.NielsenNaesIiNwSettings),
 			}
 
-			return []interface{}{m}
+			return []any{m}
 		}(ns.NielsenWatermarksSettings),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAudioDescriptionsCodecSettings(in *types.AudioCodecSettings) []interface{} {
+func flattenAudioDescriptionsCodecSettings(in *types.AudioCodecSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"aac_settings":        flattenCodecSettingsAacSettings(in.AacSettings),
 		"ac3_settings":        flattenCodecSettingsAc3Settings(in.Ac3Settings),
 		"eac3_atmos_settings": flattenCodecSettingsEac3AtmosSettings(in.Eac3AtmosSettings),
@@ -7252,18 +7252,18 @@ func flattenAudioDescriptionsCodecSettings(in *types.AudioCodecSettings) []inter
 	}
 
 	if in.PassThroughSettings != nil {
-		m["pass_through_settings"] = []interface{}{} // no exported fields
+		m["pass_through_settings"] = []any{} // no exported fields
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
+func flattenCodecSettingsAacSettings(in *types.AacSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bitrate":           in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
@@ -7275,15 +7275,15 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
 		"vbr_quality":       string(in.VbrQuality),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []interface{} {
+func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bitrate":          in.Bitrate,
 		"bitstream_mode":   string(in.BitstreamMode),
 		"coding_mode":      string(in.CodingMode),
@@ -7293,15 +7293,15 @@ func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []interface{} {
 		"metadata_control": string(in.MetadataControl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsEac3AtmosSettings(in *types.Eac3AtmosSettings) []interface{} {
+func flattenCodecSettingsEac3AtmosSettings(in *types.Eac3AtmosSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bitrate":       float32(aws.ToFloat64(in.Bitrate)),
 		"coding_mode":   string(in.CodingMode),
 		"dialnorm":      int(aws.ToInt32(in.Dialnorm)),
@@ -7311,15 +7311,15 @@ func flattenCodecSettingsEac3AtmosSettings(in *types.Eac3AtmosSettings) []interf
 		"surround_trim": float32(aws.ToFloat64(in.SurroundTrim)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsEac3Settings(in *types.Eac3Settings) []interface{} {
+func flattenCodecSettingsEac3Settings(in *types.Eac3Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"attenuation_control":      string(in.AttenuationControl),
 		"bitrate":                  float32(aws.ToFloat64(in.Bitrate)),
 		"bitstream_mode":           string(in.BitstreamMode),
@@ -7342,59 +7342,59 @@ func flattenCodecSettingsEac3Settings(in *types.Eac3Settings) []interface{} {
 		"surround_mode":            string(in.SurroundMode),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsMp2Settings(in *types.Mp2Settings) []interface{} {
+func flattenCodecSettingsMp2Settings(in *types.Mp2Settings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bitrate":     float32(aws.ToFloat64(in.Bitrate)),
 		"coding_mode": string(in.CodingMode),
 		"sample_rate": float32(aws.ToFloat64(in.SampleRate)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCodecSettingsWavSettings(in *types.WavSettings) []interface{} {
+func flattenCodecSettingsWavSettings(in *types.WavSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bit_depth":   float32(aws.ToFloat64(in.BitDepth)),
 		"coding_mode": string(in.CodingMode),
 		"sample_rate": float32(aws.ToFloat64(in.SampleRate)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAudioDescriptionsRemixSettings(in *types.RemixSettings) []interface{} {
+func flattenAudioDescriptionsRemixSettings(in *types.RemixSettings) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"channel_mappings": flattenChannelMappings(in.ChannelMappings),
 		"channels_in":      int(aws.ToInt32(in.ChannelsIn)),
 		"channels_out":     int(aws.ToInt32(in.ChannelsOut)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenChannelMappings(in []types.AudioChannelMapping) []interface{} {
+func flattenChannelMappings(in []types.AudioChannelMapping) []any {
 	if len(in) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 	for _, item := range in {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"input_channel_levels": flattenInputChannelLevels(item.InputChannelLevels),
 			"output_channel":       int(aws.ToInt32(item.OutputChannel)),
 		}
@@ -7405,14 +7405,14 @@ func flattenChannelMappings(in []types.AudioChannelMapping) []interface{} {
 	return out
 }
 
-func flattenInputChannelLevels(in []types.InputChannelLevel) []interface{} {
+func flattenInputChannelLevels(in []types.InputChannelLevel) []any {
 	if len(in) == 0 {
 		return nil
 	}
 
-	var out []interface{}
+	var out []any
 	for _, item := range in {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"gain":          int(aws.ToInt32(item.Gain)),
 			"input_channel": int(aws.ToInt32(item.InputChannel)),
 		}
@@ -7423,29 +7423,29 @@ func flattenInputChannelLevels(in []types.InputChannelLevel) []interface{} {
 	return out
 }
 
-func flattenNielsenCbetSettings(in *types.NielsenCBET) []interface{} {
+func flattenNielsenCbetSettings(in *types.NielsenCBET) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cbet_check_digit_string": aws.ToString(in.CbetCheckDigitString),
 		"cbet_stepaside":          string(in.CbetStepaside),
 		"csid":                    aws.ToString(in.Csid),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNielsenNaesIiNwSettings(in *types.NielsenNaesIiNw) []interface{} {
+func flattenNielsenNaesIiNwSettings(in *types.NielsenNaesIiNw) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"check_digit_string": aws.ToString(in.CheckDigitString),
 		"sid":                float32(aws.ToFloat64(in.Sid)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

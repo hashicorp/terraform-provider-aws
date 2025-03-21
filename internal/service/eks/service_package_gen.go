@@ -31,7 +31,18 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 }
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+	return []*itypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceClusterVersions,
+			TypeName: "aws_eks_cluster_versions",
+			Name:     "Cluster Versions",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {

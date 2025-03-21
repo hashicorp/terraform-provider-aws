@@ -18,9 +18,29 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newGroupMembershipsDataSource,
+			TypeName: "aws_identitystore_group_memberships",
+			Name:     "Group Memberships",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			},
+		},
+		{
 			Factory:  newGroupsDataSource,
 			TypeName: "aws_identitystore_groups",
 			Name:     "Groups",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			},
+		},
+		{
+			Factory:  newUsersDataSource,
+			TypeName: "aws_identitystore_users",
+			Name:     "Users",
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

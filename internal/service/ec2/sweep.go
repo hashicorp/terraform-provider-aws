@@ -2671,9 +2671,25 @@ func sweepIPAMs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 		}
 
 		for _, v := range page.Ipams {
+			id := aws.ToString(v.IpamId)
+
+			// Skip free tier IPAMs with CIDRs in public scope, as it will take up to 48 hours for the CIDR to become available for future allocations.
+			if v.Tier == awstypes.IpamTierFree {
+				v, err := findIPAMScopeByID(ctx, conn, aws.ToString(v.PublicDefaultScopeId))
+
+				if err != nil {
+					return nil, err
+				}
+
+				if aws.ToInt32(v.PoolCount) > 0 {
+					log.Printf("[INFO] Skipping IPAM %s: Lingering free tier allocations", id)
+					continue
+				}
+			}
+
 			r := resourceIPAM()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.IpamId))
+			d.SetId(id)
 			d.Set("cascade", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

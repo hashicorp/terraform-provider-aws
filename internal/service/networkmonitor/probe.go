@@ -333,7 +333,7 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 }
 
 func statusProbe(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProbeByTwoPartKey(ctx, conn, monitorName, probeID)
 
 		if tfresource.NotFound(err) {

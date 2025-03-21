@@ -197,7 +197,7 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Channel Group", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Channel Group", map[string]any{
 		names.AttrName: data.Name.ValueString(),
 	})
 
@@ -219,7 +219,7 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (any, error) {
 		return findChannelGroupByID(ctx, conn, data.Name.ValueString())
 	})
 

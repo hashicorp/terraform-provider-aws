@@ -88,7 +88,7 @@ func resourceMlflowTrackingServer() *schema.Resource {
 	}
 }
 
-func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -124,7 +124,7 @@ func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
 }
 
-func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -153,7 +153,7 @@ func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -200,7 +200,7 @@ func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
 }
 
-func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

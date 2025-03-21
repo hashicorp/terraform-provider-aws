@@ -22,7 +22,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
 	return []*itypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceEnvironment,
+			Factory:  newEnvironmentResource,
 			TypeName: "aws_appconfig_environment",
 			Name:     "Environment",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConfigurationProfile,
+			Factory:  dataSourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
 			Name:     "Configuration Profile",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -53,7 +53,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceConfigurationProfiles,
+			Factory:  dataSourceConfigurationProfiles,
 			TypeName: "aws_appconfig_configuration_profiles",
 			Name:     "Configuration Profiles",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -63,7 +63,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceEnvironment,
+			Factory:  dataSourceEnvironment,
 			TypeName: "aws_appconfig_environment",
 			Name:     "Environment",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -76,7 +76,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceEnvironments,
+			Factory:  dataSourceEnvironments,
 			TypeName: "aws_appconfig_environments",
 			Name:     "Environments",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -91,7 +91,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApplication,
+			Factory:  resourceApplication,
 			TypeName: "aws_appconfig_application",
 			Name:     "Application",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceConfigurationProfile,
+			Factory:  resourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
 			Name:     "Configuration Profile",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -117,7 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceDeployment,
+			Factory:  resourceDeployment,
 			TypeName: "aws_appconfig_deployment",
 			Name:     "Deployment",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -130,7 +130,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceDeploymentStrategy,
+			Factory:  resourceDeploymentStrategy,
 			TypeName: "aws_appconfig_deployment_strategy",
 			Name:     "Deployment Strategy",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -143,7 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceExtension,
+			Factory:  resourceExtension,
 			TypeName: "aws_appconfig_extension",
 			Name:     "Extension",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -156,7 +156,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceExtensionAssociation,
+			Factory:  resourceExtensionAssociation,
 			TypeName: "aws_appconfig_extension_association",
 			Name:     "Extension Association",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -166,7 +166,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceHostedConfigurationVersion,
+			Factory:  resourceHostedConfigurationVersion,
 			TypeName: "aws_appconfig_hosted_configuration_version",
 			Name:     "Hosted Configuration Version",
 			Region: &itypes.ServicePackageResourceRegion{

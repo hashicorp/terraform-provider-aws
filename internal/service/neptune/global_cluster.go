@@ -114,7 +114,7 @@ func resourceGlobalCluster() *schema.Resource {
 	}
 }
 
-func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
@@ -159,7 +159,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
-func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
@@ -190,7 +190,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
@@ -220,7 +220,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		engineVersion := d.Get(names.AttrEngineVersion).(string)
 
 		for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -240,7 +240,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 					EngineVersion:       aws.String(engineVersion),
 				}
 
-				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 					return conn.ModifyDBCluster(ctx, input)
 				}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -258,14 +258,14 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
-func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	// Remove any members from the global cluster.
 	for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -279,7 +279,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Global Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteGlobalCluster(ctx, &neptune.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})
@@ -376,7 +376,7 @@ func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptun
 }
 
 func statusGlobalCluster(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -444,15 +444,15 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Client, id stri
 	return nil, err
 }
 
-func flattenGlobalClusterMembers(apiObjects []awstypes.GlobalClusterMember) []interface{} {
+func flattenGlobalClusterMembers(apiObjects []awstypes.GlobalClusterMember) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"db_cluster_arn": aws.ToString(apiObject.DBClusterArn),
 			"is_writer":      aws.ToBool(apiObject.IsWriter),
 		}

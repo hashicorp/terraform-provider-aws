@@ -5784,6 +5784,7 @@ service "opsworks" {
   provider_package_correct = "opsworks"
   doc_prefix               = ["opsworks_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "opsworkscm" {

@@ -93,7 +93,7 @@ func resourceMonitoringSchedule() *schema.Resource {
 	}
 }
 
-func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	createOpts := &sagemaker.CreateMonitoringScheduleInput{
-		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]interface{})),
+		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]any)),
 		MonitoringScheduleName:   aws.String(name),
 		Tags:                     getTagsIn(ctx),
 	}
@@ -123,7 +123,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceMonitoringScheduleRead(ctx, d, meta)...)
 }
 
-func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -149,7 +149,7 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -158,8 +158,8 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 			MonitoringScheduleName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("monitoring_schedule_config"); ok && (len(v.([]interface{})) > 0) {
-			modifyOpts.MonitoringScheduleConfig = expandMonitoringScheduleConfig(v.([]interface{}))
+		if v, ok := d.GetOk("monitoring_schedule_config"); ok && (len(v.([]any)) > 0) {
+			modifyOpts.MonitoringScheduleConfig = expandMonitoringScheduleConfig(v.([]any))
 		}
 
 		log.Printf("[INFO] Modifying monitoring_schedule_config attribute for %s: %#v", d.Id(), modifyOpts)
@@ -174,7 +174,7 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceMonitoringScheduleRead(ctx, d, meta)...)
 }
 
-func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -224,12 +224,12 @@ func findMonitoringScheduleByName(ctx context.Context, conn *sagemaker.Client, n
 	return output, nil
 }
 
-func expandMonitoringScheduleConfig(configured []interface{}) *awstypes.MonitoringScheduleConfig {
+func expandMonitoringScheduleConfig(configured []any) *awstypes.MonitoringScheduleConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringScheduleConfig{}
 
@@ -241,19 +241,19 @@ func expandMonitoringScheduleConfig(configured []interface{}) *awstypes.Monitori
 		c.MonitoringType = awstypes.MonitoringType(v)
 	}
 
-	if v, ok := m["schedule_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["schedule_config"].([]any); ok && len(v) > 0 {
 		c.ScheduleConfig = expandScheduleConfig(v)
 	}
 
 	return c
 }
 
-func expandScheduleConfig(configured []interface{}) *awstypes.ScheduleConfig {
+func expandScheduleConfig(configured []any) *awstypes.ScheduleConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.ScheduleConfig{}
 
@@ -264,12 +264,12 @@ func expandScheduleConfig(configured []interface{}) *awstypes.ScheduleConfig {
 	return c
 }
 
-func flattenMonitoringScheduleConfig(config *awstypes.MonitoringScheduleConfig) []map[string]interface{} {
+func flattenMonitoringScheduleConfig(config *awstypes.MonitoringScheduleConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.MonitoringJobDefinitionName != nil {
 		m["monitoring_job_definition_name"] = aws.ToString(config.MonitoringJobDefinitionName)
@@ -281,19 +281,19 @@ func flattenMonitoringScheduleConfig(config *awstypes.MonitoringScheduleConfig) 
 		m["schedule_config"] = flattenScheduleConfig(config.ScheduleConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenScheduleConfig(config *awstypes.ScheduleConfig) []map[string]interface{} {
+func flattenScheduleConfig(config *awstypes.ScheduleConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ScheduleExpression != nil {
 		m[names.AttrScheduleExpression] = aws.ToString(config.ScheduleExpression)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

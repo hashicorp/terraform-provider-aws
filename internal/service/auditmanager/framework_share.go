@@ -6,6 +6,7 @@ package auditmanager
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -219,12 +220,7 @@ func CanBeRevoked(status string) bool {
 		awstypes.ShareRequestStatusFailed,
 		awstypes.ShareRequestStatusRevoked,
 	)
-	for _, s := range nonRevokable {
-		if s == status {
-			return false
-		}
-	}
-	return true
+	return !slices.Contains(nonRevokable, status)
 }
 
 type resourceFrameworkShareData struct {

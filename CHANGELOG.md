@@ -2,12 +2,69 @@
 
 BREAKING CHANGES:
 
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_application` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_custom_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_ecs_cluster_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_ganglia_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_haproxy_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_instance` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_java_app_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_memcached_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_mysql_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_nodejs_app_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_permission` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_php_app_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_rails_app_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_rds_db_instance` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_stack` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_static_web_layer` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
+* provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_user_profile` resource has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
 * provider: As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB the `aws_simpledb_domain` resource has been removed. Add a [constraint](https://developer.hashicorp.com/terraform/language/providers/requirements#version-constraints) to v5 of the Terraform AWS Provider for continued use of this resource ([#41775](https://github.com/hashicorp/terraform-provider-aws/issues/41775))
+* provider: The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy ([#41941](https://github.com/hashicorp/terraform-provider-aws/issues/41941))
+* provider: The `endpoints.opsworks` configuration argument has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
 * provider: The `endpoints.simpledb` and `endpoints.sdb` configuration arguments have been removed ([#41775](https://github.com/hashicorp/terraform-provider-aws/issues/41775))
 
 NOTES:
 
 * provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
+
+## 5.92.0 (March 20, 2025)
+
+NOTES:
+
+* resource/aws_kendra_data_source: The `configuration.s3_configuration` argument is deprecated. Use `configuration.template_configuration` instead, which supports the upgraded Amazon S3 connector. Amazon has ended support for the older architecture as of June 2024, and resources created with this argument cannot be edited or updated. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-s3.html) for additional details. ([#35437](https://github.com/hashicorp/terraform-provider-aws/issues/35437))
+* resource/aws_kendra_data_source: The `configuration.web_crawler_configuration` argument is deprecated. Use `configuration.template_configuration` instead, which supports the Amazon Kendra Web Crawler connector v2.0. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-web-crawler.html) for additional details. ([#35437](https://github.com/hashicorp/terraform-provider-aws/issues/35437))
+
+FEATURES:
+
+* **New Data Source:** `aws_api_gateway_api_keys` ([#39335](https://github.com/hashicorp/terraform-provider-aws/issues/39335))
+* **New Data Source:** `aws_eks_cluster_versions` ([#40741](https://github.com/hashicorp/terraform-provider-aws/issues/40741))
+* **New Data Source:** `aws_identitystore_group_memberships` ([#31589](https://github.com/hashicorp/terraform-provider-aws/issues/31589))
+* **New Data Source:** `aws_identitystore_users` ([#31688](https://github.com/hashicorp/terraform-provider-aws/issues/31688))
+* **New Resource:** `aws_athena_capacity_reservation` ([#41858](https://github.com/hashicorp/terraform-provider-aws/issues/41858))
+
+ENHANCEMENTS:
+
+* data-source/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
+* data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* data-source/aws_lb: Add `ipam_pools` attribute ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
+* provider: Support `aws-marketplace` as a valid account ID in ARNs ([#41867](https://github.com/hashicorp/terraform-provider-aws/issues/41867))
+* resource/aws_appconfig_extension_association: Add plan-time validation of `extension_arn` and `resource_arn` ([#41907](https://github.com/hashicorp/terraform-provider-aws/issues/41907))
+* resource/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
+* resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
+* resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* resource/aws_kendra_data_source: Add `configuration.template_configuration` argument ([#35437](https://github.com/hashicorp/terraform-provider-aws/issues/35437))
+* resource/aws_lb:  Add `ipam_pools` configuration block ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_rest_api: Avoid unnecessary remove and add operations for `vpc_endpoint_ids` ([#41836](https://github.com/hashicorp/terraform-provider-aws/issues/41836))
+* resource/aws_bedrockagent_agent: Fix `instruction` validator to consider multi-byte chars so not to artificially limit instruction length ([#41921](https://github.com/hashicorp/terraform-provider-aws/issues/41921))
+* resource/aws_eks_cluster: Allow `compute_config.node_role_arn` to update in place when previously unset ([#41925](https://github.com/hashicorp/terraform-provider-aws/issues/41925))
+* resource/aws_rds_cluster: Ensure that `performance_insights_enabled` takes effect when creating a cluster that is a member of a global cluster ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
+* resource/aws_rds_cluster: Fix `InvalidParameterCombination: To enable the Advanced mode of Database Insights, modify your cluster to enable Performance Insights and set the retention period for Performance Insights to at least 465 days` errors when enabling `database_insights_mode` on existing clusters ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
+* resource/aws_timestreaminfluxdb_db_instance: Set new computed value for `secondary_availability_zone` attribute when changing `deployment_type` ([#41849](https://github.com/hashicorp/terraform-provider-aws/issues/41849))
 
 ## 5.91.0 (March 13, 2025)
 

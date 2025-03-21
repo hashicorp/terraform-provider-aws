@@ -56,7 +56,7 @@ func resourceCookieStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -100,7 +100,7 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceCookieStickinessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -133,7 +133,7 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 

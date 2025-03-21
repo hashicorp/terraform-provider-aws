@@ -69,7 +69,7 @@ func ResourceVoiceConnector() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	if v, ok := diff.Get("aws_region").(string); !ok || v == "" {
 		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region(ctx)); err != nil {
 			return err
@@ -79,7 +79,7 @@ func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.Resou
 	return nil
 }
 
-func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVoiceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -153,7 +153,7 @@ func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVoiceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
