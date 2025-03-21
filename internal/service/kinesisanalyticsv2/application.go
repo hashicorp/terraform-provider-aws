@@ -846,7 +846,7 @@ func resourceApplication() *schema.Resource {
 				"runtime_environment": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ForceNew:         true,
+					ForceNew:         false,
 					ValidateDiagFunc: enum.Validate[awstypes.RuntimeEnvironment](),
 				},
 				"service_execution_role": {
@@ -1382,6 +1382,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("service_execution_role") {
 			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
+
+			updateApplication = true
+		}
+
+		if d.HasChange("runtime_environment") {
+			input.RuntimeEnvironmentUpdate = awstypes.RuntimeEnvironment(d.Get("runtime_environment").(string))
 
 			updateApplication = true
 		}
