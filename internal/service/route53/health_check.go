@@ -175,7 +175,7 @@ func resourceHealthCheck() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					return strings.ToUpper(val.(string))
 				},
 			},
@@ -185,7 +185,7 @@ func resourceHealthCheck() *schema.Resource {
 	}
 }
 
-func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -298,7 +298,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceHealthCheckRead(ctx, d, meta)...)
 }
 
-func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -342,7 +342,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -423,7 +423,7 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceHealthCheckRead(ctx, d, meta)...)
 }
 
-func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -468,11 +468,11 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	return output.HealthCheck, nil
 }
 
-func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// Removal of the triggers argument should _not_ trigger an update
 	if d.HasChange(names.AttrTriggers) {
 		o, n := d.GetChange(names.AttrTriggers)
-		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+		if len(o.(map[string]any)) > 0 && len(n.(map[string]any)) == 0 {
 			return d.Clear(names.AttrTriggers)
 		}
 	}

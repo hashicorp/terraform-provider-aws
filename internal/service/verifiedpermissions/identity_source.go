@@ -365,7 +365,7 @@ func (r *resourceIdentitySource) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Identity Source", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Identity Source", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

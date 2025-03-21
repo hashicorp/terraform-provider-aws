@@ -294,7 +294,7 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 }
 
 func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAgentAliasByTwoPartKey(ctx, conn, agentAliasID, agentID)
 
 		if tfresource.NotFound(err) {

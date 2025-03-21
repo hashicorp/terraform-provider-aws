@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIPAMOrganizationAdminAccount_serial(t *testing.T) {
+func TestAccIPAMOrganizationAdminAccount_serial(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){

@@ -94,14 +94,14 @@ func resourceDeviceFleet() *schema.Resource {
 	}
 }
 
-func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.CreateDeviceFleetInput{
 		DeviceFleetName:    aws.String(name),
-		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]any)),
 		EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -114,7 +114,7 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
 		return conn.CreateDeviceFleet(ctx, input)
 	}, ErrCodeValidationException)
 	if err != nil {
@@ -126,7 +126,7 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDeviceFleetRead(ctx, d, meta)...)
 }
 
-func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -158,7 +158,7 @@ func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -166,7 +166,7 @@ func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &sagemaker.UpdateDeviceFleetInput{
 			DeviceFleetName:    aws.String(d.Id()),
 			EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
-			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]any)),
 			RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
@@ -184,7 +184,7 @@ func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDeviceFleetRead(ctx, d, meta)...)
 }
 
-func resourceDeviceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -227,12 +227,12 @@ func findDeviceFleetByName(ctx context.Context, conn *sagemaker.Client, id strin
 	return output, nil
 }
 
-func expandFeatureDeviceFleetOutputConfig(l []interface{}) *awstypes.EdgeOutputConfig {
+func expandFeatureDeviceFleetOutputConfig(l []any) *awstypes.EdgeOutputConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.EdgeOutputConfig{
 		S3OutputLocation: aws.String(m["s3_output_location"].(string)),
@@ -245,12 +245,12 @@ func expandFeatureDeviceFleetOutputConfig(l []interface{}) *awstypes.EdgeOutputC
 	return config
 }
 
-func flattenFeatureDeviceFleetOutputConfig(config *awstypes.EdgeOutputConfig) []map[string]interface{} {
+func flattenFeatureDeviceFleetOutputConfig(config *awstypes.EdgeOutputConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_output_location": aws.ToString(config.S3OutputLocation),
 	}
 
@@ -258,5 +258,5 @@ func flattenFeatureDeviceFleetOutputConfig(config *awstypes.EdgeOutputConfig) []
 		m[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

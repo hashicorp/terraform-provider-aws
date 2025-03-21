@@ -58,6 +58,10 @@ func resourceEBSVolume() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrCreateTime: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -208,6 +212,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
+	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)

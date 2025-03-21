@@ -18,7 +18,7 @@ func TestDistributionMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_to_v1": {
 			StateVersion: 0,

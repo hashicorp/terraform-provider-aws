@@ -38,7 +38,7 @@ func resourceServicecatalogPortfolioStatus() *schema.Resource {
 	}
 }
 
-func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -59,7 +59,7 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 	return append(diags, resourceServicecatalogPortfolioStatusRead(ctx, d, meta)...)
 }
 
-func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

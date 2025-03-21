@@ -173,7 +173,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	}
 }
 
-func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -187,8 +187,8 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 		input.Containers = expandContainerServiceDeploymentContainers(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("public_endpoint"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.PublicEndpoint = expandContainerServiceDeploymentPublicEndpoint(v.([]interface{}))
+	if v, ok := d.GetOk("public_endpoint"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PublicEndpoint = expandContainerServiceDeploymentPublicEndpoint(v.([]any))
 	}
 
 	output, err := conn.CreateContainerServiceDeployment(ctx, &input)
@@ -211,7 +211,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	return append(diags, resourceContainerServiceDeploymentVersionRead(ctx, d, meta)...)
 }
 
-func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -249,7 +249,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 	return diags
 }
 
-func resourceContainerServiceDeploymentVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerServiceDeploymentVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[WARN] Cannot destroy Lightsail Container Service Deployment Version. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }
@@ -269,7 +269,7 @@ func ContainerServiceDeploymentVersionParseResourceID(id string) (string, int, e
 	return parts[0], version, nil
 }
 
-func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string]types.Container {
+func expandContainerServiceDeploymentContainers(tfList []any) map[string]types.Container {
 	if len(tfList) == 0 {
 		return map[string]types.Container{}
 	}
@@ -277,7 +277,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 	result := make(map[string]types.Container)
 
 	for _, tfListRaw := range tfList {
-		tfMap, ok := tfListRaw.(map[string]interface{})
+		tfMap, ok := tfListRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -288,15 +288,15 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 			Image: aws.String(tfMap["image"].(string)),
 		}
 
-		if v, ok := tfMap["command"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["command"].([]any); ok && len(v) > 0 {
 			container.Command = aws.ToStringSlice(flex.ExpandStringList(v))
 		}
 
-		if v, ok := tfMap[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
 			container.Environment = aws.ToStringMap(flex.ExpandStringMap(v))
 		}
 
-		if v, ok := tfMap["ports"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["ports"].(map[string]any); ok && len(v) > 0 {
 			container.Ports = expandContainerServiceProtocol(v)
 		}
 
@@ -306,7 +306,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 	return result
 }
 
-func expandContainerServiceProtocol(tfMap map[string]interface{}) map[string]types.ContainerServiceProtocol {
+func expandContainerServiceProtocol(tfMap map[string]any) map[string]types.ContainerServiceProtocol {
 	if tfMap == nil {
 		return nil
 	}
@@ -329,12 +329,12 @@ func expandContainerServiceProtocol(tfMap map[string]interface{}) map[string]typ
 	return apiObject
 }
 
-func expandContainerServiceDeploymentPublicEndpoint(tfList []interface{}) *types.EndpointRequest {
+func expandContainerServiceDeploymentPublicEndpoint(tfList []any) *types.EndpointRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -344,19 +344,19 @@ func expandContainerServiceDeploymentPublicEndpoint(tfList []interface{}) *types
 		ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
 	}
 
-	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrHealthCheck].([]any); ok && len(v) > 0 {
 		endpoint.HealthCheck = expandContainerServiceDeploymentPublicEndpointHealthCheck(v)
 	}
 
 	return endpoint
 }
 
-func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []interface{}) *types.ContainerServiceHealthCheckConfig {
+func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []any) *types.ContainerServiceHealthCheckConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -373,14 +373,14 @@ func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []interfac
 	return healthCheck
 }
 
-func flattenContainerServiceDeploymentContainers(containers map[string]types.Container) []interface{} {
+func flattenContainerServiceDeploymentContainers(containers map[string]types.Container) []any {
 	if len(containers) == 0 {
 		return nil
 	}
 
-	var rawContainers []interface{}
+	var rawContainers []any
 	for containerName, container := range containers {
-		rawContainer := map[string]interface{}{
+		rawContainer := map[string]any{
 			"container_name":      containerName,
 			"image":               aws.ToString(container.Image),
 			"command":             container.Command,
@@ -394,13 +394,13 @@ func flattenContainerServiceDeploymentContainers(containers map[string]types.Con
 	return rawContainers
 }
 
-func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerServiceEndpoint) []interface{} {
+func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerServiceEndpoint) []any {
 	if endpoint == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"container_name":      aws.ToString(endpoint.ContainerName),
 			"container_port":      int(aws.ToInt32(endpoint.ContainerPort)),
 			names.AttrHealthCheck: flattenContainerServiceDeploymentPublicEndpointHealthCheck(endpoint.HealthCheck),
@@ -408,13 +408,13 @@ func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerSe
 	}
 }
 
-func flattenContainerServiceDeploymentPublicEndpointHealthCheck(healthCheck *types.ContainerServiceHealthCheckConfig) []interface{} {
+func flattenContainerServiceDeploymentPublicEndpointHealthCheck(healthCheck *types.ContainerServiceHealthCheckConfig) []any {
 	if healthCheck == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"healthy_threshold":   int(aws.ToInt32(healthCheck.HealthyThreshold)),
 			"interval_seconds":    int(aws.ToInt32(healthCheck.IntervalSeconds)),
 			names.AttrPath:        aws.ToString(healthCheck.Path),

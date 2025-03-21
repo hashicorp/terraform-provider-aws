@@ -220,7 +220,7 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 }
 
 func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
