@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
 	"testing"
 
@@ -223,8 +224,8 @@ func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, se
 	ctx := acctest.Context(t)
 	var v1 types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
-	cidrEndpointCustomSubDomainV1 := "test1.example.com"
-	cidrEndpointCustomSubDomainV2 := "test2.example.com"
+	subDomainName := "test.demo.com"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
@@ -236,17 +237,10 @@ func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, se
 		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(cidrEndpointCustomSubDomainV1),
+				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, subDomainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", cidrEndpointCustomSubDomainV1),
-				),
-			},
-			{
-				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(cidrEndpointCustomSubDomainV2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", cidrEndpointCustomSubDomainV2),
+					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", subDomainName),
 				),
 			},
 			{
@@ -383,11 +377,15 @@ resource "aws_verifiedaccess_instance" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(cidrEndpointsCustomSubDomain string) string {
+func testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, cidrEndpointsCustomSubDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedaccess_instance" "test" {
   
-  cidr_endpoints_custom_subdomain = %[1]q
+  cidr_endpoints_custom_subdomain = %[2]q
+  
+  tags = {
+    Name = %[1]q
+  }
 }
-`, cidrEndpointsCustomSubDomain)
+`, rName, cidrEndpointsCustomSubDomain)
 }

@@ -386,6 +386,7 @@ const (
 
 	// Verified Access Instance
 	attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain           = "cidr_endpoints_custom_subdomain"
+	attrVerifiedAccessInstance_NameServers                            = "name_servers"
 	attrVerifiedAccessInstance_FipsEnabled                            = "fips_enabled"
 	attrVerifiedAccessInstance_TrustProviders                         = "verified_access_trust_providers"
 	attrVerifiedAccessInstance_TrustProviders_DeviceTrustProviderType = "device_trust_provider_type"

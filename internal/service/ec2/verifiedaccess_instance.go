@@ -85,6 +85,11 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 					},
 				},
 			},
+			attrVerifiedAccessInstance_NameServers: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -140,7 +145,14 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set(names.AttrCreationTime, output.CreationTime)
-	d.Set(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain, output.CidrEndpointsCustomSubDomain)
+	if output.CidrEndpointsCustomSubDomain != nil {
+		if output.CidrEndpointsCustomSubDomain.SubDomain != nil {
+			d.Set(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain, output.CidrEndpointsCustomSubDomain.SubDomain)
+		}
+		if output.CidrEndpointsCustomSubDomain.Nameservers != nil {
+			d.Set(attrVerifiedAccessInstance_NameServers, output.CidrEndpointsCustomSubDomain.Nameservers)
+		}
+	}
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(attrVerifiedAccessInstance_FipsEnabled, output.FipsEnabled)
 	d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime)
