@@ -218,19 +218,19 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{verifiedAccessEndpointProtocolTCP}, false),
 						},
-						"db_cluster_arn": {
+						"cluster_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"db_instance_arn": {
+						"instance_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"db_proxy_arn": {
+						"proxy_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -639,15 +639,15 @@ func flattenVerifiedAccessEndpointRdsOptions(apiObject *types.VerifiedAccessEndp
 	}
 
 	if v := apiObject.RdsDbClusterArn; v != nil {
-		tfmap["db_cluster_arn"] = v
+		tfmap["cluster_arn"] = v
 	}
 
 	if v := apiObject.RdsDbInstanceArn; v != nil {
-		tfmap["db_instance_arn"] = v
+		tfmap["instance_arn"] = v
 	}
 
 	if v := apiObject.RdsDbProxyArn; v != nil {
-		tfmap["db_proxy_arn"] = v
+		tfmap["proxy_arn"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
@@ -716,16 +716,20 @@ func expandCreateVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.C
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
-	if v, ok := tfMap["db_cluster_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["cluster_arn"].(string); ok && v != "" {
 		apiobject.RdsDbClusterArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["db_instance_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["instance_arn"].(string); ok && v != "" {
 		apiobject.RdsDbInstanceArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["db_proxy_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["proxy_arn"].(string); ok && v != "" {
 		apiobject.RdsDbProxyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["endpoint"].(string); ok && v != "" {
+		apiobject.RdsEndpoint = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {

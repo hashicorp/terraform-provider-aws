@@ -346,6 +346,52 @@ func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore
 	})
 }
 
+func testAccVerifiedAccessEndpoint_Rds(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_Rds(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.0.port", "3306"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_Rds_Update(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.0.port", "6033"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -827,6 +873,159 @@ resource "aws_verifiedaccess_endpoint" "test" {
     }
 	protocol          = "tcp"
     subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, key, certificate))
+}
+
+func testAccVerifiedAccessEndpointConfig_Rds(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
+		fmt.Sprintf(`
+
+# Security Group para permitir acceso a la BD solo desde la VPC
+resource "aws_security_group" "testrds" {
+  name        = "rds-security-group"
+  description = "Grant rds access from VPC"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = "rds-subnet-group"
+  subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+
+  tags = {
+    Name = "RDS Subnet Group"
+  }
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage      = 10                      
+  engine                 = "mysql"                  
+  engine_version         = "8.0"                    
+  instance_class         = "db.t4g.micro"            
+  identifier             = "basic-rds-instance"
+  username               = "tfaccrds"               
+  password               = "SuperSecure123!"         
+  parameter_group_name   = "default.mysql8.0"
+  publicly_accessible    = false                     
+  skip_final_snapshot    = true                      
+  storage_encrypted      = false                     
+  multi_az               = false                     
+
+  vpc_security_group_ids = [aws_security_group.testrds.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type        = "vpc"
+  description            = "example"
+  endpoint_type          = "rds"
+  
+  rds_options {
+	port                 = aws_db_instance.test.port 
+	instance_arn         = aws_db_instance.test.arn
+    endpoint             = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol          	 = "tcp"
+    subnet_ids           = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, key, certificate))
+}
+
+func testAccVerifiedAccessEndpointConfig_Rds_Update(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
+		fmt.Sprintf(`
+
+# Security Group para permitir acceso a la BD solo desde la VPC
+resource "aws_security_group" "testrds" {
+  name        = "rds-security-group"
+  description = "Grant rds access from VPC"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 6033
+    to_port     = 6033
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = "rds-subnet-group"
+  subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+
+  tags = {
+    Name = "RDS Subnet Group"
+  }
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage      = 10                      
+  engine                 = "mysql"                  
+  engine_version         = "8.0"                    
+  instance_class         = "db.t4g.micro"            
+  identifier             = "basic-rds-instance"
+  username               = "tfaccrds"               
+  password               = "SuperSecure123!"         
+  parameter_group_name   = "default.mysql8.0"
+  publicly_accessible    = false                     
+  skip_final_snapshot    = true                      
+  storage_encrypted      = false                     
+  multi_az               = false
+
+  vpc_security_group_ids = [aws_security_group.testrds.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  port                   = 6033
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type        = "vpc"
+  description            = "example"
+  endpoint_type          = "rds"
+  
+  rds_options {
+	port                 = aws_db_instance.test.port
+	instance_arn         = aws_db_instance.test.arn
+    endpoint             = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol          	 = "tcp"
+    subnet_ids           = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]

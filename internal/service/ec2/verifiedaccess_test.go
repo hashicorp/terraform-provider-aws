@@ -23,6 +23,7 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"policyDocument":     testAccVerifiedAccessEndpoint_policyDocument,
 			"subnetIDs":          testAccVerifiedAccessEndpoint_subnetIDs,
 			"cidr":               testAccVerifiedAccessEndpoint_Cidr,
+			"rds":                testAccVerifiedAccessEndpoint_Rds,
 		},
 		"Group": {
 			acctest.CtBasic:      testAccVerifiedAccessGroup_basic,
