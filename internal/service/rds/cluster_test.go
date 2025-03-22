@@ -4083,6 +4083,11 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_clusters          = true
 }
 
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+
 resource "aws_db_instance" "test" {
   apply_immediately    = true
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
@@ -4092,9 +4097,13 @@ resource "aws_db_instance" "test" {
   storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage    = 400
   iops                 = 12000
-  password             = "mustbeeightcharaters"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "test"
   skip_final_snapshot  = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, sType))
 }
@@ -6421,9 +6430,14 @@ resource "aws_security_group_rule" "test" {
   security_group_id = aws_security_group.test.id
 }
 
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+
 resource "aws_directory_service_directory" "directory" {
   name     = %[2]q
-  password = "SuperSecretPassw0rd"
+  password = data.aws_secretsmanager_random_password.test.random_password
   size     = "Small"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -6431,6 +6445,10 @@ resource "aws_directory_service_directory" "directory" {
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
