@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Add support for `cidr_options` argument
+```
+
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Add support for `rds_options` argument
+```
+
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Add support for `load_balancer.port_range` argument
+```
+
+```release-note:enhancement
+resource/aws_verified_access_endpoint: Add support for `network_interface_options.port_range` argument
+```
+
+```release-note:enhancement
+resource/aws_verified_access_trust_provider: Add support for `native_application_oidc_options` argument
+```
+
+```release-note:enhancement
+resource/aws_verified_access_trust_provider: Add support for `sse_specification` argument
+```
+
+```release-note:enhancement
+resource/aws_verified_access_instance: Add support for `cidr_endpoint_custom_subdomain` argument
+```
