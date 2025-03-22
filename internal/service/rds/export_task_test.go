@@ -226,6 +226,11 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 10
 }
 
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   allocated_storage   = 10
@@ -233,8 +238,12 @@ resource "aws_db_instance" "test" {
   engine              = "mysql"
   instance_class      = "db.t3.micro"
   username            = "foo"
-  password            = "foobarbaz"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {

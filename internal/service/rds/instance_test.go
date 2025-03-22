@@ -7247,6 +7247,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 func testAccInstanceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -7259,19 +7260,24 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_basicApplyImmediately(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -7284,7 +7290,7 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   apply_immediately       = true
 
@@ -7292,12 +7298,17 @@ resource "aws_db_instance" "test" {
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_db2engine(rName, customerId, siteId string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassDB2(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -7324,15 +7335,20 @@ resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name = aws_db_parameter_group.test.name
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   skip_final_snapshot  = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, customerId, siteId))
 }
 
 func testAccInstanceConfig_identifierPrefix(identifierPrefix string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -7341,28 +7357,39 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, identifierPrefix))
 }
 
 func testAccInstanceConfig_identifierGenerated() string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(), `
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		`
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `)
 }
 
 func testAccInstanceConfig_engineLifecycleSupport_disabled(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -7376,18 +7403,23 @@ resource "aws_db_instance" "test" {
   db_name                  = "test"
   parameter_group_name     = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot      = true
-  password                 = "avoid-plaintext-passwords"
+  password                 = data.aws_secretsmanager_random_password.test.random_password
   username                 = "tfacctest"
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_majorVersionOnly(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -7400,19 +7432,24 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_kmsKeyID(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -7452,19 +7489,24 @@ resource "aws_db_instance" "test" {
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
   storage_encrypted       = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_DBSubnetGroupName_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -7479,7 +7521,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   db_subnet_group_name = aws_db_subnet_group.test.name
@@ -7489,12 +7531,17 @@ resource "aws_db_instance" "test" {
 
   backup_retention_period = 0
   apply_immediately       = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_DBSubnetGroupName_update(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -7534,7 +7581,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   db_subnet_group_name = aws_db_subnet_group.test2.name
@@ -7546,12 +7593,17 @@ resource "aws_db_instance" "test" {
   apply_immediately       = true
 
   depends_on = [aws_db_subnet_group.test]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_networkType(rName string, networkType string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		fmt.Sprintf(`
@@ -7567,17 +7619,22 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
   network_type            = %[2]q
   apply_immediately       = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, networkType))
 }
 
 func testAccInstanceConfig_optionGroup(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
@@ -7596,14 +7653,21 @@ resource "aws_db_instance" "test" {
   db_name             = "test"
   option_group_name   = aws_db_option_group.test.name
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_CACertificate_latest(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
 }
@@ -7617,14 +7681,21 @@ resource "aws_db_instance" "test" {
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "test"
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_CACertificate_update(rName, cert string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   allocated_storage   = 10
@@ -7634,14 +7705,20 @@ resource "aws_db_instance" "test" {
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "test"
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, cert))
 }
 
 func testAccInstanceConfig_iamAuth(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -7663,18 +7740,25 @@ resource "aws_db_instance" "test" {
   engine_version                      = data.aws_rds_engine_version.default.version
   instance_class                      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                             = "test"
-  password                            = "avoid-plaintext-passwords"
+  password                            = data.aws_secretsmanager_random_password.test.random_password
   username                            = "tfacctest"
   backup_retention_period             = 0
   skip_final_snapshot                 = true
   parameter_group_name                = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   iam_database_authentication_enabled = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_FinalSnapshotID_skipFinalSnapshot(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier = %[1]q
 
@@ -7683,7 +7767,7 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   backup_retention_period = 1
 
@@ -7691,6 +7775,10 @@ resource "aws_db_instance" "test" {
 
   skip_final_snapshot       = true
   final_snapshot_identifier = %[1]q
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
@@ -7782,6 +7870,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 func testAccInstanceConfig_s3Import(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseS3Import(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -7793,7 +7882,7 @@ resource "aws_db_instance" "test" {
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                    = "test"
-  password                   = "avoid-plaintext-passwords"
+  password                   = data.aws_secretsmanager_random_password.test.random_password
   username                   = "tfacctest"
   backup_retention_period    = 0
 
@@ -7812,12 +7901,19 @@ resource "aws_db_instance" "test" {
     bucket_prefix  = %[1]q
     ingestion_role = aws_iam_role.test.arn
   }
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_finalSnapshotID(rName1, rName2 string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier = %[1]q
 
@@ -7826,7 +7922,7 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   backup_retention_period = 1
 
@@ -7838,12 +7934,18 @@ resource "aws_db_instance" "test" {
   tags = {
     Name = %[1]q
   }
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName1, rName2))
 }
 
 func testAccInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -7896,15 +7998,21 @@ resource "aws_db_instance" "test" {
   monitoring_interval = %[4]d
   monitoring_role_arn = aws_iam_role.test.arn
   db_name             = "baz"
-  password            = "barbarbarbar"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot = true
   username            = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses, monitoringInterval)
+`, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses, monitoringInterval))
 }
 
 func testAccInstanceConfig_monitoringRoleARNRemoved(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -7926,15 +8034,21 @@ resource "aws_db_instance" "test" {
   identifier          = %[3]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "baz"
-  password            = "barbarbarbar"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot = true
   username            = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_monitoringRoleARN(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -7987,15 +8101,22 @@ resource "aws_db_instance" "test" {
   monitoring_interval = 5
   monitoring_role_arn = aws_iam_role.test.arn
   db_name             = "baz"
-  password            = "barbarbarbar"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot = true
   username            = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses)
+`, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses))
 }
 
 func testAccInstanceConfig_baseForPITR(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
   allocated_storage       = 10
@@ -8005,9 +8126,13 @@ resource "aws_db_instance" "test" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "baz"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   username                = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
@@ -8085,7 +8210,9 @@ resource "aws_db_instance" "restore" {
 }
 
 func testAccInstanceConfig_iopsUpdate(rName string, sType string, iops int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -8106,7 +8233,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -8116,12 +8243,17 @@ resource "aws_db_instance" "test" {
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = 200
   iops              = %[5]d
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, sType, iops)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, sType, iops))
 }
 
 func testAccInstanceConfig_mySQLPort(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -8130,7 +8262,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3306
@@ -8138,12 +8270,17 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 
   apply_immediately = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_updateMySQLPort(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -8152,7 +8289,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3305
@@ -8160,12 +8297,17 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 
   apply_immediately = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_MSSQL_timezone(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassSQLServerEx(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8178,9 +8320,13 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -8206,6 +8352,7 @@ resource "aws_security_group_rule" "test" {
 
 func testAccInstanceConfig_MSSQL_timezone_AKST(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassSQLServerEx(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8219,9 +8366,13 @@ resource "aws_db_instance" "test" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
   timezone                = "Alaskan Standard Time"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -8286,6 +8437,7 @@ resource "aws_db_subnet_group" "test" {
 
 func testAccInstanceConfig_baseMSSQLDomain(rName, domain string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassSQLServerEx(),
 		testAccInstanceConfig_baseVPC(rName),
 		testAccInstanceConfig_ServiceRole(rName),
@@ -8311,13 +8463,17 @@ resource "aws_security_group_rule" "test" {
 
 resource "aws_directory_service_directory" "directory" {
   name     = %[2]q
-  password = "SuperSecretPassw0rd"
+  password = data.aws_secretsmanager_random_password.test.random_password
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
@@ -8338,23 +8494,31 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_directory_service_directory" "directory-2" {
   name     = %[2]q
-  password = "SuperSecretPassw0rd"
+  password = data.aws_secretsmanager_random_password.test.random_password
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 `, rName, domain2))
@@ -8374,23 +8538,31 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory-2.id
   domain_iam_role_name = aws_iam_role.role.name
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_directory_service_directory" "directory-2" {
   name     = %[2]q
-  password = "SuperSecretPassw0rd"
+  password = data.aws_secretsmanager_random_password.test.random_password
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 `, rName, domain2))
@@ -8407,8 +8579,12 @@ resource "aws_db_instance" "origin" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "origin" {
@@ -8426,7 +8602,7 @@ resource "aws_db_instance" "test" {
   identifier              = "%[1]s-restore"
   instance_class          = aws_db_instance.origin.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
@@ -8434,6 +8610,10 @@ resource "aws_db_instance" "test" {
   domain_iam_role_name = aws_iam_role.role.name
 
   snapshot_identifier = aws_db_snapshot.origin.id
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
@@ -8536,6 +8716,7 @@ resource "aws_secretsmanager_secret_version" "example" {
 
 func testAccInstanceConfig_mssqlSelfManagedDomain(rName, domain, domainOu string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -8547,19 +8728,24 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
   domain_fqdn             = %[2]q
   domain_ou               = %[3]q
   domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
   domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, domain, domainOu))
 }
 
 func testAccInstanceConfig_mssqlUpdateSelfManagedDomain(rName, domain, domainOu string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -8572,13 +8758,17 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
   domain_fqdn             = %[2]q
   domain_ou               = %[3]q
   domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
   domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_secretsmanager_secret" "example-2" {
@@ -8617,6 +8807,7 @@ resource "aws_secretsmanager_secret_version" "example-2" {
 
 func testAccInstanceConfig_mssqlSelfManagedDomainSingleDomainDNSIP(rName, domain, domainOu string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -8628,19 +8819,24 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
   domain_fqdn             = %[2]q
   domain_ou               = %[3]q
   domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
   domain_dns_ips          = ["123.124.125.126", "123.124.125.126"]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, domain, domainOu))
 }
 
 func testAccInstanceConfig_mssqlSelfManagedDomainSnapshotRestore(rName, domain, domainOu string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
 
@@ -8651,8 +8847,12 @@ resource "aws_db_instance" "origin" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "origin" {
@@ -8670,7 +8870,7 @@ resource "aws_db_instance" "test" {
   identifier              = "%[1]s-restore"
   instance_class          = aws_db_instance.origin.instance_class
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
@@ -8680,12 +8880,17 @@ resource "aws_db_instance" "test" {
   domain_dns_ips         = ["123.124.125.126", "123.124.125.127"]
 
   snapshot_identifier = aws_db_snapshot.origin.id
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, domain, domainOu))
 }
 
 func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8696,8 +8901,12 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -8716,9 +8925,13 @@ resource "aws_db_instance" "restore" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
   snapshot_identifier     = aws_db_snapshot.test.id
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -8743,7 +8956,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 func testAccInstanceConfig_Versions_allowMajor(rName string, allowMajorVersionUpgrade bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage           = 10
   allow_major_version_upgrade = %[1]t
@@ -8752,15 +8968,20 @@ resource "aws_db_instance" "test" {
   identifier                  = %[2]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                     = "baz"
-  password                    = "barbarbarbar"
+  password                    = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot         = true
   username                    = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, allowMajorVersionUpgrade, rName))
 }
 
 func testAccInstanceConfig_autoMinorVersion(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
@@ -8770,15 +8991,20 @@ resource "aws_db_instance" "bar" {
   engine_version      = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "baz"
-  password            = "barbarbarbar"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "foo"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_cloudWatchLogsExport(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8790,7 +9016,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   skip_final_snapshot  = true
 
@@ -8798,12 +9024,17 @@ resource "aws_db_instance" "test" {
     "audit",
     "error",
   ]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_cloudWatchLogsExportAdd(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8815,7 +9046,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   skip_final_snapshot  = true
 
@@ -8826,12 +9057,17 @@ resource "aws_db_instance" "test" {
     "error",
     "general",
   ]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_cloudWatchLogsExportModify(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8843,7 +9079,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   skip_final_snapshot  = true
 
@@ -8854,12 +9090,17 @@ resource "aws_db_instance" "test" {
     "general",
     "slowquery",
   ]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_cloudWatchLogsExportDelete(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -8871,31 +9112,43 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   skip_final_snapshot  = true
 
   apply_immediately = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_mariaDB(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_DBSubnetGroupName_ramShared(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -8976,16 +9229,21 @@ resource "aws_db_instance" "test" {
   engine                 = data.aws_rds_orderable_db_instance.test.engine
   identifier             = %[1]q
   instance_class         = data.aws_rds_orderable_db_instance.test.instance_class
-  password               = "avoid-plaintext-passwords"
+  password               = data.aws_secretsmanager_random_password.test.random_password
   username               = "tfacctest"
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -9004,16 +9262,21 @@ resource "aws_db_instance" "test" {
   engine                 = data.aws_rds_orderable_db_instance.test.engine
   identifier             = %[1]q
   instance_class         = data.aws_rds_orderable_db_instance.test.instance_class
-  password               = "avoid-plaintext-passwords"
+  password               = data.aws_secretsmanager_random_password.test.random_password
   username               = "tfacctest"
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_deletionProtection(rName string, deletionProtection bool) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -9022,15 +9285,20 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[2]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, deletionProtection, rName))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_db2(rName, customerId, siteId string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassDB2(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -9058,15 +9326,21 @@ resource "aws_db_instance" "test" {
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name            = aws_db_parameter_group.test.name
-  password                        = "avoid-plaintext-passwords"
+  password                        = data.aws_secretsmanager_random_password.test.random_password
   username                        = "tfacctest"
   skip_final_snapshot             = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, customerId, siteId))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_oracle(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine        = %[1]q
   license_model = "bring-your-own-license"
@@ -9082,15 +9356,21 @@ resource "aws_db_instance" "test" {
   identifier                      = %[3]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   license_model                   = "bring-your-own-license"
-  password                        = "avoid-plaintext-passwords"
+  password                        = data.aws_secretsmanager_random_password.test.random_password
   username                        = "tfacctest"
   skip_final_snapshot             = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_Oracle_nationalCharacterSet(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine        = %[1]q
   license_model = "bring-your-own-license"
@@ -9106,15 +9386,21 @@ resource "aws_db_instance" "test" {
   instance_class           = data.aws_rds_orderable_db_instance.test.instance_class
   license_model            = "bring-your-own-license"
   nchar_character_set_name = "UTF8"
-  password                 = "avoid-plaintext-passwords"
+  password                 = data.aws_secretsmanager_random_password.test.random_password
   username                 = "tfacctest"
   skip_final_snapshot      = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_Oracle_noNationalCharacterSet(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine        = %[1]q
   license_model = "bring-your-own-license"
@@ -9129,15 +9415,20 @@ resource "aws_db_instance" "test" {
   identifier          = %[3]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = "bring-your-own-license"
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_mssql(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassSQLServerSe(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -9147,40 +9438,58 @@ resource "aws_db_instance" "test" {
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   license_model                   = data.aws_rds_orderable_db_instance.test.license_model
-  password                        = "avoid-plaintext-passwords"
+  password                        = data.aws_secretsmanager_random_password.test.random_password
   username                        = "tfacctest"
   skip_final_snapshot             = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName,
 	enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage               = 10
   enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
   engine                          = data.aws_rds_engine_version.default.engine
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  password                        = "avoid-plaintext-passwords"
+  password                        = data.aws_secretsmanager_random_password.test.random_password
   username                        = "tfacctest"
   skip_final_snapshot             = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
 }
 
 func testAccInstanceConfig_Storage_maxAllocated(rName string, maxAllocatedStorage int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage     = 5
   engine                = data.aws_rds_orderable_db_instance.test.engine
   identifier            = %[1]q
   instance_class        = data.aws_rds_orderable_db_instance.test.instance_class
   max_allocated_storage = %[2]d
-  password              = "avoid-plaintext-passwords"
+  password              = data.aws_secretsmanager_random_password.test.random_password
   username              = "tfacctest"
   skip_final_snapshot   = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, maxAllocatedStorage))
 }
@@ -9315,6 +9624,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -9330,15 +9640,20 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_sourceARN(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -9354,15 +9669,20 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_promoteNull(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -9377,15 +9697,20 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_promoteEmptyString(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -9401,15 +9726,20 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_upgradeStorageConfig(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -9418,9 +9748,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9438,6 +9772,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -9446,9 +9781,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9462,6 +9801,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -9470,9 +9810,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9485,15 +9829,20 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_addLaterSetup() string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(), `
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `)
 }
@@ -9513,6 +9862,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_allocatedStorage(rName string, allocatedStorage int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -9521,9 +9871,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9537,7 +9891,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_iops(rName string, iops int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -9558,11 +9914,15 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[3]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
   iops                    = 1100
   storage_type            = "io1"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9573,11 +9933,13 @@ resource "aws_db_instance" "test" {
   iops                = %[4]d
   storage_type        = "io1"
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, iops)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, iops))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_allocatedStorageAndIOPS(rName string, allocatedStorage, iops int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -9598,11 +9960,15 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[4]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
   iops                    = 1000
   storage_type            = "io1"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9614,20 +9980,27 @@ resource "aws_db_instance" "test" {
   iops                = %[5]d
   storage_type        = "io1"
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, allocatedStorage, rName, iops)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, allocatedStorage, rName, iops))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9641,16 +10014,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9665,6 +10045,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_availabilityZone(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -9674,9 +10055,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9690,16 +10075,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_backupRetentionPeriod(rName string, backupRetentionPeriod int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9715,16 +10107,23 @@ resource "aws_db_instance" "test" {
 // We provide maintenance_window to prevent the following error from a randomly selected window:
 // InvalidParameterValue: The backup window and maintenance window must not overlap.
 func testAccInstanceConfig_ReplicateSourceDB_backupWindow(rName, backupWindow, maintenanceWindow string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9740,6 +10139,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -9756,10 +10156,14 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_subnet_group" "source" {
@@ -9771,6 +10175,7 @@ resource "aws_db_subnet_group" "source" {
 
 func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -9788,10 +10193,14 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_subnet_group" "source" {
@@ -9803,6 +10212,7 @@ resource "aws_db_subnet_group" "source" {
 
 func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameVPC(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -9820,10 +10230,14 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -9840,7 +10254,8 @@ resource "aws_db_subnet_group" "source" {
 
 func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_crossRegion(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAlternateRegionProvider(),
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigMultipleRegionProvider(2),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
@@ -9934,9 +10349,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_engine_version.default.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9951,6 +10370,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_baseMSSQLEnterpriseDomain(rName, domain string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassSQLServerEE(),
 		testAccInstanceConfig_baseVPC(rName),
 		testAccInstanceConfig_ServiceRole(rName),
@@ -9976,13 +10396,17 @@ resource "aws_security_group_rule" "test" {
 
 resource "aws_directory_service_directory" "directory" {
   name     = %[2]q
-  password = "SuperSecretPassw0rd"
+  password = data.aws_secretsmanager_random_password.test.random_password
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
@@ -10004,11 +10428,15 @@ resource "aws_db_instance" "source" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   license_model           = "license-included"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10049,7 +10477,10 @@ provider "awssameaccountalternateregion" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName string) string {
-	return acctest.ConfigCompose(testAccAlternateAccountAndAlternateRegionProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccAlternateAccountAndAlternateRegionProviderConfig(),
+		fmt.Sprintf(`
 data "aws_availability_zones" "alternateaccountsameregion" {
   provider = "awsalternateaccountsameregion"
 
@@ -10188,9 +10619,13 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10206,7 +10641,8 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAlternateRegionProvider(),
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigMultipleRegionProvider(2),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
@@ -10305,9 +10741,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10322,16 +10762,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName string, deletionProtection bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10345,16 +10792,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(rName string, iamDatabaseAuthenticationEnabled bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10370,16 +10824,23 @@ resource "aws_db_instance" "test" {
 // We provide backup_window to prevent the following error from a randomly selected window:
 // InvalidParameterValue: The backup window and maintenance window must not overlap.
 func testAccInstanceConfig_ReplicateSourceDB_maintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10394,16 +10855,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_maxAllocatedStorage(rName string, maxAllocatedStorage int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10419,6 +10887,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_monitoring(rName string, monitoringInterval int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_baseMonitoringRole(rName),
 		fmt.Sprintf(`
@@ -10428,9 +10897,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10446,6 +10919,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_monitoring_sourceOnly(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -10454,24 +10928,35 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_multiAZ(rName string, multiAz bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10486,6 +10971,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_networkType(rName string, networkType string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		fmt.Sprintf(`
@@ -10501,9 +10987,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10518,6 +11008,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -10538,9 +11029,13 @@ resource "aws_db_instance" "source" {
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name    = aws_db_parameter_group.test.name
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10555,6 +11050,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_differentSetOnBoth(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -10583,9 +11079,13 @@ resource "aws_db_instance" "source" {
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name    = aws_db_parameter_group.source.name
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_parameter_group" "source" {
@@ -10601,6 +11101,7 @@ resource "aws_db_parameter_group" "source" {
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_replicaCopiesValue(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -10621,9 +11122,13 @@ resource "aws_db_instance" "source" {
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name    = aws_db_parameter_group.test.name
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10637,6 +11142,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_setOnReplica(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -10656,9 +11162,13 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10672,16 +11182,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_port(rName string, port int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10695,7 +11212,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_vpcSecurityGroupIDs(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 data "aws_vpc" "default" {
   default = true
 }
@@ -10711,9 +11231,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10728,6 +11252,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_caCertificateID(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 data "aws_rds_certificate" "latest" {
@@ -10740,10 +11265,14 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   ca_cert_identifier      = data.aws_rds_certificate.latest.id
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10758,6 +11287,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_characterSet_Source(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassOracleEnterprise(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -10777,18 +11307,23 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassOracleEnterprise(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -10810,18 +11345,24 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, replicaMode string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -10843,9 +11384,13 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10855,11 +11400,13 @@ resource "aws_db_instance" "test" {
   replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
-`, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName, replicaMode)
+`, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName, replicaMode))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_setup(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -10882,7 +11429,7 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 3
@@ -10893,8 +11440,12 @@ resource "aws_db_instance" "source" {
     update = "120m"
   }
   ca_cert_identifier = "rds-ca-rsa2048-g1"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName)
+`, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_parameterGroupTwoStep(rName string) string {
@@ -10934,7 +11485,9 @@ parameter {
 }
 `
 	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   provider = "aws"
 
@@ -10966,11 +11519,15 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 3
   parameter_group_name    = aws_db_parameter_group.source.name
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_parameter_group" "source" {
@@ -11006,6 +11563,7 @@ parameter {
 }
 `
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -11039,11 +11597,15 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 3
   parameter_group_name    = aws_db_parameter_group.source.name
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_parameter_group" "source" {
@@ -11059,8 +11621,10 @@ resource "aws_db_parameter_group" "source" {
 
 func testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccInstanceConfig_orderableClassOracleEnterprise(), fmt.Sprintf(`
+		testAccInstanceConfig_orderableClassOracleEnterprise(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   provider = "aws"
 
@@ -11082,12 +11646,16 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
@@ -11125,6 +11693,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 func testAccInstanceConfig_snapshotID(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -11132,9 +11701,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11153,6 +11726,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_snapshotID_ManageMasterPasswordKMSKey(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -11186,9 +11760,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11209,6 +11787,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -11216,9 +11795,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11237,6 +11820,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -11244,9 +11828,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11264,6 +11852,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_associationRemoved(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -11271,9 +11860,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11290,15 +11883,22 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_allocatedStorage(rName string, allocatedStorage int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11317,7 +11917,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_ioStorage(rName string, sType string, iops int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                = %[1]q
   engine_latest_version = true
@@ -11332,9 +11934,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[3]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11351,11 +11957,13 @@ resource "aws_db_instance" "test" {
   iops                = %[5]d
   storage_type        = data.aws_rds_orderable_db_instance.test.storage_type
 }
-`, tfrds.InstanceEngineMariaDB, mainInstanceClasses, rName, sType, iops)
+`, tfrds.InstanceEngineMariaDB, mainInstanceClasses, rName, sType, iops))
 }
 
 func testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine                  = %[1]q
   latest                  = true
@@ -11381,9 +11989,13 @@ resource "aws_db_instance" "source" {
   engine_version      = data.aws_rds_orderable_db_instance.postgres13.engine_version
   identifier          = "%[3]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.postgres13.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11409,19 +12021,26 @@ resource "aws_db_instance" "test" {
   snapshot_identifier         = aws_db_snapshot.test.id
   skip_final_snapshot         = true
 }
-`, tfrds.InstanceEnginePostgres, mainInstanceClasses, rName, allowMajorVersionUpgrade)
+`, tfrds.InstanceEnginePostgres, mainInstanceClasses, rName, allowMajorVersionUpgrade))
 }
 
 func testAccInstanceConfig_SnapshotID_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11441,6 +12060,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_availabilityZone(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -11449,9 +12069,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11470,15 +12094,22 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_backupRetentionPeriod(rName string, backupRetentionPeriod int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11497,16 +12128,23 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_BackupRetentionPeriod_unset(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 10
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11527,15 +12165,22 @@ resource "aws_db_instance" "test" {
 // We provide maintenance_window to prevent the following error from a randomly selected window:
 // InvalidParameterValue: The backup window and maintenance window must not overlap.
 func testAccInstanceConfig_SnapshotID_backupWindow(rName, backupWindow, maintenanceWindow string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11556,6 +12201,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_dbSubnetGroupName(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -11564,9 +12210,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11586,6 +12236,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_DBSubnetGroupName_ramShared(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -11665,9 +12316,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11688,6 +12343,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_DBSubnetGroupName_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -11705,9 +12361,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11727,15 +12387,22 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_deletionProtection(rName string, deletionProtection bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11754,15 +12421,22 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_iamDatabaseAuthenticationEnabled(rName string, iamDatabaseAuthenticationEnabled bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11783,15 +12457,22 @@ resource "aws_db_instance" "test" {
 // We provide backup_window to prevent the following error from a randomly selected window:
 // InvalidParameterValue: The backup window and maintenance window must not overlap.
 func testAccInstanceConfig_SnapshotID_maintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11811,15 +12492,22 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_maxAllocatedStorage(rName string, maxAllocatedStorage int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11839,7 +12527,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_monitoring(rName string, monitoringInterval int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -11872,9 +12563,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11894,15 +12589,22 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_multiAZ(rName string, multiAz bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11922,6 +12624,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_MultiAZ_sqlServer(rName string, multiAz bool) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassSQLServerSe(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -11930,9 +12633,13 @@ resource "aws_db_instance" "source" {
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11954,6 +12661,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_parameterGroupName(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
@@ -11972,9 +12680,13 @@ resource "aws_db_instance" "source" {
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11994,6 +12706,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_port(rName string, port int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -12001,9 +12714,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12023,6 +12740,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_tags(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -12030,12 +12748,16 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
 
   tags = {
     key1 = "value-old"
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
@@ -12059,6 +12781,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_tagsRemove(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -12066,12 +12789,16 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
 
   tags = {
     key1 = "value1"
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
@@ -12092,7 +12819,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_vpcSecurityGroupIDs(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 data "aws_vpc" "default" {
   default = true
 }
@@ -12107,9 +12837,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12128,7 +12862,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotID_VPCSecurityGroupIDs_tags(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 data "aws_vpc" "default" {
   default = true
 }
@@ -12143,9 +12880,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12168,7 +12909,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_performanceInsightsDisabled(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12190,15 +12933,21 @@ resource "aws_db_instance" "test" {
   identifier              = %[3]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "mydb"
-  password                = "mustbeeightcharaters"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   username                = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_performanceInsightsEnabled(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12220,17 +12969,23 @@ resource "aws_db_instance" "test" {
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                               = "mydb"
-  password                              = "mustbeeightcharaters"
+  password                              = data.aws_secretsmanager_random_password.test.random_password
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
   skip_final_snapshot                   = true
   username                              = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_performanceInsightsKMSKeyIdDisabled(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -12256,15 +13011,21 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = %[3]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "mustbeeightcharaters"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot     = true
   username                = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_performanceInsightsKMSKeyID(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -12290,18 +13051,24 @@ resource "aws_db_instance" "test" {
   engine_version                        = data.aws_rds_engine_version.default.version
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
-  password                              = "mustbeeightcharaters"
+  password                              = data.aws_secretsmanager_random_password.test.random_password
   performance_insights_enabled          = true
   performance_insights_kms_key_id       = aws_kms_key.test.arn
   performance_insights_retention_period = 7
   skip_final_snapshot                   = true
   username                              = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_performanceInsightsRetentionPeriod(rName string, performanceInsightsRetentionPeriod int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12323,17 +13090,23 @@ resource "aws_db_instance" "test" {
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                               = "mydb"
-  password                              = "mustbeeightcharaters"
+  password                              = data.aws_secretsmanager_random_password.test.random_password
   performance_insights_enabled          = true
   performance_insights_retention_period = %[4]d
   skip_final_snapshot                   = true
   username                              = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, performanceInsightsRetentionPeriod)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, performanceInsightsRetentionPeriod))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_performanceInsightsEnabled(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -12379,9 +13152,13 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = "%[3]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "mustbeeightcharaters"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -12393,11 +13170,13 @@ resource "aws_db_instance" "test" {
   replicate_source_db                   = aws_db_instance.source.identifier
   skip_final_snapshot                   = true
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_SnapshotID_performanceInsightsEnabled(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -12442,9 +13221,13 @@ resource "aws_db_instance" "source" {
   engine_version      = data.aws_rds_engine_version.default.version
   identifier          = "%[3]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12461,11 +13244,13 @@ resource "aws_db_instance" "test" {
   snapshot_identifier                   = aws_db_snapshot.test.id
   skip_final_snapshot                   = true
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriod string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12487,25 +13272,32 @@ resource "aws_db_instance" "test" {
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                               = "mydb"
-  password                              = "mustbeeightcharaters"
+  password                              = data.aws_secretsmanager_random_password.test.random_password
   database_insights_mode                = %[4]q
   performance_insights_enabled          = %[5]t
   performance_insights_retention_period = %[6]s
   skip_final_snapshot                   = true
   username                              = "foo"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
 }
 
 func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   # Dedicated log volumes do not support PG 16 instances.
   engine              = "postgres"
   engine_version      = "15.6"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
   apply_immediately   = true
@@ -12516,23 +13308,34 @@ resource "aws_db_instance" "test" {
   iops              = 1000
 
   dedicated_log_volume = %[2]t
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, enabled))
 }
 
 func testAccInstanceConfig_noDeleteAutomatedBackups(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
 
   backup_retention_period  = 1
   delete_automated_backups = false
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
@@ -12588,6 +13391,7 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 
 func testAccInstanceConfig_Outpost_coIPEnabled(rName string, coipEnabled bool, backupRetentionPeriod int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseOutpost(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -12600,11 +13404,15 @@ resource "aws_db_instance" "test" {
   db_name                   = "test"
   parameter_group_name      = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot       = true
-  password                  = "avoid-plaintext-passwords"
+  password                  = data.aws_secretsmanager_random_password.test.random_password
   username                  = "tfacctest"
   db_subnet_group_name      = aws_db_subnet_group.test.name
   storage_encrypted         = true
   customer_owned_ip_enabled = %[2]t
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, coipEnabled, backupRetentionPeriod))
 }
@@ -12649,6 +13457,7 @@ resource "aws_db_instance" "restore" {
 
 func testAccInstanceConfig_Outposts_backupTarget(rName string, backupTarget string, backupRetentionPeriod int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseOutpost(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -12661,17 +13470,22 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.test.name
   storage_encrypted       = true
   backup_target           = %[2]q
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, backupTarget, backupRetentionPeriod))
 }
 
 func testAccInstanceConfig_license(rName, license string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClass(tfrds.InstanceEngineOracleStandard2, license, "standard"),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -12681,15 +13495,20 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_customIAMInstanceProfile(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassCustomSQLServerWeb(),
 		fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
@@ -12706,18 +13525,23 @@ resource "aws_db_instance" "test" {
   identifier                  = %[1]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   kms_key_id                  = aws_cloudformation_stack.test.outputs["RDSCustomSQLServerKMSKey"]
-  password                    = "avoid-plaintext-passwords"
+  password                    = data.aws_secretsmanager_random_password.test.random_password
   username                    = "tfacctest"
   skip_final_snapshot         = true
   storage_encrypted           = true
   vpc_security_group_ids      = [aws_cloudformation_stack.test.outputs["RDSCustomSecurityGroup"]]
   db_subnet_group_name        = aws_cloudformation_stack.test.outputs["DBSubnetGroup"]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName string, update bool) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
@@ -12729,11 +13553,15 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${local.engine_version.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
@@ -12773,7 +13601,9 @@ func testAccInstanceConfig_BlueGreenDeployment_pre(rName string, oddClasses bool
 	}
 	halfMainInstClass := strings.Join(halfClasses, ", ")
 
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12797,19 +13627,24 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -12822,11 +13657,15 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = aws_db_parameter_group.test.name
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 
@@ -12844,6 +13683,7 @@ resource "aws_db_parameter_group" "test" {
 
 func testAccInstanceConfig_BlueGreenDeployment_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -12856,7 +13696,7 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   tags = {
@@ -12866,12 +13706,17 @@ resource "aws_db_instance" "test" {
   blue_green_update {
     enabled = true
   }
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, tagKey1, tagValue1))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 data "aws_db_parameter_group" "test" {
@@ -12888,11 +13733,15 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 `, rName))
@@ -12909,7 +13758,9 @@ func testAccInstanceConfig_BlueGreenDeployment_updateableInstanceClass(rName str
 	}
 	halfMainInstClass := strings.Join(halfClasses, ", ")
 
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12937,14 +13788,18 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = data.aws_db_parameter_group.test.name
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
   }
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {
@@ -12960,7 +13815,9 @@ func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {
 	}
 	oddClasses := strings.Join(o, ", ")
 
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -12989,9 +13846,13 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[6]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -13001,7 +13862,7 @@ resource "aws_db_instance" "test" {
   replicate_source_db     = aws_db_instance.source.identifier
   skip_final_snapshot     = true
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_promote(rName string) string {
@@ -13017,7 +13878,9 @@ func testAccInstanceConfig_BlueGreenDeployment_promote(rName string) string {
 	}
 	oddClasses := strings.Join(o, ", ")
 
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -13046,9 +13909,13 @@ resource "aws_db_instance" "source" {
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
   skip_final_snapshot     = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -13060,7 +13927,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName string, deletionProtection bool, oddClasses bool) string {
@@ -13074,7 +13941,9 @@ func testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName string, 
 	}
 	halfMainInstClass := strings.Join(halfClasses, ", ")
 
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -13098,7 +13967,7 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
 
   blue_green_update {
@@ -13106,8 +13975,12 @@ resource "aws_db_instance" "test" {
   }
 
   deletion_protection = %[6]t
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, deletionProtection)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, deletionProtection))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_password(rName, password string) string {
@@ -13136,6 +14009,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_engineVersion(rName string, update bool) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
@@ -13147,8 +14021,12 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${local.engine_version.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = "avoid-plaintext-passwords"
+  password                = data.aws_secretsmanager_random_password.test.random_password
   username                = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -13178,6 +14056,7 @@ locals {
 
 func testAccInstanceConfig_Storage_gp3(rName string, orderableClassConfig func() string, allocatedStorage int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		orderableClassConfig(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -13186,7 +14065,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = data.aws_rds_engine_version.default.engine == "%[2]s" ? null : "test" # using %[2]q breaks linter
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -13195,12 +14074,17 @@ resource "aws_db_instance" "test" {
 
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = %[3]d
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, tfrds.InstanceEngineSQLServerExpress, allocatedStorage))
 }
 
 func testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName string, iops, throughput int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQLGP3(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -13209,7 +14093,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -13221,12 +14105,18 @@ resource "aws_db_instance" "test" {
 
   iops               = %[2]d
   storage_throughput = %[3]d
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 `, rName, iops, throughput))
 }
 
 func testAccInstanceConfig_Storage_throughputSSE(rName string, iops, throughput int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -13250,17 +14140,23 @@ resource "aws_db_instance" "test" {
   iops                 = %[4]d
   license_model        = data.aws_rds_orderable_db_instance.test.license_model
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   skip_final_snapshot  = true
   storage_throughput   = %[5]d
   storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
   username             = "tfacctest"
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEngineSQLServerStandard, mainInstanceClasses, rName, iops, throughput)
+`, tfrds.InstanceEngineSQLServerStandard, mainInstanceClasses, rName, iops, throughput))
 }
 
 func testAccInstanceConfig_Storage_postgres(rName string, storageType string, allocatedStorage int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
@@ -13279,7 +14175,7 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = "avoid-plaintext-passwords"
+  password             = data.aws_secretsmanager_random_password.test.random_password
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -13288,6 +14184,10 @@ resource "aws_db_instance" "test" {
 
   storage_type      = %[2]q
   allocated_storage = %[5]d
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
-`, tfrds.InstanceEnginePostgres, storageType, mainInstanceClasses, rName, allocatedStorage)
+`, tfrds.InstanceEnginePostgres, storageType, mainInstanceClasses, rName, allocatedStorage))
 }
