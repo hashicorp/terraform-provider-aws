@@ -46,37 +46,74 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_domain": {
+			attrVerifiedAccessEndpoint_ApplicationDomain: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
-			"attachment_type": {
+			attrVerifiedAccessEndpoint_AttachmentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(verifiedAccessAttachmentType_Values(), false),
 			},
+			names.AttrCidrOptions: {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						attrVerifiedAccessEndpoint_CidrOptions_Cidr: {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Required:     true,
+							ValidateFunc: validation.IsCIDR,
+						},
+						attrVerifiedAccessEndpoint_PortRange: { // debe estar en singular aquí también
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									attrVerifiedAccessEndpoint_PortRange_FromPort: {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+									attrVerifiedAccessEndpoint_PortRange_ToPort:   {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+								},
+							},
+						},
+						names.AttrProtocol: {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{verifiedAccessEndpointProtocolTCP}, false),
+						},
+						names.AttrSubnetIDs: {
+							Type:     schema.TypeSet,
+							ForceNew: true,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"device_validation_domain": {
+			attrVerifiedAccessEndpoint_DeviceValidationDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_certificate_arn": {
+			attrVerifiedAccessEndpoint_DomainCertificateArn: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"endpoint_domain_prefix": {
+			attrVerifiedAccessEndpoint_EndpointDomainPrefix: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
-			"endpoint_domain": {
+			attrVerifiedAccessEndpoint_EndpointDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,13 +123,13 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(verifiedAccessEndpointType_Values(), false),
 			},
-			"load_balancer_options": {
+			attrVerifiedAccessEndpoint_LoadBalancerOptions: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"load_balancer_arn": {
+						attrVerifiedAccessEndpoint_LoadBalancerOptions_LoadBalancerArn: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -103,6 +140,16 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
+						attrVerifiedAccessEndpoint_PortRange: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									attrVerifiedAccessEndpoint_PortRange_FromPort: {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+									attrVerifiedAccessEndpoint_PortRange_ToPort:   {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+								},
+							},
+						},
 						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -110,13 +157,14 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
+							ForceNew: true,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-			"network_interface_options": {
+			attrVerifiedAccessEndpoint_NetworkInterfaceOptions: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -132,6 +180,16 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
+						attrVerifiedAccessEndpoint_PortRange: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									attrVerifiedAccessEndpoint_PortRange_FromPort: {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+									attrVerifiedAccessEndpoint_PortRange_ToPort:   {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+								},
+							},
+						},
 						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -140,9 +198,56 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"policy_document": {
+			attrVerifiedAccessEndpoint_PolicyDocument: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			attrVerifiedAccessEndpoint_RdsOptions: {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrPort: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IsPortNumber,
+						},
+						names.AttrProtocol: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{verifiedAccessEndpointProtocolTCP}, false),
+						},
+						attrVerifiedAccessEndpoint_RdsOptions_ClusterArn: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						attrVerifiedAccessEndpoint_RdsOptions_InstanceArn: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						attrVerifiedAccessEndpoint_RdsOptions_ProxyArn: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrEndpoint: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrSubnetIDs: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
@@ -150,14 +255,14 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"sse_specification": {
+			attrVerifiedAccessEndpoint_SseSpecification: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"customer_managed_key_enabled": {
+						attrVerifiedAccessEndpoint_SseSpecification_CustomManagedKeyEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -171,11 +276,11 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"verified_access_group_id": {
+			names.AttrVerifiedAccessGroupID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"verified_access_instance_id": {
+			names.AttrVerifiedAccessInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,38 +293,55 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessEndpointInput{
-		ApplicationDomain:     aws.String(d.Get("application_domain").(string)),
-		AttachmentType:        types.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
+		AttachmentType:        types.VerifiedAccessEndpointAttachmentType(d.Get(attrVerifiedAccessEndpoint_AttachmentType).(string)),
 		ClientToken:           aws.String(id.UniqueId()),
-		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
-		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
 		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessEndpoint),
-		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
+		VerifiedAccessGroupId: aws.String(d.Get(names.AttrVerifiedAccessGroupID).(string)),
+	}
+
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_ApplicationDomain); ok {
+		input.ApplicationDomain = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_DomainCertificateArn); ok {
+		input.DomainCertificateArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_EndpointDomainPrefix); ok {
+		input.EndpointDomainPrefix = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrCidrOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CidrOptions = expandCreateVerifiedAccessEndpointCidrOptions(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_LoadBalancerOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.LoadBalancerOptions = expandCreateVerifiedAccessEndpointLoadBalancerOptions(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_NetworkInterfaceOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("policy_document"); ok {
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_PolicyDocument); ok {
 		input.PolicyDocument = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrRdsOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RdsOptions = expandCreateVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.SseSpecification = expandCreateVerifiedAccessEndpointSseSpecification(v.([]any)[0].(map[string]any))
+	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_SseSpecification); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SseSpecification = expandCreateVerifiedAccessGenericSseSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVerifiedAccessEndpoint(ctx, input)
@@ -253,25 +375,32 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("application_domain", ep.ApplicationDomain)
-	d.Set("attachment_type", ep.AttachmentType)
+	d.Set(attrVerifiedAccessEndpoint_ApplicationDomain, ep.ApplicationDomain)
+	d.Set(attrVerifiedAccessEndpoint_AttachmentType, ep.AttachmentType)
+	if err := d.Set(names.AttrCidrOptions, flattenVerifiedAccessEndpointCidrOptions(ep.CidrOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cidr_options: %s", err)
+	}
+
 	d.Set(names.AttrDescription, ep.Description)
-	d.Set("device_validation_domain", ep.DeviceValidationDomain)
-	d.Set("domain_certificate_arn", ep.DomainCertificateArn)
-	d.Set("endpoint_domain", ep.EndpointDomain)
+	d.Set(attrVerifiedAccessEndpoint_DeviceValidationDomain, ep.DeviceValidationDomain)
+	d.Set(attrVerifiedAccessEndpoint_DomainCertificateArn, ep.DomainCertificateArn)
+	d.Set(attrVerifiedAccessEndpoint_EndpointDomain, ep.EndpointDomain)
 	d.Set(names.AttrEndpointType, ep.EndpointType)
-	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(ep.LoadBalancerOptions)); err != nil {
+	if err := d.Set(attrVerifiedAccessEndpoint_LoadBalancerOptions, flattenVerifiedAccessEndpointLoadBalancerOptions(ep.LoadBalancerOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer_options: %s", err)
 	}
-	if err := d.Set("network_interface_options", flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
+	if err := d.Set(attrVerifiedAccessEndpoint_NetworkInterfaceOptions, flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interface_options: %s", err)
 	}
+	if err := d.Set(names.AttrRdsOptions, flattenVerifiedAccessEndpointRdsOptions(ep.RdsOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rds_options: %s", err)
+	}
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
-	if err := d.Set("sse_specification", flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
+	if err := d.Set(attrVerifiedAccessEndpoint_SseSpecification, flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
 	}
-	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
-	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
+	d.Set(names.AttrVerifiedAccessGroupID, ep.VerifiedAccessGroupId)
+	d.Set(names.AttrVerifiedAccessInstanceID, ep.VerifiedAccessInstanceId)
 
 	output, err := findVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
 
@@ -279,7 +408,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) policy: %s", d.Id(), err)
 	}
 
-	d.Set("policy_document", output.PolicyDocument)
+	d.Set(attrVerifiedAccessEndpoint_PolicyDocument, output.PolicyDocument)
 
 	return diags
 }
@@ -288,7 +417,7 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(attrVerifiedAccessEndpoint_PolicyDocument, names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyVerifiedAccessEndpointInput{
 			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
@@ -298,20 +427,32 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChanges("load_balancer_options") {
-			if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if d.HasChanges(names.AttrCidrOptions) {
+			if v, ok := d.GetOk(names.AttrCidrOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CidrOptions = expandModifyVerifiedAccessEndpointCidrOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChanges(attrVerifiedAccessEndpoint_LoadBalancerOptions) {
+			if v, ok := d.GetOk(attrVerifiedAccessEndpoint_LoadBalancerOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.LoadBalancerOptions = expandModifyVerifiedAccessEndpointLoadBalancerOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
-		if d.HasChanges("network_interface_options") {
-			if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if d.HasChanges(attrVerifiedAccessEndpoint_NetworkInterfaceOptions) {
+			if v, ok := d.GetOk(attrVerifiedAccessEndpoint_NetworkInterfaceOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
-		if d.HasChanges("verified_access_group_id") {
-			input.VerifiedAccessGroupId = aws.String(d.Get("verified_access_group_id").(string))
+		if d.HasChanges(names.AttrRdsOptions) {
+			if v, ok := d.GetOk(names.AttrRdsOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.RdsOptions = expandModifyVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChanges(names.AttrVerifiedAccessGroupID) {
+			input.VerifiedAccessGroupId = aws.String(d.Get(names.AttrVerifiedAccessGroupID).(string))
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpoint(ctx, input)
@@ -325,12 +466,12 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	if d.HasChange("policy_document") {
+	if d.HasChange(attrVerifiedAccessEndpoint_PolicyDocument) {
 		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
 
-		if v := d.Get("policy_document").(string); v != "" {
+		if v := d.Get(attrVerifiedAccessEndpoint_PolicyDocument).(string); v != "" {
 			input.PolicyEnabled = aws.Bool(true)
 			input.PolicyDocument = aws.String(v)
 		} else {
@@ -373,6 +514,55 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
+func flattenVerifiedAccessEndpointPortRanges(apiObjects []types.VerifiedAccessEndpointPortRange) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, len(apiObjects))
+	for i, apiObject := range apiObjects {
+		tfmap := map[string]any{}
+
+		if v := apiObject.FromPort; v != nil {
+			tfmap[attrVerifiedAccessEndpoint_PortRange_FromPort] = aws.ToInt32(v)
+		}
+
+		if v := apiObject.ToPort; v != nil {
+			tfmap[attrVerifiedAccessEndpoint_PortRange_ToPort] = aws.ToInt32(v)
+		}
+
+		tfList[i] = tfmap
+	}
+
+	return tfList
+}
+
+func flattenVerifiedAccessEndpointCidrOptions(apiObject *types.VerifiedAccessEndpointCidrOptions) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfmap := map[string]any{}
+
+	if v := apiObject.Cidr; v != nil {
+		tfmap[attrVerifiedAccessEndpoint_CidrOptions_Cidr] = aws.ToString(v)
+	}
+
+	if v := apiObject.Protocol; v != "" {
+		tfmap[names.AttrProtocol] = v
+	}
+
+	if v := apiObject.PortRanges; v != nil {
+		tfmap[attrVerifiedAccessEndpoint_PortRange] = flattenVerifiedAccessEndpointPortRanges(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfmap[names.AttrSubnetIDs] = aws.StringSlice(v)
+	}
+
+	return []any{tfmap}
+}
+
 func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []any {
 	if apiObject == nil {
 		return nil
@@ -381,11 +571,15 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	tfmap := map[string]any{}
 
 	if v := apiObject.LoadBalancerArn; v != nil {
-		tfmap["load_balancer_arn"] = aws.ToString(v)
+		tfmap[attrVerifiedAccessEndpoint_LoadBalancerOptions_LoadBalancerArn] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
 		tfmap[names.AttrPort] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PortRanges; v != nil {
+		tfmap[names.AttrPortRanges] = flattenVerifiedAccessEndpointPortRanges(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {
@@ -414,8 +608,50 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 		tfmap[names.AttrPort] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.PortRanges; v != nil {
+		tfmap[names.AttrPortRanges] = flattenVerifiedAccessEndpointPortRanges(v)
+	}
+
 	if v := apiObject.Protocol; v != "" {
 		tfmap[names.AttrProtocol] = v
+	}
+
+	return []any{tfmap}
+}
+
+func flattenVerifiedAccessEndpointRdsOptions(apiObject *types.VerifiedAccessEndpointRdsOptions) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfmap := map[string]any{}
+
+	if v := apiObject.Port; v != nil {
+		tfmap[names.AttrPort] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Protocol; v != "" {
+		tfmap[names.AttrProtocol] = v
+	}
+
+	if v := apiObject.RdsEndpoint; v != nil {
+		tfmap[names.AttrEndpoint] = v
+	}
+
+	if v := apiObject.RdsDbClusterArn; v != nil {
+		tfmap[attrVerifiedAccessEndpoint_RdsOptions_ClusterArn] = v
+	}
+
+	if v := apiObject.RdsDbInstanceArn; v != nil {
+		tfmap[attrVerifiedAccessEndpoint_RdsOptions_InstanceArn] = v
+	}
+
+	if v := apiObject.RdsDbProxyArn; v != nil {
+		tfmap[attrVerifiedAccessEndpoint_RdsOptions_ProxyArn] = v
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfmap[names.AttrSubnetIDs] = aws.StringSlice(v)
 	}
 
 	return []any{tfmap}
@@ -429,7 +665,7 @@ func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAcces
 	tfmap := map[string]any{}
 
 	if v := apiObject.CustomerManagedKeyEnabled; v != nil {
-		tfmap["customer_managed_key_enabled"] = aws.ToBool(v)
+		tfmap[attrVerifiedAccessEndpoint_SseSpecification_CustomManagedKeyEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
@@ -439,6 +675,117 @@ func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAcces
 	return []any{tfmap}
 }
 
+func expandCreateVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointCidrOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiobject := &types.CreateVerifiedAccessEndpointCidrOptions{}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_CidrOptions_Cidr].(string); ok && v != "" {
+		apiobject.Cidr = aws.String(v)
+	}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_PortRange].(*schema.Set); ok && v.Len() > 0 {
+		apiobject.PortRanges = expandCreateVerifiedAccessPortRanges(v.List())
+	}
+
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiobject.SubnetIds = flex.ExpandStringValueSet(v)
+	}
+
+	return apiobject
+}
+
+func expandCreateVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointRdsOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiobject := &types.CreateVerifiedAccessEndpointRdsOptions{}
+
+	if v, ok := tfMap[names.AttrPort].(int); ok {
+		apiobject.Port = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_RdsOptions_ClusterArn].(string); ok && v != "" {
+		apiobject.RdsDbClusterArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_RdsOptions_InstanceArn].(string); ok && v != "" {
+		apiobject.RdsDbInstanceArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_RdsOptions_ProxyArn].(string); ok && v != "" {
+		apiobject.RdsDbProxyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrEndpoint].(string); ok && v != "" {
+		apiobject.RdsEndpoint = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiobject.SubnetIds = flex.ExpandStringValueSet(v)
+	}
+
+	return apiobject
+}
+
+func expandVerifiedAccessPortRanges(tfList []any) []types.VerifiedAccessEndpointPortRange {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	portRanges := make([]types.VerifiedAccessEndpointPortRange, len(tfList))
+	for i, tfElem := range tfList {
+		tfMap := tfElem.(map[string]any)
+		portRanges[i] = types.VerifiedAccessEndpointPortRange{
+			FromPort: aws.Int32(int32(tfMap[attrVerifiedAccessEndpoint_PortRange_FromPort].(int))),
+			ToPort:   aws.Int32(int32(tfMap[attrVerifiedAccessEndpoint_PortRange_ToPort].(int))),
+		}
+	}
+	return portRanges
+}
+
+func expandCreateVerifiedAccessPortRanges(tfList []any) []types.CreateVerifiedAccessEndpointPortRange {
+	portRanges := expandVerifiedAccessPortRanges(tfList)
+	if portRanges == nil {
+		return nil
+	}
+
+	newPortRanges := make([]types.CreateVerifiedAccessEndpointPortRange, len(portRanges))
+	for i, portRange := range portRanges {
+		newPortRanges[i] = types.CreateVerifiedAccessEndpointPortRange{
+			FromPort: portRange.FromPort,
+			ToPort:   portRange.ToPort,
+		}
+	}
+	return newPortRanges
+}
+
+func expandModifyVerifiedAccessPortRanges(tfList []any) []types.ModifyVerifiedAccessEndpointPortRange {
+	portRanges := expandVerifiedAccessPortRanges(tfList)
+	if portRanges == nil {
+		return nil
+	}
+
+	newPortRanges := make([]types.ModifyVerifiedAccessEndpointPortRange, len(portRanges))
+	for i, portRange := range portRanges {
+		newPortRanges[i] = types.ModifyVerifiedAccessEndpointPortRange{
+			FromPort: portRange.FromPort,
+			ToPort:   portRange.ToPort,
+		}
+	}
+	return newPortRanges
+}
+
 func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointLoadBalancerOptions {
 	if tfMap == nil {
 		return nil
@@ -446,12 +793,16 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 
 	apiobject := &types.CreateVerifiedAccessEndpointLoadBalancerOptions{}
 
-	if v, ok := tfMap["load_balancer_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_LoadBalancerOptions_LoadBalancerArn].(string); ok && v != "" {
 		apiobject.LoadBalancerArn = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrPort].(int); ok {
 		apiobject.Port = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_PortRange].(*schema.Set); ok && v.Len() > 0 {
+		apiobject.PortRanges = expandCreateVerifiedAccessPortRanges(v.List())
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
@@ -480,10 +831,50 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.C
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_PortRange].(*schema.Set); ok && v.Len() > 0 {
+		apiobject.PortRanges = expandCreateVerifiedAccessPortRanges(v.List())
+	}
+
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiobject
+}
+
+func expandModifyVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointCidrOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ModifyVerifiedAccessEndpointCidrOptions{}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_PortRange].(*schema.Set); ok {
+		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.List())
+	}
+
+	return apiObject
+}
+
+func expandModifyVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointRdsOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ModifyVerifiedAccessEndpointRdsOptions{}
+
+	if v, ok := tfMap[names.AttrPort].(int); ok {
+		apiObject.Port = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrEndpoint]; ok {
+		apiObject.RdsEndpoint = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
+	}
+
+	return apiObject
 }
 
 func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointLoadBalancerOptions {
@@ -499,6 +890,10 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_PortRange].(*schema.Set); ok {
+		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.List())
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -519,20 +914,24 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.M
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_PortRange].(*schema.Set); ok {
+		apiObject.PortRanges = expandModifyVerifiedAccessPortRanges(v.List())
+	}
+
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiObject
 }
 
-func expandCreateVerifiedAccessEndpointSseSpecification(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
+func expandCreateVerifiedAccessGenericSseSpecification(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.VerifiedAccessSseSpecificationRequest{}
 
-	if v, ok := tfMap["customer_managed_key_enabled"].(bool); ok {
+	if v, ok := tfMap[attrVerifiedAccessEndpoint_SseSpecification_CustomManagedKeyEnabled].(bool); ok {
 		apiObject.CustomerManagedKeyEnabled = aws.Bool(v)
 	}
 

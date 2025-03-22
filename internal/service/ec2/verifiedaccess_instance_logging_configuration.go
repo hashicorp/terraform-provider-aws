@@ -38,7 +38,7 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"access_logs": {
+			attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -55,26 +55,26 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"log_group": {
+									attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_CloudWatchLogs_LogGroup: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						"include_trust_context": {
+						attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_IncludeTrustContext: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"kinesis_data_firehose": {
+						attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose: {
 							Type:             schema.TypeList,
 							Optional:         true,
 							MaxItems:         1,
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delivery_stream": {
+									attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose_DeliveryStream: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -85,12 +85,12 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"log_version": {
+						attrVerifiedAccessInstanceLoggingConfiguration_LogVersion: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"s3": {
+						attrVerifiedAccessInstanceLoggingConfiguration_S3: {
 							Type:             schema.TypeList,
 							Optional:         true,
 							MaxItems:         1,
@@ -101,7 +101,7 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"bucket_owner": {
+									attrVerifiedAccessInstanceLoggingConfiguration_S3_BucketOwner: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true, // Describe API returns this value if not set
@@ -121,7 +121,7 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"verifiedaccess_instance_id": {
+			attrVerifiedAccessInstanceId: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -134,7 +134,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Contex
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vaiID := d.Get("verifiedaccess_instance_id").(string)
+	vaiID := d.Get(attrVerifiedAccessInstanceId).(string)
 
 	uuid, err := uuid.GenerateUUID()
 	if err != nil {
@@ -142,7 +142,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Contex
 	}
 
 	input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
-		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
+		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get(attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs).([]any)),
 		ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 		VerifiedAccessInstanceId: aws.String(vaiID),
 	}
@@ -176,14 +176,14 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	}
 
 	if v := output.AccessLogs; v != nil {
-		if err := d.Set("access_logs", flattenVerifiedAccessInstanceAccessLogs(v)); err != nil {
+		if err := d.Set(attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs, flattenVerifiedAccessInstanceAccessLogs(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting verified access instance access logs: %s", err)
 		}
 	} else {
-		d.Set("access_logs", nil)
+		d.Set(attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs, nil)
 	}
 
-	d.Set("verifiedaccess_instance_id", vaiID)
+	d.Set(attrVerifiedAccessInstanceId, vaiID)
 
 	return diags
 }
@@ -194,14 +194,14 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 
 	vaiID := d.Id()
 
-	if d.HasChange("access_logs") {
+	if d.HasChange(attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs) {
 		uuid, err := uuid.GenerateUUID()
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
 		}
 
 		input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
-			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
+			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get(attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs).([]any)),
 			ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 			VerifiedAccessInstanceId: aws.String(vaiID),
 		}
@@ -281,19 +281,19 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *types.VerifiedAcc
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
-	if v, ok := tfMap["include_trust_context"].(bool); ok {
+	if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_IncludeTrustContext].(bool); ok {
 		result.IncludeTrustContext = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["kinesis_data_firehose"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose].([]any); ok && len(v) > 0 {
 		result.KinesisDataFirehose = expandVerifiedAccessLogKinesisDataFirehose(v)
 	}
 
-	if v, ok := tfMap["log_version"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_LogVersion].(string); ok && v != "" {
 		result.LogVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_S3].([]any); ok && len(v) > 0 {
 		result.S3 = expandVerifiedAccessLogS3(v)
 	}
 
@@ -314,7 +314,7 @@ func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []any) *types.Verified
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_CloudWatchLogs_LogGroup].(string); ok && v != "" {
 		result.LogGroup = aws.String(v)
 	}
 
@@ -335,7 +335,7 @@ func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []any) *type
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose_DeliveryStream].(string); ok && v != "" {
 		result.DeliveryStream = aws.String(v)
 	}
 
@@ -363,7 +363,7 @@ func expandVerifiedAccessLogS3(s3 []any) *types.VerifiedAccessLogS3DestinationOp
 	// if enabled is true, pass bucket owner, otherwise don't pass it
 	// api error InvalidParameterCombination: The parameter AccessLogs.S3.BucketOwner cannot be used when AccessLogs.S3.Enabled is false
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok && v {
-		if v, ok := tfMap["bucket_owner"].(string); ok && v != "" {
+		if v, ok := tfMap[attrVerifiedAccessInstanceLoggingConfiguration_S3_BucketOwner].(string); ok && v != "" {
 			result.BucketOwner = aws.String(v)
 		}
 	}
@@ -383,19 +383,19 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {
-		tfMap["include_trust_context"] = aws.ToBool(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_IncludeTrustContext] = aws.ToBool(v)
 	}
 
 	if v := apiObject.KinesisDataFirehose; v != nil {
-		tfMap["kinesis_data_firehose"] = flattenVerifiedAccessLogKinesisDataFirehose(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose] = flattenVerifiedAccessLogKinesisDataFirehose(v)
 	}
 
 	if v := apiObject.LogVersion; v != nil {
-		tfMap["log_version"] = aws.ToString(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_LogVersion] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3; v != nil {
-		tfMap["s3"] = flattenVerifiedAccessLogS3(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_S3] = flattenVerifiedAccessLogS3(v)
 	}
 
 	return []any{tfMap}
@@ -407,7 +407,7 @@ func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCl
 	}
 
 	if v := apiObject.LogGroup; v != nil {
-		tfMap["log_group"] = aws.ToString(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_CloudWatchLogs_LogGroup] = aws.ToString(v)
 	}
 
 	return []any{tfMap}
@@ -419,7 +419,7 @@ func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccess
 	}
 
 	if v := apiObject.DeliveryStream; v != nil {
-		tfMap["delivery_stream"] = aws.ToString(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_AccessLogs_KinesisDataFirehose_DeliveryStream] = aws.ToString(v)
 	}
 
 	return []any{tfMap}
@@ -435,7 +435,7 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 	}
 
 	if v := apiObject.BucketOwner; v != nil {
-		tfMap["bucket_owner"] = aws.ToString(v)
+		tfMap[attrVerifiedAccessInstanceLoggingConfiguration_S3_BucketOwner] = aws.ToString(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
