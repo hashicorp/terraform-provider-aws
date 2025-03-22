@@ -152,7 +152,7 @@ func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting AppStream Directory Config: %s", d.Id())
 	input := appstream.DeleteDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
 	}

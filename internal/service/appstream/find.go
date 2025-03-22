@@ -6,7 +6,6 @@ package appstream
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
@@ -135,46 +134,6 @@ func findUser(ctx context.Context, conn *appstream.Client, input *appstream.Desc
 	}
 
 	return tfresource.AssertSingleValueResult(output)
-}
-
-// FindFleetStackAssociation Validates that a fleet has the named associated stack
-func FindFleetStackAssociation(ctx context.Context, conn *appstream.Client, fleetName, stackName string) error {
-	input := &appstream.ListAssociatedStacksInput{
-		FleetName: aws.String(fleetName),
-	}
-
-	found := false
-	err := listAssociatedStacksPages(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		if slices.Contains(page.Names, stackName) {
-			found = true
-			return false
-		}
-
-		return !lastPage
-	})
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return err
-	}
-
-	if !found {
-		return &retry.NotFoundError{
-			Message:     fmt.Sprintf("No stack %q associated with fleet %q", stackName, fleetName),
-			LastRequest: input,
-		}
-	}
-
-	return nil
 }
 
 // findImages finds all images from a describe images input

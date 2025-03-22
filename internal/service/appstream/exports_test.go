@@ -5,7 +5,9 @@ package appstream
 
 // Exports for use in tests only.
 var (
-	ResourceDirectoryConfig = resourceDirectoryConfig
+	ResourceDirectoryConfig       = resourceDirectoryConfig
+	ResourceFleetStackAssociation = resourceFleetStackAssociation
 
-	FindDirectoryConfigByID = findDirectoryConfigByID
+	FindDirectoryConfigByID               = findDirectoryConfigByID
+	FindFleetStackAssociationByTwoPartKey = findFleetStackAssociationByTwoPartKey
 )
