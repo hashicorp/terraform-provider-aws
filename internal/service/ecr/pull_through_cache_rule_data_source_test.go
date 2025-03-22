@@ -33,6 +33,27 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccECRPullThroughCacheRuleDataSource_repositoryNoPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPullThroughCacheRuleDataSourceConfig_repositoryNoPrefix(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
+					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test/" + sdkacctest.RandString(22)
@@ -81,6 +102,19 @@ func testAccPullThroughCacheRuleDataSourceConfig_basic() string {
 	return `
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = "ecr-public"
+  upstream_registry_url = "public.ecr.aws"
+}
+
+data "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix = aws_ecr_pull_through_cache_rule.test.ecr_repository_prefix
+}
+`
+}
+
+func testAccPullThroughCacheRuleDataSourceConfig_repositoryNoPrefix() string {
+	return `
+resource "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix = "ROOT"
   upstream_registry_url = "public.ecr.aws"
 }
 

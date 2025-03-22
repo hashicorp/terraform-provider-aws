@@ -32,7 +32,7 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 30),
 					validation.StringMatch(
-						regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`),
+						regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT`),
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
 				),
 			},
