@@ -137,7 +137,6 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 					Blocks: map[string]schema.Block{
 						"connections": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionModel](ctx),
-							Validators: []validator.List{},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"name": schema.StringAttribute{
@@ -204,6 +203,267 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 						},
 						"nodes": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"name": schema.StringAttribute{
+										Required: true,
+									},
+									"type": schema.StringAttribute{
+										// CustomType: fwtypes.StringEnumType[awstypes.FlowNodeType](),
+										// TODO: could this be computed by us instead?
+										Required: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"agent": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberAgentModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("agent"),
+															path.MatchRelative().AtParent().AtName("collector"),
+															path.MatchRelative().AtParent().AtName("condition"),
+															path.MatchRelative().AtParent().AtName("input"),
+															path.MatchRelative().AtParent().AtName("iterator"),
+															path.MatchRelative().AtParent().AtName("knowledge_base"),
+															path.MatchRelative().AtParent().AtName("lambda_function"),
+															path.MatchRelative().AtParent().AtName("lex"),
+															path.MatchRelative().AtParent().AtName("output"),
+															path.MatchRelative().AtParent().AtName("prompt"),
+															path.MatchRelative().AtParent().AtName("retrieval"),
+															path.MatchRelative().AtParent().AtName("storage"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"agent_alias_arn": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+												"collector": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberCollectorModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+												},
+												"condition": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberConditionModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"conditions": schema.ListAttribute{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[flowConditionModel](ctx),
+																Required:   true,
+															},
+														},
+													},
+												},
+												"input": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberInputModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+												},
+												"iterator": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberIteratorModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+												},
+												"knowledge_base": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberKnowledgeBaseModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"knowledge_base_id": schema.StringAttribute{
+																Required: true,
+															},
+															"model_id": schema.StringAttribute{
+																Required: true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"guardrail_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"guardrail_identifier": schema.StringAttribute{
+																			Required: true,
+																		},
+																		"guardrail_version": schema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"lambda_function": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberLambdaFunctionModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"lambda_arn": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+												"lex": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberLexModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"bot_alias_arn": schema.StringAttribute{
+																Required: true,
+															},
+															"locale_id": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+												"output": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberOutputModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+												},
+												"prompt": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberPromptModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													// TODO
+												},
+												"retrieval": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberRetrievalModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"service_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[retrievalFlowNodeServiceConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"s3": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[retrievalFlowNodeServiceConfigurationMemberS3Model](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																				listvalidator.ExactlyOneOf(
+																					path.MatchRelative().AtParent().AtName("s3"),
+																				),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"bucket_name": schema.StringAttribute{
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"storage": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberStorageModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"service_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[storageFlowNodeServiceConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"s3": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[storageFlowNodeServiceConfigurationMemberS3Model](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																				listvalidator.ExactlyOneOf(
+																					path.MatchRelative().AtParent().AtName("s3"),
+																				),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"bucket_name": schema.StringAttribute{
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"inputs": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeInputModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"expression": schema.StringAttribute{
+													Required: true,
+												},
+												"name": schema.StringAttribute{
+													Required: true,
+												},
+												"type": schema.StringAttribute{
+													// CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
+													Required: true,
+												},
+											},
+										},
+									},
+									"outputs": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeOutputModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"name": schema.StringAttribute{
+													Required: true,
+												},
+												"type": schema.StringAttribute{
+													// CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
+													Required: true,
+												},
+											},
+										}},
+								},
+							},
 						},
 					},
 				},
@@ -216,63 +476,6 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 }
-
-// func (r *resourceFlow) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-// 	return []resource.ConfigValidator{
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("connections").AtAnyListIndex().AtName("configuration").AtName("conditional"),
-// 			path.MatchRoot("definition").AtName("connections").AtAnyListIndex().AtName("configuration").AtName("data"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("agent"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("collector"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("condition"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("input"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("iterator"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("knowledge_base"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("lambda_function"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("lex"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("output"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("storage"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("resource"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("text"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("cache_point"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("messages").AtAnyListIndex().AtName("content").AtAnyListIndex().AtName("text"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("cache_point"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("system").AtAnyListIndex().AtName("text"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("cache_point"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tools").AtAnyListIndex().AtName("tool_spec").AtName("input_schema").AtName("json"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("any"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("auto"),
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("prompt").AtName("source_configuration").AtName("inline").AtName("template_configuration").AtName("chat").AtName("tool_configuration").AtName("tool_choice").AtName("tool"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("retrieval").AtName("service_configuration").AtName("s3"),
-// 		),
-// 		resourcevalidator.ExactlyOneOf(
-// 			path.MatchRoot("definition").AtName("nodes").AtAnyListIndex().AtName("configuration").AtName("storage").AtName("service_configuration").AtName("s3"),
-// 		),
-// 	}
-// }
 
 func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// TIP: -- 1. Get a client connection to the relevant service
@@ -700,27 +903,27 @@ func (m flowConnectionConfigurationModel) Expand(ctx context.Context) (result an
 }
 
 type flowNodeModel struct {
-	Name          types.String                                         `tfsdk:"name"`
-	Type          fwtypes.StringEnum[awstypes.FlowNodeType]            `tfsdk:"type"`
-	Configuration fwtypes.ObjectValueOf[flowNodeConfigurationModel]    `tfsdk:"configuration"`
-	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]  `tfsdk:"inputs"`
-	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel] `tfsdk:"outputs"`
+	Name          types.String                                                `tfsdk:"name"`
+	Type          fwtypes.StringEnum[awstypes.FlowNodeType]                   `tfsdk:"type"`
+	Configuration fwtypes.ListNestedObjectValueOf[flowNodeConfigurationModel] `tfsdk:"configuration"`
+	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]         `tfsdk:"inputs"`
+	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel]        `tfsdk:"outputs"`
 }
 
 // Tagged union
 type flowNodeConfigurationModel struct {
-	Agent          fwtypes.ObjectValueOf[flowNodeConfigurationMemberAgentModel]          `tfsdk:"agent"`
-	Collector      fwtypes.ObjectValueOf[flowNodeConfigurationMemberCollectorModel]      `tfsdk:"collector"`
-	Condition      fwtypes.ObjectValueOf[flowNodeConfigurationMemberConditionModel]      `tfsdk:"condition"`
-	Input          fwtypes.ObjectValueOf[flowNodeConfigurationMemberInputModel]          `tfsdk:"input"`
-	Iterator       fwtypes.ObjectValueOf[flowNodeConfigurationMemberIteratorModel]       `tfsdk:"iterator"`
-	KnowledgeBase  fwtypes.ObjectValueOf[flowNodeConfigurationMemberKnowledgeBaseModel]  `tfsdk:"knowledge_base"`
-	LambdaFunction fwtypes.ObjectValueOf[flowNodeConfigurationMemberLambdaFunctionModel] `tfsdk:"lambda_function"`
-	Lex            fwtypes.ObjectValueOf[flowNodeConfigurationMemberLexModel]            `tfsdk:"lex"`
-	Output         fwtypes.ObjectValueOf[flowNodeConfigurationMemberOutputModel]         `tfsdk:"output"`
-	Prompt         fwtypes.ObjectValueOf[flowNodeConfigurationMemberPromptModel]         `tfsdk:"prompt"`
-	Retrieval      fwtypes.ObjectValueOf[flowNodeConfigurationMemberRetrievalModel]      `tfsdk:"retrieval"`
-	Storage        fwtypes.ObjectValueOf[flowNodeConfigurationMemberStorageModel]        `tfsdk:"storage"`
+	Agent          fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberAgentModel]          `tfsdk:"agent"`
+	Collector      fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberCollectorModel]      `tfsdk:"collector"`
+	Condition      fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberConditionModel]      `tfsdk:"condition"`
+	Input          fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberInputModel]          `tfsdk:"input"`
+	Iterator       fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberIteratorModel]       `tfsdk:"iterator"`
+	KnowledgeBase  fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberKnowledgeBaseModel]  `tfsdk:"knowledge_base"`
+	LambdaFunction fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberLambdaFunctionModel] `tfsdk:"lambda_function"`
+	Lex            fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberLexModel]            `tfsdk:"lex"`
+	Output         fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberOutputModel]         `tfsdk:"output"`
+	Prompt         fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberPromptModel]         `tfsdk:"prompt"`
+	Retrieval      fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberRetrievalModel]      `tfsdk:"retrieval"`
+	Storage        fwtypes.ListNestedObjectValueOf[flowNodeConfigurationMemberStorageModel]        `tfsdk:"storage"`
 }
 
 func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -733,7 +936,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Agent = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Agent = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberCollector:
@@ -744,7 +947,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Collector = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Collector = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberCondition:
@@ -755,7 +958,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Condition = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Condition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberInput:
@@ -766,7 +969,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Input = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Input = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberIterator:
@@ -777,7 +980,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Iterator = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Iterator = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberKnowledgeBase:
@@ -788,7 +991,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.KnowledgeBase = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.KnowledgeBase = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberLambdaFunction:
@@ -799,7 +1002,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.LambdaFunction = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.LambdaFunction = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberLex:
@@ -810,7 +1013,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Lex = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Lex = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberOutput:
@@ -821,7 +1024,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Output = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Output = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberPrompt:
@@ -832,7 +1035,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Prompt = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Prompt = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberRetrieval:
@@ -843,7 +1046,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Retrieval = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Retrieval = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberStorage:
@@ -854,7 +1057,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Storage = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Storage = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1063,9 +1266,9 @@ type flowNodeConfigurationMemberIteratorModel struct {
 }
 
 type flowNodeConfigurationMemberKnowledgeBaseModel struct {
-	KnowledgeBaseID        types.String                                       `tfsdk:"knowledge_base_id"`
-	GuardrailConfiguration fwtypes.ObjectValueOf[guardrailConfigurationModel] `tfsdk:"guardrail_configuration"`
-	ModelID                types.String                                       `tfsdk:"model_id"`
+	KnowledgeBaseID        types.String                                                 `tfsdk:"knowledge_base_id"`
+	GuardrailConfiguration fwtypes.ListNestedObjectValueOf[guardrailConfigurationModel] `tfsdk:"guardrail_configuration"`
+	ModelID                types.String                                                 `tfsdk:"model_id"`
 }
 
 type flowNodeConfigurationMemberLambdaFunctionModel struct {
@@ -1711,17 +1914,17 @@ type promptFlowNodeSourceConfigurationMemberResourceModel struct {
 }
 
 type flowNodeConfigurationMemberRetrievalModel struct {
-	ServiceConfiguration fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
+	ServiceConfiguration fwtypes.ListNestedObjectValueOf[retrievalFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
 // Tagged union
 type retrievalFlowNodeServiceConfigurationModel struct {
-	S3 fwtypes.ObjectValueOf[retrievalFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
+	S3 fwtypes.ListNestedObjectValueOf[retrievalFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
 }
 
 func (m *retrievalFlowNodeServiceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
-	case awstypes.FlowNodeConfigurationMemberStorage:
+	case awstypes.RetrievalFlowNodeServiceConfigurationMemberS3:
 		var model retrievalFlowNodeServiceConfigurationMemberS3Model
 		d := flex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
@@ -1729,7 +1932,7 @@ func (m *retrievalFlowNodeServiceConfigurationModel) Flatten(ctx context.Context
 			return diags
 		}
 
-		m.S3 = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1763,17 +1966,17 @@ type retrievalFlowNodeServiceConfigurationMemberS3Model struct {
 }
 
 type flowNodeConfigurationMemberStorageModel struct {
-	ServiceConfiguration fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
+	ServiceConfiguration fwtypes.ListNestedObjectValueOf[storageFlowNodeServiceConfigurationModel] `tfsdk:"service_configuration"`
 }
 
 // Tagged union
 type storageFlowNodeServiceConfigurationModel struct {
-	S3 fwtypes.ObjectValueOf[storageFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
+	S3 fwtypes.ListNestedObjectValueOf[storageFlowNodeServiceConfigurationMemberS3Model] `tfsdk:"s3"`
 }
 
 func (m *storageFlowNodeServiceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
-	case awstypes.FlowNodeConfigurationMemberStorage:
+	case awstypes.StorageFlowNodeServiceConfigurationMemberS3:
 		var model storageFlowNodeServiceConfigurationMemberS3Model
 		d := flex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
@@ -1781,7 +1984,7 @@ func (m *storageFlowNodeServiceConfigurationModel) Flatten(ctx context.Context, 
 			return diags
 		}
 
-		m.S3 = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
