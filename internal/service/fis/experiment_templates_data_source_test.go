@@ -266,20 +266,20 @@ func TestIsSubset(t *testing.T) {
 	}{
 		{
 			name:     "Test 1: Subset is actually a subset of Superset",
-			subset:   map[string]string{"key1": "value1", "key2": "value2"},
-			superset: map[string]string{"key1": "value1", "key2": "value2", "key3": "value3"},
+			subset:   map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
+			superset: map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2, "key3": "value3"},
 			want:     true,
 		},
 		{
 			name:     "Test 2: Subset is not a subset of Superset",
-			subset:   map[string]string{"key1": "value1", "key2": "value2"},
-			superset: map[string]string{"key1": "value1", "key3": "value3"},
+			subset:   map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
+			superset: map[string]string{acctest.CtKey1: acctest.CtValue1, "key3": "value3"},
 			want:     false,
 		},
 		{
 			name:     "Test 3: Subset is equal to Superset",
-			subset:   map[string]string{"key1": "value1", "key2": "value2"},
-			superset: map[string]string{"key1": "value1", "key2": "value2"},
+			subset:   map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
+			superset: map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
 			want:     true,
 		},
 	}

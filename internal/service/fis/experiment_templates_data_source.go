@@ -6,14 +6,15 @@ package fis
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/fis/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_fis_experiment_templates", name="Experiment Templates")
@@ -22,12 +23,12 @@ func DataSourceExperimentTemplates() *schema.Resource {
 		ReadWithoutTimeout: dataSourceExperimentTemplatesRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": {
+			names.AttrTags: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -45,7 +46,7 @@ func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceDa
 
 	var inputTags map[string]string
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk && len(tags.(map[string]any)) > 0 {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk && len(tags.(map[string]any)) > 0 {
 		inputTags = Tags(tftags.New(ctx, tags.(map[string]any)))
 	}
 
@@ -73,11 +74,11 @@ func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceDa
 	var expIds []string
 
 	for _, exp := range output {
-		expIds = append(expIds, aws.StringValue(exp.Id))
+		expIds = append(expIds, aws.ToString(exp.Id))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
-	d.Set("ids", expIds)
+	d.Set(names.AttrIDs, expIds)
 
 	return diags
 }
