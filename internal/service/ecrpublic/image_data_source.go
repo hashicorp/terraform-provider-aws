@@ -69,7 +69,7 @@ func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^\d{12}$`), "Match exactly 12 digits (0-9)"),
+						regexp.MustCompile("[0-9]{12}"), "must satisfy regular expression [0-9]{12}"),
 				},
 			},
 			names.AttrRepositoryName: schema.StringAttribute{
