@@ -6,8 +6,10 @@ package appstream
 // Exports for use in tests only.
 var (
 	ResourceDirectoryConfig       = resourceDirectoryConfig
+	ResourceFleet                 = resourceFleet
 	ResourceFleetStackAssociation = resourceFleetStackAssociation
 
 	FindDirectoryConfigByID               = findDirectoryConfigByID
+	FindFleetByID                         = findFleetByID
 	FindFleetStackAssociationByTwoPartKey = findFleetStackAssociationByTwoPartKey
 )

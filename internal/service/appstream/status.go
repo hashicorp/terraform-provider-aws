@@ -11,23 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// statusFleetState fetches the fleet and its state
-func statusFleetState(ctx context.Context, conn *appstream.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		fleet, err := FindFleetByName(ctx, conn, name)
-
-		if err != nil {
-			return nil, "Unknown", err
-		}
-
-		if fleet == nil {
-			return fleet, "NotFound", nil
-		}
-
-		return fleet, string(fleet.State), nil
-	}
-}
-
 func statusImageBuilderState(ctx context.Context, conn *appstream.Client, name string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := FindImageBuilderByName(ctx, conn, name)

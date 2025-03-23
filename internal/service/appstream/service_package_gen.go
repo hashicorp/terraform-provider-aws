@@ -40,7 +40,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Directory Config",
 		},
 		{
-			Factory:  ResourceFleet,
+			Factory:  resourceFleet,
 			TypeName: "aws_appstream_fleet",
 			Name:     "Fleet",
 			Tags: &types.ServicePackageResourceTags{

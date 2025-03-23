@@ -5,7 +5,6 @@ package appstream
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
@@ -15,30 +14,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// FindFleetByName Retrieve a appstream fleet by name
-func FindFleetByName(ctx context.Context, conn *appstream.Client, name string) (*awstypes.Fleet, error) {
-	input := &appstream.DescribeFleetsInput{
-		Names: []string{name},
-	}
-
-	var fleet awstypes.Fleet
-	resp, err := conn.DescribeFleets(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.Fleets) > 1 {
-		return nil, fmt.Errorf("got more than one fleet with the name %s", name)
-	}
-
-	if len(resp.Fleets) == 1 {
-		fleet = resp.Fleets[0]
-	}
-
-	return &fleet, nil
-}
 
 func FindImageBuilderByName(ctx context.Context, conn *appstream.Client, name string) (*awstypes.ImageBuilder, error) {
 	input := &appstream.DescribeImageBuildersInput{
