@@ -36,7 +36,7 @@ func DataSourceExperimentTemplates() *schema.Resource {
 	}
 }
 
-func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
@@ -45,8 +45,8 @@ func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceDa
 
 	var inputTags map[string]string
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk && len(tags.(map[string]interface{})) > 0 {
-		inputTags = Tags(tftags.New(ctx, tags.(map[string]interface{})))
+	if tags, tagsOk := d.GetOk("tags"); tagsOk && len(tags.(map[string]any)) > 0 {
+		inputTags = Tags(tftags.New(ctx, tags.(map[string]any)))
 	}
 
 	var output []types.ExperimentTemplateSummary
@@ -76,7 +76,7 @@ func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceDa
 		expIds = append(expIds, aws.StringValue(exp.Id))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("ids", expIds)
 
 	return diags
