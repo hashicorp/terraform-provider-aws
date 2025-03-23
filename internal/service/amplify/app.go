@@ -446,6 +446,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 			return sdkdiag.AppendErrorf(diags, "setting cache_config: %s", err)
 		}
 	}
+	d.Set("compute_role_arn", app.ComputeRoleArn)
 	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)

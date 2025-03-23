@@ -325,6 +325,51 @@ func testAccApp_CacheConfig(t *testing.T) {
 	})
 }
 
+func testAccApp_ComputeRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app1, app2, app3 types.App
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_app.test"
+	computeRole1ResourceName := "aws_iam_role.compute_test1"
+	computeRole2ResourceName := "aws_iam_role.compute_test2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_computeRoleARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app1),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_role_arn", computeRole1ResourceName, names.AttrARN)),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppConfig_computeRoleARNUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app2),
+					testAccCheckAppNotRecreated(&app1, &app2),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_role_arn", computeRole2ResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccAppConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app3),
+					testAccCheckAppNotRecreated(&app2, &app3),
+					resource.TestCheckResourceAttr(resourceName, "compute_role_arn", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccApp_CustomRules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app types.App
@@ -778,6 +823,64 @@ resource "aws_amplify_app" "test" {
   }
 }
 `, rName, cacheConfigType)
+}
+
+func testAccAppComputeRoleBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "compute_test1" {
+  name = "%[1]s-compute1"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "amplify.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role" "compute_test2" {
+  name = "%[1]s-compute2"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "amplify.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+`, rName)
+}
+
+func testAccAppConfig_computeRoleARN(rName string) string {
+	return acctest.ConfigCompose(testAccAppComputeRoleBaseConfig(rName), fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  compute_role_arn = aws_iam_role.compute_test1.arn
+}
+`, rName))
+}
+
+func testAccAppConfig_computeRoleARNUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccAppComputeRoleBaseConfig(rName), fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  compute_role_arn = aws_iam_role.compute_test2.arn
+}
+`, rName))
 }
 
 func testAccAppConfig_customRules(rName string) string {
