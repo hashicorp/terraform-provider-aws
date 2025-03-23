@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceExperimentTemplates,
 			TypeName: "aws_fis_experiment_templates",
+			Name:     "Experiment Templates",
 		},
 	}
 }

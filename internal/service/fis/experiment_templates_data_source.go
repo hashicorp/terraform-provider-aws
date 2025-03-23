@@ -16,7 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_fis_experiment_templates")
+// @SDKDataSource("aws_fis_experiment_templates", name="Experiment Templates")
 func DataSourceExperimentTemplates() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExperimentTemplatesRead,
