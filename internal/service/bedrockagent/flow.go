@@ -355,7 +355,356 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													// TODO
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"source_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[promptFlowNodeSourceConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"inline": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[promptFlowNodeSourceConfigurationMemberInlineModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																				listvalidator.ExactlyOneOf(
+																					path.MatchRelative().AtParent().AtName("inline"),
+																					path.MatchRelative().AtParent().AtName("resource"),
+																				),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"model_id": schema.StringAttribute{
+																						Required: true,
+																					},
+																					"template_type": schema.StringAttribute{
+																						// CustomType: fwtypes.StringEnumType[awstypes.PromptTemplateType](),
+																						// TODO: could this be computed by us instead?
+																						Required: true,
+																					},
+																					"additional_model_request_fields": schema.StringAttribute{
+																						Optional: true,
+																					},
+																				},
+																				Blocks: map[string]schema.Block{
+																					"template_configuration": schema.ListNestedBlock{
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[templateConfigurationModel](ctx),
+																						Validators: []validator.List{
+																							listvalidator.SizeAtMost(1),
+																						},
+																						NestedObject: schema.NestedBlockObject{
+																							Blocks: map[string]schema.Block{
+																								"chat": schema.ListNestedBlock{
+																									CustomType: fwtypes.NewListNestedObjectTypeOf[promptTemplateConfigurationMemberChatModel](ctx),
+																									Validators: []validator.List{
+																										listvalidator.SizeAtMost(1),
+																										listvalidator.ExactlyOneOf(
+																											path.MatchRelative().AtParent().AtName("chat"),
+																											path.MatchRelative().AtParent().AtName("text"),
+																										),
+																									},
+																									NestedObject: schema.NestedBlockObject{
+																										Blocks: map[string]schema.Block{
+																											"messages": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[messageModel](ctx),
+																												NestedObject: schema.NestedBlockObject{
+																													Attributes: map[string]schema.Attribute{
+																														"role": schema.StringAttribute{
+																															// CustomType: fwtypes.StringEnum[awstypes.ConversationRole],
+																															Required: true,
+																														},
+																													},
+																													Blocks: map[string]schema.Block{
+																														"content": schema.ListNestedBlock{
+																															CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockModel](ctx),
+																															Validators: []validator.List{
+																																listvalidator.SizeAtMost(1),
+																															},
+																															NestedObject: schema.NestedBlockObject{
+																																Blocks: map[string]schema.Block{
+																																	"cache_point": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockMemberCachePointModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																		},
+																																		NestedObject: schema.NestedBlockObject{
+																																			Attributes: map[string]schema.Attribute{
+																																				"type": schema.StringAttribute{
+																																					// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
+																																					Required: true,
+																																				},
+																																			},
+																																		},
+																																	},
+																																	"text": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockMemberTextModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																		},
+																																		NestedObject: schema.NestedBlockObject{
+																																			Attributes: map[string]schema.Attribute{
+																																				"value": schema.StringAttribute{
+																																					Required: true,
+																																				},
+																																			},
+																																		},
+																																	},
+																																},
+																															},
+																														},
+																													},
+																												},
+																											},
+																											"input_variables": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
+																												NestedObject: schema.NestedBlockObject{
+																													Attributes: map[string]schema.Attribute{
+																														"name": schema.StringAttribute{
+																															Required: true,
+																														},
+																													},
+																												},
+																											},
+																											"system": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockModel](ctx),
+																												NestedObject: schema.NestedBlockObject{
+																													Blocks: map[string]schema.Block{
+																														"cache_point": schema.ListNestedBlock{
+																															CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockMemberCachePointModel](ctx),
+																															Validators: []validator.List{
+																																listvalidator.SizeAtMost(1),
+																															},
+																															NestedObject: schema.NestedBlockObject{
+																																Attributes: map[string]schema.Attribute{
+																																	"type": schema.StringAttribute{
+																																		// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
+																																		Required: true,
+																																	},
+																																},
+																															},
+																														},
+																														"text": schema.ListNestedBlock{
+																															CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockMemberTextModel](ctx),
+																															Validators: []validator.List{
+																																listvalidator.SizeAtMost(1),
+																															},
+																															NestedObject: schema.NestedBlockObject{
+																																Attributes: map[string]schema.Attribute{
+																																	"value": schema.StringAttribute{
+																																		Required: true,
+																																	},
+																																},
+																															},
+																														},
+																													},
+																												},
+																											},
+																											"tool_configuration": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[toolConfigurationModel](ctx),
+																												Validators: []validator.List{
+																													listvalidator.SizeAtMost(1),
+																												},
+																												NestedObject: schema.NestedBlockObject{
+																													Blocks: map[string]schema.Block{
+																														"tools": schema.ListNestedBlock{
+																															CustomType: fwtypes.NewListNestedObjectTypeOf[toolModel](ctx),
+																															NestedObject: schema.NestedBlockObject{
+																																Blocks: map[string]schema.Block{
+																																	"cache_point": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[toolMemberCachePointModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																			listvalidator.ExactlyOneOf(
+																																				path.MatchRelative().AtParent().AtName("cache_point"),
+																																				path.MatchRelative().AtParent().AtName("tool_spec"),
+																																			),
+																																		},
+																																		NestedObject: schema.NestedBlockObject{
+																																			Attributes: map[string]schema.Attribute{
+																																				"type": schema.StringAttribute{
+																																					// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
+																																					Required: true,
+																																				},
+																																			},
+																																		},
+																																	},
+																																	"tool_spec": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[toolMemberToolSpecModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																		},
+																																		NestedObject: schema.NestedBlockObject{
+																																			Attributes: map[string]schema.Attribute{
+																																				"name": schema.StringAttribute{
+																																					Required: true,
+																																				},
+																																				"description": schema.StringAttribute{
+																																					Required: true,
+																																				},
+																																			},
+																																			Blocks: map[string]schema.Block{
+																																				"input_schema": schema.ListNestedBlock{
+																																					CustomType: fwtypes.NewListNestedObjectTypeOf[toolInputSchemaModel](ctx),
+																																					Validators: []validator.List{
+																																						listvalidator.SizeAtMost(1),
+																																					},
+																																					NestedObject: schema.NestedBlockObject{
+																																						Blocks: map[string]schema.Block{
+																																							"json": schema.ListNestedBlock{
+																																								CustomType: fwtypes.NewListNestedObjectTypeOf[toolInputSchemaMemberJsonModel](ctx),
+																																								Validators: []validator.List{
+																																									listvalidator.SizeAtMost(1),
+																																									listvalidator.ExactlyOneOf(
+																																										path.MatchRelative().AtParent().AtName("json"),
+																																									),
+																																								},
+																																								NestedObject: schema.NestedBlockObject{
+																																									Attributes: map[string]schema.Attribute{
+																																										"value": schema.StringAttribute{
+																																											Required: true,
+																																										},
+																																									},
+																																								},
+																																							},
+																																						},
+																																					},
+																																				},
+																																			},
+																																		},
+																																	},
+																																},
+																															},
+																														},
+																														"tool_choice": schema.ListNestedBlock{
+																															CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceModel](ctx),
+																															Validators: []validator.List{
+																																listvalidator.SizeAtMost(1),
+																															},
+																															NestedObject: schema.NestedBlockObject{
+																																Blocks: map[string]schema.Block{
+																																	"any": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceMemberAnyModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																			listvalidator.ExactlyOneOf(
+																																				path.MatchRelative().AtParent().AtName("any"),
+																																				path.MatchRelative().AtParent().AtName("auto"),
+																																				path.MatchRelative().AtParent().AtName("tool"),
+																																			),
+																																		},
+																																	},
+																																	"auto": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceMemberAutoModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																		},
+																																	},
+																																	"tool": schema.ListNestedBlock{
+																																		CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceMemberToolModel](ctx),
+																																		Validators: []validator.List{
+																																			listvalidator.SizeAtMost(1),
+																																		},
+																																		NestedObject: schema.NestedBlockObject{
+																																			Attributes: map[string]schema.Attribute{
+																																				"name": schema.StringAttribute{
+																																					Required: true,
+																																				},
+																																			},
+																																		},
+																																	},
+																																},
+																															},
+																														},
+																													},
+																												},
+																											},
+																										},
+																									},
+																								},
+																								"text": schema.ListNestedBlock{
+																									CustomType: fwtypes.NewListNestedObjectTypeOf[promptTemplateConfigurationMemberTextModel](ctx),
+																									Validators: []validator.List{
+																										listvalidator.SizeAtMost(1),
+																									},
+																									// TODO
+																								},
+																							},
+																						},
+																					},
+																					"inference_configuration": schema.ListNestedBlock{
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[promptInferenceConfigurationModel](ctx),
+																						Validators: []validator.List{
+																							listvalidator.SizeAtMost(1),
+																						},
+																						NestedObject: schema.NestedBlockObject{
+																							Blocks: map[string]schema.Block{
+																								"text": schema.ListNestedBlock{
+																									CustomType: fwtypes.NewListNestedObjectTypeOf[promptInferenceConfigurationMemberText](ctx),
+																									Validators: []validator.List{
+																										listvalidator.SizeAtMost(1),
+																										listvalidator.ExactlyOneOf(
+																											path.MatchRelative().AtParent().AtName("text"),
+																										),
+																									},
+																									NestedObject: schema.NestedBlockObject{
+																										Attributes: map[string]schema.Attribute{
+																											"max_tokens": schema.Int32Attribute{
+																												Required: true,
+																											},
+																											"stop_sequences": schema.ListAttribute{
+																												ElementType: types.StringType,
+																												Required:    true,
+																											},
+																											"temperature": schema.Float32Attribute{
+																												Required: true,
+																											},
+																											"top_p": schema.Float32Attribute{
+																												Required: true,
+																											},
+																										},
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																		"resource": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[promptFlowNodeSourceConfigurationMemberResourceModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"resource_arn": schema.StringAttribute{
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"guardrail_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"guardrail_identifier": schema.StringAttribute{
+																			Required: true,
+																		},
+																		"guardrail_version": schema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 												"retrieval": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberRetrievalModel](ctx),
@@ -1285,14 +1634,14 @@ type flowNodeConfigurationMemberOutputModel struct {
 }
 
 type flowNodeConfigurationMemberPromptModel struct {
-	SourceConfiguration    fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationModel] `tfsdk:"source_configuration"`
-	GuardrailConfiguration fwtypes.ObjectValueOf[guardrailConfigurationModel]            `tfsdk:"guardrail_configuration"`
+	SourceConfiguration    fwtypes.ListNestedObjectValueOf[promptFlowNodeSourceConfigurationModel] `tfsdk:"source_configuration"`
+	GuardrailConfiguration fwtypes.ListNestedObjectValueOf[guardrailConfigurationModel]            `tfsdk:"guardrail_configuration"`
 }
 
 // Tagged union
 type promptFlowNodeSourceConfigurationModel struct {
-	Inline   fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationMemberInlineModel]   `tfsdk:"inline"`
-	Resource fwtypes.ObjectValueOf[promptFlowNodeSourceConfigurationMemberResourceModel] `tfsdk:"resource"`
+	Inline   fwtypes.ListNestedObjectValueOf[promptFlowNodeSourceConfigurationMemberInlineModel]   `tfsdk:"inline"`
+	Resource fwtypes.ListNestedObjectValueOf[promptFlowNodeSourceConfigurationMemberResourceModel] `tfsdk:"resource"`
 }
 
 func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1305,7 +1654,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 			return diags
 		}
 
-		m.Inline = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Inline = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.PromptFlowNodeSourceConfigurationMemberResource:
@@ -1316,7 +1665,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 			return diags
 		}
 
-		m.Resource = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Resource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1360,16 +1709,16 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 }
 
 type promptFlowNodeSourceConfigurationMemberInlineModel struct {
-	ModelID                      types.String                                             `tfsdk:"model_id"`
-	TemplateConfiguration        fwtypes.ObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
-	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]          `tfsdk:"template_type"`
-	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                   `tfsdk:"additional_model_request_fields"`
-	InferenceConfiguration       fwtypes.ObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
+	ModelID                      types.String                                                       `tfsdk:"model_id"`
+	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
+	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
+	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                             `tfsdk:"additional_model_request_fields"`
+	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
 }
 
 // Tagged union
 type promptInferenceConfigurationModel struct {
-	Text fwtypes.ObjectValueOf[promptInferenceConfigurationMemberText] `tfsdk:"text"`
+	Text fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationMemberText] `tfsdk:"text"`
 }
 
 func (m *promptInferenceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1382,7 +1731,7 @@ func (m *promptInferenceConfigurationModel) Flatten(ctx context.Context, v any) 
 			return diags
 		}
 
-		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1420,8 +1769,8 @@ type promptInferenceConfigurationMemberText struct {
 
 // Tagged union
 type templateConfigurationModel struct {
-	Chat fwtypes.ObjectValueOf[promptTemplateConfigurationMemberChatModel] `tfsdk:"chat"`
-	Text fwtypes.ObjectValueOf[promptTemplateConfigurationMemberTextModel] `tfsdk:"text"`
+	Chat fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationMemberChatModel] `tfsdk:"chat"`
+	Text fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationMemberTextModel] `tfsdk:"text"`
 }
 
 func (m *templateConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1434,7 +1783,7 @@ func (m *templateConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Chat = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Chat = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.PromptTemplateConfigurationMemberText:
@@ -1445,7 +1794,7 @@ func (m *templateConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 			return diags
 		}
 
-		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1492,7 +1841,7 @@ type promptTemplateConfigurationMemberChatModel struct {
 	Messages          fwtypes.ListNestedObjectValueOf[messageModel]             `tfsdk:"messages"`
 	InputVariables    fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variables"`
 	System            fwtypes.ListNestedObjectValueOf[systemContentBlockModel]  `tfsdk:"system"`
-	ToolConfiguration fwtypes.ObjectValueOf[toolConfigurationModel]             `tfsdk:"tool_configuration"`
+	ToolConfiguration fwtypes.ListNestedObjectValueOf[toolConfigurationModel]   `tfsdk:"tool_configuration"`
 }
 
 type messageModel struct {
@@ -1502,8 +1851,8 @@ type messageModel struct {
 
 // Tagged union
 type contentBlockModel struct {
-	CachePoint fwtypes.ObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
-	Text       fwtypes.ObjectValueOf[contentBlockMemberTextModel]       `tfsdk:"text"`
+	CachePoint fwtypes.ListNestedObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
+	Text       fwtypes.ListNestedObjectValueOf[contentBlockMemberTextModel]       `tfsdk:"text"`
 }
 
 func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1516,7 +1865,7 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 			return diags
 		}
 
-		m.CachePoint = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.ContentBlockMemberText:
@@ -1527,7 +1876,7 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 			return diags
 		}
 
-		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1661,14 +2010,14 @@ type systemContentBlockMemberTextModel struct {
 }
 
 type toolConfigurationModel struct {
-	Tools      fwtypes.ListNestedObjectValueOf[toolModel] `tfsdk:"tools"`
-	ToolChoice fwtypes.ObjectValueOf[toolChoiceModel]     `tfsdk:"tool_choice"`
+	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tools"`
+	ToolChoice fwtypes.ListNestedObjectValueOf[toolChoiceModel] `tfsdk:"tool_choice"`
 }
 
 // Tagged union
 type toolModel struct {
-	CachePoint fwtypes.ObjectValueOf[toolMemberCachePointModel] `tfsdk:"cache_point"`
-	ToolSpec   fwtypes.ObjectValueOf[toolMemberToolSpecModel]   `tfsdk:"tool_spec"`
+	CachePoint fwtypes.ListNestedObjectValueOf[toolMemberCachePointModel] `tfsdk:"cache_point"`
+	ToolSpec   fwtypes.ListNestedObjectValueOf[toolMemberToolSpecModel]   `tfsdk:"tool_spec"`
 }
 
 func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1681,7 +2030,7 @@ func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics)
 			return diags
 		}
 
-		m.CachePoint = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.ToolMemberToolSpec:
@@ -1692,7 +2041,7 @@ func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics)
 			return diags
 		}
 
-		m.ToolSpec = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.ToolSpec = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1740,14 +2089,14 @@ type toolMemberCachePointModel struct {
 }
 
 type toolMemberToolSpecModel struct {
-	InputSchema fwtypes.ObjectValueOf[toolInputSchemaModel] `tfsdk:"input_schema"`
-	Name        types.String                                `tfsdk:"name"`
-	Description types.String                                `tfsdk:"description"`
+	InputSchema fwtypes.ListNestedObjectValueOf[toolInputSchemaModel] `tfsdk:"input_schema"`
+	Name        types.String                                          `tfsdk:"name"`
+	Description types.String                                          `tfsdk:"description"`
 }
 
 // Tagged union
 type toolInputSchemaModel struct {
-	Json fwtypes.ObjectValueOf[toolInputSchemaMemberJsonModel] `tfsdk:"json"`
+	Json fwtypes.ListNestedObjectValueOf[toolInputSchemaMemberJsonModel] `tfsdk:"json"`
 }
 
 func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1760,7 +2109,7 @@ func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.D
 			return diags
 		}
 
-		m.Json = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Json = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1795,9 +2144,9 @@ type toolInputSchemaMemberJsonModel struct {
 
 // Tagged union
 type toolChoiceModel struct {
-	Any  fwtypes.ObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
-	Auto fwtypes.ObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
-	Tool fwtypes.ObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
+	Any  fwtypes.ListNestedObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
+	Auto fwtypes.ListNestedObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
+	Tool fwtypes.ListNestedObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
 }
 
 func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1810,7 +2159,7 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 			return diags
 		}
 
-		m.Any = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Any = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.ToolChoiceMemberAuto:
@@ -1821,7 +2170,7 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 			return diags
 		}
 
-		m.Auto = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Auto = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.ToolChoiceMemberTool:
@@ -1832,7 +2181,7 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 			return diags
 		}
 
-		m.Tool = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Tool = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
