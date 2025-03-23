@@ -5,13 +5,11 @@ package appstream
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -21,11 +19,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_appstream_directory_config", sweepDirectoryConfigs)
 	awsv2.Register("aws_appstream_fleet", sweepFleets)
 	awsv2.Register("aws_appstream_image_builder", sweepImageBuilders)
-
-	resource.AddTestSweepers("aws_appstream_stack", &resource.Sweeper{
-		Name: "aws_appstream_stack",
-		F:    sweepStacks,
-	})
+	awsv2.Register("aws_appstream_stack", sweepStacks)
 }
 
 func sweepDirectoryConfigs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -62,7 +56,7 @@ func sweepDirectoryConfigs(ctx context.Context, client *conns.AWSClient) ([]swee
 
 func sweepFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
-		log.Printf("[WARN] Skipping AppStream Directory Config sweep for region: %s", region)
+		log.Printf("[WARN] Skipping AppStream Fleet sweep for region: %s", region)
 		return nil, nil
 	}
 	conn := client.AppStreamClient(ctx)
@@ -94,7 +88,7 @@ func sweepFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 func sweepImageBuilders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
-		log.Printf("[WARN] Skipping AppStream Directory Config sweep for region: %s", region)
+		log.Printf("[WARN] Skipping AppStream Image Builder sweep for region: %s", region)
 		return nil, nil
 	}
 	conn := client.AppStreamClient(ctx)
@@ -124,27 +118,22 @@ func sweepImageBuilders(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 	return sweepResources, nil
 }
 
-func sweepStacks(region string) error {
-	ctx := sweep.Context(region)
-	if region == endpoints.UsWest1RegionID {
+func sweepStacks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping AppStream Stack sweep for region: %s", region)
-		return nil
-	}
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return nil, nil
 	}
 	conn := client.AppStreamClient(ctx)
-	input := &appstream.DescribeStacksInput{}
+	var input appstream.DescribeStacksInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeStacksPages(ctx, conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
+	err := describeStacksPages(ctx, conn, &input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.Stacks {
-			r := ResourceStack()
+			r := resourceStack()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 
@@ -154,20 +143,9 @@ func sweepStacks(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppStream Stack sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error listing AppStream Stacks (%s): %w", region, err)
+		return nil, err
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping AppStream Stacks (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

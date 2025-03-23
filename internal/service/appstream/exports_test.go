@@ -9,9 +9,11 @@ var (
 	ResourceFleet                 = resourceFleet
 	ResourceFleetStackAssociation = resourceFleetStackAssociation
 	ResourceImageBuilder          = resourceImageBuilder
+	ResourceStack                 = resourceStack
 
 	FindDirectoryConfigByID               = findDirectoryConfigByID
 	FindFleetByID                         = findFleetByID
 	FindFleetStackAssociationByTwoPartKey = findFleetStackAssociationByTwoPartKey
 	FindImageBuilderByID                  = findImageBuilderByID
+	FindStackByID                         = findStackByID
 )
