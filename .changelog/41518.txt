@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_mediapackagevod_packaging_group
+```
