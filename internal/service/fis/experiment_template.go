@@ -980,13 +980,13 @@ func expandCeateExperimentTemplateExperimentReportConfiguration(l *schema.Set) *
 
 	config := &awstypes.CreateExperimentTemplateReportConfigurationInput{}
 
-	raw := l.List()[0].(map[string]interface{})
+	raw := l.List()[0].(map[string]any)
 
 	if v, ok := raw["data_sources"].(*schema.Set); ok && v.Len() > 0 {
 		config.DataSources = expandExperimentTemplateExperimentReportConfigurationDataSources(v)
 	}
 
-	if v, ok := raw["outputs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["outputs"].([]any); ok && len(v) > 0 {
 		config.Outputs = expandExperimentTemplateExperimentReportConfigurationOutputs(v)
 	}
 
@@ -1008,13 +1008,13 @@ func expandUpdateExperimentTemplateExperimentReportConfiguration(l *schema.Set) 
 
 	config := &awstypes.UpdateExperimentTemplateReportConfigurationInput{}
 
-	raw := l.List()[0].(map[string]interface{})
+	raw := l.List()[0].(map[string]any)
 
 	if v, ok := raw["data_sources"].(*schema.Set); ok && v.Len() > 0 {
 		config.DataSources = expandExperimentTemplateExperimentReportConfigurationDataSources(v)
 	}
 
-	if v, ok := raw["outputs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["outputs"].([]any); ok && len(v) > 0 {
 		config.Outputs = expandExperimentTemplateExperimentReportConfigurationOutputs(v)
 	}
 
@@ -1036,13 +1036,13 @@ func expandExperimentTemplateExperimentReportConfigurationDataSources(s *schema.
 
 	dataSourcesInput := &awstypes.ExperimentTemplateReportConfigurationDataSourcesInput{}
 
-	rawMap := s.List()[0].(map[string]interface{})
+	rawMap := s.List()[0].(map[string]any)
 
-	if v, ok := rawMap["cloudwatch_dashboards"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := rawMap["cloudwatch_dashboards"].([]any); ok && len(v) > 0 {
 		dashboards := make([]awstypes.ReportConfigurationCloudWatchDashboardInput, 0, len(v))
 
 		for _, dashboard := range v {
-			dashboardMap := dashboard.(map[string]interface{})
+			dashboardMap := dashboard.(map[string]any)
 			if dashboardArn, ok := dashboardMap["dashboard_arn"].(string); ok && dashboardArn != "" {
 				dashboards = append(dashboards, awstypes.ReportConfigurationCloudWatchDashboardInput{
 					DashboardIdentifier: aws.String(dashboardArn),
@@ -1056,28 +1056,28 @@ func expandExperimentTemplateExperimentReportConfigurationDataSources(s *schema.
 	return dataSourcesInput
 }
 
-func expandExperimentTemplateExperimentReportConfigurationOutputs(l []interface{}) *awstypes.ExperimentTemplateReportConfigurationOutputsInput {
+func expandExperimentTemplateExperimentReportConfigurationOutputs(l []any) *awstypes.ExperimentTemplateReportConfigurationOutputsInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	rawMap := l[0].(map[string]interface{})
+	rawMap := l[0].(map[string]any)
 
 	outputsInput := &awstypes.ExperimentTemplateReportConfigurationOutputsInput{}
 
-	if v, ok := rawMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := rawMap["s3_configuration"].([]any); ok && len(v) > 0 {
 		outputsInput.S3Configuration = expandExperimentTemplateReportConfigurationS3Configuration(v)
 	}
 
 	return outputsInput
 }
 
-func expandExperimentTemplateReportConfigurationS3Configuration(l []interface{}) *awstypes.ReportConfigurationS3OutputInput {
+func expandExperimentTemplateReportConfigurationS3Configuration(l []any) *awstypes.ReportConfigurationS3OutputInput {
 	if len(l) == 0 {
 		return nil
 	}
 
-	raw := l[0].(map[string]interface{})
+	raw := l[0].(map[string]any)
 
 	config := awstypes.ReportConfigurationS3OutputInput{
 		BucketName: aws.String(raw[names.AttrBucketName].(string)),
@@ -1090,13 +1090,13 @@ func expandExperimentTemplateReportConfigurationS3Configuration(l []interface{})
 	return &config
 }
 
-func flattenExperimentTemplateExperimentReportConfiguration(configured *awstypes.ExperimentTemplateReportConfiguration) []map[string]interface{} {
+func flattenExperimentTemplateExperimentReportConfiguration(configured *awstypes.ExperimentTemplateReportConfiguration) []map[string]any {
 	if configured == nil {
-		return make([]map[string]interface{}, 0)
+		return make([]map[string]any, 0)
 	}
 
-	dataResources := make([]map[string]interface{}, 1)
-	dataResources[0] = make(map[string]interface{})
+	dataResources := make([]map[string]any, 1)
+	dataResources[0] = make(map[string]any)
 	dataResources[0]["data_sources"] = flattenExperimentTemplateExperimentReportConfigurationDataSources(configured.DataSources)
 	dataResources[0]["outputs"] = flattenExperimentTemplateExperimentReportConfigurationOutputs(configured.Outputs)
 	dataResources[0]["post_experiment_duration"] = aws.ToString(configured.PostExperimentDuration)
@@ -1105,35 +1105,35 @@ func flattenExperimentTemplateExperimentReportConfiguration(configured *awstypes
 	return dataResources
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationOutputs(configured *awstypes.ExperimentTemplateReportConfigurationOutputs) []map[string]interface{} {
+func flattenExperimentTemplateExperimentReportConfigurationOutputs(configured *awstypes.ExperimentTemplateReportConfigurationOutputs) []map[string]any {
 	if configured == nil {
-		return make([]map[string]interface{}, 0)
+		return make([]map[string]any, 0)
 	}
 
-	dataResources := make([]map[string]interface{}, 1)
-	dataResources[0] = make(map[string]interface{})
+	dataResources := make([]map[string]any, 1)
+	dataResources[0] = make(map[string]any)
 	dataResources[0]["s3_configuration"] = flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured.S3Configuration)
 
 	return dataResources
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationDataSources(configured *awstypes.ExperimentTemplateReportConfigurationDataSources) []map[string]interface{} {
+func flattenExperimentTemplateExperimentReportConfigurationDataSources(configured *awstypes.ExperimentTemplateReportConfigurationDataSources) []map[string]any {
 	if configured == nil {
-		return make([]map[string]interface{}, 0)
+		return make([]map[string]any, 0)
 	}
 
-	dataResources := make([]map[string]interface{}, 1)
-	dataResources[0] = make(map[string]interface{})
+	dataResources := make([]map[string]any, 1)
+	dataResources[0] = make(map[string]any)
 	dataResources[0]["cloudwatch_dashboards"] = flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured.CloudWatchDashboards)
 
 	return dataResources
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured []awstypes.ExperimentTemplateReportConfigurationCloudWatchDashboard) []map[string]interface{} {
-	dataResources := make([]map[string]interface{}, 0, len(configured))
+func flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured []awstypes.ExperimentTemplateReportConfigurationCloudWatchDashboard) []map[string]any {
+	dataResources := make([]map[string]any, 0, len(configured))
 
 	for _, v := range configured {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["dashboard_arn"] = aws.ToString(v.DashboardIdentifier)
 		dataResources = append(dataResources, item)
 	}
@@ -1141,13 +1141,13 @@ func flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(
 	return dataResources
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured *awstypes.ReportConfigurationS3Output) []map[string]interface{} {
+func flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured *awstypes.ReportConfigurationS3Output) []map[string]any {
 	if configured == nil {
-		return make([]map[string]interface{}, 0)
+		return make([]map[string]any, 0)
 	}
 
-	dataResources := make([]map[string]interface{}, 1)
-	dataResources[0] = make(map[string]interface{})
+	dataResources := make([]map[string]any, 1)
+	dataResources[0] = make(map[string]any)
 	dataResources[0][names.AttrBucketName] = aws.ToString(configured.BucketName)
 	dataResources[0][names.AttrPrefix] = aws.ToString(configured.Prefix)
 
