@@ -119,7 +119,6 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
-								names.AttrPrefix:                    knownvalue.StringExact(""),
 								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":                        checkTransitions(),
 							}),
@@ -129,6 +128,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 							checkExpiration_Days(365),
 							checkExpiration_DaysAfterMigration(365),
 						),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrPrefix)),
 						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter),
 							checkFilter_Prefix(""),
 							checkFilter_None(),
@@ -166,7 +166,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "prefix/"),
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -192,7 +192,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "prefix/"),
+				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1306,7 +1306,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 								names.AttrID:                    knownvalue.StringExact(rName),
 								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								// "noncurrent_version_transition":
-								names.AttrPrefix: knownvalue.StringExact(""),
+								// names.AttrPrefix:
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":     checkTransitions(),
 							}),
@@ -1315,7 +1315,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("and"), knownvalue.ListExact([]knownvalue.Check{})),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("object_size_greater_than")),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("object_size_less_than")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey(names.AttrPrefix), knownvalue.StringExact("")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey(names.AttrPrefix)),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("tag"), knownvalue.ListExact([]knownvalue.Check{})),
 
 						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("noncurrent_version_transition"),
@@ -2296,11 +2296,11 @@ func checkSchemaV0NoncurrentVersionExpiration_Days(days int64) knownvalue.Check 
 	})
 }
 
-func checkSchemaV0NoncurrentVersionExpiration_VersionsAndDays(versions, days int32) knownvalue.Check {
+func checkSchemaV0NoncurrentVersionExpiration_VersionsAndDays(versions, days int64) knownvalue.Check {
 	return knownvalue.ListExact([]knownvalue.Check{
 		knownvalue.ObjectExact(map[string]knownvalue.Check{
-			"newer_noncurrent_versions": knownvalue.StringExact(strconv.FormatInt(int64(versions), 10)),
-			"noncurrent_days":           knownvalue.Int32Exact(days),
+			"newer_noncurrent_versions": knownvalue.StringExact(strconv.FormatInt(versions, 10)),
+			"noncurrent_days":           knownvalue.Int64Exact(days),
 		}),
 	})
 }

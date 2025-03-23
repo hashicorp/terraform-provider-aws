@@ -61,7 +61,7 @@ func resourceControlPanel() *schema.Resource {
 	}
 }
 
-func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -91,7 +91,7 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
 }
 
-func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -117,7 +117,7 @@ func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
 }
 
-func resourceControlPanelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlPanelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 

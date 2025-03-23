@@ -78,6 +78,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF SQL Injection Match Set.
+* `arn` - Amazon Resource Name (ARN) of the SQL injection match set.
 
 ## Import
 
@@ -111,4 +112,4 @@ Using `terraform import`, import AWS WAF SQL Injection Match Set using their ID.
 % terraform import aws_waf_sql_injection_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a47ebe8da0dc48ddfdde164b586f5f77d04e0387919e7dfd6d04e602fd7caae2 -->
+<!-- cache-key: cdktf-0.20.8 input-2f90c51a97d123500ab90fa8ca6a8f6a3cfec192af65b5ab42d197dabbd761f0 -->

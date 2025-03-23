@@ -322,7 +322,7 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 	}
 }
 
-func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -361,11 +361,11 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
-		input.Targets = expandTargets(v.([]interface{}))
+		input.Targets = expandTargets(v.([]any))
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
-		input.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
+		input.TaskInvocationParameters = expandTaskInvocationParameters(v.([]any))
 	}
 
 	output, err := conn.RegisterTaskWithMaintenanceWindow(ctx, input)
@@ -379,7 +379,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceMaintenanceWindowTaskRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -427,7 +427,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -464,11 +464,11 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
-		input.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
+		input.TaskInvocationParameters = expandTaskInvocationParameters(v.([]any))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
-		input.Targets = expandTargets(v.([]interface{}))
+		input.Targets = expandTargets(v.([]any))
 	} else {
 		input.MaxConcurrency = nil
 		input.MaxErrors = nil
@@ -483,7 +483,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceMaintenanceWindowTaskRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -504,7 +504,7 @@ func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceMaintenanceWindowTaskImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMaintenanceWindowTaskImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <window-id>/<window-task-id>", d.Id())
@@ -545,7 +545,7 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 	return output, nil
 }
 
-func expandTaskInvocationParameters(tfList []interface{}) *awstypes.MaintenanceWindowTaskInvocationParameters {
+func expandTaskInvocationParameters(tfList []any) *awstypes.MaintenanceWindowTaskInvocationParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -553,26 +553,26 @@ func expandTaskInvocationParameters(tfList []interface{}) *awstypes.MaintenanceW
 	apiObject := &awstypes.MaintenanceWindowTaskInvocationParameters{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		if v, ok := tfMap["automation_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			apiObject.Automation = expandTaskInvocationAutomationParameters(v.([]interface{}))
+		tfMap := tfMapRaw.(map[string]any)
+		if v, ok := tfMap["automation_parameters"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.Automation = expandTaskInvocationAutomationParameters(v.([]any))
 		}
-		if v, ok := tfMap["lambda_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			apiObject.Lambda = expandTaskInvocationLambdaParameters(v.([]interface{}))
+		if v, ok := tfMap["lambda_parameters"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.Lambda = expandTaskInvocationLambdaParameters(v.([]any))
 		}
-		if v, ok := tfMap["run_command_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			apiObject.RunCommand = expandTaskInvocationRunCommandParameters(v.([]interface{}))
+		if v, ok := tfMap["run_command_parameters"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.RunCommand = expandTaskInvocationRunCommandParameters(v.([]any))
 		}
-		if v, ok := tfMap["step_functions_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			apiObject.StepFunctions = expandTaskInvocationStepFunctionsParameters(v.([]interface{}))
+		if v, ok := tfMap["step_functions_parameters"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.StepFunctions = expandTaskInvocationStepFunctionsParameters(v.([]any))
 		}
 	}
 
 	return apiObject
 }
 
-func flattenTaskInvocationParameters(apiObject *awstypes.MaintenanceWindowTaskInvocationParameters) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationParameters(apiObject *awstypes.MaintenanceWindowTaskInvocationParameters) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.Automation != nil {
 		tfMap["automation_parameters"] = flattenTaskInvocationAutomationParameters(apiObject.Automation)
@@ -590,16 +590,16 @@ func flattenTaskInvocationParameters(apiObject *awstypes.MaintenanceWindowTaskIn
 		tfMap["step_functions_parameters"] = flattenTaskInvocationStepFunctionsParameters(apiObject.StepFunctions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationAutomationParameters(tfList []interface{}) *awstypes.MaintenanceWindowAutomationParameters {
+func expandTaskInvocationAutomationParameters(tfList []any) *awstypes.MaintenanceWindowAutomationParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.MaintenanceWindowAutomationParameters{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["document_version"]; ok && len(v.(string)) != 0 {
 		apiObject.DocumentVersion = aws.String(v.(string))
@@ -611,8 +611,8 @@ func expandTaskInvocationAutomationParameters(tfList []interface{}) *awstypes.Ma
 	return apiObject
 }
 
-func flattenTaskInvocationAutomationParameters(apiObject *awstypes.MaintenanceWindowAutomationParameters) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationAutomationParameters(apiObject *awstypes.MaintenanceWindowAutomationParameters) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.DocumentVersion != nil {
 		tfMap["document_version"] = aws.ToString(apiObject.DocumentVersion)
@@ -621,16 +621,16 @@ func flattenTaskInvocationAutomationParameters(apiObject *awstypes.MaintenanceWi
 		tfMap[names.AttrParameter] = flattenTaskInvocationCommonParameters(apiObject.Parameters)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationLambdaParameters(tfList []interface{}) *awstypes.MaintenanceWindowLambdaParameters {
+func expandTaskInvocationLambdaParameters(tfList []any) *awstypes.MaintenanceWindowLambdaParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.MaintenanceWindowLambdaParameters{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["client_context"]; ok && len(v.(string)) != 0 {
 		apiObject.ClientContext = aws.String(v.(string))
@@ -645,8 +645,8 @@ func expandTaskInvocationLambdaParameters(tfList []interface{}) *awstypes.Mainte
 	return apiObject
 }
 
-func flattenTaskInvocationLambdaParameters(apiObject *awstypes.MaintenanceWindowLambdaParameters) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationLambdaParameters(apiObject *awstypes.MaintenanceWindowLambdaParameters) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.ClientContext != nil {
 		tfMap["client_context"] = aws.ToString(apiObject.ClientContext)
@@ -658,19 +658,19 @@ func flattenTaskInvocationLambdaParameters(apiObject *awstypes.MaintenanceWindow
 		tfMap["qualifier"] = aws.ToString(apiObject.Qualifier)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationRunCommandParameters(tfList []interface{}) *awstypes.MaintenanceWindowRunCommandParameters {
+func expandTaskInvocationRunCommandParameters(tfList []any) *awstypes.MaintenanceWindowRunCommandParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.MaintenanceWindowRunCommandParameters{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["cloudwatch_config"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.CloudWatchOutputConfig = expandTaskInvocationRunCommandParametersCloudWatchConfig(v.([]interface{}))
+	if v, ok := tfMap["cloudwatch_config"]; ok && len(v.([]any)) > 0 {
+		apiObject.CloudWatchOutputConfig = expandTaskInvocationRunCommandParametersCloudWatchConfig(v.([]any))
 	}
 	if v, ok := tfMap[names.AttrComment]; ok && len(v.(string)) != 0 {
 		apiObject.Comment = aws.String(v.(string))
@@ -684,8 +684,8 @@ func expandTaskInvocationRunCommandParameters(tfList []interface{}) *awstypes.Ma
 	if v, ok := tfMap["document_version"]; ok && len(v.(string)) != 0 {
 		apiObject.DocumentVersion = aws.String(v.(string))
 	}
-	if v, ok := tfMap["notification_config"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.NotificationConfig = expandTaskInvocationRunCommandParametersNotificationConfig(v.([]interface{}))
+	if v, ok := tfMap["notification_config"]; ok && len(v.([]any)) > 0 {
+		apiObject.NotificationConfig = expandTaskInvocationRunCommandParametersNotificationConfig(v.([]any))
 	}
 	if v, ok := tfMap["output_s3_bucket"]; ok && len(v.(string)) != 0 {
 		apiObject.OutputS3BucketName = aws.String(v.(string))
@@ -706,8 +706,8 @@ func expandTaskInvocationRunCommandParameters(tfList []interface{}) *awstypes.Ma
 	return apiObject
 }
 
-func flattenTaskInvocationRunCommandParameters(apiObject *awstypes.MaintenanceWindowRunCommandParameters) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationRunCommandParameters(apiObject *awstypes.MaintenanceWindowRunCommandParameters) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.CloudWatchOutputConfig != nil {
 		tfMap["cloudwatch_config"] = flattenTaskInvocationRunCommandParametersCloudWatchConfig(apiObject.CloudWatchOutputConfig)
@@ -741,16 +741,16 @@ func flattenTaskInvocationRunCommandParameters(apiObject *awstypes.MaintenanceWi
 		tfMap["timeout_seconds"] = aws.ToInt32(apiObject.TimeoutSeconds)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationStepFunctionsParameters(tfList []interface{}) *awstypes.MaintenanceWindowStepFunctionsParameters {
+func expandTaskInvocationStepFunctionsParameters(tfList []any) *awstypes.MaintenanceWindowStepFunctionsParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.MaintenanceWindowStepFunctionsParameters{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["input"]; ok && len(v.(string)) != 0 {
 		apiObject.Input = aws.String(v.(string))
@@ -762,8 +762,8 @@ func expandTaskInvocationStepFunctionsParameters(tfList []interface{}) *awstypes
 	return apiObject
 }
 
-func flattenTaskInvocationStepFunctionsParameters(apiObject *awstypes.MaintenanceWindowStepFunctionsParameters) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationStepFunctionsParameters(apiObject *awstypes.MaintenanceWindowStepFunctionsParameters) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.Input != nil {
 		tfMap["input"] = aws.ToString(apiObject.Input)
@@ -772,22 +772,22 @@ func flattenTaskInvocationStepFunctionsParameters(apiObject *awstypes.Maintenanc
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationRunCommandParametersNotificationConfig(tfList []interface{}) *awstypes.NotificationConfig {
+func expandTaskInvocationRunCommandParametersNotificationConfig(tfList []any) *awstypes.NotificationConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.NotificationConfig{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["notification_arn"]; ok && len(v.(string)) != 0 {
 		apiObject.NotificationArn = aws.String(v.(string))
 	}
-	if v, ok := tfMap["notification_events"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.NotificationEvents = flex.ExpandStringyValueList[awstypes.NotificationEvent](v.([]interface{}))
+	if v, ok := tfMap["notification_events"]; ok && len(v.([]any)) > 0 {
+		apiObject.NotificationEvents = flex.ExpandStringyValueList[awstypes.NotificationEvent](v.([]any))
 	}
 	if v, ok := tfMap["notification_type"]; ok && len(v.(string)) != 0 {
 		apiObject.NotificationType = awstypes.NotificationType(v.(string))
@@ -796,8 +796,8 @@ func expandTaskInvocationRunCommandParametersNotificationConfig(tfList []interfa
 	return apiObject
 }
 
-func flattenTaskInvocationRunCommandParametersNotificationConfig(apiObject *awstypes.NotificationConfig) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationRunCommandParametersNotificationConfig(apiObject *awstypes.NotificationConfig) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.NotificationArn != nil {
 		tfMap["notification_arn"] = aws.ToString(apiObject.NotificationArn)
@@ -807,16 +807,16 @@ func flattenTaskInvocationRunCommandParametersNotificationConfig(apiObject *awst
 	}
 	tfMap["notification_type"] = apiObject.NotificationType
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationRunCommandParametersCloudWatchConfig(tfList []interface{}) *awstypes.CloudWatchOutputConfig {
+func expandTaskInvocationRunCommandParametersCloudWatchConfig(tfList []any) *awstypes.CloudWatchOutputConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CloudWatchOutputConfig{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["cloudwatch_log_group_name"]; ok && len(v.(string)) != 0 {
 		apiObject.CloudWatchLogGroupName = aws.String(v.(string))
@@ -828,18 +828,18 @@ func expandTaskInvocationRunCommandParametersCloudWatchConfig(tfList []interface
 	return apiObject
 }
 
-func flattenTaskInvocationRunCommandParametersCloudWatchConfig(apiObject *awstypes.CloudWatchOutputConfig) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenTaskInvocationRunCommandParametersCloudWatchConfig(apiObject *awstypes.CloudWatchOutputConfig) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject.CloudWatchLogGroupName != nil {
 		tfMap["cloudwatch_log_group_name"] = aws.ToString(apiObject.CloudWatchLogGroupName)
 	}
 	tfMap["cloudwatch_output_enabled"] = apiObject.CloudWatchOutputEnabled
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTaskInvocationCommonParameters(tfList []interface{}) map[string][]string {
+func expandTaskInvocationCommonParameters(tfList []any) map[string][]string {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -847,21 +847,21 @@ func expandTaskInvocationCommonParameters(tfList []interface{}) map[string][]str
 	apiObject := make(map[string][]string)
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		apiObject[tfMap[names.AttrName].(string)] = flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{}))
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject[tfMap[names.AttrName].(string)] = flex.ExpandStringValueList(tfMap[names.AttrValues].([]any))
 	}
 
 	return apiObject
 }
 
-func flattenTaskInvocationCommonParameters(apiObject map[string][]string) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObject))
+func flattenTaskInvocationCommonParameters(apiObject map[string][]string) []any {
+	tfList := make([]any, 0, len(apiObject))
 
 	keys := tfmaps.Keys(apiObject)
 	slices.Sort(keys)
 
 	for _, key := range keys {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrName:   key,
 			names.AttrValues: apiObject[key],
 		})

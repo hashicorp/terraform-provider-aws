@@ -115,7 +115,7 @@ func resourceCustomDataIdentifier() *schema.Resource {
 	}
 }
 
-func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -146,7 +146,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 		input.Regex = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateCustomDataIdentifier(ctx, &input)
 	}, errCodeClientError)
 
@@ -159,7 +159,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceCustomDataIdentifierRead(ctx, d, meta)...)
 }
 
-func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -190,12 +190,12 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceCustomDataIdentifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDataIdentifierUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceCustomDataIdentifierRead(ctx, d, meta)
 }
 
-func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 

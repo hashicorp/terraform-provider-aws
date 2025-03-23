@@ -382,7 +382,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `lambda_function_parameters` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshift_data_parameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker AI pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
@@ -553,12 +553,12 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 #### target_parameters.sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution. Detailed below.
+* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution. Detailed below.
 
 ##### target_parameters.sagemaker_pipeline_parameters.parameters Configuration Block
 
-* `name` - (Optional) Name of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 256.
-* `value` - (Optional) Value of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 1024.
+* `name` - (Optional) Name of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 256.
+* `value` - (Optional) Value of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 1024.
 
 #### target_parameters.sqs_queue_parameters Configuration Block
 
