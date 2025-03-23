@@ -8,8 +8,10 @@ var (
 	ResourceDirectoryConfig       = resourceDirectoryConfig
 	ResourceFleet                 = resourceFleet
 	ResourceFleetStackAssociation = resourceFleetStackAssociation
+	ResourceImageBuilder          = resourceImageBuilder
 
 	FindDirectoryConfigByID               = findDirectoryConfigByID
 	FindFleetByID                         = findFleetByID
 	FindFleetStackAssociationByTwoPartKey = findFleetStackAssociationByTwoPartKey
+	FindImageBuilderByID                  = findImageBuilderByID
 )

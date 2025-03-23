@@ -11,22 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusImageBuilderState(ctx context.Context, conn *appstream.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := FindImageBuilderByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
 // statusUserAvailable fetches the user available
 func statusUserAvailable(ctx context.Context, conn *appstream.Client, username, authType string) retry.StateRefreshFunc {
 	return func() (any, string, error) {

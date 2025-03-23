@@ -15,51 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindImageBuilderByName(ctx context.Context, conn *appstream.Client, name string) (*awstypes.ImageBuilder, error) {
-	input := &appstream.DescribeImageBuildersInput{
-		Names: []string{name},
-	}
-
-	return findImageBuilder(ctx, conn, input)
-}
-
-func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) ([]awstypes.ImageBuilder, error) {
-	var output []awstypes.ImageBuilder
-
-	err := describeImageBuildersPages(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		output = append(output, page.ImageBuilders...)
-
-		return !lastPage
-	})
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func findImageBuilder(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) (*awstypes.ImageBuilder, error) {
-	output, err := findImageBuilders(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func FindUserByTwoPartKey(ctx context.Context, conn *appstream.Client, username, authType string) (*awstypes.User, error) {
 	input := &appstream.DescribeUsersInput{
 		AuthenticationType: awstypes.AuthenticationType(authType),

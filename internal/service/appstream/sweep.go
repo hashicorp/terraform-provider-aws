@@ -20,11 +20,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_appstream_directory_config", sweepDirectoryConfigs)
 	awsv2.Register("aws_appstream_fleet", sweepFleets)
-
-	resource.AddTestSweepers("aws_appstream_image_builder", &resource.Sweeper{
-		Name: "aws_appstream_image_builder",
-		F:    sweepImageBuilders,
-	})
+	awsv2.Register("aws_appstream_image_builder", sweepImageBuilders)
 
 	resource.AddTestSweepers("aws_appstream_stack", &resource.Sweeper{
 		Name: "aws_appstream_stack",
@@ -96,27 +92,22 @@ func sweepFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 	return sweepResources, nil
 }
 
-func sweepImageBuilders(region string) error {
-	ctx := sweep.Context(region)
-	if region == endpoints.UsWest1RegionID {
-		log.Printf("[WARN] Skipping AppStream Image Builder sweep for region: %s", region)
-		return nil
-	}
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+func sweepImageBuilders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
+		log.Printf("[WARN] Skipping AppStream Directory Config sweep for region: %s", region)
+		return nil, nil
 	}
 	conn := client.AppStreamClient(ctx)
-	input := &appstream.DescribeImageBuildersInput{}
+	var input appstream.DescribeImageBuildersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeImageBuildersPages(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	err := describeImageBuildersPages(ctx, conn, &input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.ImageBuilders {
-			r := ResourceImageBuilder()
+			r := resourceImageBuilder()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 
@@ -126,22 +117,11 @@ func sweepImageBuilders(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppStream Image Builder sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error listing AppStream Image Builders (%s): %w", region, err)
+		return nil, err
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping AppStream Image Builders (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepStacks(region string) error {

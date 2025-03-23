@@ -53,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Fleet Stack Association",
 		},
 		{
-			Factory:  ResourceImageBuilder,
+			Factory:  resourceImageBuilder,
 			TypeName: "aws_appstream_image_builder",
 			Name:     "Image Builder",
 			Tags: &types.ServicePackageResourceTags{
