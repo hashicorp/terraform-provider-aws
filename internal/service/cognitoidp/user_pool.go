@@ -632,15 +632,14 @@ func resourceUserPool() *schema.Resource {
 			"username_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
-				Default: &cognitoidentityprovider.UsernameConfigurationType{ // ADDED IN VERSION 1
-					CaseSensitive: aws.Bool(true),
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"case_sensitive": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 					},
@@ -712,18 +711,6 @@ func resourceUserPool() *schema.Resource {
 						},
 					},
 				},
-			},
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
-		SchemaVersion: 1,
-
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				// Schema V0->V1 fixed field "username_configuration" missing Default value and allows for change in API behavior to begin returning this field by default.
-				Type:    resourceUserPoolConfigV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: userPoolStateUpgradeV0,
-				Version: 0,
 			},
 		},
 	}
