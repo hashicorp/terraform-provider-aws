@@ -43,7 +43,7 @@ const (
 //
 // Once the plan is as expected, remove the `PlanOnly` parameter and add `ConfigStateChecks` and `ConfigPlanChecks` checks
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_rule_NoFilterOrPrefix(t *testing.T) {
 	// Expected change: removes `rule[0].filter` from state
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,7 +61,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 						VersionConstraint: providerVersionSchemaV0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -87,7 +87,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_basic(t *testing
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),

@@ -30,7 +30,7 @@ const (
 	providerVersion_5_86_0 = "5.86.0"
 )
 
-func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_basic(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -47,7 +47,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_basic(t *testing.T) {
 						VersionConstraint: providerVersion_5_86_0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -73,7 +73,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_basic(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Config:                   testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
