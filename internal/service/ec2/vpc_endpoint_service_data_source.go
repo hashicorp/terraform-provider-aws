@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpc_endpoint_service", name="Endpoint Service")
+// @Region(overrideEnabled=false)
 func dataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
