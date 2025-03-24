@@ -2527,7 +2527,6 @@ BUG FIXES:
 * resource/aws_eks_access_entry: Mark `type` and `user_name` as Optional, allowing values to be configured ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
 * resource/aws_grafana_license_association: Fix missing `workspace_id` attribute after import ([#35290](https://github.com/hashicorp/terraform-provider-aws/issues/35290))
 * resource/aws_security_group_rule: Fix `UnsupportedOperation: The functionality you requested is not available in this region` errors on Read in certain partitions ([#33484](https://github.com/hashicorp/terraform-provider-aws/issues/33484))
-* resource/aws_cognitoidp_user_pool: Fix `username_configuration` not having Default value. Providing this through version upgrade. ([#35401](https://github.com/hashicorp/terraform-provider-aws/issues/35401))
 
 ## 5.33.0 (January 18, 2024)
 
