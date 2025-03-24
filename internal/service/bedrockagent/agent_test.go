@@ -943,4 +943,3 @@ resource "aws_bedrockagent_agent" "test" {
 }
 `, rName, model, description))
 }
-
