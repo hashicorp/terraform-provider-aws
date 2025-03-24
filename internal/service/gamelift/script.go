@@ -91,12 +91,10 @@ func resourceScript() *schema.Resource {
 				ExactlyOneOf: []string{"zip_file", "storage_location"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -106,8 +104,8 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("storage_location"); ok && len(v.([]interface{})) > 0 {
-		input.StorageLocation = expandStorageLocation(v.([]interface{}))
+	if v, ok := d.GetOk("storage_location"); ok && len(v.([]any)) > 0 {
+		input.StorageLocation = expandStorageLocation(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
@@ -127,7 +125,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateScript(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -149,7 +147,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
-func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -175,7 +173,7 @@ func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -187,7 +185,7 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("storage_location") {
 			if v, ok := d.GetOk("storage_location"); ok {
-				input.StorageLocation = expandStorageLocation(v.([]interface{}))
+				input.StorageLocation = expandStorageLocation(v.([]any))
 			}
 		}
 
@@ -221,7 +219,7 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
-func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -266,17 +264,17 @@ func findScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*aws
 	return output.Script, nil
 }
 
-func flattenStorageLocation(apiObject *awstypes.S3Location) []interface{} {
+func flattenStorageLocation(apiObject *awstypes.S3Location) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrBucket:  aws.ToString(apiObject.Bucket),
 		names.AttrKey:     aws.ToString(apiObject.Key),
 		"object_version":  aws.ToString(apiObject.ObjectVersion),
 		names.AttrRoleARN: aws.ToString(apiObject.RoleArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -44,7 +44,7 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 				Config: testAccTypeConfig_name(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deprecated_status", string(awstypes.DeprecatedStatusLive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An example resource schema demonstrating some basic constructs and validation rules."),
@@ -56,7 +56,7 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 					resource.TestCheckResourceAttr(resourceName, "source_url", "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RegistryTypeResource)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
 					resource.TestCheckResourceAttr(resourceName, "type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "visibility", string(awstypes.VisibilityPrivate)),
 					resource.TestMatchResourceAttr(resourceName, "version_id", regexache.MustCompile(`.+`)),

@@ -42,8 +42,6 @@ func resourceBranch() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"app_id": {
 				Type:     schema.TypeString,
@@ -175,14 +173,14 @@ func resourceBranch() *schema.Resource {
 	}
 }
 
-func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
 	id := branchCreateResourceID(appID, branchName)
-	input := &amplify.CreateBranchInput{
+	input := amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
@@ -221,8 +219,8 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EnablePullRequestPreview = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]any)) > 0 {
+		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("framework"); ok {
@@ -241,7 +239,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Ttl = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateBranch(ctx, input)
+	_, err := conn.CreateBranch(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Branch (%s): %s", id, err)
@@ -252,7 +250,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -300,7 +298,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -310,7 +308,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &amplify.UpdateBranchInput{
+		input := amplify.UpdateBranchInput{
 			AppId:      aws.String(appID),
 			BranchName: aws.String(branchName),
 		}
@@ -352,7 +350,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("environment_variables") {
-			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
+			if v := d.Get("environment_variables").(map[string]any); len(v) > 0 {
 				input.EnvironmentVariables = flex.ExpandStringValueMap(v)
 			} else {
 				input.EnvironmentVariables = map[string]string{"": ""}
@@ -375,7 +373,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Ttl = aws.String(d.Get("ttl").(string))
 		}
 
-		_, err = conn.UpdateBranch(ctx, input)
+		_, err = conn.UpdateBranch(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify Branch (%s): %s", d.Id(), err)
@@ -385,7 +383,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -395,10 +393,11 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())
-	_, err = conn.DeleteBranch(ctx, &amplify.DeleteBranchInput{
+	input := amplify.DeleteBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
-	})
+	}
+	_, err = conn.DeleteBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -412,17 +411,17 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
-	input := &amplify.GetBranchInput{
+	input := amplify.GetBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
 	}
 
-	output, err := conn.GetBranch(ctx, input)
+	output, err := conn.GetBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -431,7 +430,7 @@ func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, br
 	}
 
 	if output == nil || output.Branch == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.Branch, nil

@@ -196,7 +196,7 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T, groupNames ...string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAvailabilityZonesInput{
+	input := ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.NewAttributeFilterList(map[string]string{
 			"zone-type":     "local-zone",
 			"opt-in-status": "opted-in",
@@ -210,7 +210,7 @@ func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T, groupN
 		})
 	}
 
-	output, err := tfec2.FindAvailabilityZones(ctx, conn, input)
+	output, err := tfec2.FindAvailabilityZones(ctx, conn, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

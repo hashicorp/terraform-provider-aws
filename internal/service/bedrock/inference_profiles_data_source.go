@@ -17,17 +17,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Inference Profiles")
+// @FrameworkDataSource("aws_bedrock_inference_profiles", name="Inference Profiles")
 func newInferenceProfilesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &inferenceProfilesDataSource{}, nil
 }
 
 type inferenceProfilesDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*inferenceProfilesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_inference_profiles"
 }
 
 func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

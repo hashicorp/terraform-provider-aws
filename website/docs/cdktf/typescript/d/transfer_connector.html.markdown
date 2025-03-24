@@ -61,10 +61,10 @@ This data source exports the following attributes in addition to the arguments a
 * `serviceManagedEgressIpAddresses` - List of egress Ip addresses.
 * `sftpConfig` - Object containing the following attributes:
     * `trustedHostKeys` - List of the public portions of the host keys that are used to identify the servers the connector is connected to.
-    * `userSecretId` - Identifer for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.
+    * `userSecretId` - Identifier for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.
 * `tags` - Object containing the following attributes:
     * `key` - Name of the tag.
     * `value` - Values associated with the tags key.
 * `url` - URL of the partner's AS2 or SFTP endpoint.
 
-<!-- cache-key: cdktf-0.20.8 input-d8010c6834c55c360923308a4a5d05caa5bc79a08016e4759049157e780c9bbf -->
+<!-- cache-key: cdktf-0.20.8 input-caba0e3aba4a206e9e9a0dc15889f86e773a979b6505a3d92010d524ab2f261b -->

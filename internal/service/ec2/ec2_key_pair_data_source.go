@@ -70,11 +70,11 @@ func dataSourceKeyPair() *schema.Resource {
 	}
 }
 
-func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeKeyPairsInput{}
+	input := ec2.DescribeKeyPairsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
@@ -92,7 +92,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.IncludePublicKey = aws.Bool(v.(bool))
 	}
 
-	keyPair, err := findKeyPair(ctx, conn, input)
+	keyPair, err := findKeyPair(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Key Pair", err))
@@ -103,8 +103,8 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "key-pair/" + keyName,
 	}.String()
 	d.Set(names.AttrARN, arn)

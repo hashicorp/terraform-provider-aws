@@ -23,7 +23,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -238,12 +237,10 @@ func resourceDirectory() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
@@ -264,7 +261,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.RegisterWorkspaceDirectory(ctx, input)
 		})
 
@@ -281,7 +278,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("saml_properties"); ok {
 		input := &workspaces.ModifySamlPropertiesInput{
 			ResourceId:     aws.String(d.Id()),
-			SamlProperties: expandSAMLProperties(v.([]interface{})),
+			SamlProperties: expandSAMLProperties(v.([]any)),
 		}
 
 		_, err := conn.ModifySamlProperties(ctx, input)
@@ -294,7 +291,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		input := &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
-			SelfservicePermissions: expandSelfservicePermissions(v.([]interface{})),
+			SelfservicePermissions: expandSelfservicePermissions(v.([]any)),
 		}
 
 		_, err := conn.ModifySelfservicePermissions(ctx, input)
@@ -307,7 +304,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("workspace_access_properties"); ok {
 		input := &workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
-			WorkspaceAccessProperties: expandWorkspaceAccessProperties(v.([]interface{})),
+			WorkspaceAccessProperties: expandWorkspaceAccessProperties(v.([]any)),
 		}
 
 		_, err := conn.ModifyWorkspaceAccessProperties(ctx, input)
@@ -320,7 +317,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("workspace_creation_properties"); ok {
 		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
-			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]interface{})),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]any)),
 		}
 
 		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
@@ -346,7 +343,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
@@ -388,13 +385,13 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	if d.HasChange("saml_properties") {
-		tfListSAMLProperties := d.Get("saml_properties").([]interface{})
-		tfMap := tfListSAMLProperties[0].(map[string]interface{})
+		tfListSAMLProperties := d.Get("saml_properties").([]any)
+		tfMap := tfListSAMLProperties[0].(map[string]any)
 
 		var dels []types.DeletableSamlProperty
 		if tfMap["relay_state_parameter_name"].(string) == "" {
@@ -420,7 +417,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("self_service_permissions") {
 		input := &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
-			SelfservicePermissions: expandSelfservicePermissions(d.Get("self_service_permissions").([]interface{})),
+			SelfservicePermissions: expandSelfservicePermissions(d.Get("self_service_permissions").([]any)),
 		}
 
 		_, err := conn.ModifySelfservicePermissions(ctx, input)
@@ -433,7 +430,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("workspace_access_properties") {
 		input := &workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
-			WorkspaceAccessProperties: expandWorkspaceAccessProperties(d.Get("workspace_access_properties").([]interface{})),
+			WorkspaceAccessProperties: expandWorkspaceAccessProperties(d.Get("workspace_access_properties").([]any)),
 		}
 
 		_, err := conn.ModifyWorkspaceAccessProperties(ctx, input)
@@ -446,7 +443,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("workspace_creation_properties") {
 		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
-			WorkspaceCreationProperties: expandWorkspaceCreationProperties(d.Get("workspace_creation_properties").([]interface{})),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(d.Get("workspace_creation_properties").([]any)),
 		}
 
 		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
@@ -491,7 +488,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
@@ -500,7 +497,7 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeregisterWorkspaceDirectory(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),
 			})
@@ -574,7 +571,7 @@ func findDirectories(ctx context.Context, conn *workspaces.Client, input *worksp
 }
 
 func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -637,13 +634,13 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	return nil, err
 }
 
-func expandWorkspaceAccessProperties(tfList []interface{}) *types.WorkspaceAccessProperties {
+func expandWorkspaceAccessProperties(tfList []any) *types.WorkspaceAccessProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &types.WorkspaceAccessProperties{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if tfMap["device_type_android"].(string) != "" {
 		apiObject.DeviceTypeAndroid = types.AccessPropertyValue(tfMap["device_type_android"].(string))
@@ -680,12 +677,12 @@ func expandWorkspaceAccessProperties(tfList []interface{}) *types.WorkspaceAcces
 	return apiObject
 }
 
-func expandSAMLProperties(tfList []interface{}) *types.SamlProperties {
+func expandSAMLProperties(tfList []any) *types.SamlProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &types.SamlProperties{}
 
 	if tfMap["relay_state_parameter_name"].(string) != "" {
@@ -703,13 +700,13 @@ func expandSAMLProperties(tfList []interface{}) *types.SamlProperties {
 	return apiObject
 }
 
-func expandSelfservicePermissions(tfList []interface{}) *types.SelfservicePermissions {
+func expandSelfservicePermissions(tfList []any) *types.SelfservicePermissions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &types.SelfservicePermissions{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if tfMap["change_compute_type"].(bool) {
 		apiObject.ChangeComputeType = types.ReconnectEnumEnabled
@@ -744,12 +741,12 @@ func expandSelfservicePermissions(tfList []interface{}) *types.SelfservicePermis
 	return apiObject
 }
 
-func expandWorkspaceCreationProperties(tfList []interface{}) *types.WorkspaceCreationProperties {
+func expandWorkspaceCreationProperties(tfList []any) *types.WorkspaceCreationProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &types.WorkspaceCreationProperties{
 		EnableInternetAccess:            aws.Bool(tfMap["enable_internet_access"].(bool)),
 		EnableMaintenanceMode:           aws.Bool(tfMap["enable_maintenance_mode"].(bool)),
@@ -767,13 +764,13 @@ func expandWorkspaceCreationProperties(tfList []interface{}) *types.WorkspaceCre
 	return apiObject
 }
 
-func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties) []interface{} {
+func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"device_type_android":    apiObject.DeviceTypeAndroid,
 			"device_type_chromeos":   apiObject.DeviceTypeChromeOs,
 			"device_type_ios":        apiObject.DeviceTypeIos,
@@ -786,13 +783,13 @@ func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties
 	}
 }
 
-func flattenSAMLProperties(apiObject *types.SamlProperties) []interface{} {
+func flattenSAMLProperties(apiObject *types.SamlProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"relay_state_parameter_name": aws.ToString(apiObject.RelayStateParameterName),
 			names.AttrStatus:             apiObject.Status,
 			"user_access_url":            aws.ToString(apiObject.UserAccessUrl),
@@ -800,12 +797,12 @@ func flattenSAMLProperties(apiObject *types.SamlProperties) []interface{} {
 	}
 }
 
-func flattenSelfservicePermissions(apiObject *types.SelfservicePermissions) []interface{} {
+func flattenSelfservicePermissions(apiObject *types.SelfservicePermissions) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch apiObject.ChangeComputeType {
 	case types.ReconnectEnumEnabled:
@@ -852,16 +849,16 @@ func flattenSelfservicePermissions(apiObject *types.SelfservicePermissions) []in
 		tfMap["switch_running_mode"] = nil
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultWorkspaceCreationProperties(apiObject *types.DefaultWorkspaceCreationProperties) []interface{} {
+func flattenDefaultWorkspaceCreationProperties(apiObject *types.DefaultWorkspaceCreationProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"custom_security_group_id":            aws.ToString(apiObject.CustomSecurityGroupId),
 			"default_ou":                          aws.ToString(apiObject.DefaultOu),
 			"enable_internet_access":              aws.ToBool(apiObject.EnableInternetAccess),

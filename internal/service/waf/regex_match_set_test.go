@@ -62,7 +62,7 @@ func testAccRegexMatchSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(ctx, resourceName, &matchSet),
 					testAccCheckRegexPatternSetExists(ctx, "aws_waf_regex_pattern_set.test", &patternSet),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`regexmatchset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`regexmatchset/.+`)),
 					computeRegexMatchSetTuple(&patternSet, &fieldToMatch, "NONE", &idx),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, matchSetName),
 					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
@@ -196,7 +196,7 @@ func testAccRegexMatchSet_disappears(t *testing.T) {
 
 func computeRegexMatchSetTuple(patternSet *awstypes.RegexPatternSet, fieldToMatch *awstypes.FieldToMatch, textTransformation string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"field_to_match":       tfwaf.FlattenFieldToMatch(fieldToMatch),
 			"regex_pattern_set_id": *patternSet.RegexPatternSetId,
 			"text_transformation":  textTransformation,

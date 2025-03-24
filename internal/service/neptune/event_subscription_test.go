@@ -35,7 +35,7 @@ func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

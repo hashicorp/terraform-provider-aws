@@ -24,10 +24,11 @@ import (
 
 func TestAccEventsBus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 eventbridge.DescribeEventBusOutput
+	var v1, v2, v3, v4, v5 eventbridge.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
+	description := "Test event bus"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -39,7 +40,8 @@ func TestAccEventsBus_basic(t *testing.T) {
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -51,11 +53,28 @@ func TestAccEventsBus_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig_basic(busNameModified),
+				Config: testAccBusConfig_description(busName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
-					testAccCheckBusRecreated(&v1, &v2),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
+					testAccCheckBusNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+				),
+			},
+			{
+				Config: testAccBusConfig_basic(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v3),
+					testAccCheckBusNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+				),
+			},
+			{
+				Config: testAccBusConfig_basic(busNameModified),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v4),
+					testAccCheckBusRecreated(&v3, &v4),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busNameModified),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -64,8 +83,9 @@ func TestAccEventsBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig_tags1(busNameModified, names.AttrKey, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v3),
-					testAccCheckBusNotRecreated(&v2, &v3),
+					testAccCheckBusExists(ctx, resourceName, &v5),
+					testAccCheckBusNotRecreated(&v4, &v5),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", names.AttrValue),
 				),
@@ -219,7 +239,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 				Config: testAccBusConfig_partnerSource(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &busOutput),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -300,6 +320,15 @@ resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
 }
 `, name)
+}
+
+func testAccBusConfig_description(name, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name        = %[1]q
+  description = %[2]q
+}
+`, name, description)
 }
 
 func testAccBusConfig_tags1(name, key, value string) string {

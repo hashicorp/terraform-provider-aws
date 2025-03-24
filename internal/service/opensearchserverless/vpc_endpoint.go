@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="VPC Endpoint")
+// @FrameworkResource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
 func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := vpcEndpointResource{}
 
@@ -54,10 +54,6 @@ type vpcEndpointResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*vpcEndpointResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_vpc_endpoint"
 }
 
 func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -395,7 +391,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 }
 
 func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

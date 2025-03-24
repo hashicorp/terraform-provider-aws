@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,12 +58,10 @@ func resourceModelPackageGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -80,19 +77,19 @@ func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData
 
 	_, err := conn.CreateModelPackageGroup(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Model Package Group %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Model Package Group %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitModelPackageGroupCompleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Model Package Group (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Model Package Group (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceModelPackageGroupRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -100,12 +97,12 @@ func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, 
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Model Package Group (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Model Package Group (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Model Package Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Model Package Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("model_package_group_name", mpg.ModelPackageGroupName)
@@ -115,7 +112,7 @@ func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -123,7 +120,7 @@ func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceModelPackageGroupRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -135,11 +132,11 @@ func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Model Package Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Model Package Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitModelPackageGroupDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Model Package Group (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Model Package Group (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

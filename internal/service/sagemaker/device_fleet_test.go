@@ -38,7 +38,7 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "output_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_config.0.s3_output_location", fmt.Sprintf("s3://%s/prefix/", rName)),

@@ -185,7 +185,8 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			resp, err := conn.DescribeUsers(ctx, &appstream.DescribeUsersInput{AuthenticationType: awstypes.AuthenticationType(authType)})
+			input := appstream.DescribeUsersInput{AuthenticationType: awstypes.AuthenticationType(authType)}
+			resp, err := conn.DescribeUsers(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue

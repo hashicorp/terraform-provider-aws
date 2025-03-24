@@ -58,7 +58,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, acctest.CtBasic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "kendra", "index/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", "0"),

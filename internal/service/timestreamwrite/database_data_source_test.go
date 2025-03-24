@@ -90,7 +90,7 @@ func TestAccTimestreamWriteDatabaseDataSource_updateKMSKey(t *testing.T) {
 				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccTimestreamWriteDatabaseDataSource_updateKMSKey(t *testing.T) {
 				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 		},

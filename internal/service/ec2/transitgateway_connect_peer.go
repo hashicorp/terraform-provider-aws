@@ -48,8 +48,6 @@ func resourceTransitGatewayConnectPeer() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -116,7 +114,7 @@ func resourceTransitGatewayConnectPeer() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -160,7 +158,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceTransitGatewayConnectPeerRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -180,8 +178,8 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
 	bgpConfigurations := transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations
@@ -201,20 +199,21 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceTransitGatewayConnectPeerRead(ctx, d, meta)
 }
 
-func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Peer: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayConnectPeer(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{
+	input := ec2.DeleteTransitGatewayConnectPeerInput{
 		TransitGatewayConnectPeerId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayConnectPeer(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayConnectPeerIDNotFound) {
 		return diags

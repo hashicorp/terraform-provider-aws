@@ -34,7 +34,7 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", ""),

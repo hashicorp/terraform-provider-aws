@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
 func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceOrganizationAdminAccountRegistration{}, nil
 }
@@ -30,10 +30,6 @@ const (
 
 type resourceOrganizationAdminAccountRegistration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceOrganizationAdminAccountRegistration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_organization_admin_account_registration"
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

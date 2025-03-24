@@ -18,6 +18,7 @@ package names
 import (
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -127,6 +128,7 @@ const (
 	ServiceCatalogEndpointID               = "servicecatalog"
 	SSMEndpointID                          = "ssm"
 	SSMIncidentsEndpointID                 = "ssm-incidents"
+	SSMQuickSetupEndpointID                = "ssm-quicksetup"
 	SSOAdminEndpointID                     = "sso"
 	STSEndpointID                          = "sts"
 	SchedulerEndpointID                    = "scheduler"
@@ -142,60 +144,6 @@ const (
 	VerifiedPermissionsEndpointID          = "verifiedpermissions"
 	WAFEndpointID                          = "waf"
 	WAFRegionalEndpointID                  = "waf-regional"
-)
-
-const (
-	// AWS Standard partition's regions.
-	GlobalRegionID = "aws-global" // AWS Standard global region.
-
-	AFSouth1RegionID     = "af-south-1"     // Africa (Cape Town).
-	APEast1RegionID      = "ap-east-1"      // Asia Pacific (Hong Kong).
-	APNortheast1RegionID = "ap-northeast-1" // Asia Pacific (Tokyo).
-	APNortheast2RegionID = "ap-northeast-2" // Asia Pacific (Seoul).
-	APNortheast3RegionID = "ap-northeast-3" // Asia Pacific (Osaka).
-	APSouth1RegionID     = "ap-south-1"     // Asia Pacific (Mumbai).
-	APSouth2RegionID     = "ap-south-2"     // Asia Pacific (Hyderabad).
-	APSoutheast1RegionID = "ap-southeast-1" // Asia Pacific (Singapore).
-	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
-	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
-	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
-	APSoutheast5RegionID = "ap-southeast-5" // Asia Pacific (Malaysia).
-	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
-	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
-	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
-	EUCentral2RegionID   = "eu-central-2"   // Europe (Zurich).
-	EUNorth1RegionID     = "eu-north-1"     // Europe (Stockholm).
-	EUSouth1RegionID     = "eu-south-1"     // Europe (Milan).
-	EUSouth2RegionID     = "eu-south-2"     // Europe (Spain).
-	EUWest1RegionID      = "eu-west-1"      // Europe (Ireland).
-	EUWest2RegionID      = "eu-west-2"      // Europe (London).
-	EUWest3RegionID      = "eu-west-3"      // Europe (Paris).
-	ILCentral1RegionID   = "il-central-1"   // Israel (Tel Aviv).
-	MECentral1RegionID   = "me-central-1"   // Middle East (UAE).
-	MESouth1RegionID     = "me-south-1"     // Middle East (Bahrain).
-	SAEast1RegionID      = "sa-east-1"      // South America (Sao Paulo).
-	USEast1RegionID      = "us-east-1"      // US East (N. Virginia).
-	USEast2RegionID      = "us-east-2"      // US East (Ohio).
-	USWest1RegionID      = "us-west-1"      // US West (N. California).
-	USWest2RegionID      = "us-west-2"      // US West (Oregon).
-
-	// AWS China partition's regions.
-	CNNorth1RegionID     = "cn-north-1"     // China (Beijing).
-	CNNorthwest1RegionID = "cn-northwest-1" // China (Ningxia).
-
-	// AWS GovCloud (US) partition's regions.
-	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
-	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
-
-	// AWS ISO (US) partition's regions.
-	USISOEast1RegionID = "us-iso-east-1" // US ISO East.
-	USISOWest1RegionID = "us-iso-west-1" // US ISO WEST.
-
-	// AWS ISOB (US) partition's regions.
-	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
-
-	// AWS ISOF partition's regions.
-	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
 // PartitionForRegion returns the partition for the given Region.
@@ -276,10 +224,8 @@ func readHCLIntoServiceData() error {
 
 func ProviderPackageForAlias(serviceAlias string) (string, error) {
 	for k, v := range serviceData {
-		for _, hclKey := range v.aliases {
-			if serviceAlias == hclKey {
-				return k, nil
-			}
+		if slices.Contains(v.aliases, serviceAlias) {
+			return k, nil
 		}
 	}
 

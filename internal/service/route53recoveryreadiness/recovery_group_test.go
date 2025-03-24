@@ -34,7 +34,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -86,7 +86,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_nestedCell(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_andCell(rName, rNameCell),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "1"),
 				),
 			},
@@ -157,7 +157,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

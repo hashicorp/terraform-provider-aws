@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,7 +43,7 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`KeyPair/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -78,7 +80,7 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 				Config: testAccKeyPairConfig_imported(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`KeyPair/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
 					resource.TestCheckNoResourceAttr(resourceName, "encrypted_fingerprint"),
@@ -110,10 +112,11 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 				Config: testAccKeyPairConfig_encrypted(rName, testKeyPairPubKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`KeyPair/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_private_key"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
 				),

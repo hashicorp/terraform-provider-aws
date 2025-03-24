@@ -37,7 +37,7 @@ func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
@@ -80,7 +80,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 				Config: testAccGatewayConfig_typeFileFSxSMB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
@@ -123,7 +123,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 				Config: testAccGatewayConfig_typeFileS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
@@ -166,7 +166,7 @@ func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 				Config: testAccGatewayConfig_typeStored(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
@@ -209,7 +209,7 @@ func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 				Config: testAccGatewayConfig_typeVtl(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
@@ -250,7 +250,7 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),

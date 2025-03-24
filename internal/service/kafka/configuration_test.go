@@ -36,7 +36,7 @@ func TestAccKafkaConfiguration_basic(t *testing.T) {
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kafka", regexache.MustCompile(`configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`configuration/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "1"),

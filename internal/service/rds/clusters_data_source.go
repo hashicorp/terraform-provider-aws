@@ -39,7 +39,7 @@ func dataSourceClusters() *schema.Resource {
 	}
 }
 
-func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -63,7 +63,7 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 		clusterIdentifiers = append(clusterIdentifiers, aws.ToString(cluster.DBClusterIdentifier))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("cluster_arns", clusterARNs)
 	d.Set("cluster_identifiers", clusterIdentifiers)
 

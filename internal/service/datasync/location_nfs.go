@@ -107,24 +107,22 @@ func resourceLocationNFS() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationNfsInput{
-		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
+		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]any)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
-		input.MountOptions = expandNFSMountOptions(v.([]interface{}))
+		input.MountOptions = expandNFSMountOptions(v.([]any))
 	}
 
 	output, err := conn.CreateLocationNfs(ctx, input)
@@ -138,7 +136,7 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationNFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -178,19 +176,19 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
-			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
+			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]any)),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		}
 
 		if v, ok := d.GetOk("mount_options"); ok {
-			input.MountOptions = expandNFSMountOptions(v.([]interface{}))
+			input.MountOptions = expandNFSMountOptions(v.([]any))
 		}
 
 		_, err := conn.UpdateLocationNfs(ctx, input)
@@ -203,14 +201,15 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationNFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
@@ -248,12 +247,12 @@ func findLocationNFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	return output, nil
 }
 
-func expandNFSMountOptions(l []interface{}) *awstypes.NfsMountOptions {
+func expandNFSMountOptions(l []any) *awstypes.NfsMountOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	nfsMountOptions := &awstypes.NfsMountOptions{
 		Version: awstypes.NfsVersion(m[names.AttrVersion].(string)),
@@ -262,36 +261,36 @@ func expandNFSMountOptions(l []interface{}) *awstypes.NfsMountOptions {
 	return nfsMountOptions
 }
 
-func flattenNFSMountOptions(mountOptions *awstypes.NfsMountOptions) []interface{} {
+func flattenNFSMountOptions(mountOptions *awstypes.NfsMountOptions) []any {
 	if mountOptions == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrVersion: string(mountOptions.Version),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOnPremConfig(onPremConfig *awstypes.OnPremConfig) []interface{} {
+func flattenOnPremConfig(onPremConfig *awstypes.OnPremConfig) []any {
 	if onPremConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"agent_arns": onPremConfig.AgentArns,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandOnPremConfig(l []interface{}) *awstypes.OnPremConfig {
+func expandOnPremConfig(l []any) *awstypes.OnPremConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	onPremConfig := &awstypes.OnPremConfig{
 		AgentArns: flex.ExpandStringValueSet(m["agent_arns"].(*schema.Set)),

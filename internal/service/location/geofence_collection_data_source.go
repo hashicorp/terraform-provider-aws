@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_geofence_collection")
+// @SDKDataSource("aws_location_geofence_collection", name="Geofence Collection")
 func DataSourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGeofenceCollectionRead,
@@ -58,7 +58,7 @@ const (
 	DSNameGeofenceCollection = "Geofence Collection Data Source"
 )
 
-func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)

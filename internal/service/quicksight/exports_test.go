@@ -18,6 +18,7 @@ var (
 	ResourceIngestion           = newIngestionResource
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
+	ResourceRoleMembership      = newResourceRoleMembership
 	ResourceTemplate            = resourceTemplate
 	ResourceTemplateAlias       = newTemplateAliasResource
 	ResourceTheme               = resourceTheme
@@ -41,6 +42,7 @@ var (
 	FindIngestionByThreePartKey           = findIngestionByThreePartKey
 	FindNamespaceByTwoPartKey             = findNamespaceByTwoPartKey
 	FindRefreshScheduleByThreePartKey     = findRefreshScheduleByThreePartKey
+	FindRoleMembershipByMultiPartKey      = findRoleMembershipByMultiPartKey
 	FindTemplateAliasByThreePartKey       = findTemplateAliasByThreePartKey
 	FindTemplateByTwoPartKey              = findTemplateByTwoPartKey
 	FindThemeByTwoPartKey                 = findThemeByTwoPartKey

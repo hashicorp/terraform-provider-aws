@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -186,24 +185,24 @@ func ResourceResponsePlan() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
-		Actions:          expandAction(d.Get(names.AttrAction).([]interface{})),
+		Actions:          expandAction(d.Get(names.AttrAction).([]any)),
 		ChatChannel:      expandChatChannel(d.Get("chat_channel").(*schema.Set)),
 		DisplayName:      aws.String(d.Get(names.AttrDisplayName).(string)),
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
-		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
-		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
+		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]any)),
+		Integrations:     expandIntegration(d.Get("integration").([]any)),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -223,7 +222,7 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
-func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -246,7 +245,7 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -256,7 +255,7 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChanges(names.AttrAction) {
-			input.Actions = expandAction(d.Get(names.AttrAction).([]interface{}))
+			input.Actions = expandAction(d.Get(names.AttrAction).([]any))
 		}
 
 		if d.HasChanges("chat_channel") {
@@ -273,12 +272,12 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChanges("incident_template") {
 			incidentTemplate := d.Get("incident_template")
-			template := expandIncidentTemplate(incidentTemplate.([]interface{}))
+			template := expandIncidentTemplate(incidentTemplate.([]any))
 			updateResponsePlanInputWithIncidentTemplate(input, template)
 		}
 
 		if d.HasChanges("integration") {
-			input.Integrations = expandIntegration(d.Get("integration").([]interface{}))
+			input.Integrations = expandIntegration(d.Get("integration").([]any))
 		}
 
 		_, err := client.UpdateResponsePlan(ctx, input)
@@ -291,7 +290,7 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
-func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 

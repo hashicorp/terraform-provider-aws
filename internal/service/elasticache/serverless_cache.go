@@ -37,7 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Serverless Cache")
+// @FrameworkResource("aws_elasticache_serverless_cache", name="Serverless Cache")
 // @Tags(identifierAttribute="arn")
 func newServerlessCacheResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &serverlessCacheResource{}
@@ -53,10 +53,6 @@ type serverlessCacheResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*serverlessCacheResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_elasticache_serverless_cache"
 }
 
 func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -340,9 +336,20 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	if serverlessCacheHasChanges(ctx, new, old) {
-		input := &elasticache.ModifyServerlessCacheInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, diff.IgnoredFieldNamesOpts()...)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 		// Unset engine related stuff to prevent the following error:
 		// This API supports only cross-engine upgrades to Valkey engine currently.
 		if new.Engine.Equal(old.Engine) {
@@ -351,11 +358,8 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
 			input.MajorEngineVersion = nil
 		}
-		if response.Diagnostics.HasError() {
-			return
-		}
 
-		_, err := conn.ModifyServerlessCache(ctx, input)
+		_, err := conn.ModifyServerlessCache(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
@@ -397,7 +401,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]interface{}{
+	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -406,7 +410,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 		FinalSnapshotName:   nil,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -425,10 +429,6 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 		return
 	}
-}
-
-func (r *serverlessCacheResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findServerlessCache(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeServerlessCachesInput) (*awstypes.ServerlessCache, error) {
@@ -474,7 +474,7 @@ func findServerlessCacheByID(ctx context.Context, conn *elasticache.Client, id s
 }
 
 func statusServerlessCache(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServerlessCacheByID(ctx, conn, cacheClusterID)
 
 		if tfresource.NotFound(err) {
@@ -595,13 +595,4 @@ type ecpuPerSecondModel struct {
 type endpointModel struct {
 	Address types.String `tfsdk:"address"`
 	Port    types.Int64  `tfsdk:"port"`
-}
-
-func serverlessCacheHasChanges(_ context.Context, plan, state serverlessCacheResourceModel) bool {
-	return !plan.CacheUsageLimits.Equal(state.CacheUsageLimits) ||
-		!plan.DailySnapshotTime.Equal(state.DailySnapshotTime) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.UserGroupID.Equal(state.UserGroupID) ||
-		!plan.SecurityGroupIDs.Equal(state.SecurityGroupIDs) ||
-		!plan.SnapshotRetentionLimit.Equal(state.SnapshotRetentionLimit)
 }

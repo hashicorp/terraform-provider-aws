@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Region")
+// @FrameworkDataSource("aws_region", name="Region")
 func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &regionDataSource{}
 
@@ -29,10 +29,6 @@ func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, e
 
 type regionDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*regionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_region"
 }
 
 func (d *regionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -100,7 +96,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
-		name := d.Meta().Region
+		name := d.Meta().Region(ctx)
 		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {

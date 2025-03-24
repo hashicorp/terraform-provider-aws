@@ -48,7 +48,7 @@ func testAccResponsePlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", "3"),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
 				),
 			},
 			{
@@ -100,7 +100,7 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", iniTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", "1"),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", updName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", updName)),
 				),
 			},
 			{

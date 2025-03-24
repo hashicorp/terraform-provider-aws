@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Recommendation Preferences")
+// @FrameworkResource("aws_computeoptimizer_recommendation_preferences", name="Recommendation Preferences")
 func newRecommendationPreferencesResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &recommendationPreferencesResource{}
 
@@ -45,10 +45,6 @@ func newRecommendationPreferencesResource(context.Context) (resource.ResourceWit
 type recommendationPreferencesResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*recommendationPreferencesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_computeoptimizer_recommendation_preferences"
 }
 
 func (r *recommendationPreferencesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

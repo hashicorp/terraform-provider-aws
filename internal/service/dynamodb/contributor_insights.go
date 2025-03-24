@@ -55,7 +55,7 @@ func resourceContributorInsights() *schema.Resource {
 	}
 }
 
-func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -77,7 +77,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Contributor Insights for table (%s): %s", tableName, err)
 	}
 
-	d.SetId(contributorInsightsCreateResourceID(tableName, indexName, meta.(*conns.AWSClient).AccountID))
+	d.SetId(contributorInsightsCreateResourceID(tableName, indexName, meta.(*conns.AWSClient).AccountID(ctx)))
 
 	if _, err := waitContributorInsightsCreated(ctx, conn, tableName, indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Contributor Insights (%s) create: %s", d.Id(), err)
@@ -86,7 +86,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceContributorInsightsRead(ctx, d, meta)...)
 }
 
-func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -217,7 +217,7 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 }
 
 func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
 		if tfresource.NotFound(err) {

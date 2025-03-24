@@ -43,10 +43,6 @@ type ingestionResource struct {
 	framework.WithImportByID
 }
 
-func (r *ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_ingestion"
-}
-
 func (r *ingestionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -100,7 +96,7 @@ func (r *ingestionResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, dataSetID, ingestionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.DataSetID), flex.StringValueFromFramework(ctx, plan.IngestionID)
 	in := quicksight.CreateIngestionInput{

@@ -45,7 +45,7 @@ func testAccDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.auto_mount_home_efs", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_propagation", "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
@@ -730,6 +730,37 @@ func testAccDomain_rStudioServerProDomainSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_rStudioDomainDisabledNetworkUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_rStudioDomainDisabledNetworkUpdate(rName, "PublicInternetOnly"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_rStudioDomainDisabledNetworkUpdate(rName, "VpcOnly"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "VpcOnly")),
+			},
+		},
+	})
+}
+
 func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -1240,7 +1271,7 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -1775,7 +1806,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Domain (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker domain %q still exists", rs.Primary.ID)
@@ -2485,6 +2516,26 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName, connectURL, packageURL))
+}
+
+func testAccDomainConfig_rStudioDomainDisabledNetworkUpdate(rName, networkAccess string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseWithLicense(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name             = %[1]q
+  auth_mode               = "IAM"
+  vpc_id                  = aws_vpc.test.id
+  subnet_ids              = aws_subnet.test[*].id
+  app_network_access_type = %[2]q
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, networkAccess))
 }
 
 func testAccDomainConfig_baseWithLicense(rName string) string {

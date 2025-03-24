@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,14 +44,8 @@ func resourceStream() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				shardCount := diff.Get("shard_count").(int)
-				streamMode := types.StreamModeProvisioned
-				if v, ok := diff.GetOk("stream_mode_details.0.stream_mode"); ok {
-					streamMode = types.StreamMode(v.(string))
-				}
-				switch streamMode {
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				switch streamMode, shardCount := getStreamMode(diff), diff.Get("shard_count").(int); streamMode {
 				case types.StreamModeOnDemand:
 					if shardCount > 0 {
 						return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
@@ -59,8 +54,31 @@ func resourceStream() *schema.Resource {
 					if shardCount < 1 {
 						return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
 					}
-				default:
-					return fmt.Errorf("unsupported stream mode %s", streamMode)
+				}
+
+				return nil
+			},
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
+
+				output, err := findLimits(ctx, conn)
+
+				if err != nil {
+					return nil //nolint:nilerr // Explicitly OK if IAM permissions not set (or any other error)
+				}
+
+				switch streamMode := getStreamMode(diff); streamMode {
+				case types.StreamModeOnDemand:
+					if diff.Id() == "" {
+						if streamCount, streamLimit := aws.ToInt32(output.OnDemandStreamCount)+1, aws.ToInt32(output.OnDemandStreamCountLimit); streamCount > streamLimit {
+							return fmt.Errorf("on-demand stream count (%d) would exceed the Kinesis account limit (%d)", streamCount, streamLimit)
+						}
+					}
+				case types.StreamModeProvisioned:
+					o, n := diff.GetChange("shard_count")
+					if shardCount, shardLimit := aws.ToInt32(output.OpenShardCount)+int32(n.(int)-o.(int)), aws.ToInt32(output.ShardLimit); shardCount > shardLimit {
+						return fmt.Errorf("open shard count (%d) would exceed the Kinesis account limit (%d)", shardCount, shardLimit)
+					}
 				}
 
 				return nil
@@ -148,7 +166,7 @@ func resourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -157,8 +175,8 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		StreamName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.StreamModeDetails = expandStreamModeDetails(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.StreamModeDetails = expandStreamModeDetails(v.([]any)[0].(map[string]any))
 	}
 
 	if streamMode := getStreamMode(d); streamMode == types.StreamModeProvisioned {
@@ -247,7 +265,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -284,7 +302,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("shard_level_metrics", shardLevelMetrics)
 	if details := stream.StreamModeDetails; details != nil {
-		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
+		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(details)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {
@@ -294,7 +312,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -465,7 +483,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -491,7 +509,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 	output, err := findStreamByName(ctx, conn, d.Id())
@@ -503,6 +521,21 @@ func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(output.StreamARN))
 	d.Set(names.AttrName, output.StreamName)
 	return []*schema.ResourceData{d}, nil
+}
+
+func findLimits(ctx context.Context, conn *kinesis.Client) (*kinesis.DescribeLimitsOutput, error) {
+	input := &kinesis.DescribeLimitsInput{}
+	output, err := conn.DescribeLimits(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*types.StreamDescriptionSummary, error) {
@@ -531,7 +564,7 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 }
 
 func streamStatus(ctx context.Context, conn *kinesis.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStreamByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -603,7 +636,7 @@ func waitStreamUpdated(ctx context.Context, conn *kinesis.Client, name string, t
 	return nil, err
 }
 
-func getStreamMode(d *schema.ResourceData) types.StreamMode {
+func getStreamMode(d sdkv2.ResourceDiffer) types.StreamMode {
 	streamMode, ok := d.GetOk("stream_mode_details.0.stream_mode")
 	if !ok {
 		return types.StreamModeProvisioned
@@ -612,7 +645,7 @@ func getStreamMode(d *schema.ResourceData) types.StreamMode {
 	return types.StreamMode(streamMode.(string))
 }
 
-func expandStreamModeDetails(d map[string]interface{}) *types.StreamModeDetails {
+func expandStreamModeDetails(d map[string]any) *types.StreamModeDetails {
 	if d == nil {
 		return nil
 	}
@@ -626,12 +659,12 @@ func expandStreamModeDetails(d map[string]interface{}) *types.StreamModeDetails 
 	return apiObject
 }
 
-func flattenStreamModeDetails(apiObject *types.StreamModeDetails) map[string]interface{} {
+func flattenStreamModeDetails(apiObject *types.StreamModeDetails) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"stream_mode": apiObject.StreamMode,
 	}
 

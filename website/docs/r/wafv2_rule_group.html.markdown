@@ -320,6 +320,7 @@ This resource supports the following arguments:
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [Custom Response Body](#custom-response-body) below for details.
 * `description` - (Optional) A friendly description of the rule group.
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -588,6 +589,8 @@ An empty configuration block `{}` should be used when specifying `all_query_argu
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
 * `header_order` - (Optional) Inspect the request headers. See [Header Order](#header-order) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
+* `ja3_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3_fingerprint`](#ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja4_fingerprint`](#ja3_fingerprint-block) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -636,6 +639,18 @@ The `headers` block supports the following arguments:
     * `excluded_headers` - An array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
 * `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
 * `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+
+### `ja3_fingerprint` Block
+
+The `ja3_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) The match status to assign to the web request if the request doesn't have a JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### `ja4_fingerprint` Block
+
+The `ja4_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) The match status to assign to the web request if the request doesn't have a JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### JSON Body
 
@@ -719,6 +734,8 @@ The `custom_key` block supports the following arguments:
 * `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
 * `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
+* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
 * `label_namespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `label_namespace`](#ratelimit-label_namespace-block) below for details.
 * `query_argument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `query_argument`](#ratelimit-query_argument-block) below for details.
 * `query_string` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `query_string`](#ratelimit-query_string-block) below for details.
@@ -759,6 +776,22 @@ The `header` block supports the following arguments:
 Use the request's originating IP address as an aggregate key. Each distinct IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the IP address by specifying `IP` in your rate-based statement's `aggregate_key_type`.
 
 The `ip` block is configured as an empty block `{}`.
+
+### RateLimit `ja3_fingerprint` Block
+
+Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+
+The `ja3_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### RateLimit `ja4_fingerprint` Block
+
+Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+
+The `ja4_fingerprint` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### RateLimit `label_namespace` Block
 

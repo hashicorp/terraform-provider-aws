@@ -62,7 +62,7 @@ func dataSourceVirtualGateway() *schema.Resource {
 	}
 }
 
-func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -92,7 +92,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {

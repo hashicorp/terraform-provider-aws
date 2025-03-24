@@ -30,7 +30,7 @@ func resourceUsagePlanKey() *schema.Resource {
 		DeleteWithoutTimeout: resourceUsagePlanKeyDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected USAGE-PLAN-ID/USAGE-PLAN-KEY-ID", d.Id())
@@ -72,17 +72,17 @@ func resourceUsagePlanKey() *schema.Resource {
 	}
 }
 
-func resourceUsagePlanKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsagePlanKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.CreateUsagePlanKeyInput{
+	input := apigateway.CreateUsagePlanKeyInput{
 		KeyId:       aws.String(d.Get(names.AttrKeyID).(string)),
 		KeyType:     aws.String(d.Get("key_type").(string)),
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 	}
 
-	output, err := conn.CreateUsagePlanKey(ctx, input)
+	output, err := conn.CreateUsagePlanKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Usage Plan Key: %s", err)
@@ -93,7 +93,7 @@ func resourceUsagePlanKeyCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceUsagePlanKeyRead(ctx, d, meta)...)
 }
 
-func resourceUsagePlanKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsagePlanKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -116,15 +116,16 @@ func resourceUsagePlanKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceUsagePlanKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsagePlanKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan Key: %s", d.Id())
-	_, err := conn.DeleteUsagePlanKey(ctx, &apigateway.DeleteUsagePlanKeyInput{
+	input := apigateway.DeleteUsagePlanKeyInput{
 		KeyId:       aws.String(d.Get(names.AttrKeyID).(string)),
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
-	})
+	}
+	_, err := conn.DeleteUsagePlanKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -138,12 +139,12 @@ func resourceUsagePlanKeyDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findUsagePlanKeyByTwoPartKey(ctx context.Context, conn *apigateway.Client, usagePlanID, keyID string) (*apigateway.GetUsagePlanKeyOutput, error) {
-	input := &apigateway.GetUsagePlanKeyInput{
+	input := apigateway.GetUsagePlanKeyInput{
 		KeyId:       aws.String(keyID),
 		UsagePlanId: aws.String(usagePlanID),
 	}
 
-	output, err := conn.GetUsagePlanKey(ctx, input)
+	output, err := conn.GetUsagePlanKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

@@ -171,12 +171,10 @@ func resourceReplicationConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -190,8 +188,8 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		TargetEndpointArn:           aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("compute_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ComputeConfig = expandComputeConfigInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("replication_settings"); ok {
@@ -223,7 +221,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -254,7 +252,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -268,8 +266,8 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("compute_config") {
-			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("compute_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ComputeConfig = expandComputeConfigInput(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -325,7 +323,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -334,9 +332,10 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Config: %s", d.Id())
-	_, err := conn.DeleteReplicationConfig(ctx, &dms.DeleteReplicationConfigInput{
+	input := dms.DeleteReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicationConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -446,7 +445,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 }
 
 func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -609,12 +608,12 @@ func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout 
 	return nil
 }
 
-func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []interface{} {
+func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrAvailabilityZone:           aws.ToString(apiObject.AvailabilityZone),
 		"dns_name_servers":                   aws.ToString(apiObject.DnsNameServers),
 		names.AttrKMSKeyID:                   aws.ToString(apiObject.KmsKeyId),
@@ -626,10 +625,10 @@ func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []interface{} {
 		names.AttrVPCSecurityGroupIDs:        apiObject.VpcSecurityGroupIds,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandComputeConfigInput(tfMap map[string]interface{}) *awstypes.ComputeConfig {
+func expandComputeConfigInput(tfMap map[string]any) *awstypes.ComputeConfig {
 	if tfMap == nil {
 		return nil
 	}

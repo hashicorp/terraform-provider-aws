@@ -28,6 +28,10 @@ func dataSourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -40,7 +44,7 @@ func dataSourceGateway() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -57,6 +61,7 @@ func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(gateway.DirectConnectGatewayId))
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(gateway.AmazonSideAsn), 10))
+	d.Set(names.AttrARN, gatewayARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrOwnerAccountID, gateway.OwnerAccount)
 
 	return diags

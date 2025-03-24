@@ -11,6 +11,8 @@ Terraform resource for maintaining exclusive management of inline policies assig
 
 !> This resource takes exclusive ownership over inline policies assigned to a user. This includes removal of inline policies which are not explicitly configured. To prevent persistent drift, ensure any `aws_iam_user_policy` resources managed alongside this resource are included in the `policy_names` argument.
 
+~> Destruction of this resource means Terraform will no longer manage reconciliation of the configured inline policy assignments. It __will not__ delete the configured policies from the user.
+
 ## Example Usage
 
 ### Basic Usage

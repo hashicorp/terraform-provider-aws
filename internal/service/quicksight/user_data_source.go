@@ -69,11 +69,11 @@ func dataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}

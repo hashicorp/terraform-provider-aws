@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +37,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 				Config: testAccCustomRoutingEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}/endpoint-group/[a-z0-9]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.protocols.#", "1"),
@@ -43,6 +45,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.to_port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -94,7 +97,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointConfiguration(t 
 				Config: testAccCustomRoutingEndpointGroupConfig_endpointConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}/endpoint-group/[a-z0-9]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.protocols.#", "1"),
@@ -130,7 +133,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointGroupRegion(t *t
 				Config: testAccCustomRoutingEndpointGroupConfig_endpointGroupRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}/endpoint-group/[a-z0-9]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.protocols.#", "1"),
@@ -202,7 +205,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_custom_routing_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.arn
 
   port_range {
     from_port = 443
@@ -211,7 +214,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "test" {
 }
 
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
+  listener_arn = aws_globalaccelerator_custom_routing_listener.test.arn
 
   destination_configuration {
     from_port = 443
@@ -229,7 +232,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_custom_routing_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.arn
 
   port_range {
     from_port = 1
@@ -238,7 +241,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "test" {
 }
 
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
+  listener_arn = aws_globalaccelerator_custom_routing_listener.test.arn
 
   destination_configuration {
     from_port = 8080
@@ -288,7 +291,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_custom_routing_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.arn
 
   port_range {
     from_port = 443
@@ -297,7 +300,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "test" {
 }
 
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
+  listener_arn = aws_globalaccelerator_custom_routing_listener.test.arn
 
   destination_configuration {
     from_port = 443

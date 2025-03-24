@@ -65,7 +65,7 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -102,12 +102,12 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "enabling Macie Account: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -136,7 +136,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -159,7 +159,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)

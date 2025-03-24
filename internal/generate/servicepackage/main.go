@@ -7,7 +7,6 @@
 package main
 
 import (
-	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -15,11 +14,12 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"slices"
 	"strings"
+	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -58,8 +58,9 @@ func main() {
 		v := &visitor{
 			g: g,
 
-			frameworkDataSources: make([]ResourceDatum, 0),
-			frameworkResources:   make([]ResourceDatum, 0),
+			ephemeralResources:   make(map[string]ResourceDatum, 0),
+			frameworkDataSources: make(map[string]ResourceDatum, 0),
+			frameworkResources:   make(map[string]ResourceDatum, 0),
 			sdkDataSources:       make(map[string]ResourceDatum),
 			sdkResources:         make(map[string]ResourceDatum),
 		}
@@ -71,27 +72,23 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			GenerateClient:       l.GenerateClient(),
-			ClientSDKV2:          l.IsClientSDKV2(),
-			GoV2Package:          l.GoV2Package(),
-			ProviderPackage:      p,
-			ProviderNameUpper:    l.ProviderNameUpper(),
-			FrameworkDataSources: v.frameworkDataSources,
-			FrameworkResources:   v.frameworkResources,
-			SDKDataSources:       v.sdkDataSources,
-			SDKResources:         v.sdkResources,
+			GenerateClient:          l.GenerateClient(),
+			EndpointRegionOverrides: l.EndpointRegionOverrides(),
+			GoV2Package:             l.GoV2Package(),
+			ProviderPackage:         p,
+			ProviderNameUpper:       l.ProviderNameUpper(),
+			EphemeralResources:      v.ephemeralResources,
+			FrameworkDataSources:    v.frameworkDataSources,
+			FrameworkResources:      v.frameworkResources,
+			SDKDataSources:          v.sdkDataSources,
+			SDKResources:            v.sdkResources,
 		}
-
-		slices.SortStableFunc(s.FrameworkDataSources, func(a, b ResourceDatum) int {
-			return cmp.Compare(a.FactoryName, b.FactoryName)
-		})
-		slices.SortStableFunc(s.FrameworkResources, func(a, b ResourceDatum) int {
-			return cmp.Compare(a.FactoryName, b.FactoryName)
-		})
-
+		templateFuncMap := template.FuncMap{
+			"Camel": names.ToCamelCase,
+		}
 		d := g.NewGoFileDestination(filename)
 
-		if err := d.BufferTemplate("servicepackagedata", tmpl, s); err != nil {
+		if err := d.BufferTemplate("servicepackagedata", tmpl, s, templateFuncMap); err != nil {
 			g.Fatalf("generating %s service package data: %s", p, err)
 		}
 
@@ -126,15 +123,16 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
-	GenerateClient       bool
-	ClientSDKV2          bool
-	GoV2Package          string // AWS SDK for Go v2 package name
-	ProviderPackage      string
-	ProviderNameUpper    string
-	FrameworkDataSources []ResourceDatum
-	FrameworkResources   []ResourceDatum
-	SDKDataSources       map[string]ResourceDatum
-	SDKResources         map[string]ResourceDatum
+	GenerateClient          bool
+	EndpointRegionOverrides map[string]string
+	GoV2Package             string // AWS SDK for Go v2 package name
+	ProviderPackage         string
+	ProviderNameUpper       string
+	EphemeralResources      map[string]ResourceDatum
+	FrameworkDataSources    map[string]ResourceDatum
+	FrameworkResources      map[string]ResourceDatum
+	SDKDataSources          map[string]ResourceDatum
+	SDKResources            map[string]ResourceDatum
 }
 
 //go:embed file.gtpl
@@ -145,7 +143,8 @@ var endpointResolverTmpl string
 
 // Annotation processing.
 var (
-	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
+	annotation    = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
+	validTypeName = regexache.MustCompile(`^aws(?:_[a-z0-9]+)+$`)
 )
 
 type visitor struct {
@@ -156,8 +155,9 @@ type visitor struct {
 	functionName string
 	packageName  string
 
-	frameworkDataSources []ResourceDatum
-	frameworkResources   []ResourceDatum
+	ephemeralResources   map[string]ResourceDatum
+	frameworkDataSources map[string]ResourceDatum
+	frameworkResources   map[string]ResourceDatum
 	sdkDataSources       map[string]ResourceDatum
 	sdkResources         map[string]ResourceDatum
 }
@@ -239,17 +239,74 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			switch annotationName := m[1]; annotationName {
-			case "FrameworkDataSource":
-				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			case "EphemeralResource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.ephemeralResources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					v.frameworkDataSources = append(v.frameworkDataSources, d)
+					v.ephemeralResources[typeName] = d
+				}
+			case "FrameworkDataSource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.frameworkDataSources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.frameworkDataSources[typeName] = d
 				}
 			case "FrameworkResource":
-				if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.frameworkResources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					v.frameworkResources = append(v.frameworkResources, d)
+					v.frameworkResources[typeName] = d
 				}
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
@@ -258,6 +315,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if _, ok := v.sdkDataSources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -271,6 +338,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
 
 				if _, ok := v.sdkResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

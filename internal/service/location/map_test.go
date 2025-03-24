@@ -40,7 +40,7 @@ func TestAccLocationMap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.style", "VectorHereBerlin"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "map_arn", "geo", fmt.Sprintf("map/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "map_arn", "geo", fmt.Sprintf("map/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "map_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

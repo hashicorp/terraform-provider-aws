@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_lb_listener: Remove the default `tcp_idle_timeout_seconds` value, preventing `ModifyListenerAttributes` API calls when a value is not explicitly configured
+```
+```release-note:bug
+resource/aws_lb_listener: Fix errors when updating the `tcp_idle_timeout_seconds` argument for gateway load balancers
+```

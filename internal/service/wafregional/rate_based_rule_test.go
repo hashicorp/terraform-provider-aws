@@ -35,7 +35,7 @@ func TestAccWAFRegionalRateBasedRule_basic(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`ratebasedrule/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`ratebasedrule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),

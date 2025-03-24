@@ -59,10 +59,6 @@ type sourceAPIAssociationResource struct {
 	framework.WithTimeouts
 }
 
-func (*sourceAPIAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appsync_source_api_association"
-}
-
 func (r *sourceAPIAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -391,7 +387,7 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 }
 
 func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationID, mergedAPIID)
 
 		if tfresource.NotFound(err) {

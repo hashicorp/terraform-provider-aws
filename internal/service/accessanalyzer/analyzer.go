@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,31 +97,29 @@ func resourceAnalyzer() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.Type](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
-	input := &accessanalyzer.CreateAnalyzerInput{
+	input := accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandAnalyzerConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	// Handle Organizations eventual consistency.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
-		func() (interface{}, error) {
-			return conn.CreateAnalyzer(ctx, input)
+		func() (any, error) {
+			return conn.CreateAnalyzer(ctx, &input)
 		},
 		"You must create an organization",
 	)
@@ -136,7 +133,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
 }
 
-func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
@@ -155,7 +152,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("analyzer_name", analyzer.Name)
 	d.Set(names.AttrARN, analyzer.Arn)
 	if analyzer.Configuration != nil {
-		if err := d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+		if err := d.Set(names.AttrConfiguration, []any{flattenConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	} else {
@@ -168,7 +165,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -176,15 +173,16 @@ func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
 }
 
-func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
-	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{
+	input := accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
 		ClientToken:  aws.String(id.UniqueId()),
-	})
+	}
+	_, err := conn.DeleteAnalyzer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -198,11 +196,11 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name string) (*types.AnalyzerSummary, error) {
-	input := &accessanalyzer.GetAnalyzerInput{
+	input := accessanalyzer.GetAnalyzerInput{
 		AnalyzerName: aws.String(name),
 	}
 
-	output, err := conn.GetAnalyzer(ctx, input)
+	output, err := conn.GetAnalyzer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -222,21 +220,21 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	return output.Analyzer, nil
 }
 
-func expandAnalyzerConfiguration(tfMap map[string]interface{}) types.AnalyzerConfiguration {
+func expandAnalyzerConfiguration(tfMap map[string]any) types.AnalyzerConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
 
-	if v, ok := tfMap["unused_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandUnusedAccess(v[0].(map[string]interface{}))
+	if v, ok := tfMap["unused_access"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandUnusedAccess(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandUnusedAccess(tfMap map[string]interface{}) types.UnusedAccessConfiguration {
+func expandUnusedAccess(tfMap map[string]any) types.UnusedAccessConfiguration {
 	apiObject := types.UnusedAccessConfiguration{}
 
 	if v, ok := tfMap["unused_access_age"].(int); ok && v != 0 {
@@ -246,27 +244,27 @@ func expandUnusedAccess(tfMap map[string]interface{}) types.UnusedAccessConfigur
 	return apiObject
 }
 
-func flattenConfiguration(apiObject types.AnalyzerConfiguration) map[string]interface{} {
+func flattenConfiguration(apiObject types.AnalyzerConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch v := apiObject.(type) {
 	case *types.AnalyzerConfigurationMemberUnusedAccess:
-		tfMap["unused_access"] = []interface{}{flattenUnusedAccessConfiguration(&v.Value)}
+		tfMap["unused_access"] = []any{flattenUnusedAccessConfiguration(&v.Value)}
 	}
 
 	return tfMap
 }
 
-func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) map[string]interface{} {
+func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.UnusedAccessAge; v != nil {
 		tfMap["unused_access_age"] = aws.ToInt32(v)

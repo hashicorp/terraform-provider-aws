@@ -119,6 +119,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"sasl_mechanism": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"sasl_password": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -571,7 +575,7 @@ func dataSourceEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 

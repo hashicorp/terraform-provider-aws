@@ -54,10 +54,6 @@ type resourceResourceSet struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceResourceSet) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_fms_resource_set"
-}
-
 func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resourceSetLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[resourceSetData](ctx),
@@ -290,10 +286,6 @@ func (r *resourceResourceSet) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func (r *resourceResourceSet) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -347,7 +339,7 @@ func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, ti
 }
 
 func statusResourceSet(ctx context.Context, conn *fms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResourceSetByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

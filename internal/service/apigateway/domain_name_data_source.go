@@ -54,6 +54,11 @@ func dataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"domain_name_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -66,6 +71,10 @@ func dataSourceDomainName() *schema.Resource {
 						},
 					},
 				},
+			},
+			names.AttrPolicy: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"regional_certificate_arn": {
 				Type:     schema.TypeString,
@@ -92,15 +101,19 @@ func dataSourceDomainName() *schema.Resource {
 	}
 }
 
-func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
+	var domainNameID string
 	domainName := d.Get(names.AttrDomainName).(string)
-	output, err := findDomainByName(ctx, conn, domainName)
+	if v, ok := d.GetOk("domain_name_id"); ok {
+		domainNameID = v.(string)
+	}
+	output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainNameCreateResourceID(domainName, domainNameID), err)
 	}
 
 	d.SetId(aws.ToString(output.DomainName))
@@ -113,9 +126,11 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
+	d.Set("domain_name_id", output.DomainNameId)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
+	d.Set(names.AttrPolicy, output.Policy)
 	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)

@@ -40,7 +40,7 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.core_network_address"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
@@ -85,7 +85,7 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 				Config: testAccConnectPeerConfig_noDependsOn(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.core_network_address"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
@@ -130,7 +130,7 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 				Config: testAccConnectPeerConfig_subnetARN(rName, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "NO_ENCAP"),

@@ -6,6 +6,7 @@ package fsx_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -37,7 +38,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz1)),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
@@ -52,7 +53,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
@@ -132,9 +133,9 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput1)),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", strconv.Itoa(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", strconv.Itoa(capacity1)),
 				),
 			},
 			{
@@ -149,8 +150,8 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", strconv.Itoa(capacity2)),
 				),
 			},
 			{
@@ -159,8 +160,8 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput3)),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity3)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput3)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", strconv.Itoa(capacity3)),
 				),
 			},
 		},
@@ -187,7 +188,7 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput1)),
 				),
 			},
 			{
@@ -201,8 +202,8 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput2)),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", strconv.Itoa(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput2)),
 				),
 			},
 		},
@@ -232,8 +233,8 @@ func TestAccFSxONTAPFileSystem_haPair_increase(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput)),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", strconv.Itoa(capacity1)),
 				),
 			},
 			{
@@ -249,8 +250,8 @@ func TestAccFSxONTAPFileSystem_haPair_increase(t *testing.T) {
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "4"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput)),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", strconv.Itoa(capacity2)),
 				),
 			},
 		},
@@ -734,7 +735,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity_singleAZ1(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_singleAZ1(rName, throughput1, capacity),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput1)),
 				),
 			},
 			{
@@ -748,7 +749,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity_singleAZ1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput2)),
 				),
 			},
 		},
@@ -774,7 +775,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity_multiAZ1(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_multiAZ1(rName, throughput1, capacity),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput1)),
 				),
 			},
 			{
@@ -788,7 +789,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity_multiAZ1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", strconv.Itoa(throughput2)),
 				),
 			},
 		},

@@ -78,6 +78,7 @@ The following arguments are supported:
 * `protected_resource_arns` - (Optional) The ARNs for the protected resources.
 * `protected_resource_conditions` - (Optional) The conditions for the protected resource.
 * `restore_metadata_overrides` - (Optional) Override certain restore metadata keys. See the complete list of [restore testing inferred metadata](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing-inferred-metadata.html) .
+* `validation_window_hours` - (Optional) The amount of hours available to run a validation script on the data. Valid range is `1` to `168`.
 
 The `protected_resource_conditions` block supports the following arguments:
 
@@ -118,4 +119,4 @@ Using `terraform import`, import Backup Restore Testing Selection using `name:re
 % terraform import aws_backup_restore_testing_selection.example restore_testing_selection_12345678:restore_testing_plan_12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1a0c469ece6cd78ce3838579e648aeb46196f0c8e466230b5fe29ccd270dc699 -->
+<!-- cache-key: cdktf-0.20.8 input-0b462169cc6dd60425a779d3182ec384b2e4a6c5af4616e9ea33d267cac37dff -->

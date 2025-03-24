@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +40,11 @@ func resourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
 			"event_source_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -61,12 +65,10 @@ func resourceBus() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -74,6 +76,10 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 		Tags: getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("event_source_name"); ok {
@@ -104,7 +110,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		err := createTags(ctx, conn, aws.ToString(output.EventBusArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceBusRead(ctx, d, meta)...)
 		}
 
@@ -116,7 +122,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
 
-func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -133,19 +139,27 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
 
-func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChange("kms_key_identifier") {
+	if d.HasChanges(names.AttrDescription, "kms_key_identifier") {
 		input := &eventbridge.UpdateEventBusInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
+		}
+
+		// To unset the description, the only way is to explicitly set it to the empty string
+		if v, ok := d.GetOk(names.AttrDescription); ok {
+			input.Description = aws.String(v.(string))
+		} else {
+			input.Description = aws.String("")
 		}
 
 		if v, ok := d.GetOk("kms_key_identifier"); ok {
@@ -162,7 +176,7 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
 
-func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 

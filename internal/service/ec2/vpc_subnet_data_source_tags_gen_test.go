@@ -3,6 +3,7 @@
 package ec2_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -11,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -140,7 +144,7 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullSubnetDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -171,7 +175,7 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullSubnetDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -179,4 +183,10 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 			},
 		},
 	})
+}
+
+func expectFullSubnetDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+		IdentifierAttribute: names.AttrID,
+	}, knownValue)
 }

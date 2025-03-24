@@ -6,7 +6,7 @@ package meta_test
 import (
 	"fmt"
 	"net"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -169,7 +169,6 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 
 		var (
 			cidrBlockSize int
-			cidrBlocks    sort.StringSlice
 			err           error
 		)
 
@@ -181,8 +180,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 			return fmt.Errorf("%s for eu-west-1 seem suspiciously low: %d", attribute, cidrBlockSize) // lintignore:AWSAT003
 		}
 
-		cidrBlocks = make([]string, cidrBlockSize)
-
+		cidrBlocks := make([]string, cidrBlockSize)
 		for i := range cidrBlocks {
 			cidrBlock := a[fmt.Sprintf("%s.%d", attribute, i)]
 
@@ -194,8 +192,8 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 			cidrBlocks[i] = cidrBlock
 		}
 
-		if !sort.IsSorted(cidrBlocks) {
-			return fmt.Errorf("unexpected order of %s: %s", attribute, cidrBlocks)
+		if !slices.IsSorted(cidrBlocks) {
+			return fmt.Errorf("expected %s to be sorted: %s", attribute, cidrBlocks)
 		}
 
 		return nil

@@ -48,17 +48,17 @@ func resourceAlertManagerDefinition() *schema.Resource {
 	}
 }
 
-func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
-	input := &amp.CreateAlertManagerDefinitionInput{
+	input := amp.CreateAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
 		WorkspaceId: aws.String(workspaceID),
 	}
 
-	_, err := conn.CreateAlertManagerDefinition(ctx, input)
+	_, err := conn.CreateAlertManagerDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Prometheus Alert Manager Definition (%s): %s", workspaceID, err)
@@ -73,7 +73,7 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAlertManagerDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -95,16 +95,16 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	input := &amp.PutAlertManagerDefinitionInput{
+	input := amp.PutAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	}
 
-	_, err := conn.PutAlertManagerDefinition(ctx, input)
+	_, err := conn.PutAlertManagerDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
@@ -117,14 +117,15 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAlertManagerDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Alert Manager Definition: (%s)", d.Id())
-	_, err := conn.DeleteAlertManagerDefinition(ctx, &amp.DeleteAlertManagerDefinitionInput{
+	input := amp.DeleteAlertManagerDefinitionInput{
 		WorkspaceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAlertManagerDefinition(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -142,11 +143,11 @@ func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.Resourc
 }
 
 func findAlertManagerDefinitionByID(ctx context.Context, conn *amp.Client, id string) (*types.AlertManagerDefinitionDescription, error) {
-	input := &amp.DescribeAlertManagerDefinitionInput{
+	input := amp.DescribeAlertManagerDefinitionInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeAlertManagerDefinition(ctx, input)
+	output, err := conn.DescribeAlertManagerDefinition(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -167,7 +168,7 @@ func findAlertManagerDefinitionByID(ctx context.Context, conn *amp.Client, id st
 }
 
 func statusAlertManagerDefinition(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAlertManagerDefinitionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

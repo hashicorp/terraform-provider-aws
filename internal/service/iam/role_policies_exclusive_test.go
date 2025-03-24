@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -298,7 +299,7 @@ func testAccCheckRolePoliciesExclusiveExists(ctx context.Context, name string) r
 		}
 
 		policyCount := rs.Primary.Attributes["policy_names.#"]
-		if policyCount != fmt.Sprint(len(out)) {
+		if policyCount != strconv.Itoa(len(out)) {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameRolePoliciesExclusive, roleName, errors.New("unexpected policy_names count"))
 		}
 

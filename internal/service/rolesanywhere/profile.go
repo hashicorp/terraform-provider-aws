@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,11 +77,10 @@ func resourceProfile() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -125,7 +123,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
-func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -153,7 +151,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -207,7 +205,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
-func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
@@ -252,7 +250,7 @@ func findProfileByID(ctx context.Context, conn *rolesanywhere.Client, id string)
 	return out.Profile, nil
 }
 
-func disableProfile(ctx context.Context, profileId string, meta interface{}) error {
+func disableProfile(ctx context.Context, profileId string, meta any) error {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.DisableProfileInput{
@@ -263,7 +261,7 @@ func disableProfile(ctx context.Context, profileId string, meta interface{}) err
 	return err
 }
 
-func enableProfile(ctx context.Context, profileId string, meta interface{}) error {
+func enableProfile(ctx context.Context, profileId string, meta any) error {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	input := &rolesanywhere.EnableProfileInput{

@@ -164,7 +164,7 @@ class MyConvertedCode(TerraformStack):
 
 ### Example of Exclusive Managed Policies
 
-~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource instead.
+~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role and attaches two managed IAM policies. If someone attaches another managed policy out-of-band, on the next apply, Terraform will detach that policy. If someone detaches these policies out-of-band, Terraform will attach them again.
 
@@ -216,7 +216,7 @@ class MyConvertedCode(TerraformStack):
 
 ### Example of Removing Managed Policies
 
-~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource instead.
+~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role with an empty `managed_policy_arns` argument. If someone attaches a policy out-of-band, on the next apply, Terraform will detach that policy.
 
@@ -305,4 +305,4 @@ Using `terraform import`, import IAM Roles using the `name`. For example:
 % terraform import aws_iam_role.developer developer_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d67bd5d69957baa406a35c98db144d81e10cee4123bbd860c924e559cf2f093f -->
+<!-- cache-key: cdktf-0.20.8 input-cc0706c2ff662b976d263da6b20bfd28567462ac69912e6e1cfb323fe6711d20 -->

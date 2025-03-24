@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,6 +38,11 @@ func resourceQueue() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"concurrent_jobs": {
+				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrDescription: {
@@ -90,12 +94,10 @@ func resourceQueue() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
@@ -107,12 +109,16 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("concurrent_jobs"); ok {
+		input.ConcurrentJobs = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
+	if v, ok := d.Get("reservation_plan_settings").([]any); ok && len(v) > 0 && v[0] != nil {
+		input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]any))
 	}
 
 	output, err := conn.CreateQueue(ctx, input)
@@ -126,7 +132,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
@@ -143,11 +149,12 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, queue.Arn)
+	d.Set("concurrent_jobs", queue.ConcurrentJobs)
 	d.Set(names.AttrDescription, queue.Description)
 	d.Set(names.AttrName, queue.Name)
 	d.Set("pricing_plan", queue.PricingPlan)
 	if queue.ReservationPlan != nil {
-		if err := d.Set("reservation_plan_settings", []interface{}{flattenReservationPlan(queue.ReservationPlan)}); err != nil {
+		if err := d.Set("reservation_plan_settings", []any{flattenReservationPlan(queue.ReservationPlan)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting reservation_plan_settings: %s", err)
 		}
 	} else {
@@ -158,7 +165,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
@@ -168,12 +175,16 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Status: types.QueueStatus(d.Get(names.AttrStatus).(string)),
 		}
 
+		if v, ok := d.GetOk("concurrent_jobs"); ok {
+			input.ConcurrentJobs = aws.Int32(int32(v.(int)))
+		}
+
 		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
-		if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
+		if v, ok := d.Get("reservation_plan_settings").([]any); ok && len(v) > 0 && v[0] != nil {
+			input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]any))
 		}
 
 		_, err := conn.UpdateQueue(ctx, input)
@@ -186,7 +197,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
@@ -231,7 +242,7 @@ func findQueueByName(ctx context.Context, conn *mediaconvert.Client, name string
 	return output.Queue, nil
 }
 
-func expandReservationPlanSettings(tfMap map[string]interface{}) *types.ReservationPlanSettings {
+func expandReservationPlanSettings(tfMap map[string]any) *types.ReservationPlanSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -253,12 +264,12 @@ func expandReservationPlanSettings(tfMap map[string]interface{}) *types.Reservat
 	return apiObject
 }
 
-func flattenReservationPlan(apiObject *types.ReservationPlan) map[string]interface{} {
+func flattenReservationPlan(apiObject *types.ReservationPlan) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"commitment":     apiObject.Commitment,
 		"renewal_type":   apiObject.RenewalType,
 		"reserved_slots": aws.ToInt32(apiObject.ReservedSlots),

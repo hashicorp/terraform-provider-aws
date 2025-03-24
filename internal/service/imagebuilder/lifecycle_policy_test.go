@@ -34,7 +34,7 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Used for setting lifecycle policies"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

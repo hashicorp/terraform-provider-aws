@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks application resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```python
@@ -131,4 +133,4 @@ Using `terraform import`, import Opsworks Application using the `id`. For exampl
 % terraform import aws_opsworks_application.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4eedaae0cb4e4e8acfb36a8488b25242904e757fb2ce525f27f16d8958622f8a -->
+<!-- cache-key: cdktf-0.20.8 input-0b1404407b8a13b7be768968b04e360f6deffbc8ed0a272c97644f9b2707e98e -->

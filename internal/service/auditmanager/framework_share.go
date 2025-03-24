@@ -6,6 +6,7 @@ package auditmanager
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -25,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
 func newResourceFrameworkShare(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFrameworkShare{}, nil
 }
@@ -36,10 +37,6 @@ const (
 
 type resourceFrameworkShare struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework_share"
 }
 
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -223,12 +220,7 @@ func CanBeRevoked(status string) bool {
 		awstypes.ShareRequestStatusFailed,
 		awstypes.ShareRequestStatusRevoked,
 	)
-	for _, s := range nonRevokable {
-		if s == status {
-			return false
-		}
-	}
-	return true
+	return !slices.Contains(nonRevokable, status)
 }
 
 type resourceFrameworkShareData struct {
