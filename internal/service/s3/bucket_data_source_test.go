@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -107,6 +109,28 @@ func TestAccS3BucketDataSource_accessPointAlias(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketDataSource_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		Steps: []resource.TestStep{
+			{
+				// Attempt to read a bucket created in a different Region.
+				Config:      testAccBucketDataSourceConfig_crossRegion(rName),
+				ExpectError: regexache.MustCompile(`empty result`),
+			},
+		},
+	})
+}
+
 func testAccBucketDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -190,4 +214,18 @@ data "aws_s3_bucket" "test" {
   bucket = aws_s3_access_point.test.alias
 }
 `, rName)
+}
+
+func testAccBucketDataSourceConfig_crossRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  provider = "awsalternate"
+
+  bucket = %[1]q
+}
+
+data "aws_s3_bucket" "test" {
+  bucket = aws_s3_bucket.test.id
+}
+`, rName))
 }
