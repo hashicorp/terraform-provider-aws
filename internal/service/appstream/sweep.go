@@ -20,6 +20,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_appstream_fleet", sweepFleets)
 	awsv2.Register("aws_appstream_image_builder", sweepImageBuilders)
 	awsv2.Register("aws_appstream_stack", sweepStacks)
+	awsv2.Register("aws_appstream_user", sweepUsers)
 }
 
 func sweepDirectoryConfigs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -136,6 +137,38 @@ func sweepStacks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 			r := resourceStack()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return sweepResources, nil
+}
+
+func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
+		log.Printf("[WARN] Skipping AppStream User sweep for region: %s", region)
+		return nil, nil
+	}
+	conn := client.AppStreamClient(ctx)
+	var input appstream.DescribeUsersInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := describeUsersPages(ctx, conn, &input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Users {
+			r := resourceUser()
+			d := r.Data(nil)
+			d.SetId(userCreateResourceID(aws.ToString(v.UserName), v.AuthenticationType))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

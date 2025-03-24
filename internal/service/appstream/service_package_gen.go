@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_appstream_user",
 			Name:     "User",
 		},
