@@ -305,11 +305,10 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			s := r.SchemaMap()
 
 			if v := v.Region; v != nil && v.IsOverrideEnabled {
-				// TODO REGION Temporarily disable.
-				// if _, ok := s[names.AttrRegion]; ok {
-				// 	errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
-				// 	continue
-				// }
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
+					continue
+				}
 
 				// Inject a top-level "region" attribute.
 				regionSchema := &schema.Schema{
@@ -413,11 +412,10 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			s := r.SchemaMap()
 
 			if v := v.Region; v != nil && v.IsOverrideEnabled {
-				// TODO REGION Temporarily disable.
-				// if _, ok := s[names.AttrRegion]; ok {
-				// 	errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
-				// 	continue
-				// }
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s", names.AttrRegion, typeName))
+					continue
+				}
 
 				// Inject a top-level "region" attribute.
 				regionSchema := &schema.Schema{
