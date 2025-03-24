@@ -18,7 +18,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -707,11 +706,11 @@ func resourceBucket() *schema.Resource {
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
-	region := meta.(*conns.AWSClient).Region(ctx)
-
+	region := c.Region(ctx)
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
@@ -782,7 +781,8 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	_, err := findBucket(ctx, conn, d.Id())
 
@@ -796,14 +796,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "s3",
-		Resource:  d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
 	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, d.Id()+".s3"))
+	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
 
 	//
@@ -1106,7 +1101,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("object_lock_configuration", nil)
 		d.Set("object_lock_enabled", nil)
 	default:
-		if partition := meta.(*conns.AWSClient).Partition(ctx); partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID {
+		if partition := c.Partition(ctx); partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID {
 			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
 		}
 		log.Printf("[WARN] Unable to read S3 Bucket (%s) Object Lock Configuration: %s", d.Id(), err)
@@ -1118,7 +1113,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	// Bucket Region etc.
 	//
 	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
-		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle(ctx)
+		o.UsePathStyle = c.S3UsePathStyle(ctx)
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -1619,24 +1614,24 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	return output, nil
 }
 
-func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
+func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
 	optFns = append(slices.Clone(optFns),
 		func(o *s3.Options) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
-			o.UsePathStyle = awsClient.S3UsePathStyle(ctx)
+			o.UsePathStyle = c.S3UsePathStyle(ctx)
 		},
 		func(o *s3.Options) {
 			// By default, GetBucketRegion uses anonymous credentials when doing
 			// a HEAD request to get the bucket region. This breaks in aws-cn regions
 			// when the account doesn't have an ICP license to host public content.
 			// Use the current credentials when getting the bucket region.
-			o.Credentials = awsClient.CredentialsProvider(ctx)
+			o.Credentials = c.CredentialsProvider(ctx)
 		})
 
-	region, err := manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket, optFns...)
+	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
 
 	if errs.IsA[manager.BucketNotFound](err) {
 		return "", &retry.NotFoundError{
@@ -1663,6 +1658,10 @@ func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duratio
 	}
 
 	return outputRaw.(T), nil
+}
+
+func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
+	return c.GlobalARNNoAccount(ctx, "s3", bucket)
 }
 
 // https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
