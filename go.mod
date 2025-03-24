@@ -204,7 +204,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.94.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.17.1
