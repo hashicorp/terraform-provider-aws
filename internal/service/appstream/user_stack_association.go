@@ -137,7 +137,7 @@ func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceD
 	log.Printf("[DEBUG] Deleting AppStream User Stack Association: %s", d.Id())
 	input := appstream.BatchDisassociateUserStackInput{
 		UserStackAssociations: []awstypes.UserStackAssociation{{
-			AuthenticationType: awstypes.AuthenticationType(authType),
+			AuthenticationType: authType,
 			StackName:          aws.String(stackName),
 			UserName:           aws.String(userName),
 		}},
