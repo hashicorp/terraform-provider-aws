@@ -227,8 +227,8 @@ func resourceTask() *schema.Resource {
 			"task_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ForceNew:         true,
-				Default:          awstypes.TaskModeBasic,
 				ValidateDiagFunc: enum.Validate[awstypes.TaskMode](),
 			},
 			"task_report_config": {
