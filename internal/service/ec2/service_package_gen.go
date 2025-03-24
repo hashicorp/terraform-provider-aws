@@ -1079,9 +1079,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_vpc_peering_connection",
 			Name:     "VPC Peering Connection",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{

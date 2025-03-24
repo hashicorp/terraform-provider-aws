@@ -19,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpc_peering_connection", name="VPC Peering Connection")
+// @Region(overrideEnabled=false)
 func dataSourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCPeeringConnectionRead,
@@ -109,7 +110,6 @@ func dataSourceVPCPeeringConnection() *schema.Resource {
 			},
 			"peer_region": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"peer_vpc_id": {
@@ -119,7 +119,6 @@ func dataSourceVPCPeeringConnection() *schema.Resource {
 			},
 			names.AttrRegion: {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"requester": {
