@@ -314,7 +314,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "creating AppStream Fleet (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(outputRaw.(appstream.CreateFleetOutput).Fleet.Name))
+	d.SetId(aws.ToString(outputRaw.(*appstream.CreateFleetOutput).Fleet.Name))
 
 	if err := startFleet(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

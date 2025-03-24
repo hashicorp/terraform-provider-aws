@@ -171,7 +171,7 @@ func userStackAssociationCreateResourceID(userName string, authType awstypes.Aut
 func userStackAssociationParseResourceID(id string) (string, awstypes.AuthenticationType, string, error) {
 	parts := strings.SplitN(id, userStackAssociationResourceIDSeparator, 3)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected UserName%[2]sAuthenticationType%[2]sStackName", id, userStackAssociationResourceIDSeparator)
 	}
 
