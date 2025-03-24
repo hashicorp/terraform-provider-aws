@@ -107,6 +107,12 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.WarnExactlyOneOfChildren(
+							path.MatchRelative().AtName(names.AttrFilter),
+							path.MatchRelative().AtName(names.AttrPrefix),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: schema.StringAttribute{
 							Required: true,
@@ -117,12 +123,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 						names.AttrPrefix: schema.StringAttribute{
 							Optional:           true,
 							Computed:           true, // Because of Legacy value handling
-							DeprecationMessage: "Use 'filter.prefix' or 'filter.and.prefix' instead",
-							Validators: []validator.String{
-								tfstringvalidator.WarnExactlyOneOf(
-									path.MatchRelative().AtParent().AtName(names.AttrFilter),
-								),
-							},
+							DeprecationMessage: "Specify a prefix using 'filter' instead",
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Required: true,
