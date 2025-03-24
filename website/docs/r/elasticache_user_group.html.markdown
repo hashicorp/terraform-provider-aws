@@ -17,12 +17,12 @@ resource "aws_elasticache_user" "test" {
   user_id       = "testUserId"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
+  engine        = "redis"
   passwords     = ["password123456789"]
 }
 
 resource "aws_elasticache_user_group" "test" {
-  engine        = "REDIS"
+  engine        = "redis"
   user_group_id = "userGroupId"
   user_ids      = [aws_elasticache_user.test.user_id]
 }
@@ -32,7 +32,7 @@ resource "aws_elasticache_user_group" "test" {
 
 The following arguments are required:
 
-* `engine` - (Required) The current supported value is `REDIS`.
+* `engine` - (Required) The current supported value are `redis`, `valkey` (case insensitive).
 * `user_group_id` - (Required) The ID of the user group.
 
 The following arguments are optional:

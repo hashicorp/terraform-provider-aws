@@ -6,20 +6,21 @@ package guardduty
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Finding Ids")
+// @FrameworkDataSource("aws_guardduty_finding_ids", name="Finding Ids")
 func newDataSourceFindingIds(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFindingIds{}, nil
 }
@@ -30,10 +31,6 @@ const (
 
 type dataSourceFindingIds struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceFindingIds) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_guardduty_finding_ids"
 }
 
 func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -49,13 +46,13 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
 
 func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().GuardDutyConn(ctx)
+	conn := d.Meta().GuardDutyClient(ctx)
 
 	var data dataSourceFindingIdsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -73,32 +70,36 @@ func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	data.ID = types.StringValue(data.DetectorID.ValueString())
-	data.FindingIDs = flex.FlattenFrameworkStringList(ctx, out)
+	data.FindingIDs = flex.FlattenFrameworkStringValueList(ctx, out)
 	data.HasFindings = types.BoolValue((len(out) > 0))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func findFindingIds(ctx context.Context, conn *guardduty.GuardDuty, id string) ([]*string, error) {
+func findFindingIds(ctx context.Context, conn *guardduty.Client, id string) ([]string, error) {
 	in := &guardduty.ListFindingsInput{
 		DetectorId: aws.String(id),
 	}
 
-	var findingIds []*string
-	err := conn.ListFindingsPagesWithContext(ctx, in, func(page *guardduty.ListFindingsOutput, lastPage bool) bool {
-		findingIds = append(findingIds, page.FindingIds...)
-		return !lastPage
-	})
+	var findingIds []string
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+	pages := guardduty.NewListFindingsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		findingIds = append(findingIds, page.FindingIds...)
 	}
 
 	return findingIds, nil

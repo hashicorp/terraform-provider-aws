@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/codeartifact"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
@@ -19,36 +19,36 @@ func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "npm"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "pypi"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "maven"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "nuget"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -61,15 +61,15 @@ func testAccRepositoryEndpointDataSource_owner(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},

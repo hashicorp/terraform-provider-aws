@@ -41,6 +41,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `capacity_provider_strategy` - (Optional) Set of capacity provider strategies to use for the cluster. See below.
+* `client_token` - (Optional) An identifier that you provide to ensure the idempotency of the request. It must be unique and is case sensitive. Up to 64 characters are allowed. The valid characters are characters in the range of 33-126, inclusive. For more information, see [Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html).
 * `desired_count` - (Optional) Number of instantiations of the specified task to place on your cluster. You can specify up to 10 tasks for each call.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enable_execute_command` - (Optional) Specifies whether to enable Amazon ECS Exec for the tasks within the service.
@@ -75,7 +76,7 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 * `container_overrides` - (Optional) One or more container overrides that are sent to a task. See below.
 * `cpu` - (Optional) The CPU override for the task.
 * `execution_role_arn` - (Optional) Amazon Resource Name (ARN) of the task execution role override for the task.
-* `inference_accelerator_overrides` - (Optional) Elastic Inference accelerator override for the task. See below.
+* `inference_accelerator_overrides` - (Optional) **DEPRECATED** Elastic Inference accelerator override for the task. See below.
 * `memory` - (Optional) The memory override for the task.
 * `task_role_arn` - (Optional) Amazon Resource Name (ARN) of the role that containers in this task can assume.
 

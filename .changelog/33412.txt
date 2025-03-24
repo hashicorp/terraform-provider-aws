@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Fix `ReservationCapacityExceeded` errors when updating `instance_type` and `capacity_reservation_specification.capacity_reservation_target.capacity_reservation_id`
+```

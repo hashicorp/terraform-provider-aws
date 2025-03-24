@@ -41,7 +41,6 @@ func TestStringFromFramework(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -51,6 +50,67 @@ func TestStringFromFramework(t *testing.T) {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
+	}
+}
+
+func BenchmarkStringFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.StringValue("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringFromFramework(ctx, input)
+		if r == nil {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestStringValueFromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected string
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    types.StringValue("TEST"),
+			expected: "TEST",
+		},
+		"empty string": {
+			input:    types.StringValue(""),
+			expected: "",
+		},
+		"null string": {
+			input:    types.StringNull(),
+			expected: "",
+		},
+		"unknown string": {
+			input:    types.StringUnknown(),
+			expected: "",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringValueFromFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkStringValueFromFramework(b *testing.B) {
+	ctx := context.Background()
+	input := types.StringValue("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringValueFromFramework(ctx, input)
+		if r == "" {
+			b.Fatal("should never see this")
+		}
 	}
 }
 
@@ -77,7 +137,6 @@ func TestStringToFramework(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -87,6 +146,65 @@ func TestStringToFramework(t *testing.T) {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
+	}
+}
+
+func BenchmarkStringToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := aws.String("TEST")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestStringValueToFramework(t *testing.T) {
+	t.Parallel()
+
+	// AWS enums use custom types with an underlying string type.
+	type custom string
+	const (
+		test custom = "TEST"
+	)
+
+	type testCase struct {
+		input    custom
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    test,
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    custom(""),
+			expected: types.StringNull(),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.StringValueToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkStringValueToFramework(b *testing.B) {
+	ctx := context.Background()
+	input := "TEST"
+	for n := 0; n < b.N; n++ {
+		r := flex.StringValueToFramework(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
 	}
 }
 
@@ -113,46 +231,10 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringToFrameworkLegacy(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-func TestStringValueToFramework(t *testing.T) {
-	t.Parallel()
-
-	// AWS enums use custom types with an underlying string type
-	type custom string
-
-	type testCase struct {
-		input    custom
-		expected types.String
-	}
-	tests := map[string]testCase{
-		"valid": {
-			input:    "TEST",
-			expected: types.StringValue("TEST"),
-		},
-		"empty": {
-			input:    "",
-			expected: types.StringNull(),
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.StringValueToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -183,7 +265,6 @@ func TestStringValueToFrameworkLegacy(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -219,7 +300,6 @@ func TestARNStringFromFramework(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -251,11 +331,60 @@ func TestStringToFrameworkARN(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringToFrameworkARN(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkStringToFrameworkARN(b *testing.B) {
+	ctx := context.Background()
+	input := aws.String("arn:aws:iam::123456789012:user/David")
+	for n := 0; n < b.N; n++ {
+		r := flex.StringToFrameworkARN(ctx, input)
+		if r.IsNull() {
+			b.Fatal("should never see this")
+		}
+	}
+}
+
+func TestEmptyStringAsNull(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    types.StringValue("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    types.StringValue(""),
+			expected: types.StringNull(),
+		},
+		"null": {
+			input:    types.StringNull(),
+			expected: types.StringNull(),
+		},
+		"unknown": {
+			input:    types.StringUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.EmptyStringAsNull(test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

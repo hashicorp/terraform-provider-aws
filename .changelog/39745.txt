@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_elasticache_cluster: Support `valkey` as valid value for `engine`
+```
+
+```release-note:enhancement
+resource/aws_elasticache_global_replication_group: Support Valkey versions for `engine_version`
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Support `valkey` as valid value for `engine`
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Support Valkey versions for `engine_version`
+```
+
+```release-note:enhancement
+resource/aws_elasticache_serverless_cache: Support `valkey` as valid value for `engine`
+```
+
+```release-note:bug
+resource/aws_elasticache_serverless_cache: Fix `InvalidParameterValue: This API supports only cross-engine upgrades to Valkey engine currently` errors on Update
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_reserved_cache_node_offering: Support `valkey` as valid value for `product_description`
+```

@@ -34,8 +34,8 @@ func linkingMode_Values() []string {
 	}
 }
 
-// @SDKResource("aws_securityhub_finding_aggregator")
-func ResourceFindingAggregator() *schema.Resource {
+// @SDKResource("aws_securityhub_finding_aggregator", name="Finding Aggregator")
+func resourceFindingAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingAggregatorCreate,
 		ReadWithoutTimeout:   resourceFindingAggregatorRead,
@@ -64,7 +64,7 @@ func ResourceFindingAggregator() *schema.Resource {
 	}
 }
 
-func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -88,11 +88,11 @@ func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := FindFindingAggregatorByARN(ctx, conn, d.Id())
+	output, err := findFindingAggregatorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Finding Aggregator (%s) not found, removing from state", d.Id())
@@ -112,7 +112,7 @@ func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -155,11 +155,15 @@ func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
+func findFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
 	input := &securityhub.GetFindingAggregatorInput{
 		FindingAggregatorArn: aws.String(arn),
 	}
 
+	return findFindingAggregator(ctx, conn, input)
+}
+
+func findFindingAggregator(ctx context.Context, conn *securityhub.Client, input *securityhub.GetFindingAggregatorInput) (*securityhub.GetFindingAggregatorOutput, error) {
 	output, err := conn.GetFindingAggregator(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {

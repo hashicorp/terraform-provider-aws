@@ -6,14 +6,15 @@ package guardduty
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_guardduty_detector")
+// @SDKDataSource("aws_guardduty_detector", name="Detector")
 func DataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,
@@ -29,22 +30,22 @@ func DataSourceDetector() *schema.Resource {
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"status": {
+									names.AttrStatus: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -55,16 +56,16 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,11 +73,11 @@ func DataSourceDetector() *schema.Resource {
 	}
 }
 
-func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	detectorID := d.Get("id").(string)
+	detectorID := d.Get(names.AttrID).(string)
 
 	if detectorID == "" {
 		output, err := FindDetector(ctx, conn)
@@ -85,7 +86,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "reading this account's single GuardDuty Detector: %s", err)
 		}
 
-		detectorID = aws.StringValue(output)
+		detectorID = aws.ToString(output)
 	}
 
 	gdo, err := FindDetectorByID(ctx, conn, detectorID)
@@ -103,8 +104,8 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("features", nil)
 	}
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
-	d.Set("service_role_arn", gdo.ServiceRole)
-	d.Set("status", gdo.Status)
+	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
+	d.Set(names.AttrStatus, gdo.Status)
 
 	return diags
 }

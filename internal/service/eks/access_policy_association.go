@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_policy_association", name="Access Policy Association")
@@ -58,7 +59,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -70,7 +71,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -96,22 +97,24 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 	}
 }
 
-func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	principalARN := d.Get("principal_arn").(string)
 	policyARN := d.Get("policy_arn").(string)
 	id := accessPolicyAssociationCreateResourceID(clusterName, principalARN, policyARN)
 	input := &eks.AssociateAccessPolicyInput{
-		AccessScope:  expandAccessScope(d.Get("access_scope").([]interface{})),
+		AccessScope:  expandAccessScope(d.Get("access_scope").([]any)),
 		ClusterName:  aws.String(clusterName),
 		PolicyArn:    aws.String(policyARN),
 		PrincipalArn: aws.String(principalARN),
 	}
 
-	_, err := conn.AssociateAccessPolicy(ctx, input)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ResourceNotFoundException](ctx, propagationTimeout, func() (any, error) {
+		return conn.AssociateAccessPolicy(ctx, input)
+	}, "The specified principalArn could not be found")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Access Policy Association (%s): %s", id, err)
@@ -122,7 +125,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceAccessPolicyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -145,7 +148,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 
 	d.Set("access_scope", flattenAccessScope(output.AccessScope))
 	d.Set("associated_at", aws.ToTime(output.AssociatedAt).String())
-	d.Set("cluster_name", clusterName)
+	d.Set(names.AttrClusterName, clusterName)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
 	d.Set("policy_arn", policyARN)
 	d.Set("principal_arn", principalARN)
@@ -153,7 +156,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -248,16 +251,16 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 	return output, nil
 }
 
-func expandAccessScope(l []interface{}) *types.AccessScope {
+func expandAccessScope(l []any) *types.AccessScope {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	accessScope := &types.AccessScope{}
 
-	if v, ok := m["type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrType].(string); ok && v != "" {
 		accessScope.Type = types.AccessScopeType(v)
 	}
 
@@ -268,15 +271,15 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 	return accessScope
 }
 
-func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
+func flattenAccessScope(apiObject *types.AccessScope) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"type":       (*string)(&apiObject.Type),
-		"namespaces": apiObject.Namespaces,
+	tfMap := map[string]any{
+		names.AttrType: (*string)(&apiObject.Type),
+		"namespaces":   apiObject.Namespaces,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

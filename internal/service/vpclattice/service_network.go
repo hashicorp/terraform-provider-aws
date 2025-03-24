@@ -12,22 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_service_network", name="Service Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkCreate,
@@ -50,7 +50,7 @@ func resourceServiceNetwork() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.AuthType](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -59,112 +59,117 @@ func resourceServiceNetwork() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-const (
-	ResNameServiceNetwork = "Service Network"
-)
-
-func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	in := &vpclattice.CreateServiceNetworkInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(d.Get("name").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := vpclattice.CreateServiceNetworkInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auth_type"); ok {
-		in.AuthType = types.AuthType(v.(string))
+		input.AuthType = types.AuthType(v.(string))
 	}
 
-	out, err := conn.CreateServiceNetwork(ctx, in)
+	output, err := conn.CreateServiceNetwork(ctx, &input)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetwork, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Service Network (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(out.Id))
+	d.SetId(aws.ToString(output.Id))
 
-	return resourceServiceNetworkRead(ctx, d, meta)
+	return append(diags, resourceServiceNetworkRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	out, err := findServiceNetworkByID(ctx, conn, d.Id())
+	output, err := findServiceNetworkByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VPCLattice ServiceNetwork (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VPCLattice Service Network (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetwork, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Service Network (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("auth_type", out.AuthType)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set("auth_type", output.AuthType)
+	d.Set(names.AttrName, output.Name)
 
-	return nil
+	return diags
 }
 
-func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		in := &vpclattice.UpdateServiceNetworkInput{
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := vpclattice.UpdateServiceNetworkInput{
 			ServiceNetworkIdentifier: aws.String(d.Id()),
 		}
 
 		if d.HasChanges("auth_type") {
-			in.AuthType = types.AuthType(d.Get("auth_type").(string))
+			input.AuthType = types.AuthType(d.Get("auth_type").(string))
 		}
 
-		_, err := conn.UpdateServiceNetwork(ctx, in)
+		_, err := conn.UpdateServiceNetwork(ctx, &input)
 
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameServiceNetwork, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating VPCLattice Service Network (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceServiceNetworkRead(ctx, d, meta)
+	return append(diags, resourceServiceNetworkRead(ctx, d, meta)...)
 }
 
-func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Service Network: %s", d.Id())
-	_, err := conn.DeleteServiceNetwork(ctx, &vpclattice.DeleteServiceNetworkInput{
+	input := vpclattice.DeleteServiceNetworkInput{
 		ServiceNetworkIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteServiceNetwork(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetwork, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting VPCLattice Service Network (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findServiceNetworkByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkOutput, error) {
-	in := &vpclattice.GetServiceNetworkInput{
+	input := vpclattice.GetServiceNetworkInput{
 		ServiceNetworkIdentifier: aws.String(id),
 	}
-	out, err := conn.GetServiceNetwork(ctx, in)
+
+	return findServiceNetwork(ctx, conn, &input)
+}
+
+func findServiceNetwork(ctx context.Context, conn *vpclattice.Client, input *vpclattice.GetServiceNetworkInput) (*vpclattice.GetServiceNetworkOutput, error) {
+	output, err := conn.GetServiceNetwork(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -172,11 +177,11 @@ func findServiceNetworkByID(ctx context.Context, conn *vpclattice.Client, id str
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 // idFromIDOrARN return a resource ID from an ID or ARN.

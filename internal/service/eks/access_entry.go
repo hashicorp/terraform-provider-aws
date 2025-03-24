@@ -40,8 +40,6 @@ func resourceAccessEntry() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -52,13 +50,13 @@ func resourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,14 +80,14 @@ func resourceAccessEntry() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      accessEntryTypeStandard,
 				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -98,29 +96,31 @@ func resourceAccessEntry() *schema.Resource {
 	}
 }
 
-func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	principalARN := d.Get("principal_arn").(string)
 	id := accessEntryCreateResourceID(clusterName, principalARN)
 	input := &eks.CreateAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 		Tags:         getTagsIn(ctx),
-		Type:         aws.String(d.Get("type").(string)),
+		Type:         aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("kubernetes_groups"); ok {
 		input.KubernetesGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("user_name"); ok {
+	if v, ok := d.GetOk(names.AttrUserName); ok {
 		input.Username = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateAccessEntry(ctx, input)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateAccessEntry(ctx, input)
+	}, "The specified principalArn is invalid: invalid principal")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Access Entry (%s): %s", id, err)
@@ -131,7 +131,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessEntryRead(ctx, d, meta)...)
 }
 
-func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -153,24 +153,24 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("access_entry_arn", output.AccessEntryArn)
-	d.Set("cluster_name", output.ClusterName)
-	d.Set("created_at", aws.ToTime(output.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrClusterName, output.ClusterName)
+	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
 	d.Set("kubernetes_groups", output.KubernetesGroups)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
-	d.Set("type", output.Type)
-	d.Set("user_name", output.Username)
+	d.Set(names.AttrType, output.Type)
+	d.Set(names.AttrUserName, output.Username)
 
 	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		clusterName, principalARN, err := accessEntryParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -181,13 +181,8 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 			PrincipalArn: aws.String(principalARN),
 		}
 
-		if d.HasChange("kubernetes_groups") {
-			input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
-		}
-
-		if d.HasChange("user_name") {
-			input.Username = aws.String(d.Get("user_name").(string))
-		}
+		input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
+		input.Username = aws.String(d.Get(names.AttrUserName).(string))
 
 		_, err = conn.UpdateAccessEntry(ctx, input)
 
@@ -199,7 +194,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessEntryRead(ctx, d, meta)...)
 }
 
-func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 

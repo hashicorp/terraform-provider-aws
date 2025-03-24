@@ -35,7 +35,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "gitlab_test", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       keyPairName: "some_key_name",
       name: "custom_gitlab",
       tags: {
@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "custom", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "custom",
       userData:
         "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
       },
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "custom_instance",
       tags: {
         foo: "bar",
@@ -126,17 +126,17 @@ This resource supports the following arguments:
 * `keyPairName` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `userData` - (Optional) Single lined launch script as a string to configure server with additional user data
-* `ipAddressType` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
-* `addOn` - (Optional) The add on configuration for the instance. [Detailed below](#add_on).
+* `ipAddressType` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack`,  `ipv4`, and `ipv6`.
+* `addOn` - (Optional) The add-on configuration for the instance. [Detailed below](#add_on).
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `addOn`
 
-Defines the add on configuration for the instance. The `addOn` configuration block supports the following arguments:
+Defines the add-on configuration for the instance. The `addOn` configuration block supports the following arguments:
 
 * `type` - (Required) The add-on type. There is currently only one valid type `AutoSnapshot`.
 * `snapshotTime` - (Required) The daily time when an automatic snapshot will be created. Must be in HH:00 format, and in an hourly increment and specified in Coordinated Universal Time (UTC). The snapshot will be automatically created between the time specified and up to 45 minutes after.
-* `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
+* `status` - (Required) The status of the add-on. Valid Values: `Enabled`, `Disabled`.
 
 ## Attribute Reference
 
@@ -186,4 +186,4 @@ Using `terraform import`, import Lightsail Instances using their name. For examp
 % terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-77fe9fa06f699581eb79b3fcee665c9bc3aa66f0f2be7b60ff159f3a07617d83 -->
+<!-- cache-key: cdktf-0.20.8 input-0e1feb604f45f34be9ed0c89359ce3409882e31142fff3c446138c43314e5c61 -->

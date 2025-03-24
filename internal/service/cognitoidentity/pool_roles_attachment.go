@@ -8,21 +8,23 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_identity_pool_roles_attachment")
-func ResourcePoolRolesAttachment() *schema.Resource {
+// @SDKResource("aws_cognito_identity_pool_roles_attachment", name="Pool Roles Association")
+func resourcePoolRolesAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolRolesAttachmentCreate,
 		ReadWithoutTimeout:   resourcePoolRolesAttachmentRead,
@@ -49,12 +51,9 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 							Required: true,
 						},
 						"ambiguous_role_resolution": {
-							Type:     schema.TypeString,
-							Optional: true, // Required if Type equals Token or Rules.
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-								cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-							}, false),
+							Type:             schema.TypeString,
+							Optional:         true, // Required if Type equals Token or Rules.
+							ValidateDiagFunc: enum.Validate[awstypes.AmbiguousRoleResolutionType](),
 						},
 						"mapping_rule": {
 							Type:     schema.TypeList,
@@ -68,16 +67,16 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 										ValidateFunc: validRoleMappingsRulesClaim,
 									},
 									"match_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentity.MappingRuleMatchType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
@@ -85,13 +84,10 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 								},
 							},
 						},
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentity.RoleMappingTypeToken,
-								cognitoidentity.RoleMappingTypeRules,
-							}, false),
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RoleMappingType](),
 						},
 					},
 				},
@@ -110,19 +106,19 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 	}
 }
 
-func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+	if errors := validRoles(d.Get("roles").(map[string]any)); len(errors) > 0 {
 		return sdkdiag.AppendErrorf(diags, "validating Roles: %v", errors)
 	}
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
+		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]any)),
 	}
 
 	if v, ok := d.GetOk("role_mapping"); ok {
@@ -136,7 +132,7 @@ func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Creating Cognito Identity Pool Roles Association: %#v", params)
-	_, err := conn.SetIdentityPoolRolesWithContext(ctx, params)
+	_, err := conn.SetIdentityPoolRoles(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito Identity Pool Roles Association: %s", err)
 	}
@@ -146,15 +142,16 @@ func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePoolRolesAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
-	ip, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+	input := cognitoidentity.GetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+	}
+	ip, err := conn.GetIdentityPoolRoles(ctx, &input)
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id())
 		d.SetId("")
 		return diags
@@ -166,7 +163,7 @@ func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)
 
-	if err := d.Set("roles", aws.StringValueMap(ip.Roles)); err != nil {
+	if err := d.Set("roles", ip.Roles); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting roles error: %#v", err)
 	}
 
@@ -177,24 +174,24 @@ func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+	if errors := validRoles(d.Get("roles").(map[string]any)); len(errors) > 0 {
 		return sdkdiag.AppendErrorf(diags, "validating Roles: %v", errors)
 	}
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
+		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]any)),
 	}
 
 	if d.HasChange("role_mapping") {
 		v, ok := d.GetOk("role_mapping")
-		var mappings []interface{}
+		var mappings []any
 
 		if ok {
 			errors := validateRoleMappings(v.(*schema.Set).List())
@@ -204,14 +201,14 @@ func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 			}
 			mappings = v.(*schema.Set).List()
 		} else {
-			mappings = []interface{}{}
+			mappings = []any{}
 		}
 
 		params.RoleMappings = expandIdentityPoolRoleMappingsAttachment(mappings)
 	}
 
 	log.Printf("[DEBUG] Updating Cognito Identity Pool Roles Association: %#v", params)
-	_, err := conn.SetIdentityPoolRolesWithContext(ctx, params)
+	_, err := conn.SetIdentityPoolRoles(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Cognito Identity Pool Roles Association: %s", err)
 	}
@@ -221,16 +218,17 @@ func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePoolRolesAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
-	_, err := conn.SetIdentityPoolRolesWithContext(ctx, &cognitoidentity.SetIdentityPoolRolesInput{
+	input := cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
-		Roles:          expandIdentityPoolRoles(make(map[string]interface{})),
-		RoleMappings:   expandIdentityPoolRoleMappingsAttachment([]interface{}{}),
-	})
+		Roles:          expandIdentityPoolRoles(make(map[string]any)),
+		RoleMappings:   expandIdentityPoolRoleMappingsAttachment([]any{}),
+	}
+	_, err := conn.SetIdentityPoolRoles(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool roles association: %s", err)
@@ -241,11 +239,11 @@ func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceDa
 
 // Validating that each role_mapping ambiguous_role_resolution
 // is defined when "type" equals Token or Rules.
-func validateRoleMappings(roleMappings []interface{}) []error {
+func validateRoleMappings(roleMappings []any) []error {
 	errors := make([]error, 0)
 
 	for _, r := range roleMappings {
-		rm := r.(map[string]interface{})
+		rm := r.(map[string]any)
 
 		// If Type equals "Token" or "Rules", ambiguous_role_resolution must be defined.
 		// This should be removed as soon as we can have a ValidateFuncAgainst callable on the schema.

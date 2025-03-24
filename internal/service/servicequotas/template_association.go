@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template Association")
+// @FrameworkResource("aws_servicequotas_template_association", name="Template Association")
 func newResourceTemplateAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTemplateAssociation{}, nil
 }
@@ -31,18 +31,14 @@ type resourceTemplateAssociation struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTemplateAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicequotas_template_association"
-}
-
 func (r *resourceTemplateAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"skip_destroy": schema.BoolAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrSkipDestroy: schema.BoolAttribute{
 				Optional: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -58,7 +54,7 @@ func (r *resourceTemplateAssociation) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	plan.ID = types.StringValue(r.Meta().AccountID)
+	plan.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	_, err := conn.AssociateServiceQuotaTemplate(ctx, &servicequotas.AssociateServiceQuotaTemplateInput{})
 	if err != nil {
@@ -139,7 +135,7 @@ func (r *resourceTemplateAssociation) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceTemplateAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceTemplateAssociationData struct {

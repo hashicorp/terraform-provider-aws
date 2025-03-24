@@ -25,7 +25,7 @@ func testAccMember_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,9 +33,9 @@ func testAccMember_basic(t *testing.T) {
 				Config: testAccMemberConfig_basic("111111111111"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &member),
-					resource.TestCheckResourceAttr(resourceName, "account_id", "111111111111"),
-					resource.TestCheckResourceAttr(resourceName, "email", ""),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, "111111111111"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, ""),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Created"),
 				),
 			},
@@ -55,7 +55,7 @@ func testAccMember_invite(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,9 +63,9 @@ func testAccMember_invite(t *testing.T) {
 				Config: testAccMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &member),
-					resource.TestCheckResourceAttr(resourceName, "account_id", "111111111111"),
-					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, "111111111111"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, acctest.DefaultEmailAddress),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
 				),
 			},

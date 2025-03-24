@@ -13,15 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssoadmin_instances")
+// @SDKDataSource("aws_ssoadmin_instances", name="Instances")
 func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -35,7 +36,7 @@ func DataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -52,8 +53,8 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		arns = append(arns, aws.ToString(v.InstanceArn))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, arns)
 	d.Set("identity_store_ids", identityStoreIDs)
 
 	return diags

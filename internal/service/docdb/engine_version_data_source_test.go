@@ -9,11 +9,12 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
@@ -24,14 +25,14 @@ func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_basic(engine, version),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "version", version),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
 					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
@@ -49,13 +50,13 @@ func TestAccDocDBEngineVersionDataSource_preferred(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "3.6.0"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "3.6.0"),
 				),
 			},
 		},
@@ -68,14 +69,14 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", "docdb"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "docdb"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -83,14 +84,14 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 	input := &docdb.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("docdb"),
 		DefaultOnly: aws.Bool(true),
 	}
 
-	_, err := conn.DescribeDBEngineVersionsWithContext(ctx, input)
+	_, err := conn.DescribeDBEngineVersions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

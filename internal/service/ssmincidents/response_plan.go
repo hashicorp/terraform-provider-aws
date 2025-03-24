@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +35,7 @@ func ResourceResponsePlan() *schema.Resource {
 		DeleteWithoutTimeout: resourceResponsePlanDelete,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -51,7 +50,7 @@ func ResourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -63,16 +62,16 @@ func ResourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"parameter": {
+									names.AttrParameter: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -91,7 +90,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +100,7 @@ func ResourceResponsePlan() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -135,7 +134,7 @@ func ResourceResponsePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sns_topic_arn": {
+									names.AttrSNSTopicARN: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -160,7 +159,7 @@ func ResourceResponsePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -178,7 +177,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -186,43 +185,45 @@ func ResourceResponsePlan() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
-		Actions:          expandAction(d.Get("action").([]interface{})),
+		Actions:          expandAction(d.Get(names.AttrAction).([]any)),
 		ChatChannel:      expandChatChannel(d.Get("chat_channel").(*schema.Set)),
-		DisplayName:      aws.String(d.Get("display_name").(string)),
+		DisplayName:      aws.String(d.Get(names.AttrDisplayName).(string)),
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
-		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
-		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
-		Name:             aws.String(d.Get("name").(string)),
+		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]any)),
+		Integrations:     expandIntegration(d.Get("integration").([]any)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := client.CreateResponsePlan(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), err)
 	}
 
 	if output == nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.Arn))
 
-	return resourceResponsePlanRead(ctx, d, meta)
+	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
-func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
@@ -230,38 +231,39 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents ResponsePlan (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, ResNameResponsePlan, d.Id(), err)
 	}
 
 	if d, err := setResponsePlanResourceData(d, responsePlan); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, ResNameResponsePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ssmincidents.UpdateResponsePlanInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChanges("action") {
-			input.Actions = expandAction(d.Get("action").([]interface{}))
+		if d.HasChanges(names.AttrAction) {
+			input.Actions = expandAction(d.Get(names.AttrAction).([]any))
 		}
 
 		if d.HasChanges("chat_channel") {
 			input.ChatChannel = expandChatChannel(d.Get("chat_channel").(*schema.Set))
 		}
 
-		if d.HasChanges("display_name") {
-			input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChanges(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
 		if d.HasChanges("engagements") {
@@ -270,25 +272,26 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChanges("incident_template") {
 			incidentTemplate := d.Get("incident_template")
-			template := expandIncidentTemplate(incidentTemplate.([]interface{}))
+			template := expandIncidentTemplate(incidentTemplate.([]any))
 			updateResponsePlanInputWithIncidentTemplate(input, template)
 		}
 
 		if d.HasChanges("integration") {
-			input.Integrations = expandIntegration(d.Get("integration").([]interface{}))
+			input.Integrations = expandIntegration(d.Get("integration").([]any))
 		}
 
 		_, err := client.UpdateResponsePlan(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
 		}
 	}
 
-	return resourceResponsePlanRead(ctx, d, meta)
+	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
-func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMIncidents ResponsePlan %s", d.Id())
@@ -303,13 +306,13 @@ func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, met
 		var notFoundError *types.ResourceNotFoundException
 
 		if errors.As(err, &notFoundError) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SSMIncidents, create.ErrActionDeleting, ResNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionDeleting, ResNameResponsePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // input validation already done in flattenIncidentTemplate function

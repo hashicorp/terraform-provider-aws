@@ -11,7 +11,7 @@ d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().Map())
 ## Passing Code
 
 ```go
-ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig(ctx)
 
 d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 ```

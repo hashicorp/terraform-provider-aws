@@ -5,10 +5,6 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | Variable | Description |
 |----------|-------------|
 | `ACM_CERTIFICATE_ROOT_DOMAIN` | Root domain name to use with ACM Certificate testing. |
-| `ACM_CERTIFICATE_MULTIPLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with a multiple issued certificates. **DEPRECATED:** Should be replaced with `aws_acm_certficate` resource usage in tests. |
-| `ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with a multiple issued certificates. **DEPRECATED:** Should be replaced with `aws_acm_certficate` resource usage in tests. |
-| `ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certficate` resource usage in tests. |
-| `ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certficate` resource usage in tests. |
 | `ADM_CLIENT_ID` | Identifier for Amazon Device Manager Client in Pinpoint testing. |
 | `AMPLIFY_DOMAIN_NAME` | Domain name to use for Amplify domain association testing. |
 | `AMPLIFY_GITHUB_ACCESS_TOKEN` | GitHub access token used for AWS Amplify testing. |
@@ -23,7 +19,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `APNS_SANDBOX_CREDENTIAL` | Credential contents for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with `APNS_SANDBOX_CREDENTIAL_PATH`. |
 | `APNS_SANDBOX_CREDENTIAL_PATH` | Path to credential for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with `APNS_SANDBOX_CREDENTIAL`. |
 | `APNS_SANDBOX_PRINCIPAL` | Principal contents for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with `APNS_SANDBOX_PRINCIPAL_PATH`. |
-| `APNS_SANDBOX_PRINCIPAL_PATH` | Path to principal for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with `APNS_SANDBOX_PRINCIPAL`. |
+| `APNS_SANDBOX_PRINCIPAL_PATH` | Path to the principal for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with `APNS_SANDBOX_PRINCIPAL`. |
 | `APNS_SANDBOX_TEAM_ID` | Identifier for Sandbox Apple Push Notification Service Team in Pinpoint testing. |
 | `APNS_SANDBOX_TOKEN_KEY` | Token key file content (.p8 format) for Sandbox Apple Push Notification Service in Pinpoint testing. |
 | `APNS_SANDBOX_TOKEN_KEY_ID` | Identifier for Sandbox Apple Push Notification Service Token Key in Pinpoint testing. |
@@ -53,15 +49,23 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_DETECTIVE_MEMBER_EMAIL` | Email address for Detective Member testing. A valid email address associated with an AWS root account is required for tests to pass. |
 | `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
+| `AWS_EC2_TRANSIT_GATEWAY_LIMIT` | Concurrency limit for Transit Gateway acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-quotas.html) if not specified. |
+| `AWS_EC2_VERIFIED_ACCESS_INSTANCE_LIMIT` | Concurrency limit for Verified Access acceptance tests. [Default is 5](https://docs.aws.amazon.com/verified-access/latest/ug/verified-access-quotas.html) if not specified. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `AWS_GUARDDUTY_MEMBER_EMAIL` | Email address for GuardDuty Member testing. **DEPRECATED:** It may be possible to use a placeholder email address instead. |
-| `AWS_LAMBDA_IMAGE_LATEST_ID` | ECR repository image URI (tagged as `latest`) for Lambda container image acceptance tests.
-| `AWS_LAMBDA_IMAGE_V1_ID` | ECR repository image URI (tagged as `v1`) for Lambda container image acceptance tests.
-| `AWS_LAMBDA_IMAGE_V2_ID` | ECR repository image URI (tagged as `v2`) for Lambda container image acceptance tests.
+| `AWS_LAMBDA_IMAGE_LATEST_ID` | ECR repository image URI (tagged as `latest`) for Lambda container image acceptance tests. |
+| `AWS_LAMBDA_IMAGE_V1_ID` | ECR repository image URI (tagged as `v1`) for Lambda container image acceptance tests. |
+| `AWS_LAMBDA_IMAGE_V2_ID` | ECR repository image URI (tagged as `v2`) for Lambda container image acceptance tests. |
 | `AWS_THIRD_ACCESS_KEY_ID` | AWS access key ID with access to a third AWS account for tests requiring multiple accounts. Requires `AWS_THIRD_SECRET_ACCESS_KEY`. Conflicts with `AWS_THIRD_PROFILE`. |
 | `AWS_THIRD_SECRET_ACCESS_KEY` | AWS secret access key with access to a third AWS account for tests requiring multiple accounts. Requires `AWS_THIRD_ACCESS_KEY_ID`. Conflicts with `AWS_THIRD_PROFILE`. |
 | `AWS_THIRD_PROFILE` | AWS profile with access to a third AWS account for tests requiring multiple accounts. Conflicts with `AWS_THIRD_ACCESS_KEY_ID` and `AWS_THIRD_SECRET_ACCESS_KEY`. |
 | `AWS_THIRD_REGION` | Third AWS region for tests requiring multiple regions. Defaults to `us-east-2`. |
+| `CHATBOT_SLACK_CHANNEL_ID` | ID of the Slack channel. |
+| `CHATBOT_SLACK_TEAM_ID` | ID of the Slack workspace authorized with AWS Chatbot. |
+| `CHATBOT_TEAMS_CHANNEL_ID` | ID of the Microsoft Teams channel. |
+| `CHATBOT_TEAMS_TEAM_ID` | ID of the Microsoft Teams workspace authorized with AWS Chatbot. |
+| `CHATBOT_TEAMS_TENANT_ID` | ID of the Microsoft Teams tenant. |
+| `CLOUD_HSM_CLUSTER_ID` | Cloud HSM cluster identifier for KMS custom key store acceptance tests. |
 | `DX_CONNECTION_ID` | Identifier for Direct Connect Connection testing. |
 | `DX_VIRTUAL_INTERFACE_ID` | Identifier for Direct Connect Virtual Interface testing. |
 | `EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT` | EC2 Quota for Rules per Security Group. Defaults to 50. **DEPRECATED:** Can be augmented or replaced with Service Quotas lookup. |
@@ -77,6 +81,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
 | `QUICKSIGHT_ATHENA_TESTING_ENABLED` | Enable QuickSight tests dependent on Amazon Athena resources. |
 | `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
+| `RESOURCEEXPLORER_INDEX_TYPE` | Index Type for Resource Explorer 2 Search datasource testing. |
 | `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | SageMaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_SERVICE_CODE` | Service Code for Service Quotas testing (submits support case). |
@@ -88,7 +93,12 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TEST_AWS_SES_VERIFIED_EMAIL_ARN` | Verified SES Email Identity for use in Cognito User Pool testing. |
 | `TF_ACC` | Enables Go tests containing `resource.Test()` and `resource.ParallelTest()`. |
 | `TF_ACC_ASSUME_ROLE_ARN` | Amazon Resource Name of existing IAM Role to use for limited permissions acceptance testing. |
+| `TF_AWS_BEDROCK_OSS_COLLECTION_NAME` | Name of the OpenSearch Serverless collection to be used with an Amazon Bedrock Knowledge Base. |
+| `TF_AWS_DATAEXCHANGE_DATA_SET_ID` | ID of DataExchange Data Set to use for testing. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION` | Region where a License Manager license is imported. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN` | ARN for a License Manager license imported into the current account. |
 | `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL` | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit. |
+| `TF_AWS_QUICKSIGHT_IDC_GROUP` | Name of the IAM Identity Center Group to be assigned role membership. |
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |
+| `TF_TEST_ELASTICACHE_RESERVED_CACHE_NODE` | Flag to enable resource tests for ElastiCache reserved nodes. Set to `1` to run tests |
+| `TRUST_ANCHOR_CERTIFICATE` | Trust anchor certificate for KMS custom key store acceptance tests. |

@@ -10,15 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -27,9 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_neptune_cluster_instance", name="Cluster")
+// @SDKResource("aws_neptune_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterInstance() *schema.Resource {
+func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
 		ReadWithoutTimeout:   resourceClusterInstanceRead,
@@ -47,31 +48,31 @@ func ResourceClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,23 +81,23 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineNeptune,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -109,21 +110,21 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"identifier"},
+				ConflictsWith: []string{names.AttrIdentifier},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"neptune_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "default.neptune1",
+				Computed: true,
 			},
 			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -131,7 +132,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -143,11 +144,11 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					if val == nil {
 						return ""
 					}
@@ -160,17 +161,21 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  0,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
 			},
-			"storage_encrypted": {
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -181,36 +186,34 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	instanceID := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &neptune.CreateDBInstanceInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(instanceID),
-		Engine:                  aws.String(d.Get("engine").(string)),
-		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
-		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
+		PromotionTier:           aws.Int32(int32(d.Get("promotion_tier").(int))),
+		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -226,19 +229,19 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredBackupWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateDBInstanceWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateDBInstance(ctx, input)
 	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance (%s): %s", instanceID, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*neptune.CreateDBInstanceOutput).DBInstance.DBInstanceIdentifier))
+	d.SetId(aws.ToString(outputRaw.(*neptune.CreateDBInstanceOutput).DBInstance.DBInstanceIdentifier))
 
 	if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Instance (%s) create: %s", d.Id(), err)
@@ -247,11 +250,11 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	db, err := FindDBInstanceByID(ctx, conn, d.Id())
+	db, err := findDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Instance (%s) not found, removing from state", d.Id())
@@ -263,18 +266,18 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
 
-	clusterID := aws.StringValue(db.DBClusterIdentifier)
-	d.Set("arn", db.DBInstanceArn)
-	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", db.AvailabilityZone)
-	d.Set("cluster_identifier", clusterID)
+	clusterID := aws.ToString(db.DBClusterIdentifier)
+	d.Set(names.AttrARN, db.DBInstanceArn)
+	d.Set(names.AttrAutoMinorVersionUpgrade, db.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
+	d.Set(names.AttrClusterIdentifier, clusterID)
 	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("engine_version", db.EngineVersion)
-	d.Set("engine", db.Engine)
-	d.Set("identifier", db.DBInstanceIdentifier)
-	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
+	d.Set(names.AttrEngineVersion, db.EngineVersion)
+	d.Set(names.AttrEngine, db.Engine)
+	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.ToString(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("kms_key_arn", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyARN, db.KmsKeyId)
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
@@ -282,19 +285,19 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("neptune_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
 	}
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
-	d.Set("publicly_accessible", db.PubliclyAccessible)
-	d.Set("storage_encrypted", db.StorageEncrypted)
-	d.Set("storage_type", db.StorageType)
+	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
+	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
+	d.Set(names.AttrStorageType, db.StorageType)
 
 	if db.Endpoint != nil {
-		address := aws.StringValue(db.Endpoint.Address)
-		port := int(aws.Int64Value(db.Endpoint.Port))
+		address := aws.ToString(db.Endpoint.Address)
+		port := int(aws.ToInt32(db.Endpoint.Port))
 
-		d.Set("address", address)
-		d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
-		d.Set("port", port)
+		d.Set(names.AttrAddress, address)
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
+		d.Set(names.AttrPort, port)
 	}
 
 	m, err := findClusterMemberByInstanceByTwoPartKey(ctx, conn, clusterID, d.Id())
@@ -308,18 +311,18 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &neptune.ModifyDBInstanceInput{
-			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:     aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange("instance_class") {
@@ -334,16 +337,16 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("promotion_tier") {
-			input.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+			input.PromotionTier = aws.Int32(int32(d.Get("promotion_tier").(int)))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-			return conn.ModifyDBInstanceWithContext(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+			return conn.ModifyDBInstance(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
@@ -358,16 +361,22 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstanceWithContext(ctx, &neptune.DeleteDBInstanceInput{
+	input := neptune.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
-	})
+	}
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	}
+
+	_, err := conn.DeleteDBInstance(ctx, &input)
+
+	if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
 		return diags
 	}
 
@@ -382,7 +391,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindDBInstanceByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBInstance, error) {
+func findDBInstanceByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBInstance, error) {
 	input := &neptune.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -393,7 +402,7 @@ func FindDBInstanceByID(ctx context.Context, conn *neptune.Neptune, id string) (
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBInstanceIdentifier) != id {
+	if aws.ToString(output.DBInstanceIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -402,62 +411,55 @@ func FindDBInstanceByID(ctx context.Context, conn *neptune.Neptune, id string) (
 	return output, nil
 }
 
-func findDBInstance(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBInstancesInput) (*neptune.DBInstance, error) {
+func findDBInstance(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBInstancesInput) (*awstypes.DBInstance, error) {
 	output, err := findDBInstances(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBInstances(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBInstancesInput) ([]*neptune.DBInstance, error) {
-	var output []*neptune.DBInstance
+func findDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBInstancesInput) ([]awstypes.DBInstance, error) {
+	var output []awstypes.DBInstance
 
-	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *neptune.DescribeDBInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBInstances {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBInstances...)
 	}
 
 	return output, nil
 }
 
-func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.Neptune, clusterID, instanceID string) (*neptune.DBClusterMember, error) {
-	output, err := FindDBClusterByID(ctx, conn, clusterID)
+func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.Client, clusterID, instanceID string) (*awstypes.DBClusterMember, error) {
+	output, err := findDBClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(tfslices.Filter(output.DBClusterMembers, func(v *neptune.DBClusterMember) bool {
-		return aws.StringValue(v.DBInstanceIdentifier) == instanceID
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DBClusterMembers, func(v awstypes.DBClusterMember) bool {
+		return aws.ToString(v.DBInstanceIdentifier) == instanceID
 	}))
 }
 
-func statusDBInstance(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(ctx, conn, id)
+func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -467,11 +469,11 @@ func statusDBInstance(ctx context.Context, conn *neptune.Neptune, id string) ret
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.DBInstanceStatus), nil
+		return output, aws.ToString(output.DBInstanceStatus), nil
 	}
 }
 
-func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) { //nolint:unparam
+func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			dbInstanceStatusBackingUp,
@@ -497,14 +499,14 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*neptune.DBInstance); ok {
+	if output, ok := outputRaw.(*awstypes.DBInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) {
+func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			dbInstanceStatusModifying,
@@ -519,7 +521,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Neptune, id string
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*neptune.DBInstance); ok {
+	if output, ok := outputRaw.(*awstypes.DBInstance); ok {
 		return output, err
 	}
 

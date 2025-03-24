@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template")
+// @FrameworkResource("aws_servicequotas_template", name="Template")
 func newResourceTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTemplate{}, nil
 }
@@ -41,10 +41,6 @@ type resourceTemplate struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTemplate) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicequotas_template"
-}
-
 func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -54,7 +50,7 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"quota_code": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -67,7 +63,7 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -79,19 +75,19 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"service_name": schema.StringAttribute{
+			names.AttrServiceName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"unit": schema.StringAttribute{
+			names.AttrUnit: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"value": schema.Float64Attribute{
+			names.AttrValue: schema.Float64Attribute{
 				Required: true,
 			},
 		},
@@ -123,7 +119,7 @@ func (r *resourceTemplate) Create(ctx context.Context, req resource.CreateReques
 
 	in := &servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
 		AwsRegion:    aws.String(region),
-		DesiredValue: aws.Float64(plan.Value.ValueFloat64()),
+		DesiredValue: plan.Value.ValueFloat64Pointer(),
 		QuotaCode:    aws.String(quotaCode),
 		ServiceCode:  aws.String(serviceCode),
 	}
@@ -199,10 +195,10 @@ func (r *resourceTemplate) Update(ctx context.Context, req resource.UpdateReques
 
 	if !plan.Value.Equal(state.Value) {
 		in := &servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
-			AwsRegion:    aws.String(plan.Region.ValueString()),
-			DesiredValue: aws.Float64(plan.Value.ValueFloat64()),
-			QuotaCode:    aws.String(plan.QuotaCode.ValueString()),
-			ServiceCode:  aws.String(plan.ServiceCode.ValueString()),
+			AwsRegion:    plan.Region.ValueStringPointer(),
+			DesiredValue: plan.Value.ValueFloat64Pointer(),
+			QuotaCode:    plan.QuotaCode.ValueStringPointer(),
+			ServiceCode:  plan.ServiceCode.ValueStringPointer(),
 		}
 
 		out, err := conn.PutServiceQuotaIncreaseRequestIntoTemplate(ctx, in)
@@ -241,9 +237,9 @@ func (r *resourceTemplate) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	in := &servicequotas.DeleteServiceQuotaIncreaseRequestFromTemplateInput{
-		AwsRegion:   aws.String(state.Region.ValueString()),
-		QuotaCode:   aws.String(state.QuotaCode.ValueString()),
-		ServiceCode: aws.String(state.ServiceCode.ValueString()),
+		AwsRegion:   state.Region.ValueStringPointer(),
+		QuotaCode:   state.QuotaCode.ValueStringPointer(),
+		ServiceCode: state.ServiceCode.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteServiceQuotaIncreaseRequestFromTemplate(ctx, in)
@@ -260,7 +256,7 @@ func (r *resourceTemplate) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 func (r *resourceTemplate) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindTemplateByID(ctx context.Context, conn *servicequotas.Client, id string) (*awstypes.ServiceQuotaIncreaseRequestInTemplate, error) {

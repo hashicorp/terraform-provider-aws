@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_secretsmanager_secret_policy", name="Secret Policy")
@@ -39,13 +40,13 @@ func resourceSecretPolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -60,11 +61,11 @@ func resourceSecretPolicy() *schema.Resource {
 	}
 }
 
-func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -86,7 +87,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(output.ARN))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
 		return findSecretPolicyByID(ctx, conn, d.Id())
 	})
 
@@ -97,7 +98,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSecretPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -117,25 +118,25 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	// For backwards compatibility we don't check that.
 
 	if output.ResourcePolicy != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.ResourcePolicy))
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.ResourcePolicy))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	} else {
-		d.Set("policy", "")
+		d.Set(names.AttrPolicy, "")
 	}
 	d.Set("secret_arn", d.Id())
 
 	return diags
 }
 
-func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -153,7 +154,7 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSecretPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -168,7 +169,7 @@ func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (any, error) {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {

@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Profiling Group")
+// @FrameworkResource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 // @Tags(identifierAttribute="arn")
 func newResourceProfilingGroup(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProfilingGroup{}
@@ -46,16 +46,12 @@ type resourceProfilingGroup struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceProfilingGroup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
-}
-
 func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	computePlatform := fwtypes.StringEnumType[awstypes.ComputePlatform]()
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_platform": schema.StringAttribute{
 				CustomType: computePlatform,
 				Optional:   true,
@@ -65,8 +61,8 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -223,7 +219,7 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 	}
 
 	in := &codeguruprofiler.DeleteProfilingGroupInput{
-		ProfilingGroupName: aws.String(state.ID.ValueString()),
+		ProfilingGroupName: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteProfilingGroup(ctx, in)
@@ -242,11 +238,7 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceProfilingGroup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *resourceProfilingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client, name string) (*awstypes.ProfilingGroupDescription, error) {
@@ -279,8 +271,8 @@ type resourceProfilingGroupData struct {
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]              `tfsdk:"compute_platform"`
 	ID                       types.String                                              `tfsdk:"id"`
 	Name                     types.String                                              `tfsdk:"name"`
-	Tags                     types.Map                                                 `tfsdk:"tags"`
-	TagsAll                  types.Map                                                 `tfsdk:"tags_all"`
+	Tags                     tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
 }
 
 type agentOrchestrationConfig struct {

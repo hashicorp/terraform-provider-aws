@@ -37,7 +37,7 @@ func resourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func resourceConnection() *schema.Resource {
 				ValidateFunc:  verify.ValidARN,
 				ConflictsWith: []string{"provider_type"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -68,16 +68,14 @@ func resourceConnection() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(name),
 		Tags:           getTagsIn(ctx),
@@ -102,7 +100,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
@@ -120,16 +118,16 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	arn := aws.ToString(connection.ConnectionArn)
 	d.SetId(arn)
-	d.Set("arn", connection.ConnectionArn)
+	d.Set(names.AttrARN, connection.ConnectionArn)
 	d.Set("connection_status", connection.ConnectionStatus)
 	d.Set("host_arn", connection.HostArn)
-	d.Set("name", connection.ConnectionName)
+	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
 	return diags
 }
 
-func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -137,14 +135,15 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Connection: %s", d.Id())
-	_, err := conn.DeleteConnection(ctx, &codestarconnections.DeleteConnectionInput{
+	input := codestarconnections.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

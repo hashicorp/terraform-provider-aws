@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ssoadmin_managed_policy_attachment")
+// @SDKResource("aws_ssoadmin_managed_policy_attachment", name="Managed Policy Attachment")
 func ResourceManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPolicyAttachmentCreate,
@@ -67,7 +67,7 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 

@@ -28,7 +28,7 @@ func TestAccCodeCommitRepository_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,15 +36,15 @@ func TestAccCodeCommitRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codecommit", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codecommit", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_http"),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_ssh"),
 					resource.TestCheckNoResourceAttr(resourceName, "default_branch"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "repository_id"),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,7 +73,7 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
 				),
 			},
 			{
@@ -81,8 +81,8 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description - with changes"),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description - with changes"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rNameUpdated),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccCodeCommitRepository_CreateDefault_branch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +131,7 @@ func TestAccCodeCommitRepository_CreateAndUpdateDefault_branch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,16 +167,16 @@ func TestAccCodeCommitRepository_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -185,12 +185,12 @@ func TestAccCodeCommitRepository_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRepositoryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -199,11 +199,11 @@ func TestAccCodeCommitRepository_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryConfig_tags1(rName, "key2", "value2"),
+				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -224,17 +224,17 @@ func TestAccCodeCommitRepository_UpdateNameAndTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -243,13 +243,13 @@ func TestAccCodeCommitRepository_UpdateNameAndTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryConfig_tags2(rNameUpdated, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRepositoryConfig_tags2(rNameUpdated, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -269,7 +269,7 @@ func TestAccCodeCommitRepository_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -277,7 +277,7 @@ func TestAccCodeCommitRepository_kmsKey(t *testing.T) {
 				Config: testAccRepositoryConfig_kmsKey(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -290,7 +290,7 @@ func TestAccCodeCommitRepository_kmsKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test.1", names.AttrARN),
 				),
 			},
 		},

@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -24,7 +24,7 @@ func RegisterSweepers() {
 
 func sweepReportDefinitions(region string) error {
 	ctx := sweep.Context(region)
-	if region != names.USEast1RegionID {
+	if region != endpoints.UsEast1RegionID {
 		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for region: %s", region)
 		return nil
 	}
@@ -32,32 +32,30 @@ func sweepReportDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CURConn(ctx)
+	conn := client.CURClient(ctx)
 	input := &cur.DescribeReportDefinitionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeReportDefinitionsPagesWithContext(ctx, input, func(page *cur.DescribeReportDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cur.NewDescribeReportDefinitionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, reportDefinition := range page.ReportDefinitions {
-			r := ResourceReportDefinition()
+		if err != nil {
+			return fmt.Errorf("error listing Cost And Usage Report Definitions (%s): %w", region, err)
+		}
+
+		for _, v := range page.ReportDefinitions {
+			r := resourceReportDefinition()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(reportDefinition.ReportName))
+			d.SetId(aws.ToString(v.ReportName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error listing Cost And Usage Report Definitions (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

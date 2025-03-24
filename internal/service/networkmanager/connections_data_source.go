@@ -6,17 +6,18 @@ package networkmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_connections")
-func DataSourceConnections() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_connections", name="Connections")
+func dataSourceConnections() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionsRead,
 
@@ -29,22 +30,22 @@ func DataSourceConnections() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
-func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetConnectionsInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -54,7 +55,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.DeviceId = aws.String(v.(string))
 	}
 
-	output, err := FindConnections(ctx, conn, input)
+	output, err := findConnections(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Network Manager Connections: %s", err)
@@ -69,11 +70,11 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		connectionIDs = append(connectionIDs, aws.StringValue(v.ConnectionId))
+		connectionIDs = append(connectionIDs, aws.ToString(v.ConnectionId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", connectionIDs)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrIDs, connectionIDs)
 
 	return diags
 }

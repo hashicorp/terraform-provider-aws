@@ -16,21 +16,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_budgets_budget")
+// @SDKDataSource("aws_budgets_budget", name="Budget")
+// @Tags(identifierAttribute="arn")
 func DataSourceBudget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBudgetRead,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +81,7 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -100,7 +102,7 @@ func DataSourceBudget() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"unit": {
+									names.AttrUnit: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -115,11 +117,11 @@ func DataSourceBudget() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Schema{
@@ -181,11 +183,11 @@ func DataSourceBudget() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -234,17 +236,18 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"time_period_end": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -269,18 +272,17 @@ const (
 	DSNameBudget = "Budget Data Source"
 )
 
-func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	budgetName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	if err != nil {
@@ -290,12 +292,12 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(fmt.Sprintf("%s:%s", accountID, budgetName))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
 		AccountID: accountID,
-		Resource:  fmt.Sprintf("budget/%s", budgetName),
+		Resource:  "budget/" + budgetName,
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("budget_type", budget.BudgetType)
 
@@ -327,32 +329,32 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	d.Set("name", budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+	d.Set(names.AttrName, budget.BudgetName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	return diags
 }
 
-func flattenCalculatedSpend(apiObject *awstypes.CalculatedSpend) []interface{} {
+func flattenCalculatedSpend(apiObject *awstypes.CalculatedSpend) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	attrs := map[string]interface{}{
+	attrs := map[string]any{
 		"actual_spend": flattenSpend(apiObject.ActualSpend),
 	}
-	return []interface{}{attrs}
+	return []any{attrs}
 }
 
-func flattenSpend(apiObject *awstypes.Spend) []interface{} {
+func flattenSpend(apiObject *awstypes.Spend) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	attrs := map[string]interface{}{
-		"amount": aws.ToString(apiObject.Amount),
-		"unit":   aws.ToString(apiObject.Unit),
+	attrs := map[string]any{
+		"amount":       aws.ToString(apiObject.Amount),
+		names.AttrUnit: aws.ToString(apiObject.Unit),
 	}
 
-	return []interface{}{attrs}
+	return []any{attrs}
 }

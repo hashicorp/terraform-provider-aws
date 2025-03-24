@@ -7,16 +7,18 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_glue_script")
+// @SDKDataSource("aws_glue_script", name="Script")
 func DataSourceScript() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceScriptRead,
@@ -26,11 +28,11 @@ func DataSourceScript() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -52,7 +54,7 @@ func DataSourceScript() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -60,14 +62,14 @@ func DataSourceScript() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -83,13 +85,10 @@ func DataSourceScript() *schema.Resource {
 				},
 			},
 			"language": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  glue.LanguagePython,
-				ValidateFunc: validation.StringInSlice([]string{
-					glue.LanguagePython,
-					glue.LanguageScala,
-				}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.LanguagePython,
+				ValidateDiagFunc: enum.Validate[awstypes.Language](),
 			},
 			"python_script": {
 				Type:     schema.TypeString,
@@ -103,12 +102,12 @@ func DataSourceScript() *schema.Resource {
 	}
 }
 
-func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	dagEdge := d.Get("dag_edge").([]interface{})
-	dagNode := d.Get("dag_node").([]interface{})
+	dagEdge := d.Get("dag_edge").([]any)
+	dagNode := d.Get("dag_node").([]any)
 
 	input := &glue.CreateScriptInput{
 		DagEdges: expandCodeGenEdges(dagEdge),
@@ -116,11 +115,11 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("language"); ok {
-		input.Language = aws.String(v.(string))
+		input.Language = awstypes.Language(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Script: %s", input)
-	output, err := conn.CreateScriptWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Glue Script: %+v", input)
+	output, err := conn.CreateScript(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue script: %s", err)
 	}
@@ -129,22 +128,22 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "script not created")
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("python_script", output.PythonScript)
 	d.Set("scala_code", output.ScalaCode)
 
 	return diags
 }
 
-func expandCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
-	args := []*glue.CodeGenNodeArg{}
+func expandCodeGenNodeArgs(l []any) []awstypes.CodeGenNodeArg {
+	args := []awstypes.CodeGenNodeArg{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
-		arg := &glue.CodeGenNodeArg{
-			Name:  aws.String(m["name"].(string)),
-			Param: aws.Bool(m["param"].(bool)),
-			Value: aws.String(m["value"].(string)),
+		m := mRaw.(map[string]any)
+		arg := awstypes.CodeGenNodeArg{
+			Name:  aws.String(m[names.AttrName].(string)),
+			Param: m["param"].(bool),
+			Value: aws.String(m[names.AttrValue].(string)),
 		}
 		args = append(args, arg)
 	}
@@ -152,14 +151,14 @@ func expandCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	return args
 }
 
-func expandCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
-	edges := []*glue.CodeGenEdge{}
+func expandCodeGenEdges(l []any) []awstypes.CodeGenEdge {
+	edges := []awstypes.CodeGenEdge{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
-		edge := &glue.CodeGenEdge{
-			Source: aws.String(m["source"].(string)),
-			Target: aws.String(m["target"].(string)),
+		m := mRaw.(map[string]any)
+		edge := awstypes.CodeGenEdge{
+			Source: aws.String(m[names.AttrSource].(string)),
+			Target: aws.String(m[names.AttrTarget].(string)),
 		}
 		if v, ok := m["target_parameter"]; ok && v.(string) != "" {
 			edge.TargetParameter = aws.String(v.(string))
@@ -170,18 +169,18 @@ func expandCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 	return edges
 }
 
-func expandCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
-	nodes := []*glue.CodeGenNode{}
+func expandCodeGenNodes(l []any) []awstypes.CodeGenNode {
+	nodes := []awstypes.CodeGenNode{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
-		node := &glue.CodeGenNode{
-			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
-			Id:       aws.String(m["id"].(string)),
+		m := mRaw.(map[string]any)
+		node := awstypes.CodeGenNode{
+			Args:     expandCodeGenNodeArgs(m["args"].([]any)),
+			Id:       aws.String(m[names.AttrID].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}
 		if v, ok := m["line_number"]; ok && v.(int) != 0 {
-			node.LineNumber = aws.Int64(int64(v.(int)))
+			node.LineNumber = int32(v.(int))
 		}
 		nodes = append(nodes, node)
 	}

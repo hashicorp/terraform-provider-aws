@@ -9,15 +9,28 @@ package s3
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
+
+func bucketCreateTags(ctx context.Context, conn *s3.Client, identifier string, tags []awstypes.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return bucketUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+}
 
 // bucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
@@ -28,13 +41,9 @@ func bucketListTags(ctx context.Context, conn *s3.Client, identifier string, opt
 
 	output, err := conn.GetBucketTagging(ctx, input, optFns...)
 
-	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
-	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
-	// and the AWS Go SDK has neither as a constant.
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation) {
 		return tftags.New(ctx, nil), nil
 	}
-
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
@@ -60,7 +69,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, o
 	if len(newTags)+len(ignoredTags) > 0 {
 		input := &s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
-			Tagging: &types.Tagging{
+			Tagging: &awstypes.Tagging{
 				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
@@ -94,7 +103,11 @@ func objectListTags(ctx context.Context, conn *s3.Client, bucket, key string, op
 
 	output, err := conn.GetObjectTagging(ctx, input, optFns...)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
+		return tftags.New(ctx, nil), nil
+	}
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return tftags.New(ctx, nil), nil
 	}
 
@@ -123,7 +136,7 @@ func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, 
 		input := &s3.PutObjectTaggingInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
-			Tagging: &types.Tagging{
+			Tagging: &awstypes.Tagging{
 				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
@@ -146,5 +159,97 @@ func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, 
 		}
 	}
 
+	return nil
+}
+
+// ListTags lists s3 service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	var (
+		tags tftags.KeyValueTags
+		err  error
+	)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	switch resourceType {
+	case "Bucket":
+		if isDirectoryBucket(identifier) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+		tags, err = bucketListTags(ctx, conn, identifier)
+
+	case "Object", "ObjectCopy", "BucketObject":
+		var objectARN objectARN
+		objectARN, err = parseObjectARN(identifier)
+		if err != nil {
+			return err
+		}
+
+		if isDirectoryBucket(objectARN.Bucket) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+
+		var optFns []func(*s3.Options)
+		// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+		if arn.IsARN(objectARN.Bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		tags, err = objectListTags(ctx, conn, objectARN.Bucket, objectARN.Key, optFns...)
+
+	default:
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
+// UpdateTags updates s3 service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	switch resourceType {
+	case "Bucket":
+		if isDirectoryBucket(identifier) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+		return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+
+	case "Object", "ObjectCopy", "BucketObject":
+		objectARN, err := parseObjectARN(identifier)
+		if err != nil {
+			return err
+		}
+
+		if isDirectoryBucket(objectARN.Bucket) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+
+		var optFns []func(*s3.Options)
+		// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+		if arn.IsARN(objectARN.Bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		return objectUpdateTags(ctx, conn, objectARN.Bucket, objectARN.Key, oldTags, newTags, optFns...)
+
+	default:
+		return nil
+	}
+}
+
+func getContextTags(ctx context.Context) tftags.KeyValueTags {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		return inContext.TagsIn.UnwrapOrDefault()
+	}
 	return nil
 }

@@ -11,7 +11,7 @@ var (
 	ResourceBucketCorsConfiguration                 = resourceBucketCorsConfiguration
 	ResourceBucketIntelligentTieringConfiguration   = resourceBucketIntelligentTieringConfiguration
 	ResourceBucketInventory                         = resourceBucketInventory
-	ResourceBucketLifecycleConfiguration            = resourceBucketLifecycleConfiguration
+	ResourceBucketLifecycleConfiguration            = newResourceBucketLifecycleConfiguration
 	ResourceBucketLogging                           = resourceBucketLogging
 	ResourceBucketMetric                            = resourceBucketMetric
 	ResourceBucketNotification                      = resourceBucketNotification
@@ -28,7 +28,6 @@ var (
 	ResourceDirectoryBucket                         = newDirectoryBucketResource
 	ResourceObjectCopy                              = resourceObjectCopy
 
-	BucketListTags                        = bucketListTags
 	BucketUpdateTags                      = bucketUpdateTags
 	BucketRegionalDomainName              = bucketRegionalDomainName
 	BucketWebsiteEndpointAndDomain        = bucketWebsiteEndpointAndDomain
@@ -38,6 +37,7 @@ var (
 	FindBucket                            = findBucket
 	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
+	FindBucketLifecycleConfiguration      = findBucketLifecycleConfiguration
 	FindBucketNotificationConfiguration   = findBucketNotificationConfiguration
 	FindBucketPolicy                      = findBucketPolicy
 	FindBucketRequestPayment              = findBucketRequestPayment
@@ -46,7 +46,6 @@ var (
 	FindCORSRules                         = findCORSRules
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
-	FindLifecycleRules                    = findLifecycleRules
 	FindLoggingEnabled                    = findLoggingEnabled
 	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
@@ -69,4 +68,16 @@ var (
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
+
+	NewObjectARN   = newObjectARN
+	ParseObjectARN = parseObjectARN
+
+	CreateResourceID = createResourceID
+	ParseResourceID  = parseResourceID
+
+	DirectoryBucketNameRegex = directoryBucketNameRegex
+)
+
+type (
+	ObjectARN = objectARN
 )

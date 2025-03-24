@@ -160,11 +160,11 @@ can be done using the [`autoAccept`](vpc_peering_connection.html#auto_accept) at
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
-* `peerOwnerId` - (Optional) The AWS account ID of the owner of the peer VPC.
-   Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `peerVpcId` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
+* `peerOwnerId` - (Optional) The AWS account ID of the target peer VPC.
+   Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
+* `peerVpcId` - (Required) The ID of the target VPC with which you are creating the VPC Peering Connection.
 * `vpcId` - (Required) The ID of the requester VPC.
 * `autoAccept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
 * `peerRegion` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `autoAccept` must be `false`,
@@ -239,4 +239,4 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-73a508d459b90465fa5267c1055341add54eefba044dcb055a7d430ee33449de -->
+<!-- cache-key: cdktf-0.20.8 input-81146d4d65b74a0127fbac7a0b412052b1f13331dcc243c687067a6fe2c7a258 -->

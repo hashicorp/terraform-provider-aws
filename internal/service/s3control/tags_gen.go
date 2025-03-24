@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceType string, optFns ...func(*s3control.Options)) (tftags.KeyValueTags, error) {
-	input := &s3control.ListTagsForResourceInput{
+	input := s3control.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		AccountId:   aws.String(resourceType),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -110,13 +110,13 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.S3Control)
 	if len(removedTags) > 0 {
-		input := &s3control.UntagResourceInput{
+		input := s3control.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			AccountId:   aws.String(resourceType),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -126,13 +126,13 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.S3Control)
 	if len(updatedTags) > 0 {
-		input := &s3control.TagResourceInput{
+		input := s3control.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			AccountId:   aws.String(resourceType),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

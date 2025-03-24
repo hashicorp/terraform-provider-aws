@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_assessment_delegation", name="Assessment Delegation")
 func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentDelegation{}, nil
 }
@@ -40,10 +40,6 @@ type resourceAssessmentDelegation struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAssessmentDelegation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment_delegation"
-}
-
 func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -53,7 +49,7 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -75,8 +71,8 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"role_arn": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrRoleARN: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -91,7 +87,7 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 					enum.FrameworkValidate[awstypes.RoleType](),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -111,15 +107,15 @@ func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.
 	}
 
 	delegationIn := awstypes.CreateDelegationRequest{
-		RoleArn:      aws.String(plan.RoleARN.ValueString()),
+		RoleArn:      plan.RoleARN.ValueStringPointer(),
 		RoleType:     awstypes.RoleType(plan.RoleType.ValueString()),
-		ControlSetId: aws.String(plan.ControlSetID.ValueString()),
+		ControlSetId: plan.ControlSetID.ValueStringPointer(),
 	}
 	if !plan.Comment.IsNull() {
-		delegationIn.Comment = aws.String(plan.Comment.ValueString())
+		delegationIn.Comment = plan.Comment.ValueStringPointer()
 	}
 	in := auditmanager.BatchCreateDelegationByAssessmentInput{
-		AssessmentId:             aws.String(plan.AssessmentID.ValueString()),
+		AssessmentId:             plan.AssessmentID.ValueStringPointer(),
 		CreateDelegationRequests: []awstypes.CreateDelegationRequest{delegationIn},
 	}
 
@@ -224,7 +220,7 @@ func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.
 	}
 
 	_, err := conn.BatchDeleteDelegationByAssessment(ctx, &auditmanager.BatchDeleteDelegationByAssessmentInput{
-		AssessmentId:  aws.String(state.AssessmentID.ValueString()),
+		AssessmentId:  state.AssessmentID.ValueStringPointer(),
 		DelegationIds: []string{state.DelegationID.ValueString()},
 	})
 	if err != nil {
@@ -240,7 +236,7 @@ func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAssessmentDelegationByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.DelegationMetadata, error) {

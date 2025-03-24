@@ -7,22 +7,25 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_environments")
-func DataSourceEnvironments() *schema.Resource {
+// @SDKDataSource("aws_appconfig_environments", name="Environments")
+func dataSourceEnvironments() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentsRead,
+
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
@@ -36,45 +39,42 @@ func DataSourceEnvironments() *schema.Resource {
 	}
 }
 
-const (
-	DSNameEnvironments = "Environments Data Source"
-)
-
-func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
-	appID := d.Get("application_id").(string)
+	applicationID := d.Get(names.AttrApplicationID).(string)
+	input := appconfig.ListEnvironmentsInput{
+		ApplicationId: aws.String(applicationID),
+	}
 
-	out, err := findEnvironmentsByApplication(ctx, conn, appID)
+	output, err := findEnvironments(ctx, conn, &input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Environments: %s", err)
 	}
 
-	d.SetId(appID)
-
-	var environmentIds []*string
-	for _, v := range out {
-		environmentIds = append(environmentIds, v.Id)
-	}
-	d.Set("environment_ids", aws.StringValueSlice(environmentIds))
+	d.SetId(applicationID)
+	d.Set("environment_ids", tfslices.ApplyToAll(output, func(v awstypes.Environment) string {
+		return aws.ToString(v.Id)
+	}))
 
 	return diags
 }
 
-func findEnvironmentsByApplication(ctx context.Context, conn *appconfig.AppConfig, appId string) ([]*appconfig.Environment, error) {
-	var outputs []*appconfig.Environment
-	err := conn.ListEnvironmentsPagesWithContext(ctx, &appconfig.ListEnvironmentsInput{
-		ApplicationId: aws.String(appId),
-	}, func(output *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
-		outputs = append(outputs, output.Items...)
+func findEnvironments(ctx context.Context, conn *appconfig.Client, input *appconfig.ListEnvironmentsInput) ([]awstypes.Environment, error) {
+	var output []awstypes.Environment
 
-		return !lastPage
-	})
+	pages := appconfig.NewListEnvironmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Items...)
 	}
 
-	return outputs, nil
+	return output, nil
 }

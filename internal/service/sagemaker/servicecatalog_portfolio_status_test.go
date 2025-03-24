@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
@@ -22,15 +24,15 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 				),
 			},
 			{
@@ -41,22 +43,22 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 			{
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Disabled"),
 				),
 			},
 			{
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx context.Context, n string, config *sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput) resource.TestCheckFunc {
+func testAccCheckServicecatalogPortfolioStatusExists(ctx context.Context, n string, config *sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -64,12 +66,13 @@ func testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx context.Context, 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
+			return fmt.Errorf("No SageMaker AI Studio Lifecycle Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
-		output, err := conn.GetSagemakerServicecatalogPortfolioStatusWithContext(ctx, &sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
+		output, err := tfsagemaker.FindServicecatalogPortfolioStatus(ctx, conn)
+
 		if err != nil {
 			return err
 		}

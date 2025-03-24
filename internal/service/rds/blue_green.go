@@ -9,22 +9,24 @@ import (
 	"log"
 	"time"
 
-	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc)
+type cleanupWaiterFunc func(context.Context, *rds.Client, ...tfresource.OptionsFunc)
 
 type blueGreenOrchestrator struct {
-	conn           *rds_sdkv2.Client
+	conn           *rds.Client
 	cleanupWaiters []cleanupWaiterFunc
 }
 
-func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
+func newBlueGreenOrchestrator(conn *rds.Client) *blueGreenOrchestrator {
 	return &blueGreenOrchestrator{
 		conn: conn,
 	}
@@ -44,7 +46,7 @@ func (o *blueGreenOrchestrator) CleanUp(ctx context.Context) {
 	}
 }
 
-func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds_sdkv2.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
+func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
 	createOut, err := o.conn.CreateBlueGreenDeployment(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
@@ -62,11 +64,11 @@ func (o *blueGreenOrchestrator) waitForDeploymentAvailable(ctx context.Context, 
 }
 
 func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
-	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
+	input := &rds.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
 	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -89,10 +91,10 @@ func (o *blueGreenOrchestrator) AddCleanupWaiter(f cleanupWaiterFunc) {
 }
 
 type instanceHandler struct {
-	conn *rds_sdkv2.Client
+	conn *rds.Client
 }
 
-func newInstanceHandler(conn *rds_sdkv2.Client) *instanceHandler {
+func newInstanceHandler(conn *rds.Client) *instanceHandler {
 	return &instanceHandler{
 		conn: conn,
 	}
@@ -100,9 +102,9 @@ func newInstanceHandler(conn *rds_sdkv2.Client) *instanceHandler {
 
 func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceData) error {
 	needsPreConditions := false
-	input := &rds_sdkv2.ModifyDBInstanceInput{
+	input := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
-		DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
+		DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
 	}
 
 	// Backups must be enabled for Blue/Green Deployments. Enable them first.
@@ -112,9 +114,9 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 		input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
 	}
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		needsPreConditions = true
-		input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 	}
 
 	if needsPreConditions {
@@ -126,29 +128,32 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
-	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
-		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
-		Source:                  aws.String(d.Get("arn").(string)),
+func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.CreateBlueGreenDeploymentInput {
+	input := &rds.CreateBlueGreenDeploymentInput{
+		BlueGreenDeploymentName: aws.String(d.Get(names.AttrIdentifier).(string)),
+		Source:                  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange("engine_version") {
-		input.TargetEngineVersion = aws.String(d.Get("engine_version").(string))
+	if d.HasChange(names.AttrEngineVersion) {
+		input.TargetEngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 	}
-	if d.HasChange("parameter_group_name") {
-		input.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+	if d.HasChange(names.AttrParameterGroupName) {
+		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
 
 	return input
 }
 
 func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) error {
-	modifyInput := &rds_sdkv2.ModifyDBInstanceInput{
+	modifyInput := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
-	needsModify := dbInstancePopulateModify(modifyInput, d)
+	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
+	if diags.HasError() {
+		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	}
 
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)

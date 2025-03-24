@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -30,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot Version")
+// @FrameworkResource("aws_lexv2models_bot_version", name="Bot Version")
 func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotVersion{}
 
@@ -49,14 +50,10 @@ type resourceBotVersion struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceBotVersion) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_version"
-}
-
 func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -83,10 +80,10 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -114,12 +111,12 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	in := &lexmodelsv2.CreateBotVersionInput{
-		BotId:                         aws.String(plan.BotID.ValueString()),
+		BotId:                         plan.BotID.ValueStringPointer(),
 		BotVersionLocaleSpecification: expandLocalSpecification(localeSpec),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	out, err := conn.CreateBotVersion(ctx, in)
@@ -213,14 +210,14 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &lexmodelsv2.DeleteBotVersionInput{
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteBotVersion(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -242,7 +239,7 @@ func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceBotVersion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
@@ -280,7 +277,7 @@ func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, id str
 }
 
 func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotVersionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -306,8 +303,7 @@ func FindBotVersionByID(ctx context.Context, conn *lexmodelsv2.Client, id string
 
 	out, err := conn.DescribeBotVersion(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -331,7 +327,7 @@ func expandLocalSpecification(tfMap map[string]versionLocaleDetailsData) map[str
 
 	tfObj := make(map[string]awstypes.BotVersionLocaleDetails)
 	for key, value := range tfMap {
-		tfObj[key] = awstypes.BotVersionLocaleDetails{SourceBotVersion: aws.String(value.SourceBotVersion.ValueString())}
+		tfObj[key] = awstypes.BotVersionLocaleDetails{SourceBotVersion: value.SourceBotVersion.ValueStringPointer()}
 	}
 
 	return tfObj

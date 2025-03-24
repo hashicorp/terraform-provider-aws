@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,24 +40,24 @@ func ResourceSigningProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
 			},
 			"platform_display_name": {
@@ -99,13 +98,13 @@ func ResourceSigningProfile() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.ValidityType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Required: true,
 							ForceNew: true,
@@ -121,7 +120,7 @@ func ResourceSigningProfile() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -129,13 +128,13 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,18 +143,16 @@ func ResourceSigningProfile() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("terraform_"),
 	).Generate()
 	input := &signer.PutSigningProfileInput{
@@ -165,14 +162,14 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
-		signatureValidityPeriod := v.([]interface{})[0].(map[string]interface{})
+		signatureValidityPeriod := v.([]any)[0].(map[string]any)
 		input.SignatureValidityPeriod = &types.SignatureValidityPeriod{
-			Value: int32(signatureValidityPeriod["value"].(int)),
-			Type:  types.ValidityType(signatureValidityPeriod["type"].(string)),
+			Value: int32(signatureValidityPeriod[names.AttrValue].(int)),
+			Type:  types.ValidityType(signatureValidityPeriod[names.AttrType].(string)),
 		}
 	}
 
-	if v, ok := d.Get("signing_material").([]interface{}); ok && len(v) > 0 {
+	if v, ok := d.Get("signing_material").([]any); ok && len(v) > 0 {
 		input.SigningMaterial = expandSigningMaterial(v)
 	}
 
@@ -187,7 +184,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -203,19 +200,19 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("name", output.ProfileName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.ProfileName)))
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrName, output.ProfileName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.ProfileName)))
 	d.Set("platform_display_name", output.PlatformDisplayName)
 	d.Set("platform_id", output.PlatformId)
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(output.RevocationRecord)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting revocation_record: %s", err)
 	}
 	if v := output.SignatureValidityPeriod; v != nil {
-		if err := d.Set("signature_validity_period", []interface{}{
-			map[string]interface{}{
-				"value": v.Value,
-				"type":  v.Type,
+		if err := d.Set("signature_validity_period", []any{
+			map[string]any{
+				names.AttrValue: v.Value,
+				names.AttrType:  v.Type,
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
@@ -226,8 +223,8 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
 		}
 	}
-	d.Set("status", output.Status)
-	d.Set("version", output.ProfileVersion)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrVersion, output.ProfileVersion)
 	d.Set("version_arn", output.ProfileVersionArn)
 
 	setTagsOut(ctx, output.Tags)
@@ -235,7 +232,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -243,7 +240,7 @@ func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -263,39 +260,39 @@ func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandSigningMaterial(in []interface{}) *types.SigningMaterial {
+func expandSigningMaterial(in []any) *types.SigningMaterial {
 	if len(in) == 0 {
 		return nil
 	}
 
-	m := in[0].(map[string]interface{})
+	m := in[0].(map[string]any)
 	var out types.SigningMaterial
 
-	if v, ok := m["certificate_arn"].(string); ok && v != "" {
+	if v, ok := m[names.AttrCertificateARN].(string); ok && v != "" {
 		out.CertificateArn = aws.String(v)
 	}
 
 	return &out
 }
 
-func flattenSigningMaterial(apiObject *types.SigningMaterial) []interface{} {
+func flattenSigningMaterial(apiObject *types.SigningMaterial) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"certificate_arn": aws.ToString(apiObject.CertificateArn),
+	m := map[string]any{
+		names.AttrCertificateARN: aws.ToString(apiObject.CertificateArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevocationRecord) interface{} {
+func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevocationRecord) any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RevocationEffectiveFrom; v != nil {
 		tfMap["revocation_effective_from"] = aws.ToTime(v).Format(time.RFC3339)
@@ -309,7 +306,7 @@ func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevoca
 		tfMap["revoked_by"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func PlatformID_Values() []string {

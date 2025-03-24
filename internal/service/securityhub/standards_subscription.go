@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_securityhub_standards_subscription")
-func ResourceStandardsSubscription() *schema.Resource {
+// @SDKResource("aws_securityhub_standards_subscription", name="Standards Subscription")
+func resourceStandardsSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsSubscriptionCreate,
 		ReadWithoutTimeout:   resourceStandardsSubscriptionRead,
@@ -45,7 +45,7 @@ func ResourceStandardsSubscription() *schema.Resource {
 	}
 }
 
-func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -71,11 +71,11 @@ func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceStandardsSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := FindStandardsSubscriptionByARN(ctx, conn, d.Id())
+	output, err := findStandardsSubscriptionByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Subscription (%s) not found, removing from state", d.Id())
@@ -92,7 +92,7 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
+func findStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
 	input := &securityhub.GetEnabledStandardsInput{
 		StandardsSubscriptionArns: []string{arn},
 	}
@@ -168,8 +168,8 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 }
 
 func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindStandardsSubscriptionByARN(ctx, conn, arn)
+	return func() (any, string, error) {
+		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -184,8 +184,8 @@ func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Cl
 }
 
 func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindStandardsSubscriptionByARN(ctx, conn, arn)
+	return func() (any, string, error) {
+		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

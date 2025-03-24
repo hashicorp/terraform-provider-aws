@@ -16,7 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -32,7 +33,6 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,7 +60,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,7 +180,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 							MaxItems: 25,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -194,7 +194,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 					},
 				},
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
@@ -205,7 +205,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 				DiffSuppressFunc: tfkms.DiffSuppressKey,
 				ValidateFunc:     tfkms.ValidateKey,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validModelName,
@@ -232,18 +232,18 @@ func ResourceEntityRecognizer() *schema.Resource {
 				DiffSuppressFunc: tfkms.DiffSuppressKey,
 				ValidateFunc:     tfkms.ValidateKey,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -254,8 +254,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				tfMap := getEntityRecognizerInputDataConfig(diff)
 				if tfMap == nil {
 					return nil
@@ -273,18 +272,18 @@ func ResourceEntityRecognizer() *schema.Resource {
 
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				tfMap := getEntityRecognizerInputDataConfig(diff)
 				if tfMap == nil {
 					return nil
 				}
 
-				documents := expandDocuments(tfMap["documents"].([]interface{}))
+				documents := expandDocuments(tfMap["documents"].([]any))
 				if documents == nil {
 					return nil
 				}
 
-				annotations := expandAnnotations(tfMap["annotations"].([]interface{}))
+				annotations := expandAnnotations(tfMap["annotations"].([]any))
 				if annotations == nil {
 					return nil
 				}
@@ -305,7 +304,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 	}
 }
 
-func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.ComprehendClient(ctx)
 
@@ -325,7 +324,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEntityRecognizerRead(ctx, d, meta)...)
 }
 
-func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
@@ -342,9 +341,9 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.EntityRecognizerArn)
+	d.Set(names.AttrARN, out.EntityRecognizerArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
 	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
@@ -355,26 +354,26 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	if err := d.Set("input_data_config", flattenEntityRecognizerInputDataConfig(out.InputDataConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting input_data_config: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(out.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	return diags
 }
 
-func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.ComprehendClient(ctx)
 
 	var diags diag.Diagnostics
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var versionName *string
 		if d.HasChange("version_name") {
 			versionName = aws.String(d.Get("version_name").(string))
@@ -391,16 +390,17 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEntityRecognizerRead(ctx, d, meta)...)
 }
 
-func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	log.Printf("[INFO] Stopping Comprehend Entity Recognizer (%s)", d.Id())
 
-	_, err := conn.StopTrainingEntityRecognizer(ctx, &comprehend.StopTrainingEntityRecognizerInput{
+	input := comprehend.StopTrainingEntityRecognizerInput{
 		EntityRecognizerArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopTrainingEntityRecognizer(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -433,11 +433,11 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 
 	var g multierror.Group
 	for _, v := range versions {
-		v := v
 		g.Go(func() error {
-			_, err = conn.DeleteEntityRecognizer(ctx, &comprehend.DeleteEntityRecognizerInput{
+			input := comprehend.DeleteEntityRecognizerInput{
 				EntityRecognizerArn: v.EntityRecognizerArn,
-			})
+			}
+			_, err = conn.DeleteEntityRecognizer(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if !errors.As(err, &nfe) {
@@ -449,10 +449,10 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
 			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
-				Filters: []*ec2.Filter{
-					tfec2.NewFilter(fmt.Sprintf("tag:%s", entityRecognizerTagKey), []string{aws.ToString(v.EntityRecognizerArn)}),
+				Filters: []ec2types.Filter{
+					tfec2.NewFilter("tag:"+entityRecognizerTagKey, []string{aws.ToString(v.EntityRecognizerArn)}),
 				},
 			})
 			if err != nil {
@@ -460,7 +460,6 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			}
 
 			for _, v := range networkInterfaces {
-				v := v
 				g.Go(func() error {
 					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
@@ -498,10 +497,10 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	in := &comprehend.CreateEntityRecognizerInput{
 		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:    expandEntityRecognizerInputDataConfig(getEntityRecognizerInputDataConfig(d)),
-		LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
-		RecognizerName:     aws.String(d.Get("name").(string)),
+		LanguageCode:       types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
+		RecognizerName:     aws.String(d.Get(names.AttrName).(string)),
 		VersionName:        versionName,
-		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
+		VpcConfig:          expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
 		ClientRequestToken: aws.String(id.UniqueId()),
 		Tags:               getTagsIn(ctx),
 	}
@@ -546,11 +545,11 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		out, err = conn.CreateEntityRecognizer(ctx, in)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.EntityRecognizerArn == nil {
-		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get(names.AttrName).(string))
 	}
 
 	d.SetId(aws.ToString(out.EntityRecognizerArn))
@@ -575,7 +574,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn(ctx)
+			ec2Conn := awsClient.EC2Client(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
@@ -598,9 +597,9 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 			modelVPCENILock.Unlock()
 
-			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
-				Resources: []*string{newENI.NetworkInterfaceId},
-				Tags: []*ec2.Tag{
+			_, err = ec2Conn.CreateTags(waitCtx, &ec2.CreateTagsInput{ // nosemgrep:ci.semgrep.migrate.aws-api-context
+				Resources: []string{aws.ToString(newENI.NetworkInterfaceId)},
+				Tags: []ec2types.Tag{
 					{
 						Key:   aws.String(entityRecognizerTagKey),
 						Value: aws.String(d.Id()),
@@ -728,7 +727,7 @@ func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, i
 }
 
 func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindEntityRecognizerByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -742,12 +741,12 @@ func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id str
 	}
 }
 
-func flattenEntityRecognizerInputDataConfig(apiObject *types.EntityRecognizerInputDataConfig) []interface{} {
+func flattenEntityRecognizerInputDataConfig(apiObject *types.EntityRecognizerInputDataConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"entity_types":        flattenEntityTypes(apiObject.EntityTypes),
 		"annotations":         flattenAnnotations(apiObject.Annotations),
 		"augmented_manifests": flattenAugmentedManifests(apiObject.AugmentedManifests),
@@ -756,15 +755,15 @@ func flattenEntityRecognizerInputDataConfig(apiObject *types.EntityRecognizerInp
 		"entity_list":         flattenEntityList(apiObject.EntityList),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEntityTypes(apiObjects []types.EntityTypesListItem) []interface{} {
+func flattenEntityTypes(apiObjects []types.EntityTypesListItem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenEntityTypesListItem(&apiObject))
@@ -773,24 +772,24 @@ func flattenEntityTypes(apiObjects []types.EntityTypesListItem) []interface{} {
 	return l
 }
 
-func flattenEntityTypesListItem(apiObject *types.EntityTypesListItem) map[string]interface{} {
+func flattenEntityTypesListItem(apiObject *types.EntityTypesListItem) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"type": aws.ToString(apiObject.Type),
+	m := map[string]any{
+		names.AttrType: aws.ToString(apiObject.Type),
 	}
 
 	return m
 }
 
-func flattenAnnotations(apiObject *types.EntityRecognizerAnnotations) []interface{} {
+func flattenAnnotations(apiObject *types.EntityRecognizerAnnotations) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_uri": aws.ToString(apiObject.S3Uri),
 	}
 
@@ -798,15 +797,15 @@ func flattenAnnotations(apiObject *types.EntityRecognizerAnnotations) []interfac
 		m["test_s3_uri"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDocuments(apiObject *types.EntityRecognizerDocuments) []interface{} {
+func flattenDocuments(apiObject *types.EntityRecognizerDocuments) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_uri":       aws.ToString(apiObject.S3Uri),
 		"input_format": apiObject.InputFormat,
 	}
@@ -815,19 +814,19 @@ func flattenDocuments(apiObject *types.EntityRecognizerDocuments) []interface{} 
 		m["test_s3_uri"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEntityList(apiObject *types.EntityRecognizerEntityList) []interface{} {
+func flattenEntityList(apiObject *types.EntityRecognizerEntityList) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_uri": aws.ToString(apiObject.S3Uri),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func getEntityRecognizerInputDataConfig(d resourceGetter) map[string]any {
@@ -846,11 +845,11 @@ func expandEntityRecognizerInputDataConfig(tfMap map[string]any) *types.EntityRe
 
 	a := &types.EntityRecognizerInputDataConfig{
 		EntityTypes:        expandEntityTypes(tfMap["entity_types"].(*schema.Set)),
-		Annotations:        expandAnnotations(tfMap["annotations"].([]interface{})),
+		Annotations:        expandAnnotations(tfMap["annotations"].([]any)),
 		AugmentedManifests: expandAugmentedManifests(tfMap["augmented_manifests"].(*schema.Set)),
 		DataFormat:         types.EntityRecognizerDataFormat(tfMap["data_format"].(string)),
-		Documents:          expandDocuments(tfMap["documents"].([]interface{})),
-		EntityList:         expandEntityList(tfMap["entity_list"].([]interface{})),
+		Documents:          expandDocuments(tfMap["documents"].([]any)),
+		EntityList:         expandEntityList(tfMap["entity_list"].([]any)),
 	}
 
 	return a
@@ -864,7 +863,7 @@ func expandEntityTypes(tfSet *schema.Set) []types.EntityTypesListItem {
 	var s []types.EntityTypesListItem
 
 	for _, r := range tfSet.List() {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -880,26 +879,26 @@ func expandEntityTypes(tfSet *schema.Set) []types.EntityTypesListItem {
 	return s
 }
 
-func expandEntityTypesListItem(tfMap map[string]interface{}) *types.EntityTypesListItem {
+func expandEntityTypesListItem(tfMap map[string]any) *types.EntityTypesListItem {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.EntityTypesListItem{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		a.Type = aws.String(v)
 	}
 
 	return a
 }
 
-func expandAnnotations(tfList []interface{}) *types.EntityRecognizerAnnotations {
+func expandAnnotations(tfList []any) *types.EntityRecognizerAnnotations {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.EntityRecognizerAnnotations{
 		S3Uri: aws.String(tfMap["s3_uri"].(string)),
@@ -912,12 +911,12 @@ func expandAnnotations(tfList []interface{}) *types.EntityRecognizerAnnotations 
 	return a
 }
 
-func expandDocuments(tfList []interface{}) *types.EntityRecognizerDocuments {
+func expandDocuments(tfList []any) *types.EntityRecognizerDocuments {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.EntityRecognizerDocuments{
 		S3Uri:       aws.String(tfMap["s3_uri"].(string)),
@@ -931,12 +930,12 @@ func expandDocuments(tfList []interface{}) *types.EntityRecognizerDocuments {
 	return a
 }
 
-func expandEntityList(tfList []interface{}) *types.EntityRecognizerEntityList {
+func expandEntityList(tfList []any) *types.EntityRecognizerEntityList {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.EntityRecognizerEntityList{
 		S3Uri: aws.String(tfMap["s3_uri"].(string)),

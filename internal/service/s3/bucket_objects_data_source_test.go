@@ -23,7 +23,7 @@ func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -75,7 +75,7 @@ func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -136,7 +136,7 @@ func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -162,7 +162,7 @@ func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -188,7 +188,7 @@ func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -213,7 +213,7 @@ func TestAccS3BucketObjectsDataSource_fetchOwner(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -283,17 +283,17 @@ resource "aws_s3_object" "object7" {
 }
 
 func testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt int) string {
-	return testAccBucketObjectsDataSourceConfig_resources(randInt) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketObjectsDataSourceConfig_resources(randInt), fmt.Sprintf(`
 resource "aws_s3_access_point" "test" {
   bucket = aws_s3_bucket.objects_bucket.bucket
   name   = "tf-objects-test-access-point-%[1]d"
 }
-`, randInt)
+`, randInt))
 }
 
 func testAccBucketObjectsDataSourceConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "aws_s3_objects" "yesh" {
   bucket    = aws_s3_bucket.objects_bucket.id
@@ -304,13 +304,13 @@ data "aws_s3_objects" "yesh" {
 }
 
 func testAccBucketObjectsDataSourceConfig_basicViaAccessPoint(randInt int) string {
-	return testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt) + `
+	return acctest.ConfigCompose(testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt), `
 data "aws_s3_objects" "yesh" {
   bucket    = aws_s3_access_point.test.arn
   prefix    = "arch/navajo/"
   delimiter = "/"
 }
-`
+`)
 }
 
 func testAccBucketObjectsDataSourceConfig_all(randInt int) string {

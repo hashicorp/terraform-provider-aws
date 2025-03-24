@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 * `addonName` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
-* `clusterName` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `clusterName` – (Required) Name of the EKS Cluster.
 
 ## Attribute Reference
 
@@ -53,8 +53,11 @@ This data source exports the following attributes in addition to the arguments a
 * `configurationValues` - Configuration values for the addon with a single JSON string.
 * `serviceAccountRoleArn` - ARN of IAM role used for EKS add-on. If value is empty -
   then add-on uses the IAM role assigned to the EKS Cluster node.
+* `podIdentityAssociation` - Pod identity association for the EKS add-on.
+    * `roleArn` - ARN of the IAM role associated with the EKS add-on.
+    * `serviceAccount` - Service account associated with the EKS add-on.
 * `id` - EKS Cluster name and EKS add-on name separated by a colon (`:`).
 * `createdAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modifiedAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.20.1 input-553bc4808c728491b5414f2d688994a4b0a80d9290f35e4271bd6e2834213ffb -->
+<!-- cache-key: cdktf-0.20.8 input-3f4eca3f962477e1b91bf2f70b11158ab3a7885fb267a627640071b891b42423 -->

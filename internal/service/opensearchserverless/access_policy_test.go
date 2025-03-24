@@ -34,7 +34,7 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckAccessPolicy(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
 				),
 			},
 			{
@@ -67,25 +67,40 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckAccessPolicy(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPolicyConfig_update(rName, "description"),
+				Config: testAccAccessPolicyConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					resource.TestCheckResourceAttr(resourceName, "type", "data"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
 				Config: testAccAccessPolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					resource.TestCheckResourceAttr(resourceName, "type", "data"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
+			},
+			{
+				Config: testAccAccessPolicyConfig_updatePolicy(rName, "description updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAccessPolicyImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -104,7 +119,7 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckAccessPolicy(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +144,7 @@ func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
+			_, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -158,7 +173,7 @@ func testAccCheckAccessPolicyExists(ctx context.Context, name string, accesspoli
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
+		resp, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameAccessPolicy, rs.Primary.ID, err)
@@ -177,7 +192,7 @@ func testAccAccessPolicyImportStateIdFunc(resourceName string) resource.ImportSt
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["type"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrType]), nil
 	}
 }
 
@@ -260,6 +275,42 @@ resource "aws_opensearchserverless_access_policy" "test" {
       ],
       "Principal" : [
         "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin"
+      ]
+    }
+  ])
+}
+`, rName, description)
+}
+
+func testAccAccessPolicyConfig_updatePolicy(rName, description string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_opensearchserverless_access_policy" "test" {
+  name        = %[1]q
+  type        = "data"
+  description = %[2]q
+  policy = jsonencode([
+    {
+      "Rules" : [
+        {
+          "ResourceType" : "index",
+          "Resource" : [
+            "index/books/*"
+          ],
+          "Permission" : [
+            "aoss:CreateIndex",
+            "aoss:ReadDocument",
+            "aoss:UpdateIndex",
+            "aoss:DeleteIndex",
+            "aoss:WriteDocument"
+          ]
+        }
+      ],
+      "Principal" : [
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin",
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin2"
       ]
     }
   ])

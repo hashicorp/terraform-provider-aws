@@ -5,32 +5,30 @@ package appconfig
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_configuration_profile")
-func DataSourceConfigurationProfile() *schema.Resource {
+// @SDKDataSource("aws_appconfig_configuration_profile", name="Configuration Profile")
+// @Tags(identifierAttribute="arn")
+func dataSourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfileRead,
+
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +37,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +49,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,8 +57,8 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,11 +67,11 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"content": {
+						names.AttrContent: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -84,74 +82,33 @@ func DataSourceConfigurationProfile() *schema.Resource {
 	}
 }
 
-const (
-	DSNameConfigurationProfile = "Configuration Profile Data Source"
-)
-
-func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	applicationID := d.Get(names.AttrApplicationID).(string)
+	configurationProfileID := d.Get("configuration_profile_id").(string)
+	id := configurationProfileCreateResourceID(configurationProfileID, applicationID)
 
-	appId := d.Get("application_id").(string)
-	profileId := d.Get("configuration_profile_id").(string)
-	ID := fmt.Sprintf("%s:%s", profileId, appId)
+	output, err := findConfigurationProfileByTwoPartKey(ctx, conn, applicationID, configurationProfileID)
 
-	out, err := findConfigurationProfileByApplicationAndProfile(ctx, conn, appId, profileId)
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profile (%s): %s", id, err)
 	}
 
-	d.SetId(ID)
-
-	d.Set("application_id", appId)
-
-	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appId, profileId),
-		Service:   "appconfig",
-	}.String()
-
-	d.Set("arn", arn)
-	d.Set("configuration_profile_id", profileId)
-	d.Set("description", out.Description)
-	d.Set("kms_key_identifier", out.KmsKeyIdentifier)
-	d.Set("location_uri", out.LocationUri)
-	d.Set("name", out.Name)
-	d.Set("retrieval_role_arn", out.RetrievalRoleArn)
-	d.Set("type", out.Type)
-
-	if err := d.Set("validator", flattenValidators(out.Validators)); err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
-	}
-
-	tags, err := listTags(ctx, conn, arn)
-	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
+	d.SetId(id)
+	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set(names.AttrARN, configurationProfileARN(ctx, meta.(*conns.AWSClient), applicationID, configurationProfileID))
+	d.Set("configuration_profile_id", output.Id)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	d.Set("location_uri", output.LocationUri)
+	d.Set(names.AttrName, output.Name)
+	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
+	d.Set(names.AttrType, output.Type)
+	if err := d.Set("validator", flattenValidators(output.Validators)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting validator: %s", err)
 	}
 
 	return diags
-}
-
-func findConfigurationProfileByApplicationAndProfile(ctx context.Context, conn *appconfig.AppConfig, appId string, cpId string) (*appconfig.GetConfigurationProfileOutput, error) {
-	res, err := conn.GetConfigurationProfileWithContext(ctx, &appconfig.GetConfigurationProfileInput{
-		ApplicationId:          aws.String(appId),
-		ConfigurationProfileId: aws.String(cpId),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }

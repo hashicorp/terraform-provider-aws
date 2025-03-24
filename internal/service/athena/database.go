@@ -24,9 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_athena_database")
+// @SDKResource("aws_athena_database", name="Database")
 func resourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -55,16 +56,16 @@ func resourceDatabase() *schema.Resource {
 					},
 				},
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -77,7 +78,7 @@ func resourceDatabase() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -85,23 +86,23 @@ func resourceDatabase() *schema.Resource {
 					},
 				},
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -111,23 +112,23 @@ func resourceDatabase() *schema.Resource {
 	}
 }
 
-func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	createStmt := fmt.Sprintf("create database `%s`", name)
 	var queryString bytes.Buffer
 	queryString.WriteString(createStmt)
 
-	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrComment); ok && v.(string) != "" {
 		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
 		queryString.WriteString(commentStmt)
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]any)) > 0 {
 		var props []string
-		for k, v := range v.(map[string]interface{}) {
+		for k, v := range v.(map[string]any) {
 			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
 			props = append(props, prop)
 		}
@@ -158,7 +159,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -174,19 +175,19 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Athena Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set("comment", db.Description)
-	d.Set("name", db.Name)
-	d.Set("properties", db.Parameters)
+	d.Set(names.AttrComment, db.Description)
+	d.Set(names.AttrName, db.Name)
+	d.Set(names.AttrProperties, db.Parameters)
 
 	return diags
 }
 
-func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		queryString += " cascade"
 	}
 	queryString += ";"
@@ -196,6 +197,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 		ResultConfiguration: expandResultConfiguration(d),
 	}
 
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
 	output, err := conn.StartQueryExecution(ctx, input)
 
 	if err != nil {
@@ -237,45 +239,45 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
-		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
-		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]any)),
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
 		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
-		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
+	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]any)) > 0 {
+		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
 	}
 
 	return resultConfig
 }
 
-func expandResultConfigurationEncryptionConfig(config []interface{}) *types.EncryptionConfiguration {
-	if len(config) <= 0 {
+func expandResultConfigurationEncryptionConfig(config []any) *types.EncryptionConfiguration {
+	if len(config) == 0 {
 		return nil
 	}
 
-	data := config[0].(map[string]interface{})
+	data := config[0].(map[string]any)
 
 	encryptionConfig := &types.EncryptionConfiguration{
 		EncryptionOption: types.EncryptionOption(data["encryption_option"].(string)),
 	}
 
-	if v, ok := data["kms_key"].(string); ok && v != "" {
+	if v, ok := data[names.AttrKMSKey].(string); ok && v != "" {
 		encryptionConfig.KmsKey = aws.String(v)
 	}
 
 	return encryptionConfig
 }
 
-func expandResultConfigurationACLConfig(config []interface{}) *types.AclConfiguration {
-	if len(config) <= 0 {
+func expandResultConfigurationACLConfig(config []any) *types.AclConfiguration {
+	if len(config) == 0 {
 		return nil
 	}
 
-	data := config[0].(map[string]interface{})
+	data := config[0].(map[string]any)
 
 	encryptionConfig := &types.AclConfiguration{
 		S3AclOption: types.S3AclOption(data["s3_acl_option"].(string)),
@@ -321,7 +323,7 @@ func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string)
 }
 
 func queryExecutionStateRefreshFunc(ctx context.Context, conn *athena.Client, qeid string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),
 		}

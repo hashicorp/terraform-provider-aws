@@ -134,6 +134,7 @@ This resource supports the following arguments:
 * `computePlatform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.
 * `minimumHealthyHosts` - (Optional) A minimum_healthy_hosts block. Required for `Server` compute platform. Minimum Healthy Hosts are documented below.
 * `trafficRoutingConfig` - (Optional) A traffic_routing_config block. Traffic Routing Config is documented below.
+* `zonalConfig` - (Optional) A zonal_config block. Zonal Config is documented below.
 
 The `minimumHealthyHosts` block supports the following:
 
@@ -159,10 +160,22 @@ The `timeBasedLinear` block supports the following:
 * `interval` - (Optional) The number of minutes between each incremental traffic shift of a `TimeBasedLinear` deployment.
 * `percentage` - (Optional) The percentage of traffic that is shifted at the start of each increment of a `TimeBasedLinear` deployment.
 
+The `zonalConfig` block supports the following:
+
+* `firstZoneMonitorDurationInSeconds` - (Optional) The period of time, in seconds, that CodeDeploy must wait after completing a deployment to the first Availability Zone. CodeDeploy will wait this amount of time before starting a deployment to the second Availability Zone. If you don't specify a value for `firstZoneMonitorDurationInSeconds`, then CodeDeploy uses the `monitorDurationInSeconds` value for the first Availability Zone.
+* `minimumHealthyHostsPerZone` - (Optional) The number or percentage of instances that must remain available per Availability Zone during a deployment. If you don't specify a value under `minimumHealthyHostsPerZone`, then CodeDeploy uses a default value of 0 percent. This block is more documented below.
+* `monitorDurationInSeconds` - (Optional) The period of time, in seconds, that CodeDeploy must wait after completing a deployment to an Availability Zone. CodeDeploy will wait this amount of time before starting a deployment to the next Availability Zone. If you don't specify a `monitorDurationInSeconds`, CodeDeploy starts deploying to the next Availability Zone immediately.
+
+The `minimumHealthyHostsPerZone` block supports the following:
+
+* `type` - (Required) The type can either be `FLEET_PERCENT` or `HOST_COUNT`.
+* `value` - (Required) The value when the type is `FLEET_PERCENT` represents the minimum number of healthy instances as a percentage of the total number of instances in the Availability Zone during a deployment. If you specify FLEET_PERCENT, at the start of the deployment, AWS CodeDeploy converts the percentage to the equivalent number of instance and rounds up fractional instances. When the type is `HOST_COUNT`, the value represents the minimum number of healthy instances in the Availability Zone as an absolute value.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the deployment config.
 * `id` - The deployment group's config name.
 * `deploymentConfigId` - The AWS Assigned deployment config id
 
@@ -198,4 +211,4 @@ Using `terraform import`, import CodeDeploy Deployment Configurations using the 
 % terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2cc160bcb5a9c6c91fd5d75e63168fd2d320f48dbdb419ab8d514075206a12e7 -->
+<!-- cache-key: cdktf-0.20.8 input-7683a24d45be8afb3fdb701aaf9093111f7bcd93063fb7f270dc2c81c0f1139e -->

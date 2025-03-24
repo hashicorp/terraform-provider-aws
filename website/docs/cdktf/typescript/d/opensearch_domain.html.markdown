@@ -59,6 +59,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cronExpressionForRecurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollbackOnDisable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `useOffPeakWindow` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `clusterConfig` - Cluster configuration of the domain.
     * `coldStorageOptions` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -67,19 +68,29 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicatedMasterEnabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicatedMasterType` - Instance type of the dedicated master nodes in the cluster.
     * `dedicatedMasterCount` - Number of dedicated master nodes in the cluster.
-    * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
-    * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
-        * `availabilityZoneCount` - Number of availability zones used.
+    * `multiAzWithStandbyEnabled` - Whether a multi-AZ domain is turned on with a standby AZ.
+    * `nodeOptions` - List of node options for the domain.
+        * `nodeConfig` - Sizing of a node type.
+            * `count` - Number of nodes of a particular node type in the cluster.
+            * `enabled` - Whether a particular node type is enabled.
+            * `type` - The instance type of a particular node type in the cluster.
+        * `nodeType` - Type of node this configuration describes.
     * `warmEnabled` - Warm storage is enabled.
     * `warmCount` - Number of warm nodes in the cluster.
     * `warmType` - Instance type for the OpenSearch cluster's warm nodes.
+    * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
+    * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
+        * `availabilityZoneCount` - Number of availability zones used.
 * `cognitoOptions` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
     * `userPoolId` - Cognito User pool used by the domain.
     * `identityPoolId` - Cognito Identity pool used by the domain.
     * `roleArn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
+* `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `dashboardEndpointV2` - V2 domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html)
 * `deleted` – Status of the deletion of the domain.
+* `domainEndpointV2HostedZoneId` -  Dual stack hosted zone ID for the domain.
 * `domainId` – Unique identifier for the domain.
 * `ebsOptions` - EBS Options for the instances in the domain.
     * `ebsEnabled` - Whether EBS volumes are attached to data nodes in the domain.
@@ -92,7 +103,8 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kmsKeyId` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `endpointV2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
+* `ipAddressType` - Type of IP addresses supported by the endpoint for the domain.
 * `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboardEndpoint` attribute instead.
 * `logPublishingOptions` - Domain log publishing related options.
     * `logType` - Type of OpenSearch log being published.
@@ -118,4 +130,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->
+<!-- cache-key: cdktf-0.20.8 input-837de436745fda2e63a3c16e01709893584fc4561159fc72f98d83229cc7d58b -->

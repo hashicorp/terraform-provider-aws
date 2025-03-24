@@ -119,18 +119,18 @@ This resource supports the following arguments:
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
 * `description` - (Optional) Description of the launch template.
-* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
+* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
-  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
+  Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
+* `elastic_gpu_specifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
-* `elastic_inference_accelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
+* `elastic_inference_accelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `image_id` - (Optional) The AMI from which to launch the instance.
+* `image_id` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instance_market_options` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -152,7 +152,7 @@ This resource supports the following arguments:
 * `ram_disk_id` - (Optional) The ID of the RAM disk.
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
-* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
+* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
 * `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `update_default_version` - (Optional) Whether to update Default Version each update. Conflicts with `default_version`.
 * `user_data` - (Optional) The base64-encoded user data to provide when launching the instance.
@@ -178,7 +178,7 @@ Each `block_device_mappings` supports the following:
 The `ebs` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination.
-  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/preserving-volumes-on-termination.html) for more information.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
@@ -232,11 +232,11 @@ Attach an elastic GPU the instance.
 
 The `elastic_gpu_specifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
-Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
+**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
 
 The `elastic_inference_accelerator` configuration block supports the following:
 
@@ -351,6 +351,7 @@ This configuration block supports the following:
       * ssd - solid state drive
     ```
 
+* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spot_max_price_percentage_over_lowest_price`
 * `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -367,7 +368,7 @@ This configuration block supports the following:
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `max_spot_price_as_percentage_of_optimal_on_demand_price`
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `total_local_storage_gb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
@@ -437,11 +438,8 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
-* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface.
-  Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
-  Boolean value, can be left unset.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface.
-  Boolean value, can be left unset.
+* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.
@@ -454,11 +452,31 @@ Each `network_interfaces` block supports the following:
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - (Optional) The ID of the network interface to attach.
 * `network_card_index` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `primary_ipv6` - (Optional) Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `private_ip_address` - (Optional) The primary private IPv4 address.
 * `ipv4_address_count` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
 * `security_groups` - (Optional) A list of security group IDs to associate.
 * `subnet_id` - (Optional) The VPC Subnet ID to associate.
+* `ena_srd_specification` - (Optional) Configuration for Elastic Network Adapter (ENA) Express settings. Applies to network interfaces that use the [ena Express](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html) feature. See details below.
+* `connection_tracking_specification` - (Optional) The Connection Tracking Configuration for the network interface. See [Amazon EC2 security group connection tracking](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts)
+
+The `ena_srd_specification` block supports the following:
+
+* `ena_srd_enabled` - (Optional) Whether to enable ENA Express. ENA Express uses AWS Scalable Reliable Datagram (SRD) technology to improve the performance of TCP traffic.
+* `ena_srd_udp_specification` - (Optional) Configuration for ENA Express UDP optimization. See details below.
+
+The `ena_srd_udp_specification` block supports the following:
+
+* `ena_srd_udp_enabled` - (Optional) Whether to enable UDP traffic optimization through ENA Express. Requires `ena_srd_enabled` to be `true`.
+
+NOTE: ENA Express requires [specific instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html#ena-express-requirements) and minimum bandwidth of 25 Gbps.
+
+The `connection_tracking_specification` block supports the following:
+
+* `tcp_established_timeout` - (Optional) Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Default: 432000 seconds. Recommended: Less than 432000 seconds.
+* `udp_stream_timeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
+* `udp_timeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
 
 ### Placement
 

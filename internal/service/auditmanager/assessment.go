@@ -36,7 +36,7 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-// @FrameworkResource(name="Assessment")
+// @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil
@@ -50,15 +50,11 @@ type resourceAssessment struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAssessment) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment"
-}
-
 func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"framework_id": schema.StringAttribute{
@@ -67,8 +63,8 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			// The roles attribute is split into "roles" and "roles_all" to account for roles
@@ -91,7 +87,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -105,7 +101,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"destination": schema.StringAttribute{
+						names.AttrDestination: schema.StringAttribute{
 							Required: true,
 						},
 						"destination_type": schema.StringAttribute{
@@ -117,7 +113,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			"scope": schema.ListNestedBlock{
+			names.AttrScope: schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -130,7 +126,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
+									names.AttrID: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -142,7 +138,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -188,15 +184,15 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 
 	in := auditmanager.CreateAssessmentInput{
 		AssessmentReportsDestination: expandAssessmentReportsDestination(reportsDestination),
-		FrameworkId:                  aws.String(plan.FrameworkID.ValueString()),
-		Name:                         aws.String(plan.Name.ValueString()),
+		FrameworkId:                  plan.FrameworkID.ValueStringPointer(),
+		Name:                         plan.Name.ValueStringPointer(),
 		Roles:                        expandAssessmentRoles(roles),
 		Scope:                        scopeInput,
 		Tags:                         getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	// Include retry handling to allow for IAM propagation
@@ -306,15 +302,15 @@ func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		in := &auditmanager.UpdateAssessmentInput{
-			AssessmentId:                 aws.String(plan.ID.ValueString()),
-			AssessmentName:               aws.String(plan.Name.ValueString()),
+			AssessmentId:                 plan.ID.ValueStringPointer(),
+			AssessmentName:               plan.Name.ValueStringPointer(),
 			AssessmentReportsDestination: expandAssessmentReportsDestination(reportsDestination),
 			Roles:                        expandAssessmentRoles(roles),
 			Scope:                        scopeInput,
 		}
 
 		if !plan.Description.IsNull() {
-			in.AssessmentDescription = aws.String(plan.Description.ValueString())
+			in.AssessmentDescription = plan.Description.ValueStringPointer()
 		}
 
 		out, err := conn.UpdateAssessment(ctx, in)
@@ -351,7 +347,7 @@ func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, err := conn.DeleteAssessment(ctx, &auditmanager.DeleteAssessmentInput{
-		AssessmentId: aws.String(state.ID.ValueString()),
+		AssessmentId: state.ID.ValueStringPointer(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -366,11 +362,7 @@ func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceAssessment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *resourceAssessment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Assessment, error) {
@@ -399,13 +391,13 @@ func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 
 var (
 	assessmentReportsDestinationAttrTypes = map[string]attr.Type{
-		"destination":      types.StringType,
-		"destination_type": types.StringType,
+		names.AttrDestination: types.StringType,
+		"destination_type":    types.StringType,
 	}
 
 	assessmentRolesAttrTypes = map[string]attr.Type{
-		"role_arn":  types.StringType,
-		"role_type": types.StringType,
+		names.AttrRoleARN: types.StringType,
+		"role_type":       types.StringType,
 	}
 
 	assessmentScopeAttrTypes = map[string]attr.Type{
@@ -414,11 +406,11 @@ var (
 	}
 
 	assessmentScopeAWSAccountsAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		"id": types.StringType,
+		names.AttrID: types.StringType,
 	}
 
 	assessmentScopeAWSServicesAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		"service_name": types.StringType,
+		names.AttrServiceName: types.StringType,
 	}
 )
 
@@ -433,8 +425,8 @@ type resourceAssessmentData struct {
 	RolesAll                     types.Set    `tfsdk:"roles_all"`
 	Scope                        types.List   `tfsdk:"scope"`
 	Status                       types.String `tfsdk:"status"`
-	Tags                         types.Map    `tfsdk:"tags"`
-	TagsAll                      types.Map    `tfsdk:"tags_all"`
+	Tags                         tftags.Map   `tfsdk:"tags"`
+	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
 }
 
 type assessmentReportsDestinationData struct {
@@ -499,7 +491,7 @@ func expandAssessmentReportsDestination(tfList []assessmentReportsDestinationDat
 	}
 	rd := tfList[0]
 	return &awstypes.AssessmentReportsDestination{
-		Destination:     aws.String(rd.Destination.ValueString()),
+		Destination:     rd.Destination.ValueStringPointer(),
 		DestinationType: awstypes.AssessmentReportDestinationType(rd.DestinationType.ValueString()),
 	}
 }
@@ -508,7 +500,7 @@ func expandAssessmentRoles(tfList []assessmentRolesData) []awstypes.Role {
 	var roles []awstypes.Role
 	for _, item := range tfList {
 		new := awstypes.Role{
-			RoleArn:  aws.String(item.RoleARN.ValueString()),
+			RoleArn:  item.RoleARN.ValueStringPointer(),
 			RoleType: awstypes.RoleType(item.RoleType.ValueString()),
 		}
 		roles = append(roles, new)
@@ -539,7 +531,7 @@ func expandAssessmentScopeAWSAccounts(tfList []assessmentScopeAWSAccountsData) [
 	var accounts []awstypes.AWSAccount
 	for _, item := range tfList {
 		new := awstypes.AWSAccount{
-			Id: aws.String(item.ID.ValueString()),
+			Id: item.ID.ValueStringPointer(),
 		}
 		accounts = append(accounts, new)
 	}
@@ -550,7 +542,7 @@ func expandAssessmentScopeAWSServices(tfList []assessmentScopeAWSServicesData) [
 	var services []awstypes.AWSService
 	for _, item := range tfList {
 		new := awstypes.AWSService{
-			ServiceName: aws.String(item.ServiceName.ValueString()),
+			ServiceName: item.ServiceName.ValueStringPointer(),
 		}
 		services = append(services, new)
 	}
@@ -566,8 +558,8 @@ func flattenAssessmentReportsDestination(ctx context.Context, apiObject *awstype
 	}
 
 	obj := map[string]attr.Value{
-		"destination":      flex.StringToFramework(ctx, apiObject.Destination),
-		"destination_type": flex.StringValueToFramework(ctx, apiObject.DestinationType),
+		names.AttrDestination: flex.StringToFramework(ctx, apiObject.Destination),
+		"destination_type":    flex.StringValueToFramework(ctx, apiObject.DestinationType),
 	}
 	objVal, d := types.ObjectValue(assessmentReportsDestinationAttrTypes, obj)
 	diags.Append(d...)
@@ -589,8 +581,8 @@ func flattenAssessmentRoles(ctx context.Context, apiObject []awstypes.Role) (typ
 	elems := []attr.Value{}
 	for _, role := range apiObject {
 		obj := map[string]attr.Value{
-			"role_arn":  flex.StringToFramework(ctx, role.RoleArn),
-			"role_type": flex.StringValueToFramework(ctx, role.RoleType),
+			names.AttrRoleARN: flex.StringToFramework(ctx, role.RoleArn),
+			"role_type":       flex.StringValueToFramework(ctx, role.RoleType),
 		}
 		objVal, d := types.ObjectValue(assessmentRolesAttrTypes, obj)
 		diags.Append(d...)
@@ -640,7 +632,7 @@ func flattenAssessmentScopeAWSAccounts(ctx context.Context, apiObject []awstypes
 	elems := []attr.Value{}
 	for _, account := range apiObject {
 		obj := map[string]attr.Value{
-			"id": flex.StringToFramework(ctx, account.Id),
+			names.AttrID: flex.StringToFramework(ctx, account.Id),
 		}
 		objVal, d := types.ObjectValue(assessmentScopeAWSAccountsAttrTypes, obj)
 		diags.Append(d...)
@@ -664,7 +656,7 @@ func flattenAssessmentScopeAWSServices(ctx context.Context, apiObject []awstypes
 	elems := []attr.Value{}
 	for _, service := range apiObject {
 		obj := map[string]attr.Value{
-			"service_name": flex.StringToFramework(ctx, service.ServiceName),
+			names.AttrServiceName: flex.StringToFramework(ctx, service.ServiceName),
 		}
 		objVal, d := types.ObjectValue(assessmentScopeAWSServicesAttrTypes, obj)
 		diags.Append(d...)

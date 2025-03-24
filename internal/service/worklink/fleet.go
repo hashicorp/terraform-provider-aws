@@ -11,36 +11,40 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/worklink"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/worklink/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_worklink_fleet")
-func ResourceFleet() *schema.Resource {
+// @SDKResource("aws_worklink_fleet", name="Fleet")
+func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
 		ReadWithoutTimeout:   resourceFleetRead,
 		UpdateWithoutTimeout: resourceFleetUpdate,
 		DeleteWithoutTimeout: resourceFleetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,7 +53,7 @@ func ResourceFleet() *schema.Resource {
 					validation.StringLenBetween(1, 48),
 				),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -65,17 +69,17 @@ func ResourceFleet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -87,7 +91,7 @@ func ResourceFleet() *schema.Resource {
 			"device_ca_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					s, ok := v.(string)
 					if !ok {
 						return ""
@@ -101,7 +105,7 @@ func ResourceFleet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -117,11 +121,11 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -131,28 +135,30 @@ func ResourceFleet() *schema.Resource {
 				Default:  true,
 			},
 		},
+
+		DeprecationMessage: `The aws_worklink_fleet resource has been deprecated and will be removed in a future version. Use Amazon WorkSpaces Secure Browser instead`,
 	}
 }
 
-func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
 	input := &worklink.CreateFleetInput{
-		FleetName:                  aws.String(d.Get("name").(string)),
+		FleetName:                  aws.String(d.Get(names.AttrName).(string)),
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateFleetWithContext(ctx, input)
+	resp, err := conn.CreateFleet(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WorkLink Fleet: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.FleetArn))
+	d.SetId(aws.ToString(resp.FleetArn))
 
 	if err := updateAuditStreamConfiguration(ctx, conn, d); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WorkLink Fleet: %s", err)
@@ -173,42 +179,44 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
-	resp, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
-		FleetArn: aws.String(d.Id()),
-	})
+	output, err := findFleetByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WorkLink Fleet (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] WorkLink Fleet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", resp.FleetName)
-	d.Set("display_name", resp.DisplayName)
-	d.Set("optimize_for_end_user_location", resp.OptimizeForEndUserLocation)
-	d.Set("company_code", resp.CompanyCode)
-	d.Set("created_time", resp.CreatedTime.Format(time.RFC3339))
-	if resp.LastUpdatedTime != nil {
-		d.Set("last_updated_time", resp.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, output.FleetName)
+	d.Set(names.AttrDisplayName, output.DisplayName)
+	d.Set("optimize_for_end_user_location", output.OptimizeForEndUserLocation)
+	d.Set("company_code", output.CompanyCode)
+	d.Set(names.AttrCreatedTime, output.CreatedTime.Format(time.RFC3339))
+	if output.LastUpdatedTime != nil {
+		d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime.Format(time.RFC3339))
 	}
-	auditStreamConfigurationResp, err := conn.DescribeAuditStreamConfigurationWithContext(ctx, &worklink.DescribeAuditStreamConfigurationInput{
+	describeAuditStreamInput := worklink.DescribeAuditStreamConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	auditStreamConfigurationResp, err := conn.DescribeAuditStreamConfiguration(ctx, &describeAuditStreamInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) audit stream configuration: %s", d.Id(), err)
 	}
 	d.Set("audit_stream_arn", auditStreamConfigurationResp.AuditStreamArn)
 
-	companyNetworkConfigurationResp, err := conn.DescribeCompanyNetworkConfigurationWithContext(ctx, &worklink.DescribeCompanyNetworkConfigurationInput{
+	describeCompanyNetworkInput := worklink.DescribeCompanyNetworkConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	companyNetworkConfigurationResp, err := conn.DescribeCompanyNetworkConfiguration(ctx, &describeCompanyNetworkInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) company network configuration: %s", d.Id(), err)
 	}
@@ -216,9 +224,10 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting network: %s", err)
 	}
 
-	identityProviderConfigurationResp, err := conn.DescribeIdentityProviderConfigurationWithContext(ctx, &worklink.DescribeIdentityProviderConfigurationInput{
+	describeIdentityProviderInput := worklink.DescribeIdentityProviderConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	identityProviderConfigurationResp, err := conn.DescribeIdentityProviderConfiguration(ctx, &describeIdentityProviderInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) identity provider configuration: %s", d.Id(), err)
 	}
@@ -226,32 +235,33 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting identity_provider: %s", err)
 	}
 
-	devicePolicyConfigurationResp, err := conn.DescribeDevicePolicyConfigurationWithContext(ctx, &worklink.DescribeDevicePolicyConfigurationInput{
+	describeDevicePolicyInput := worklink.DescribeDevicePolicyConfigurationInput{
 		FleetArn: aws.String(d.Id()),
-	})
+	}
+	devicePolicyConfigurationResp, err := conn.DescribeDevicePolicyConfiguration(ctx, &describeDevicePolicyInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s) device policy configuration: %s", d.Id(), err)
 	}
-	d.Set("device_ca_certificate", strings.TrimSpace(aws.StringValue(devicePolicyConfigurationResp.DeviceCaCertificate)))
+	d.Set("device_ca_certificate", strings.TrimSpace(aws.ToString(devicePolicyConfigurationResp.DeviceCaCertificate)))
 
 	return diags
 }
 
-func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
 	input := &worklink.UpdateFleetMetadataInput{
 		FleetArn:                   aws.String(d.Id()),
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if d.HasChanges("display_name", "optimize_for_end_user_location") {
-		_, err := conn.UpdateFleetMetadataWithContext(ctx, input)
+	if d.HasChanges(names.AttrDisplayName, "optimize_for_end_user_location") {
+		_, err := conn.UpdateFleetMetadata(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkLink Fleet (%s): %s", d.Id(), err)
 		}
@@ -284,16 +294,16 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
 	input := &worklink.DeleteFleetInput{
 		FleetArn: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteFleetWithContext(ctx, input); err != nil {
-		if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
+	if _, err := conn.DeleteFleet(ctx, input); err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting WorkLink Fleet resource share (%s): %s", d.Id(), err)
@@ -302,7 +312,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
-		Refresh:    FleetStateRefresh(ctx, conn, d.Id()),
+		Refresh:    fleetStateRefresh(ctx, conn, d.Id()),
 		Timeout:    15 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -316,24 +326,48 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FleetStateRefresh(ctx context.Context, conn *worklink.WorkLink, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func findFleetByARN(ctx context.Context, conn *worklink.Client, arn string) (*worklink.DescribeFleetMetadataOutput, error) {
+	input := &worklink.DescribeFleetMetadataInput{
+		FleetArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeFleetMetadata(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func fleetStateRefresh(ctx context.Context, conn *worklink.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		emptyResp := &worklink.DescribeFleetMetadataOutput{}
 
-		resp, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
+		input := worklink.DescribeFleetMetadataInput{
 			FleetArn: aws.String(arn),
-		})
+		}
+		resp, err := conn.DescribeFleetMetadata(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return emptyResp, "DELETED", nil
 			}
 		}
 
-		return resp, *resp.FleetStatus, nil
+		return resp, string(resp.FleetStatus), nil
 	}
 }
 
-func updateAuditStreamConfiguration(ctx context.Context, conn *worklink.WorkLink, d *schema.ResourceData) error {
+func updateAuditStreamConfiguration(ctx context.Context, conn *worklink.Client, d *schema.ResourceData) error {
 	input := &worklink.UpdateAuditStreamConfigurationInput{
 		FleetArn: aws.String(d.Id()),
 	}
@@ -343,36 +377,36 @@ func updateAuditStreamConfiguration(ctx context.Context, conn *worklink.WorkLink
 		return nil
 	}
 
-	if _, err := conn.UpdateAuditStreamConfigurationWithContext(ctx, input); err != nil {
+	if _, err := conn.UpdateAuditStreamConfiguration(ctx, input); err != nil {
 		return fmt.Errorf("updating Audit Stream Configuration: %w", err)
 	}
 
 	return nil
 }
 
-func updateCompanyNetworkConfiguration(ctx context.Context, conn *worklink.WorkLink, d *schema.ResourceData) error {
+func updateCompanyNetworkConfiguration(ctx context.Context, conn *worklink.Client, d *schema.ResourceData) error {
 	oldNetwork, newNetwork := d.GetChange("network")
-	if len(oldNetwork.([]interface{})) > 0 && len(newNetwork.([]interface{})) == 0 {
+	if len(oldNetwork.([]any)) > 0 && len(newNetwork.([]any)) == 0 {
 		return fmt.Errorf("Company Network Configuration cannot be removed from WorkLink Fleet(%s),"+
 			" use 'terraform taint' to recreate the resource if you wish.", d.Id())
 	}
 
-	if v, ok := d.GetOk("network"); ok && len(v.([]interface{})) > 0 {
-		config := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("network"); ok && len(v.([]any)) > 0 {
+		config := v.([]any)[0].(map[string]any)
 		input := &worklink.UpdateCompanyNetworkConfigurationInput{
 			FleetArn:         aws.String(d.Id()),
-			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
-			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
-			VpcId:            aws.String(config["vpc_id"].(string)),
+			SecurityGroupIds: flex.ExpandStringValueSet(config[names.AttrSecurityGroupIDs].(*schema.Set)),
+			SubnetIds:        flex.ExpandStringValueSet(config[names.AttrSubnetIDs].(*schema.Set)),
+			VpcId:            aws.String(config[names.AttrVPCID].(string)),
 		}
-		if _, err := conn.UpdateCompanyNetworkConfigurationWithContext(ctx, input); err != nil {
+		if _, err := conn.UpdateCompanyNetworkConfiguration(ctx, input); err != nil {
 			return fmt.Errorf("updating Company Network Configuration: %w", err)
 		}
 	}
 	return nil
 }
 
-func updateDevicePolicyConfiguration(ctx context.Context, conn *worklink.WorkLink, d *schema.ResourceData) error {
+func updateDevicePolicyConfiguration(ctx context.Context, conn *worklink.Client, d *schema.ResourceData) error {
 	input := &worklink.UpdateDevicePolicyConfigurationInput{
 		FleetArn: aws.String(d.Id()),
 	}
@@ -382,28 +416,28 @@ func updateDevicePolicyConfiguration(ctx context.Context, conn *worklink.WorkLin
 		return nil
 	}
 
-	if _, err := conn.UpdateDevicePolicyConfigurationWithContext(ctx, input); err != nil {
+	if _, err := conn.UpdateDevicePolicyConfiguration(ctx, input); err != nil {
 		return fmt.Errorf("updating Device Policy Configuration: %w", err)
 	}
 	return nil
 }
 
-func updateIdentityProviderConfiguration(ctx context.Context, conn *worklink.WorkLink, d *schema.ResourceData) error {
+func updateIdentityProviderConfiguration(ctx context.Context, conn *worklink.Client, d *schema.ResourceData) error {
 	oldIdentityProvider, newIdentityProvider := d.GetChange("identity_provider")
 
-	if len(oldIdentityProvider.([]interface{})) > 0 && len(newIdentityProvider.([]interface{})) == 0 {
+	if len(oldIdentityProvider.([]any)) > 0 && len(newIdentityProvider.([]any)) == 0 {
 		return fmt.Errorf("Identity Provider Configuration cannot be removed from WorkLink Fleet(%s),"+
 			" use 'terraform taint' to recreate the resource if you wish.", d.Id())
 	}
 
-	if v, ok := d.GetOk("identity_provider"); ok && len(v.([]interface{})) > 0 {
-		config := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("identity_provider"); ok && len(v.([]any)) > 0 {
+		config := v.([]any)[0].(map[string]any)
 		input := &worklink.UpdateIdentityProviderConfigurationInput{
 			FleetArn:                     aws.String(d.Id()),
-			IdentityProviderType:         aws.String(config["type"].(string)),
+			IdentityProviderType:         awstypes.IdentityProviderType(config[names.AttrType].(string)),
 			IdentityProviderSamlMetadata: aws.String(config["saml_metadata"].(string)),
 		}
-		if _, err := conn.UpdateIdentityProviderConfigurationWithContext(ctx, input); err != nil {
+		if _, err := conn.UpdateIdentityProviderConfiguration(ctx, input); err != nil {
 			return fmt.Errorf("updating Identity Provider Configuration: %w", err)
 		}
 	}

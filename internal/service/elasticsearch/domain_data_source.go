@@ -6,19 +6,18 @@ package elasticsearch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elasticsearch_domain")
-func DataSourceDomain() *schema.Resource {
+// @SDKDataSource("aws_elasticsearch_domain", name="Domain")
+func dataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainRead,
 
@@ -37,7 +36,7 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -48,7 +47,7 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,16 +69,16 @@ func DataSourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -110,7 +109,7 @@ func DataSourceDomain() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -129,11 +128,11 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -173,7 +172,7 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -181,11 +180,11 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -204,7 +203,7 @@ func DataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -217,19 +216,19 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -245,18 +244,18 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -269,11 +268,11 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group_arn": {
+						names.AttrCloudWatchLogGroupARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -289,7 +288,7 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -312,28 +311,28 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -344,125 +343,92 @@ func DataSourceDomain() *schema.Resource {
 	}
 }
 
-func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	domainName := d.Get(names.AttrDomainName).(string)
+	ds, err := findDomainByName(ctx, conn, domainName)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "your query returned no results")
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s): %s", domainName, err)
 	}
 
-	reqDescribeDomainConfig := &elasticsearchservice.DescribeElasticsearchDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
+	dc, err := findDomainConfigByName(ctx, conn, domainName)
 
-	respDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, reqDescribeDomainConfig)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "querying config for elasticsearch_domain: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) Config: %s", domainName, err)
 	}
 
-	if respDescribeDomainConfig.DomainConfig == nil {
-		return sdkdiag.AppendErrorf(diags, "your query returned no results")
-	}
+	d.SetId(aws.ToString(ds.ARN))
 
-	dc := respDescribeDomainConfig.DomainConfig
-
-	d.SetId(aws.StringValue(ds.ARN))
-
-	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
+	if ds.AccessPolicies != nil && aws.ToString(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "access policies contain an invalid JSON: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 		d.Set("access_policies", policies)
 	}
-
-	if err := d.Set("advanced_options", flex.FlattenStringMap(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", ds.AdvancedOptions); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
-
-	d.Set("arn", ds.ARN)
-	d.Set("domain_id", ds.DomainId)
-	d.Set("endpoint", ds.Endpoint)
-	d.Set("kibana_endpoint", getKibanaEndpoint(d))
-
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 	}
-
+	d.Set(names.AttrARN, ds.ARN)
 	if dc.AutoTuneOptions != nil {
-		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
+		if err := d.Set("auto_tune_options", []any{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
-
-	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
-	}
-
-	if err := d.Set("encryption_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encryption_at_rest: %s", err)
-	}
-
-	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
-	}
-
-	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+	if err := d.Set("cluster_config", flattenElasticsearchClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
 	}
-
-	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
-	}
-
-	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
-		}
-
-		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
-		}
-		d.Set("kibana_endpoint", getKibanaEndpoint(d))
-		if ds.Endpoint != nil {
-			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
-		}
-	} else {
-		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
-			d.Set("kibana_endpoint", getKibanaEndpoint(d))
-		}
-		if ds.Endpoints != nil {
-			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
-		}
-	}
-
-	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
-	}
-
-	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
-
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
 	}
-
 	d.Set("created", ds.Created)
 	d.Set("deleted", ds.Deleted)
-
+	d.Set("domain_id", ds.DomainId)
+	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
+	}
+	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
+	if err := d.Set("encryption_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encryption_at_rest: %s", err)
+	}
+	d.Set(names.AttrEndpoint, ds.Endpoint)
+	d.Set("kibana_endpoint", getKibanaEndpoint(d))
+	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
+	}
+	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
+	}
 	d.Set("processing", ds.Processing)
+	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
+	}
+	if ds.VPCOptions != nil {
+		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
+		}
+
+		d.Set(names.AttrEndpoint, ds.Endpoints["vpc"])
+		d.Set("kibana_endpoint", getKibanaEndpoint(d))
+	} else if ds.Endpoint != nil {
+		d.Set(names.AttrEndpoint, ds.Endpoint)
+		d.Set("kibana_endpoint", getKibanaEndpoint(d))
+	}
 
 	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

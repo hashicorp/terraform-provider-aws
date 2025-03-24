@@ -1,0 +1,11 @@
+```release-note:new-data-source
+aws_bedrock_custom_model
+```
+
+```release-note:new-data-source
+aws_bedrock_custom_models
+```
+
+```release-note:resource
+aws_bedrock_custom_model
+```

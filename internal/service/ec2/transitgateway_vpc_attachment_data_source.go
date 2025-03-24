@@ -5,20 +5,25 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_vpc_attachment")
-func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_vpc_attachment", name="Transit Gateway VPC Attachment")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPCAttachmentRead,
 
@@ -31,12 +36,16 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dns_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -45,17 +54,21 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			"security_group_referencing_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,15 +80,14 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -83,28 +95,36 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.TransitGatewayAttachmentIds = []string{v.(string)}
 	}
 
-	transitGatewayVPCAttachment, err := FindTransitGatewayVPCAttachment(ctx, conn, input)
+	transitGatewayVPCAttachment, err := findTransitGatewayVPCAttachment(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPC Attachment", err))
 	}
 
-	d.SetId(aws.StringValue(transitGatewayVPCAttachment.TransitGatewayAttachmentId))
+	d.SetId(aws.ToString(transitGatewayVPCAttachment.TransitGatewayAttachmentId))
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
+	vpcOwnerID := aws.ToString(transitGatewayVPCAttachment.VpcOwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: vpcOwnerID,
+		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
+	}.String()
+	d.Set(names.AttrARN, arn)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
-	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
-	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
-	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
-	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
+	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
+	d.Set(names.AttrSubnetIDs, transitGatewayVPCAttachment.SubnetIds)
+	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
+	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
+	d.Set("vpc_owner_id", vpcOwnerID)
 
-	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }

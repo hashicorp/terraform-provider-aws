@@ -395,6 +395,7 @@ The following arguments are optional:
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
+* `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `node_to_node_encryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
@@ -421,7 +422,10 @@ The following arguments are optional:
 
 * `desired_state` - (Required) Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
 * `maintenance_schedule` - (Required if `rollback_on_disable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
+
+  **NOTE:** Maintenance windows are deprecated and have been replaced with [off-peak windows](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html). Consequently, `maintenance_schedule` configuration blocks cannot be specified when `use_off_peak_window` is set to `true`.
 * `rollback_on_disable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
+* `use_off_peak_window` - (Optional) Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window. Defaults to `false`.
 
 #### maintenance_schedule
 
@@ -442,11 +446,26 @@ The following arguments are optional:
 * `dedicated_master_type` - (Optional) Instance type of the dedicated main nodes in the cluster.
 * `instance_count` - (Optional) Number of instances in the cluster.
 * `instance_type` - (Optional) Instance type of data nodes in the cluster.
+* `multi_az_with_standby_enabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
+* `node_options` - (Optional) List of node options for the domain.
 * `warm_count` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warm_enabled` - (Optional) Whether to enable warm storage.
 * `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
+
+#### node_options
+
+Container object to specify configuration for a node type.
+
+* `node_config` - (Optional) Container to specify sizing of a node type.
+* `node_type` - (Optional) Type of node this configuration describes. Valid values: `coordinator`.
+
+#### node_config
+
+* `count` - (Optional) Number of nodes of a particular node type in the cluster.
+* `enabled` - (Optional) Whether a particular node type is enabled.
+* `type` - (Optional) The instance type of a particular node type in the cluster.
 
 #### cold_storage_options
 
@@ -471,7 +490,7 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `custom_endpoint_enabled` - (Optional) Whether to enable custom endpoint for the OpenSearch domain.
 * `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforce_https` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_DomainEndpointOptions.html#opensearchservice-Type-DomainEndpointOptions-TLSSecurityPolicy). Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 
@@ -534,10 +553,13 @@ AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain.
+* `domain_endpoint_v2_hosted_zone_id` -  Dual stack hosted zone ID for the domain.
 * `domain_id` - Unique identifier for the domain.
 * `domain_name` - Name of the OpenSearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
+* `endpoint_v2` - V2 domain endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `dashboard_endpoint` - Domain-specific endpoint for Dashboard without https scheme.
+* `dashboard_endpoint_v2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without https scheme.
 * `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
@@ -547,7 +569,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
+* `create` - (Default `90m`)
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
@@ -576,4 +598,4 @@ Using `terraform import`, import OpenSearch domains using the `domain_name`. For
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6be783c117732ccc247a91f3a21b873ce34ae5384be5834b261ffa5d5d287402 -->
+<!-- cache-key: cdktf-0.20.8 input-37fa224452decb6addbeabd5d6c6b27b31741f8e1ca9af31765de08dd0c7541b -->
