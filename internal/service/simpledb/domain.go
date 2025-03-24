@@ -117,7 +117,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	conn := simpleDBConn(ctx, r.Meta())
 
-	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
+	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

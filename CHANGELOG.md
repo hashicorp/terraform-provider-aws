@@ -1,17 +1,51 @@
-## 5.92.0 (Unreleased)
+## 5.93.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_elasticache_cluster: Add configurable timeouts for create, update, and delete operations ([#41940](https://github.com/hashicorp/terraform-provider-aws/issues/41940))
+* resource/aws_kinesisanalyticsv2_application: Allow `runtime_environment` to be updated in-place ([#41935](https://github.com/hashicorp/terraform-provider-aws/issues/41935))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Fix `InvalidParameterCombination: To enable the Advanced mode of Database Insights, modify your cluster to enable Performance Insights and set the retention period for Performance Insights to at least 465 days` errors when enabling `database_insights_mode` on existing instances ([#41960](https://github.com/hashicorp/terraform-provider-aws/issues/41960))
+* resource/aws_eip: Prevents application from failing when hitting "InvalidAction" error for specific regions ([#41920](https://github.com/hashicorp/terraform-provider-aws/issues/41920))
+* resource/aws_elasticache_replication_group: Wait for replication group to become available before all modification operations ([#40320](https://github.com/hashicorp/terraform-provider-aws/issues/40320))
+* resource/aws_lakeformation_opt_in: Fix error when expanding `resource_data.table_wildcard` attribute ([#41939](https://github.com/hashicorp/terraform-provider-aws/issues/41939))
+
+## 5.92.0 (March 20, 2025)
+
+NOTES:
+
+* resource/aws_kendra_data_source: The `configuration.s3_configuration` argument is deprecated. Use `configuration.template_configuration` instead, which supports the upgraded Amazon S3 connector. Amazon has ended support for the older architecture as of June 2024, and resources created with this argument cannot be edited or updated. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-s3.html) for additional details. ([#35437](https://github.com/hashicorp/terraform-provider-aws/issues/35437))
+* resource/aws_kendra_data_source: The `configuration.web_crawler_configuration` argument is deprecated. Use `configuration.template_configuration` instead, which supports the Amazon Kendra Web Crawler connector v2.0. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-web-crawler.html) for additional details. ([#35437](https://github.com/hashicorp/terraform-provider-aws/issues/35437))
+
+FEATURES:
+
+* **New Data Source:** `aws_api_gateway_api_keys` ([#39335](https://github.com/hashicorp/terraform-provider-aws/issues/39335))
+* **New Data Source:** `aws_eks_cluster_versions` ([#40741](https://github.com/hashicorp/terraform-provider-aws/issues/40741))
+* **New Data Source:** `aws_identitystore_group_memberships` ([#31589](https://github.com/hashicorp/terraform-provider-aws/issues/31589))
+* **New Data Source:** `aws_identitystore_users` ([#31688](https://github.com/hashicorp/terraform-provider-aws/issues/31688))
+* **New Resource:** `aws_athena_capacity_reservation` ([#41858](https://github.com/hashicorp/terraform-provider-aws/issues/41858))
 
 ENHANCEMENTS:
 
 * data-source/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * data-source/aws_db_instance: Add `database_insights_mode` attribute ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * data-source/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* data-source/aws_lb: Add `ipam_pools` attribute ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
+* provider: Support `aws-marketplace` as a valid account ID in ARNs ([#41867](https://github.com/hashicorp/terraform-provider-aws/issues/41867))
+* resource/aws_appconfig_extension_association: Add plan-time validation of `extension_arn` and `resource_arn` ([#41907](https://github.com/hashicorp/terraform-provider-aws/issues/41907))
 * resource/aws_connect_user: Add `identity_info.secondary_email` attribute ([#41001](https://github.com/hashicorp/terraform-provider-aws/issues/41001))
 * resource/aws_db_instance: Add `database_insights_mode` argument ([#41607](https://github.com/hashicorp/terraform-provider-aws/issues/41607))
 * resource/aws_ebs_volume: Add `create_time` attribute ([#41839](https://github.com/hashicorp/terraform-provider-aws/issues/41839))
+* resource/aws_kendra_data_source: Add `configuration.template_configuration` argument ([#35437](https://github.com/hashicorp/terraform-provider-aws/issues/35437))
+* resource/aws_lb:  Add `ipam_pools` configuration block ([#41822](https://github.com/hashicorp/terraform-provider-aws/issues/41822))
 
 BUG FIXES:
 
 * resource/aws_api_gateway_rest_api: Avoid unnecessary remove and add operations for `vpc_endpoint_ids` ([#41836](https://github.com/hashicorp/terraform-provider-aws/issues/41836))
+* resource/aws_bedrockagent_agent: Fix `instruction` validator to consider multi-byte chars so not to artificially limit instruction length ([#41921](https://github.com/hashicorp/terraform-provider-aws/issues/41921))
+* resource/aws_eks_cluster: Allow `compute_config.node_role_arn` to update in place when previously unset ([#41925](https://github.com/hashicorp/terraform-provider-aws/issues/41925))
 * resource/aws_rds_cluster: Ensure that `performance_insights_enabled` takes effect when creating a cluster that is a member of a global cluster ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
 * resource/aws_rds_cluster: Fix `InvalidParameterCombination: To enable the Advanced mode of Database Insights, modify your cluster to enable Performance Insights and set the retention period for Performance Insights to at least 465 days` errors when enabling `database_insights_mode` on existing clusters ([#41737](https://github.com/hashicorp/terraform-provider-aws/issues/41737))
 * resource/aws_timestreaminfluxdb_db_instance: Set new computed value for `secondary_availability_zone` attribute when changing `deployment_type` ([#41849](https://github.com/hashicorp/terraform-provider-aws/issues/41849))

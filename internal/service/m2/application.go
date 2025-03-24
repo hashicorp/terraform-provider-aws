@@ -157,7 +157,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateApplication(ctx, &input)
 	}, "does not have proper Trust Policy for M2 service")
 
@@ -425,7 +425,7 @@ func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id
 }
 
 func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -441,7 +441,7 @@ func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.St
 }
 
 func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationVersionByTwoPartKey(ctx, conn, id, version)
 
 		if tfresource.NotFound(err) {

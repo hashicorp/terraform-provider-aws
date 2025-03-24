@@ -84,12 +84,12 @@ func resourceRule() *schema.Resource {
 	}
 }
 
-func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
@@ -107,7 +107,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.ToString(output.(*waf.CreateRuleOutput).Rule.RuleId))
 
 	if newPredicates := d.Get("predicates").(*schema.Set).List(); len(newPredicates) > 0 {
-		noPredicates := []interface{}{}
+		noPredicates := []any{}
 		if err := updateRule(ctx, conn, d.Id(), noPredicates, newPredicates); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -116,7 +116,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -132,10 +132,10 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading WAF Rule (%s): %s", d.Id(), err)
 	}
 
-	var predicates []map[string]interface{}
+	var predicates []map[string]any
 
 	for _, predicateSet := range rule.Predicates {
-		predicate := map[string]interface{}{
+		predicate := map[string]any{
 			"data_id":      aws.ToString(predicateSet.DataId),
 			"negated":      aws.ToBool(predicateSet.Negated),
 			names.AttrType: predicateSet.Type,
@@ -153,7 +153,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -168,12 +168,12 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if oldPredicates := d.Get("predicates").(*schema.Set).List(); len(oldPredicates) > 0 {
-		noPredicates := []interface{}{}
+		noPredicates := []any{}
 		if err := updateRule(ctx, conn, d.Id(), oldPredicates, noPredicates); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -182,8 +182,8 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFReferencedItemException](ctx, timeout, func() (interface{}, error) {
-		return newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.WAFReferencedItemException](ctx, timeout, func() (any, error) {
+		return newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 			input := &waf.DeleteRuleInput{
 				ChangeToken: token,
 				RuleId:      aws.String(d.Id()),
@@ -229,8 +229,8 @@ func findRuleByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.R
 	return output.Rule, nil
 }
 
-func updateRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []interface{}) error {
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+func updateRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []any) error {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.UpdateRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
@@ -247,11 +247,11 @@ func updateRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []i
 	return nil
 }
 
-func diffRulePredicates(oldP, newP []interface{}) []awstypes.RuleUpdate {
+func diffRulePredicates(oldP, newP []any) []awstypes.RuleUpdate {
 	updates := make([]awstypes.RuleUpdate, 0)
 
 	for _, op := range oldP {
-		predicate := op.(map[string]interface{})
+		predicate := op.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newP, predicate); contains {
 			newP = slices.Delete(newP, idx, idx+1)
@@ -269,7 +269,7 @@ func diffRulePredicates(oldP, newP []interface{}) []awstypes.RuleUpdate {
 	}
 
 	for _, np := range newP {
-		predicate := np.(map[string]interface{})
+		predicate := np.(map[string]any)
 
 		updates = append(updates, awstypes.RuleUpdate{
 			Action: awstypes.ChangeActionInsert,

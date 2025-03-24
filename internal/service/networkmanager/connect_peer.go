@@ -184,7 +184,7 @@ func resourceConnectPeer() *schema.Resource {
 	}
 }
 
-func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -196,8 +196,8 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]interface{})) > 0 {
-		input.BgpOptions = expandPeerOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]any)) > 0 {
+		input.BgpOptions = expandPeerOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("core_network_address"); ok {
@@ -205,7 +205,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("inside_cidr_blocks"); ok {
-		input.InsideCidrBlocks = flex.ExpandStringValueList(v.([]interface{}))
+		input.InsideCidrBlocks = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("subnet_arn"); ok {
@@ -213,7 +213,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateConnectPeer(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -251,7 +251,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceConnectPeerRead(ctx, d, meta)...)
 }
 
-func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -268,10 +268,10 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrARN, connectPeerARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	d.Set("bgp_options", []interface{}{map[string]interface{}{
+	d.Set("bgp_options", []any{map[string]any{
 		"peer_asn": connectPeer.Configuration.BgpConfigurations[0].PeerAsn,
 	}})
-	d.Set(names.AttrConfiguration, []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
+	d.Set(names.AttrConfiguration, []any{flattenPeerConfiguration(connectPeer.Configuration)})
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
 	if connectPeer.CreatedAt != nil {
@@ -291,12 +291,12 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceConnectPeerRead(ctx, d, meta)
 }
 
-func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -320,7 +320,7 @@ func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandPeerOptions(o map[string]interface{}) *awstypes.BgpOptions {
+func expandPeerOptions(o map[string]any) *awstypes.BgpOptions {
 	if o == nil {
 		return nil
 	}
@@ -359,15 +359,15 @@ func findConnectPeerByID(ctx context.Context, conn *networkmanager.Client, id st
 	return output.ConnectPeer, nil
 }
 
-func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[string]interface{} {
+func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	confMap := map[string]interface{}{}
+	confMap := map[string]any{}
 
 	for _, v := range apiObject.BgpConfigurations {
-		bgpConfMap := map[string]interface{}{}
+		bgpConfMap := map[string]any{}
 
 		if a := v.CoreNetworkAddress; a != nil {
 			bgpConfMap["core_network_address"] = aws.ToString(a)
@@ -381,9 +381,9 @@ func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[
 		if a := v.PeerAsn; a != nil {
 			bgpConfMap["peer_asn"] = aws.ToInt64(a)
 		}
-		var existing []interface{}
+		var existing []any
 		if c, ok := confMap["bgp_configurations"]; ok {
-			existing = c.([]interface{})
+			existing = c.([]any)
 		}
 		confMap["bgp_configurations"] = append(existing, bgpConfMap)
 	}
@@ -403,7 +403,7 @@ func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[
 }
 
 func statusConnectPeerState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConnectPeerByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

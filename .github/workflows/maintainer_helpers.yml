@@ -39,7 +39,7 @@ jobs:
       CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
     steps:
-      - uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
+      - uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
         id: token
         with:
           app-id: ${{ secrets.APP_ID }}
@@ -170,18 +170,30 @@ jobs:
               "channel" : "${{ secrets.SLACK_CHANNEL }}",
               "blocks": [
                 {
-                  "type": "section",
+                  "type": "header",
                   "text": {
-                    "type": "mrkdwn",
-                    "text": ":warning: The following has been labeled as a ${{ github.event.label.name }}:"
+                    "type": "plain_text",
+                    "text": ":warning: The following ${{ github.event_name == 'issues' && 'issue' || 'pull request' }} has been labeled as a ${{ github.event.label.name }}:",
+                    "emoji": true
                   }
                 },
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ${{ toJSON(format('<{0}|{1}>', env.ISSUE_URL, env.ISSUE_TITLE)) }}
-                  }
+                  "type": "divider"
+                },
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "link",
+                          "text": ${{ toJSON(env.ISSUE_TITLE) }}
+                          "url": env.ISSUE_URL
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -208,7 +220,7 @@ jobs:
               ]
             }
 
-      - uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
+      - uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
         if: github.event_name == 'schedule'
         id: token
         with:

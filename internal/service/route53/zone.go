@@ -123,7 +123,7 @@ func resourceZone() *schema.Resource {
 	}
 }
 
-func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -178,7 +178,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceZoneRead(ctx, d, meta)...)
 }
 
-func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -233,7 +233,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -258,7 +258,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		// VPCs cannot be empty, so add first and then remove.
 		for _, tfMapRaw := range ns.Difference(os).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
@@ -269,7 +269,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		for _, tfMapRaw := range os.Difference(ns).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
@@ -283,7 +283,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceZoneRead(ctx, d, meta)...)
 }
 
-func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -492,11 +492,11 @@ func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Client, zoneID
 	return nil
 }
 
-func expandVPCs(tfList []interface{}, currentRegion string) []*awstypes.VPC {
+func expandVPCs(tfList []any, currentRegion string) []*awstypes.VPC {
 	apiObjects := []*awstypes.VPC{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -507,7 +507,7 @@ func expandVPCs(tfList []interface{}, currentRegion string) []*awstypes.VPC {
 	return apiObjects
 }
 
-func expandVPC(tfMap map[string]interface{}, currentRegion string) *awstypes.VPC {
+func expandVPC(tfMap map[string]any, currentRegion string) *awstypes.VPC {
 	apiObject := &awstypes.VPC{
 		VPCId:     aws.String(tfMap[names.AttrVPCID].(string)),
 		VPCRegion: awstypes.VPCRegion(currentRegion),
@@ -520,11 +520,11 @@ func expandVPC(tfMap map[string]interface{}, currentRegion string) *awstypes.VPC
 	return apiObject
 }
 
-func flattenVPCs(apiObjects []awstypes.VPC) []interface{} {
-	tfList := []interface{}{}
+func flattenVPCs(apiObjects []awstypes.VPC) []any {
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrVPCID: aws.ToString(apiObject.VPCId),
 			"vpc_region":    apiObject.VPCRegion,
 		}

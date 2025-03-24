@@ -625,7 +625,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 }
 
 func statusDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDBInstanceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

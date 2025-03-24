@@ -431,7 +431,7 @@ const (
 	ResNameSchedule = "Schedule"
 )
 
-func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
@@ -451,8 +451,8 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.EndDate = aws.Time(v)
 	}
 
-	if v, ok := d.Get("flexible_time_window").([]interface{}); ok && len(v) > 0 {
-		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v[0].(map[string]interface{}))
+	if v, ok := d.Get("flexible_time_window").([]any); ok && len(v) > 0 {
+		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v[0].(map[string]any))
 	}
 
 	if v, ok := d.Get(names.AttrGroupName).(string); ok && v != "" {
@@ -476,8 +476,8 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.State = types.ScheduleState(v)
 	}
 
-	if v, ok := d.Get(names.AttrTarget).([]interface{}); ok && len(v) > 0 {
-		in.Target = expandTarget(ctx, v[0].(map[string]interface{}))
+	if v, ok := d.Get(names.AttrTarget).([]any); ok && len(v) > 0 {
+		in.Target = expandTarget(ctx, v[0].(map[string]any))
 	}
 
 	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
@@ -510,7 +510,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
+func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
@@ -541,7 +541,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("end_date", nil)
 	}
 
-	if err := d.Set("flexible_time_window", []interface{}{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
+	if err := d.Set("flexible_time_window", []any{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
@@ -560,23 +560,23 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrState, string(out.State))
 
-	if err := d.Set(names.AttrTarget, []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
+	if err := d.Set(names.AttrTarget, []any{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	in := &scheduler.UpdateScheduleInput{
-		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
+		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]any)[0].(map[string]any)),
 		GroupName:          aws.String(d.Get(names.AttrGroupName).(string)),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
-		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
+		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -618,7 +618,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
@@ -700,14 +700,14 @@ func ResourceScheduleParseID(id string) (groupName, scheduleName string, err err
 	return parts[0], parts[1], nil
 }
 
-func sagemakerPipelineParameterHash(v interface{}) int {
-	m := v.(map[string]interface{})
+func sagemakerPipelineParameterHash(v any) int {
+	m := v.(map[string]any)
 	return create.StringHashcode(fmt.Sprintf("%s-%s", m[names.AttrName].(string), m[names.AttrValue].(string)))
 }
 
-func capacityProviderHash(v interface{}) int {
+func capacityProviderHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 
 	if v, ok := m["base"].(int); ok {
 		buf.WriteString(fmt.Sprintf("%d-", v))
@@ -724,9 +724,9 @@ func capacityProviderHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func placementConstraintHash(v interface{}) int {
+func placementConstraintHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrExpression]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
@@ -739,9 +739,9 @@ func placementConstraintHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func placementStrategyHash(v interface{}) int {
+func placementStrategyHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrField]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))

@@ -34,7 +34,7 @@ func resourceTrafficPolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceTrafficPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				const idSeparator = "/"
 				parts := strings.Split(d.Id(), idSeparator)
 				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
@@ -88,7 +88,7 @@ func resourceTrafficPolicy() *schema.Resource {
 	}
 }
 
-func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -102,7 +102,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Comment = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateTrafficPolicy(ctx, input)
 	})
 
@@ -115,7 +115,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceTrafficPolicyRead(ctx, d, meta)...)
 }
 
-func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -141,7 +141,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -163,7 +163,7 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceTrafficPolicyRead(ctx, d, meta)...)
 }
 
-func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 

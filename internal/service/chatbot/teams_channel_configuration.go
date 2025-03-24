@@ -271,7 +271,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]any{
 		"team_id":                data.TeamID.ValueString(),
 		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
@@ -280,7 +280,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
 		return conn.DeleteMicrosoftTeamsChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -350,7 +350,7 @@ const (
 )
 
 func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
 
 		if tfresource.NotFound(err) {

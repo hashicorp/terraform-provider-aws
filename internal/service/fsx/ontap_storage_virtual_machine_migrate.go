@@ -211,7 +211,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	}
 }
 
-func resourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
 	rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"] = rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"]

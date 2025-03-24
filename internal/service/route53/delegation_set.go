@@ -54,7 +54,7 @@ func resourceDelegationSet() *schema.Resource {
 	}
 }
 
-func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -79,7 +79,7 @@ func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceDelegationSetRead(ctx, d, meta)...)
 }
 
-func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -101,7 +101,7 @@ func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceDelegationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegationSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 

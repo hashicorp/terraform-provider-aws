@@ -5,8 +5,8 @@ go 1.23.7
 require (
 	github.com/YakDriver/tfproviderdocs v0.17.0
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.64.7
-	github.com/hashicorp/copywrite v0.21.0
+	github.com/golangci/golangci-lint v1.64.8
+	github.com/hashicorp/copywrite v0.22.0
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
 	github.com/katbyte/terrafmt v0.5.5
 	github.com/pavius/impi v0.0.3
@@ -131,7 +131,7 @@ require (
 	github.com/go-xmlfmt/xmlfmt v1.1.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/flock v0.12.1 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
