@@ -7,34 +7,35 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
 
-// WarnExactlyOneOfChildren acts similarly to `objectvalidator.ExactlyOneOf` except that it returns a Warning and
-// that it doesn't include the Object in the count of matched attributes.
-func WarnExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
-	return warnExactlyOneOfChildrenValidator{
+// ExactlyOneOfChildren acts similarly to `objectvalidator.ExactlyOneOf` except that
+// it  doesn't include the Object in the count of matched attributes.
+// https://github.com/hashicorp/terraform-plugin-framework-validators/issues/274
+func ExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
+	return exactlyOneOfChildrenValidator{
 		pathExpressions: expressions,
 	}
 }
 
-type warnExactlyOneOfChildrenValidator struct {
+type exactlyOneOfChildrenValidator struct {
 	pathExpressions path.Expressions
 }
 
-func (av warnExactlyOneOfChildrenValidator) Description(ctx context.Context) string {
+func (av exactlyOneOfChildrenValidator) Description(ctx context.Context) string {
 	return av.MarkdownDescription(ctx)
 }
 
-func (av warnExactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
+func (av exactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
 	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.pathExpressions)
 }
 
-func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+func (av exactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	validateReq := internal.ExactlyOneOfValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
@@ -48,7 +49,7 @@ func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av warnExactlyOneOfChildrenValidator) validate(ctx context.Context, req internal.ExactlyOneOfValidatorRequest, res *internal.ExactlyOneOfValidatorResponse) {
+func (av exactlyOneOfChildrenValidator) validate(ctx context.Context, req internal.ExactlyOneOfValidatorRequest, res *internal.ExactlyOneOfValidatorResponse) {
 	count := 0
 	expressions := req.PathExpression.MergeExpressions(av.pathExpressions...)
 
@@ -96,14 +97,14 @@ func (av warnExactlyOneOfChildrenValidator) validate(ctx context.Context, req in
 	}
 
 	if count == 0 {
-		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+		res.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", expressions),
 		))
 	}
 
 	if count > 1 {
-		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+		res.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("%d attributes specified when one (and only one) of %s is required", count, expressions),
 		))
