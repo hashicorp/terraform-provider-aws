@@ -162,7 +162,7 @@ func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceD
 const userStackAssociationResourceIDSeparator = "/"
 
 func userStackAssociationCreateResourceID(userName string, authType awstypes.AuthenticationType, stackName string) string {
-	parts := []string{userName, string(authType), stackName}
+	parts := []string{userName, string(authType), stackName} // nosemgrep:ci.typed-enum-conversion
 	id := strings.Join(parts, userStackAssociationResourceIDSeparator)
 
 	return id

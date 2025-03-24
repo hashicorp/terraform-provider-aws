@@ -221,7 +221,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 const userResourceIDSeparator = "/"
 
 func userCreateResourceID(userName string, authType awstypes.AuthenticationType) string {
-	parts := []string{userName, string(authType)}
+	parts := []string{userName, string(authType)} // nosemgrep:ci.typed-enum-conversion
 	id := strings.Join(parts, userResourceIDSeparator)
 
 	return id
