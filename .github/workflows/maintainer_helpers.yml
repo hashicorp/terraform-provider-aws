@@ -173,7 +173,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": ":warning: The following has been labeled as a ${{ github.event.label.name }}:",
+                    "text": ":warning: The following ${{ github.event_name == 'issues' && 'issue' || 'pull request' }} has been labeled as a ${{ github.event.label.name }}:",
                     "emoji": true
                   }
                 },
