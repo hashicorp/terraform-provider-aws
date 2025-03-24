@@ -11,7 +11,7 @@ import (
 )
 
 // LegacyValue returns a plan modifier that prevents `known after apply` during creation plans for
-// attributes that must be `Computed,Options` for legacy value reasons.
+// attributes that must be `Computed,Optional` for legacy value reasons.
 func LegacyValue() planmodifier.Bool {
 	return legacyValueModifier{}
 }

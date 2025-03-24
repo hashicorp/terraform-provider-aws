@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package int32planmodifier
+package stringplanmodifier
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 // LegacyValue returns a plan modifier that prevents `known after apply` during creation plans for
 // attributes that must be `Computed,Optional` for legacy value reasons.
-func LegacyValue() planmodifier.Int32 {
+func LegacyValue() planmodifier.String {
 	return legacyValueModifier{}
 }
 
@@ -26,7 +26,7 @@ func (m legacyValueModifier) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m legacyValueModifier) PlanModifyInt32(ctx context.Context, req planmodifier.Int32Request, resp *planmodifier.Int32Response) {
+func (m legacyValueModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	// Use value from Config if set
 	if !req.ConfigValue.IsNull() {
 		return
@@ -43,7 +43,7 @@ func (m legacyValueModifier) PlanModifyInt32(ctx context.Context, req planmodifi
 	}
 
 	if req.StateValue.IsNull() {
-		resp.PlanValue = types.Int32Value(0)
+		resp.PlanValue = types.StringValue("")
 		return
 	}
 }
