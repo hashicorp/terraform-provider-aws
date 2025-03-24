@@ -17,24 +17,24 @@ import (
 // WarnExactlyOneOfChildren acts similarly to `objectvalidator.ExactlyOneOf` except that it returns a Warning and
 // that it doesn't include the Object in the count of matched attributes.
 func WarnExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
-	return exactlyOneOfChildrenValidator{
+	return warnExactlyOneOfChildrenValidator{
 		pathExpressions: expressions,
 	}
 }
 
-type exactlyOneOfChildrenValidator struct {
+type warnExactlyOneOfChildrenValidator struct {
 	pathExpressions path.Expressions
 }
 
-func (av exactlyOneOfChildrenValidator) Description(ctx context.Context) string {
+func (av warnExactlyOneOfChildrenValidator) Description(ctx context.Context) string {
 	return av.MarkdownDescription(ctx)
 }
 
-func (av exactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
+func (av warnExactlyOneOfChildrenValidator) MarkdownDescription(_ context.Context) string {
 	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.pathExpressions)
 }
 
-func (av exactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	validateReq := internal.ExactlyOneOfValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
@@ -48,7 +48,7 @@ func (av exactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av exactlyOneOfChildrenValidator) Validate(ctx context.Context, req internal.ExactlyOneOfValidatorRequest, res *internal.ExactlyOneOfValidatorResponse) {
+func (av warnExactlyOneOfChildrenValidator) Validate(ctx context.Context, req internal.ExactlyOneOfValidatorRequest, res *internal.ExactlyOneOfValidatorResponse) {
 	count := 0
 	expressions := req.PathExpression.MergeExpressions(av.pathExpressions...)
 
