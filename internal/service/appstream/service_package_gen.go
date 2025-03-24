@@ -74,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "User",
 		},
 		{
-			Factory:  ResourceUserStackAssociation,
+			Factory:  resourceUserStackAssociation,
 			TypeName: "aws_appstream_user_stack_association",
 			Name:     "User Stack Association",
 		},
