@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -38,6 +39,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/boolplanmodifier"
 	tfint32planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/int32planmodifier"
+	tfstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/stringplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
@@ -124,6 +126,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							Optional:           true,
 							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Specify a prefix using 'filter' instead",
+							PlanModifiers: []planmodifier.String{
+								tfstringplanmodifier.LegacyValue(),
+								rulePrefixStateForUnknown(),
+							},
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Required: true,
@@ -1083,4 +1089,58 @@ func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx 
 		return
 	}
 	resp.PlanValue = v
+}
+
+// rulePrefixStateForUnknown implements behaviour similar to `UseStateForUnknown` for `rule.prefix`
+// If prefix was specified using `rule.prefix` but is now moved into `filter`, the planned value should be an empty string.
+// Otherwise, use the value in state.
+func rulePrefixStateForUnknown() planmodifier.String {
+	return rulePrefixUnknownModifier{}
+}
+
+type rulePrefixUnknownModifier struct{}
+
+func (m rulePrefixUnknownModifier) Description(_ context.Context) string {
+	return ""
+}
+
+func (m rulePrefixUnknownModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m rulePrefixUnknownModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// Do nothing if there is no state value.
+	if req.StateValue.IsNull() {
+		return
+	}
+
+	// Do nothing if there is a known planned value.
+	if !req.PlanValue.IsUnknown() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if req.ConfigValue.IsNull() {
+		var filterValue attr.Value
+		filterPath := req.Path.ParentPath().AtName(names.AttrFilter)
+		diags := req.Config.GetAttribute(ctx, filterPath, &filterValue)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
+			return
+		}
+
+		if filterValue.IsUnknown() {
+			return
+		}
+		if !filterValue.IsNull() {
+			resp.PlanValue = types.StringValue("")
+			return
+		}
+	}
+
+	resp.PlanValue = req.StateValue
 }
