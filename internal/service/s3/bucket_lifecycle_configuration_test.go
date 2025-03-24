@@ -68,7 +68,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -158,7 +158,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter:                    checkPlanFilter_Prefix("logs/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -273,7 +273,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithEmptyPrefix(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter:                    checkPlanFilter_Prefix(""),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -388,7 +388,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter:                    checkPlanFilter_GreaterThan(100),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -503,7 +503,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *t
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter:                    checkPlanFilter_GreaterThan(0),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -618,7 +618,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter:                    checkPlanFilter_LessThan(500),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -740,7 +740,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter: checkPlanFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(500),
@@ -883,7 +883,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter: checkPlanFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(500),
@@ -961,7 +961,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_PrefixToAnd(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Date(date),
+								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -1559,7 +1559,7 @@ func TestAccS3BucketLifecycleConfiguration_RulePrefix(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -1671,7 +1671,7 @@ func TestAccS3BucketLifecycleConfiguration_RulePrefixToFilter(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -1786,7 +1786,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkPlanFilter_Tag(acctest.CtKey1, acctest.CtValue1),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -1899,7 +1899,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_DeleteMarker(true),
+								"expiration":                        checkExpiration_DeleteMarker(true),
 								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -2013,7 +2013,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Empty(),
+								"expiration":                        checkExpiration_Empty(),
 								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -3029,7 +3029,7 @@ func TestAccS3BucketLifecycleConfiguration_migrateFromBucket_noChange(t *testing
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_DeleteMarker(true),
+								"expiration":                        checkExpiration_DeleteMarker(true),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact("id1"),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -3101,7 +3101,7 @@ func TestAccS3BucketLifecycleConfiguration_migrateFromBucket_withChange(t *testi
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_DeleteMarker(false),
+								"expiration":                        checkExpiration_DeleteMarker(false),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact("id1"),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -3168,7 +3168,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(90),
+								"expiration":                        checkExpiration_Days(90),
 								names.AttrFilter: checkPlanFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(300),
@@ -3341,7 +3341,7 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -3405,7 +3405,7 @@ func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_up
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -3518,7 +3518,7 @@ func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_re
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
-								"expiration":                        checkPlanExpiration_Days(365),
+								"expiration":                        checkExpiration_Days(365),
 								names.AttrFilter:                    checkFilter_None(),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
@@ -3700,58 +3700,6 @@ func expirationDefaults() map[string]knownvalue.Check {
 		"date":                         knownvalue.Null(),
 		"days":                         knownvalue.Int32Exact(0),
 		"expired_object_delete_marker": knownvalue.Bool(false),
-	}
-}
-
-func checkPlanExpiration_Date(date string) knownvalue.Check {
-	checks := planExpirationDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"date": knownvalue.StringExact(date),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanExpiration_Days(days int32) knownvalue.Check {
-	checks := planExpirationDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"days": knownvalue.Int32Exact(days),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanExpiration_DeleteMarker(marker bool) knownvalue.Check {
-	checks := planExpirationDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"expired_object_delete_marker": knownvalue.Bool(marker),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanExpiration_Empty() knownvalue.Check {
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			planExpirationDefaults(),
-		),
-	})
-}
-
-func planExpirationDefaults() map[string]knownvalue.Check {
-	return map[string]knownvalue.Check{
-		"date": knownvalue.Null(),
-		// "days":                         unknown,
-		// "expired_object_delete_marker": unknown,
 	}
 }
 

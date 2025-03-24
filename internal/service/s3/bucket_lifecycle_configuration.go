@@ -36,6 +36,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/boolplanmodifier"
+	tfint32planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/int32planmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
@@ -158,6 +160,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int32{
+											tfint32planmodifier.LegacyValue(),
 											int32planmodifier.UseStateForUnknown(),
 										},
 									},
@@ -165,6 +168,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Bool{
+											tfboolplanmodifier.LegacyValue(),
 											boolplanmodifier.UseStateForUnknown(),
 										},
 									},
