@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -829,6 +830,11 @@ func TestAccDataSyncTask_taskMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
 					resource.TestCheckResourceAttr(resourceName, "task_mode", "ENHANCED"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -839,11 +845,15 @@ func TestAccDataSyncTask_taskMode(t *testing.T) {
 				Config: testAccTaskConfig_taskMode_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
-					testAccCheckTaskRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
 					resource.TestCheckResourceAttr(resourceName, "task_mode", "BASIC"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -984,16 +994,6 @@ func testAccCheckTaskExists(ctx context.Context, resourceName string, task *data
 		}
 
 		*task = *output
-
-		return nil
-	}
-}
-
-func testAccCheckTaskRecreated(i, j *datasync.DescribeTaskOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(i.TaskArn) == aws.ToString(j.TaskArn) {
-			return errors.New("DataSync Task was not recreated")
-		}
 
 		return nil
 	}
