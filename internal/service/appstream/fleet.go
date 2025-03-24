@@ -717,13 +717,13 @@ func flattenComputeCapacity(apiObject *awstypes.ComputeCapacityStatus) map[strin
 		tfMap["available"] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.DesiredUserSessions; v != nil {
+		tfMap["desired_sessions"] = aws.ToInt32(v)
+	}
+
 	// desiredInstances is always returned by the API but cannot be used in conjunction with desiredSessions
 	if v := apiObject.Desired; v != nil && tfMap["desired_sessions"] == nil {
 		tfMap["desired_instances"] = aws.ToInt32(v)
-	}
-
-	if v := apiObject.DesiredUserSessions; v != nil {
-		tfMap["desired_sessions"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.InUse; v != nil {
