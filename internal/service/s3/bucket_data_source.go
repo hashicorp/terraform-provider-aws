@@ -19,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_s3_bucket", name="Bucket")
+// @Region(overrideEnabled=false)
 func dataSourceBucket() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketRead,
