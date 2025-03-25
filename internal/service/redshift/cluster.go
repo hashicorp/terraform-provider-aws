@@ -368,7 +368,7 @@ func resourceCluster() *schema.Resource {
 			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,

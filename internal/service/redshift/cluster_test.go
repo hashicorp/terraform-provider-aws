@@ -46,7 +46,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
@@ -195,7 +195,7 @@ func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, keyResourceName, names.AttrARN),
 				),
 			},
@@ -1095,6 +1095,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1112,6 +1113,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = %[2]q
@@ -1148,6 +1150,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "ra3.xlplus"
@@ -1232,6 +1235,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1248,6 +1252,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1305,6 +1310,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1322,6 +1328,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1339,6 +1346,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1399,6 +1407,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1421,6 +1430,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1451,6 +1461,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1473,6 +1484,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1493,6 +1505,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1565,6 +1578,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+  encrypted                           = true
   master_username                     = "foo"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1633,6 +1647,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1698,6 +1713,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
@@ -1716,6 +1732,7 @@ func testAccClusterConfig_updateAvailabilityZone(rName string, regionIndex int) 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   database_name                       = "mydb"
+  encrypted                           = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "ra3.xlplus"
@@ -1737,6 +1754,7 @@ func testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "ra3.xlplus"
@@ -1757,6 +1775,7 @@ func testAccClusterConfig_availabilityZoneRelocation(rName string, enabled bool)
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "ra3.xlplus"
@@ -1778,6 +1797,7 @@ func testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName str
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "ra3.xlplus"
@@ -1803,6 +1823,7 @@ resource "aws_redshift_cluster" "test2" {
   snapshot_identifier = aws_redshift_cluster_snapshot.test.id
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
+encrypted = true
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
   node_type           = "dc2.large"
@@ -1823,6 +1844,7 @@ resource "aws_redshift_cluster" "test2" {
   snapshot_arn        = aws_redshift_cluster_snapshot.test.arn
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
+encrypted = true
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
   node_type           = "dc2.large"
@@ -1838,6 +1860,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
+encrypted = true
   master_username                     = "foo_test"
   manage_master_password              = true
   node_type                           = "dc2.large"
