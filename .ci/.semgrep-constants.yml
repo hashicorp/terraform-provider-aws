@@ -2377,6 +2377,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-parent_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrParentID` for the string literal "parent_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"parent_id"'
+      - pattern-not-regex: '"parent_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrParentID"
+    options:
+      constant_propagation: false
+
   - id: literal-password-string-constant
     languages: [go]
     message: Use the constant `names.AttrPassword` for the string literal "password"
