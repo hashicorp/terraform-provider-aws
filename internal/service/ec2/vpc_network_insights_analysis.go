@@ -952,7 +952,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrPortRanges: {
+				"port_ranges": {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -1916,7 +1916,7 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]any {
 	}
 
 	if v := apiObject.PortRanges; v != nil {
-		tfMap[names.AttrPortRanges] = flattenPortRanges(v)
+		tfMap["port_ranges"] = flattenPortRanges(v)
 	}
 
 	if v := apiObject.PrefixList; v != nil {

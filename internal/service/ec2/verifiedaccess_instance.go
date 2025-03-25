@@ -78,7 +78,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrVerifiedAccessTrustProviderID: {
+						"verified_access_trust_provider_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

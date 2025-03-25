@@ -55,7 +55,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVerifiedAccessGroupID),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 					resource.TestCheckResourceAttr(resourceName, "network_interface_options.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_options.0.protocol", "https"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVerifiedAccessGroupID),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
 				),
 			},
 			{
