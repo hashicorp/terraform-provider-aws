@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,6 +43,19 @@ func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) e
 	}
 
 	return nil
+}
+
+// importRegion is a StateContextFunc that imports the Region attribute for a resource.
+func importRegion(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	// Import ID optionally ends with "@<region>".
+	if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+		d.SetId(matches[1])
+		d.Set(names.AttrRegion, matches[2])
+	} else {
+		d.Set(names.AttrRegion, meta.(*conns.AWSClient).AwsConfig(ctx).Region)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // regionDataSourceInterceptor implements per-resource Region override functionality for data sources.

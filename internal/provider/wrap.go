@@ -49,8 +49,10 @@ type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext   contextFunc
 	customizeDiffFuncs []schema.CustomizeDiffFunc
-	interceptors       interceptorItems
-	typeName           string
+	// importsFuncs are called before bootstrapContext.
+	importFuncs  []schema.StateContextFunc
+	interceptors interceptorItems
+	typeName     string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 resource.
@@ -68,7 +70,7 @@ func wrapResource(r *schema.Resource, opts wrappedResourceOptions) {
 	r.UpdateWithoutTimeout = w.update(r.UpdateWithoutTimeout)
 	r.DeleteWithoutTimeout = w.delete(r.DeleteWithoutTimeout)
 	if v := r.Importer; v != nil {
-		r.Importer.StateContext = w.state(v.StateContext)
+		r.Importer.StateContext = w.import_(v.StateContext)
 	}
 	r.CustomizeDiff = w.customizeDiff(r.CustomizeDiff)
 	for i, v := range r.StateUpgraders {
@@ -108,12 +110,18 @@ func (w *wrappedResource) delete(f schema.DeleteContextFunc) schema.DeleteContex
 	return interceptedHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Delete)
 }
 
-func (w *wrappedResource) state(f schema.StateContextFunc) schema.StateContextFunc {
+func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContextFunc {
 	if f == nil {
 		return nil
 	}
 
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		for _, f := range w.opts.importFuncs {
+			if _, err := f(ctx, d, meta); err != nil {
+				return nil, err
+			}
+		}
+
 		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
 			return nil, sdkdiag.DiagnosticsError(diags)
