@@ -186,6 +186,16 @@ func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.
 	})
 }
 
+func RetryGWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (T, error), needle string) (T, error) {
+	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[E](err, needle) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
 // RetryUntilEqual retries the specified function until it returns a value equal to `t`.
 func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t T, f func() (T, error)) (T, error) {
 	var output T
