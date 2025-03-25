@@ -21,6 +21,7 @@ Upgrade topics:
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
+- [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 
 <!-- /TOC -->
 
@@ -108,3 +109,7 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 ## resource/aws_config_aggregate_authorization
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
+
+## data-source/aws_s3_bucket
+
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support](#enhanced-multi-region-support)).

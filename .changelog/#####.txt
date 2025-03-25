@@ -9,3 +9,7 @@ data-source/aws_availability_zone: Add `group_long_name` attribute
 ```release-note:note
 resource/aws_config_aggregate_authorization: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead
 ```
+
+```release-note:note
+data-source/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged
+```

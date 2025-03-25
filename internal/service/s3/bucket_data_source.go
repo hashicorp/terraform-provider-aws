@@ -19,7 +19,6 @@ import (
 )
 
 // @SDKDataSource("aws_s3_bucket", name="Bucket")
-// @Region(overrideEnabled=false)
 func dataSourceBucket() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketRead,
@@ -37,15 +36,15 @@ func dataSourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bucket_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,13 +92,13 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set(names.AttrARN, bucketARN(ctx, c, bucket))
 	}
 	d.Set("bucket_domain_name", c.PartitionHostname(ctx, bucket+".s3"))
+	d.Set("bucket_region", region)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucket, region))
 	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	} else {
 		log.Printf("[WARN] HostedZoneIDForRegion: %s", err)
 	}
-	d.Set(names.AttrRegion, region)
 	if _, err := findBucketWebsite(ctx, conn, bucket, ""); err == nil {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
 		d.Set("website_domain", domain)
