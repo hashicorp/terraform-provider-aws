@@ -50,7 +50,6 @@ const (
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @Testing(importIgnore="force_destroy")
-// @Region(overrideEnabled=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -113,6 +112,10 @@ func resourceBucket() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 				),
+			},
+			"bucket_region": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -397,10 +400,6 @@ func resourceBucket() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"replication_configuration": {
 				Type:       schema.TypeList,
@@ -1127,7 +1126,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) location: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrRegion, region)
+	d.Set("bucket_region", region)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Id(), region))
 
 	hostedZoneID, err := hostedZoneIDForRegion(region)

@@ -149,8 +149,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				ResourceType:        "Bucket",
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
