@@ -42,7 +42,7 @@ const (
 	spaceInServiceTimeout              = 10 * time.Minute
 	monitoringScheduleScheduledTimeout = 2 * time.Minute
 	monitoringScheduleStoppedTimeout   = 2 * time.Minute
-	mlflowTrackingServerTimeout        = 30 * time.Minute
+	mlflowTrackingServerTimeout        = 45 * time.Minute
 	hubTimeout                         = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"

@@ -13,9 +13,17 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to AutoFlex."
     },
+    "aws-compatible-service" = {
+      color       = "ff9900", # color:aws
+      description = "Issues related to compatibility with AWS-compatible services."
+    },
     "aws-sdk-go-migration" = {
       color       = "844fba", # color:terraform (main)
       description = "Issues that are related to the providers migration to AWS SDK for Go v2."
+    },
+    "beta-feedback" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues providing feedback on beta releases."
     },
     "breaking-change" = {
       color       = "ec585d", # color:boundary
@@ -229,7 +237,6 @@ variable "workflow_labels" {
       color       = "828a90", # color:stale grey
       description = "Issues and PRs that relate to using the provider on the Windows operating system."
     },
-
   }
   description = "Name-color-description mapping of workflow issues."
   type        = map(any)

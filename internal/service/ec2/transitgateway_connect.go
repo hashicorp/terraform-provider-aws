@@ -79,7 +79,7 @@ func resourceTransitGatewayConnect() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -133,7 +133,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTransitGatewayConnectRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -204,7 +204,7 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -233,7 +233,7 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTransitGatewayConnectRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)

@@ -52,7 +52,7 @@ func resourceInviteAccepter() *schema.Resource {
 	}
 }
 
-func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -60,7 +60,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	masterAccountID := d.Get("master_account_id").(string)
 
 	inputLI := &guardduty.ListInvitationsInput{}
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findInvitation(ctx, conn, inputLI, func(v *awstypes.Invitation) bool {
 			return aws.ToString(v.AccountId) == masterAccountID
 		})
@@ -88,7 +88,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -110,7 +110,7 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 

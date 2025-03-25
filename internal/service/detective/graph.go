@@ -50,7 +50,7 @@ func ResourceGraph() *schema.Resource {
 	}
 }
 
-func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	const (
@@ -62,7 +62,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags: getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, timeout, func() (any, error) {
 		return conn.CreateGraph(ctx, input)
 	})
 
@@ -75,7 +75,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGraphRead(ctx, d, meta)...)
 }
 
-func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -98,12 +98,12 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceGraphRead(ctx, d, meta)
 }
 
-func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)

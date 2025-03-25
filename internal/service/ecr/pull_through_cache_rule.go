@@ -64,7 +64,7 @@ func resourcePullThroughCacheRule() *schema.Resource {
 	}
 }
 
-func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.ecr-in-func-name
+func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.ecr-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -89,7 +89,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
 }
 
-func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -113,7 +113,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -134,7 +134,7 @@ func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
 }
 
-func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 

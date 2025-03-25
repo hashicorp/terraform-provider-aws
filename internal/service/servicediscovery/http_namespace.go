@@ -64,7 +64,7 @@ func resourceHTTPNamespace() *schema.Resource {
 	}
 }
 
-func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceHTTPNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -125,12 +125,12 @@ func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceHTTPNamespaceRead(ctx, d, meta)
 }
 
-func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	const (
 		timeout = 2 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUse](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUse](ctx, timeout, func() (any, error) {
 		return conn.DeleteNamespace(ctx, &servicediscovery.DeleteNamespaceInput{
 			Id: aws.String(d.Id()),
 		})

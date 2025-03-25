@@ -81,7 +81,7 @@ func resourcePrincipalPortfolioAssociation() *schema.Resource {
 	}
 }
 
-func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -94,7 +94,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 		PrincipalType:  awstypes.PrincipalType(principalType),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.AssociatePrincipalWithPortfolio(ctx, input)
 	}, "profile does not exist")
 
@@ -104,7 +104,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func() (any, error) {
 		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
@@ -115,7 +115,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 	return append(diags, resourcePrincipalPortfolioAssociationRead(ctx, d, meta)...)
 }
 
-func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -144,7 +144,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -171,7 +171,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Principal Portfolio Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
@@ -279,9 +279,9 @@ func resourcePrincipalPortfolioAssociationV0() *schema.Resource {
 	}
 }
 
-func principalPortfolioAssociationUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func principalPortfolioAssociationUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	// Is resource ID in the correct format?

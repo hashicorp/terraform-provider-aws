@@ -279,7 +279,7 @@ type dataSourceReservedCacheNodeOfferingModel struct {
 In some cases, flattening and expanding need conditional handling.
 One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
 The AWS implementation uses an interface as the common type, along with various concrete implementations.
-Because the Terraform schema does not support union types (see https://github.com/hashicorp/terraform/issues/32587 for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
+Because the Terraform schema does not support union types (see [this issue](https://github.com/hashicorp/terraform/issues/32587) for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
 
 To override flattening behavior, implement the interface `flex.Flattener` on the model.
 The function should have a pointer receiver, as it will modify the struct in-place.

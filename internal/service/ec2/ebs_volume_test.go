@@ -38,6 +38,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),

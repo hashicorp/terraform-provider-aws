@@ -411,7 +411,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 }
 
 func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if tfresource.NotFound(err) {

@@ -294,7 +294,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 }
 
 func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

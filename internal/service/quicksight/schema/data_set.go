@@ -604,7 +604,7 @@ func DataSetRefreshPropertiesSchema() *schema.Schema {
 	}
 }
 
-func ExpandColumnGroups(tfList []interface{}) []awstypes.ColumnGroup {
+func ExpandColumnGroups(tfList []any) []awstypes.ColumnGroup {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -612,7 +612,7 @@ func ExpandColumnGroups(tfList []interface{}) []awstypes.ColumnGroup {
 	var apiObjects []awstypes.ColumnGroup
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -628,28 +628,28 @@ func ExpandColumnGroups(tfList []interface{}) []awstypes.ColumnGroup {
 	return apiObjects
 }
 
-func expandColumnGroup(tfMap map[string]interface{}) *awstypes.ColumnGroup {
+func expandColumnGroup(tfMap map[string]any) *awstypes.ColumnGroup {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.ColumnGroup{}
 
-	if tfMapRaw, ok := tfMap["geo_spatial_column_group"].([]interface{}); ok {
-		apiObject.GeoSpatialColumnGroup = expandGeoSpatialColumnGroup(tfMapRaw[0].(map[string]interface{}))
+	if tfMapRaw, ok := tfMap["geo_spatial_column_group"].([]any); ok {
+		apiObject.GeoSpatialColumnGroup = expandGeoSpatialColumnGroup(tfMapRaw[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandGeoSpatialColumnGroup(tfMap map[string]interface{}) *awstypes.GeoSpatialColumnGroup {
+func expandGeoSpatialColumnGroup(tfMap map[string]any) *awstypes.GeoSpatialColumnGroup {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.GeoSpatialColumnGroup{}
 
-	if v, ok := tfMap["columns"].([]interface{}); ok {
+	if v, ok := tfMap["columns"].([]any); ok {
 		apiObject.Columns = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["country_code"].(string); ok && v != "" {
@@ -662,7 +662,7 @@ func expandGeoSpatialColumnGroup(tfMap map[string]interface{}) *awstypes.GeoSpat
 	return apiObject
 }
 
-func ExpandColumnLevelPermissionRules(tfList []interface{}) []awstypes.ColumnLevelPermissionRule {
+func ExpandColumnLevelPermissionRules(tfList []any) []awstypes.ColumnLevelPermissionRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -670,17 +670,17 @@ func ExpandColumnLevelPermissionRules(tfList []interface{}) []awstypes.ColumnLev
 	var apiObjects []awstypes.ColumnLevelPermissionRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		apiObject := awstypes.ColumnLevelPermissionRule{}
 
-		if v, ok := tfMap["column_names"].([]interface{}); ok {
+		if v, ok := tfMap["column_names"].([]any); ok {
 			apiObject.ColumnNames = flex.ExpandStringValueList(v)
 		}
-		if v, ok := tfMap["principals"].([]interface{}); ok {
+		if v, ok := tfMap["principals"].([]any); ok {
 			apiObject.Principals = flex.ExpandStringValueList(v)
 		}
 
@@ -690,12 +690,12 @@ func ExpandColumnLevelPermissionRules(tfList []interface{}) []awstypes.ColumnLev
 	return apiObjects
 }
 
-func ExpandDataSetUsageConfiguration(tfList []interface{}) *awstypes.DataSetUsageConfiguration {
+func ExpandDataSetUsageConfiguration(tfList []any) *awstypes.DataSetUsageConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -712,7 +712,7 @@ func ExpandDataSetUsageConfiguration(tfList []interface{}) *awstypes.DataSetUsag
 	return apiObject
 }
 
-func ExpandFieldFolders(tfList []interface{}) map[string]awstypes.FieldFolder {
+func ExpandFieldFolders(tfList []any) map[string]awstypes.FieldFolder {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -720,14 +720,14 @@ func ExpandFieldFolders(tfList []interface{}) map[string]awstypes.FieldFolder {
 	apiObjects := make(map[string]awstypes.FieldFolder)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		apiObject := awstypes.FieldFolder{}
 
-		if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
 			apiObject.Columns = flex.ExpandStringValueList(v)
 		}
 		if v, ok := tfMap[names.AttrDescription].(string); ok {
@@ -740,7 +740,7 @@ func ExpandFieldFolders(tfList []interface{}) map[string]awstypes.FieldFolder {
 	return apiObjects
 }
 
-func ExpandLogicalTableMap(tfList []interface{}) map[string]awstypes.LogicalTable {
+func ExpandLogicalTableMap(tfList []any) map[string]awstypes.LogicalTable {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -748,7 +748,7 @@ func ExpandLogicalTableMap(tfList []interface{}) map[string]awstypes.LogicalTabl
 	apiObjects := make(map[string]awstypes.LogicalTable)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -758,10 +758,10 @@ func ExpandLogicalTableMap(tfList []interface{}) map[string]awstypes.LogicalTabl
 		if v, ok := tfMap[names.AttrAlias].(string); ok {
 			apiObject.Alias = aws.String(v)
 		}
-		if v, ok := tfMap[names.AttrSource].([]interface{}); ok {
-			apiObject.Source = expandLogicalTableSource(v[0].(map[string]interface{}))
+		if v, ok := tfMap[names.AttrSource].([]any); ok {
+			apiObject.Source = expandLogicalTableSource(v[0].(map[string]any))
 		}
-		if v, ok := tfMap["data_transforms"].([]interface{}); ok {
+		if v, ok := tfMap["data_transforms"].([]any); ok {
 			apiObject.DataTransforms = expandTransformOperations(v)
 		}
 
@@ -771,7 +771,7 @@ func ExpandLogicalTableMap(tfList []interface{}) map[string]awstypes.LogicalTabl
 	return apiObjects
 }
 
-func expandLogicalTableSource(tfMap map[string]interface{}) *awstypes.LogicalTableSource {
+func expandLogicalTableSource(tfMap map[string]any) *awstypes.LogicalTableSource {
 	if tfMap == nil {
 		return nil
 	}
@@ -784,14 +784,14 @@ func expandLogicalTableSource(tfMap map[string]interface{}) *awstypes.LogicalTab
 	if v, ok := tfMap["physical_table_id"].(string); ok && v != "" {
 		apiObject.PhysicalTableId = aws.String(v)
 	}
-	if v, ok := tfMap["join_instruction"].([]interface{}); ok && len(v) > 0 {
-		apiObject.JoinInstruction = expandJoinInstruction(v[0].(map[string]interface{}))
+	if v, ok := tfMap["join_instruction"].([]any); ok && len(v) > 0 {
+		apiObject.JoinInstruction = expandJoinInstruction(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandJoinInstruction(tfMap map[string]interface{}) *awstypes.JoinInstruction {
+func expandJoinInstruction(tfMap map[string]any) *awstypes.JoinInstruction {
 	if tfMap == nil {
 		return nil
 	}
@@ -810,17 +810,17 @@ func expandJoinInstruction(tfMap map[string]interface{}) *awstypes.JoinInstructi
 	if v, ok := tfMap[names.AttrType].(string); ok {
 		apiObject.Type = awstypes.JoinType(v)
 	}
-	if v, ok := tfMap["left_join_key_properties"].(map[string]interface{}); ok {
+	if v, ok := tfMap["left_join_key_properties"].(map[string]any); ok {
 		apiObject.LeftJoinKeyProperties = expandJoinKeyProperties(v)
 	}
-	if v, ok := tfMap["right_join_key_properties"].(map[string]interface{}); ok {
+	if v, ok := tfMap["right_join_key_properties"].(map[string]any); ok {
 		apiObject.RightJoinKeyProperties = expandJoinKeyProperties(v)
 	}
 
 	return apiObject
 }
 
-func expandJoinKeyProperties(tfMap map[string]interface{}) *awstypes.JoinKeyProperties {
+func expandJoinKeyProperties(tfMap map[string]any) *awstypes.JoinKeyProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -834,7 +834,7 @@ func expandJoinKeyProperties(tfMap map[string]interface{}) *awstypes.JoinKeyProp
 	return apiObject
 }
 
-func expandTransformOperations(tfList []interface{}) []awstypes.TransformOperation {
+func expandTransformOperations(tfList []any) []awstypes.TransformOperation {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -842,7 +842,7 @@ func expandTransformOperations(tfList []interface{}) []awstypes.TransformOperati
 	var apiObjects []awstypes.TransformOperation
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -858,56 +858,56 @@ func expandTransformOperations(tfList []interface{}) []awstypes.TransformOperati
 	return apiObjects
 }
 
-func expandTransformOperation(tfMap map[string]interface{}) awstypes.TransformOperation {
+func expandTransformOperation(tfMap map[string]any) awstypes.TransformOperation {
 	if tfMap == nil {
 		return nil
 	}
 
 	var apiObject awstypes.TransformOperation
 
-	if v, ok := tfMap["cast_column_type_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cast_column_type_operation"].([]any); ok && len(v) > 0 {
 		if v := expandCastColumnTypeOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberCastColumnTypeOperation{
 				Value: *v,
 			}
 		}
 	}
-	if v, ok := tfMap["create_columns_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["create_columns_operation"].([]any); ok && len(v) > 0 {
 		if v := expandCreateColumnsOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberCreateColumnsOperation{
 				Value: *v,
 			}
 		}
 	}
-	if v, ok := tfMap["filter_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_operation"].([]any); ok && len(v) > 0 {
 		if v := expandFilterOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberFilterOperation{
 				Value: *v,
 			}
 		}
 	}
-	if v, ok := tfMap["project_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["project_operation"].([]any); ok && len(v) > 0 {
 		if v := expandProjectOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberProjectOperation{
 				Value: *v,
 			}
 		}
 	}
-	if v, ok := tfMap["rename_column_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["rename_column_operation"].([]any); ok && len(v) > 0 {
 		if v := expandRenameColumnOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberRenameColumnOperation{
 				Value: *v,
 			}
 		}
 	}
-	if v, ok := tfMap["tag_column_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tag_column_operation"].([]any); ok && len(v) > 0 {
 		if v := expandTagColumnOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberTagColumnOperation{
 				Value: *v,
 			}
 		}
 	}
-	if v, ok := tfMap["untag_column_operation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["untag_column_operation"].([]any); ok && len(v) > 0 {
 		if v := expandUntagColumnOperation(v); v != nil {
 			apiObject = &awstypes.TransformOperationMemberUntagColumnOperation{
 				Value: *v,
@@ -918,12 +918,12 @@ func expandTransformOperation(tfMap map[string]interface{}) awstypes.TransformOp
 	return apiObject
 }
 
-func expandCastColumnTypeOperation(tfList []interface{}) *awstypes.CastColumnTypeOperation {
+func expandCastColumnTypeOperation(tfList []any) *awstypes.CastColumnTypeOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -943,26 +943,26 @@ func expandCastColumnTypeOperation(tfList []interface{}) *awstypes.CastColumnTyp
 	return apiObject
 }
 
-func expandCreateColumnsOperation(tfList []interface{}) *awstypes.CreateColumnsOperation {
+func expandCreateColumnsOperation(tfList []any) *awstypes.CreateColumnsOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CreateColumnsOperation{}
 
-	if v, ok := tfMap["columns"].([]interface{}); ok {
+	if v, ok := tfMap["columns"].([]any); ok {
 		apiObject.Columns = expandCalculatedColumns(v)
 	}
 
 	return apiObject
 }
 
-func expandCalculatedColumns(tfList []interface{}) []awstypes.CalculatedColumn {
+func expandCalculatedColumns(tfList []any) []awstypes.CalculatedColumn {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -970,7 +970,7 @@ func expandCalculatedColumns(tfList []interface{}) []awstypes.CalculatedColumn {
 	var apiObjects []awstypes.CalculatedColumn
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -986,7 +986,7 @@ func expandCalculatedColumns(tfList []interface{}) []awstypes.CalculatedColumn {
 	return apiObjects
 }
 
-func expandCalculatedColumn(tfMap map[string]interface{}) *awstypes.CalculatedColumn {
+func expandCalculatedColumn(tfMap map[string]any) *awstypes.CalculatedColumn {
 	if tfMap == nil {
 		return nil
 	}
@@ -1006,12 +1006,12 @@ func expandCalculatedColumn(tfMap map[string]interface{}) *awstypes.CalculatedCo
 	return apiObject
 }
 
-func expandFilterOperation(tfList []interface{}) *awstypes.FilterOperation {
+func expandFilterOperation(tfList []any) *awstypes.FilterOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1025,31 +1025,31 @@ func expandFilterOperation(tfList []interface{}) *awstypes.FilterOperation {
 	return apiObject
 }
 
-func expandProjectOperation(tfList []interface{}) *awstypes.ProjectOperation {
+func expandProjectOperation(tfList []any) *awstypes.ProjectOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ProjectOperation{}
 
-	if v, ok := tfMap["projected_columns"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["projected_columns"].([]any); ok && len(v) > 0 {
 		apiObject.ProjectedColumns = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandRenameColumnOperation(tfList []interface{}) *awstypes.RenameColumnOperation {
+func expandRenameColumnOperation(tfList []any) *awstypes.RenameColumnOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1066,12 +1066,12 @@ func expandRenameColumnOperation(tfList []interface{}) *awstypes.RenameColumnOpe
 	return apiObject
 }
 
-func expandTagColumnOperation(tfList []interface{}) *awstypes.TagColumnOperation {
+func expandTagColumnOperation(tfList []any) *awstypes.TagColumnOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1081,14 +1081,14 @@ func expandTagColumnOperation(tfList []interface{}) *awstypes.TagColumnOperation
 	if v, ok := tfMap["column_name"].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrTags].([]interface{}); ok {
+	if v, ok := tfMap[names.AttrTags].([]any); ok {
 		apiObject.Tags = expandColumnTags(v)
 	}
 
 	return apiObject
 }
 
-func expandColumnTags(tfList []interface{}) []awstypes.ColumnTag {
+func expandColumnTags(tfList []any) []awstypes.ColumnTag {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1096,7 +1096,7 @@ func expandColumnTags(tfList []interface{}) []awstypes.ColumnTag {
 	var apiObjects []awstypes.ColumnTag
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1112,14 +1112,14 @@ func expandColumnTags(tfList []interface{}) []awstypes.ColumnTag {
 	return apiObjects
 }
 
-func expandColumnTag(tfMap map[string]interface{}) *awstypes.ColumnTag {
+func expandColumnTag(tfMap map[string]any) *awstypes.ColumnTag {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ColumnTag{}
 
-	if v, ok := tfMap["column_description"].([]interface{}); ok {
+	if v, ok := tfMap["column_description"].([]any); ok {
 		apiObject.ColumnDescription = expandColumnDescription(v)
 	}
 	if v, ok := tfMap["column_geographic_role"].(string); ok {
@@ -1129,12 +1129,12 @@ func expandColumnTag(tfMap map[string]interface{}) *awstypes.ColumnTag {
 	return apiObject
 }
 
-func expandColumnDescription(tfList []interface{}) *awstypes.ColumnDescription {
+func expandColumnDescription(tfList []any) *awstypes.ColumnDescription {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1147,12 +1147,12 @@ func expandColumnDescription(tfList []interface{}) *awstypes.ColumnDescription {
 	return apiObject
 }
 
-func expandUntagColumnOperation(tfList []interface{}) *awstypes.UntagColumnOperation {
+func expandUntagColumnOperation(tfList []any) *awstypes.UntagColumnOperation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1162,40 +1162,40 @@ func expandUntagColumnOperation(tfList []interface{}) *awstypes.UntagColumnOpera
 	if v, ok := tfMap["column_name"].(string); ok {
 		apiObject.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["tag_names"].([]interface{}); ok {
+	if v, ok := tfMap["tag_names"].([]any); ok {
 		apiObject.TagNames = flex.ExpandStringyValueList[awstypes.ColumnTagName](v)
 	}
 
 	return apiObject
 }
 
-func ExpandPhysicalTableMap(tfList []interface{}) map[string]awstypes.PhysicalTable {
+func ExpandPhysicalTableMap(tfList []any) map[string]awstypes.PhysicalTable {
 	apiObjects := make(map[string]awstypes.PhysicalTable)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var apiObject awstypes.PhysicalTable
 
-		if v, ok := tfMap["custom_sql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			if v := expandCustomSQL(v[0].(map[string]interface{})); v != nil {
+		if v, ok := tfMap["custom_sql"].([]any); ok && len(v) > 0 && v[0] != nil {
+			if v := expandCustomSQL(v[0].(map[string]any)); v != nil {
 				apiObject = &awstypes.PhysicalTableMemberCustomSql{
 					Value: *v,
 				}
 			}
 		}
-		if v, ok := tfMap["relational_table"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			if v := expandRelationalTable(v[0].(map[string]interface{})); v != nil {
+		if v, ok := tfMap["relational_table"].([]any); ok && len(v) > 0 && v[0] != nil {
+			if v := expandRelationalTable(v[0].(map[string]any)); v != nil {
 				apiObject = &awstypes.PhysicalTableMemberRelationalTable{
 					Value: *v,
 				}
 			}
 		}
-		if v, ok := tfMap["s3_source"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			if v := expandS3Source(v[0].(map[string]interface{})); v != nil {
+		if v, ok := tfMap["s3_source"].([]any); ok && len(v) > 0 && v[0] != nil {
+			if v := expandS3Source(v[0].(map[string]any)); v != nil {
 				apiObject = &awstypes.PhysicalTableMemberS3Source{
 					Value: *v,
 				}
@@ -1208,14 +1208,14 @@ func ExpandPhysicalTableMap(tfList []interface{}) map[string]awstypes.PhysicalTa
 	return apiObjects
 }
 
-func expandCustomSQL(tfMap map[string]interface{}) *awstypes.CustomSql {
+func expandCustomSQL(tfMap map[string]any) *awstypes.CustomSql {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomSql{}
 
-	if v, ok := tfMap["columns"].([]interface{}); ok {
+	if v, ok := tfMap["columns"].([]any); ok {
 		apiObject.Columns = expandInputColumns(v)
 	}
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1231,7 +1231,7 @@ func expandCustomSQL(tfMap map[string]interface{}) *awstypes.CustomSql {
 	return apiObject
 }
 
-func expandInputColumns(tfList []interface{}) []awstypes.InputColumn {
+func expandInputColumns(tfList []any) []awstypes.InputColumn {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1239,7 +1239,7 @@ func expandInputColumns(tfList []interface{}) []awstypes.InputColumn {
 	var apiObjects []awstypes.InputColumn
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1255,7 +1255,7 @@ func expandInputColumns(tfList []interface{}) []awstypes.InputColumn {
 	return apiObjects
 }
 
-func expandInputColumn(tfMap map[string]interface{}) *awstypes.InputColumn {
+func expandInputColumn(tfMap map[string]any) *awstypes.InputColumn {
 	if tfMap == nil {
 		return nil
 	}
@@ -1272,14 +1272,14 @@ func expandInputColumn(tfMap map[string]interface{}) *awstypes.InputColumn {
 	return apiObject
 }
 
-func expandRelationalTable(tfMap map[string]interface{}) *awstypes.RelationalTable {
+func expandRelationalTable(tfMap map[string]any) *awstypes.RelationalTable {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.RelationalTable{}
 
-	if v, ok := tfMap["input_columns"].([]interface{}); ok {
+	if v, ok := tfMap["input_columns"].([]any); ok {
 		apiObject.InputColumns = expandInputColumns(v)
 	}
 	if v, ok := tfMap["catalog"].(string); ok {
@@ -1298,17 +1298,17 @@ func expandRelationalTable(tfMap map[string]interface{}) *awstypes.RelationalTab
 	return apiObject
 }
 
-func expandS3Source(tfMap map[string]interface{}) *awstypes.S3Source {
+func expandS3Source(tfMap map[string]any) *awstypes.S3Source {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.S3Source{}
 
-	if v, ok := tfMap["input_columns"].([]interface{}); ok {
+	if v, ok := tfMap["input_columns"].([]any); ok {
 		apiObject.InputColumns = expandInputColumns(v)
 	}
-	if v, ok := tfMap["upload_settings"].(map[string]interface{}); ok {
+	if v, ok := tfMap["upload_settings"].(map[string]any); ok {
 		apiObject.UploadSettings = expandUploadSettings(v)
 	}
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1318,7 +1318,7 @@ func expandS3Source(tfMap map[string]interface{}) *awstypes.S3Source {
 	return apiObject
 }
 
-func expandUploadSettings(tfMap map[string]interface{}) *awstypes.UploadSettings {
+func expandUploadSettings(tfMap map[string]any) *awstypes.UploadSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1344,12 +1344,12 @@ func expandUploadSettings(tfMap map[string]interface{}) *awstypes.UploadSettings
 	return apiObject
 }
 
-func ExpandRowLevelPermissionDataSet(tfList []interface{}) *awstypes.RowLevelPermissionDataSet {
+func ExpandRowLevelPermissionDataSet(tfList []any) *awstypes.RowLevelPermissionDataSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1375,19 +1375,19 @@ func ExpandRowLevelPermissionDataSet(tfList []interface{}) *awstypes.RowLevelPer
 	return apiObject
 }
 
-func ExpandRowLevelPermissionTagConfiguration(tfList []interface{}) *awstypes.RowLevelPermissionTagConfiguration {
+func ExpandRowLevelPermissionTagConfiguration(tfList []any) *awstypes.RowLevelPermissionTagConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.RowLevelPermissionTagConfiguration{}
 
-	if v, ok := tfMap["tag_rules"].([]interface{}); ok {
+	if v, ok := tfMap["tag_rules"].([]any); ok {
 		apiObject.TagRules = expandRowLevelPermissionTagRules(v)
 	}
 	if v, ok := tfMap[names.AttrStatus].(string); ok {
@@ -1397,69 +1397,69 @@ func ExpandRowLevelPermissionTagConfiguration(tfList []interface{}) *awstypes.Ro
 	return apiObject
 }
 
-func ExpandDataSetRefreshProperties(tfList []interface{}) *awstypes.DataSetRefreshProperties {
+func ExpandDataSetRefreshProperties(tfList []any) *awstypes.DataSetRefreshProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DataSetRefreshProperties{}
 
-	if v, ok := tfMap["refresh_configuration"].([]interface{}); ok {
+	if v, ok := tfMap["refresh_configuration"].([]any); ok {
 		apiObject.RefreshConfiguration = expandRefreshConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandRefreshConfiguration(tfList []interface{}) *awstypes.RefreshConfiguration {
+func expandRefreshConfiguration(tfList []any) *awstypes.RefreshConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.RefreshConfiguration{}
 
-	if v, ok := tfMap["incremental_refresh"].([]interface{}); ok {
+	if v, ok := tfMap["incremental_refresh"].([]any); ok {
 		apiObject.IncrementalRefresh = expandIncrementalRefresh(v)
 	}
 
 	return apiObject
 }
 
-func expandIncrementalRefresh(tfList []interface{}) *awstypes.IncrementalRefresh {
+func expandIncrementalRefresh(tfList []any) *awstypes.IncrementalRefresh {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.IncrementalRefresh{}
 
-	if v, ok := tfMap["lookback_window"].([]interface{}); ok {
+	if v, ok := tfMap["lookback_window"].([]any); ok {
 		apiObject.LookbackWindow = expandLookbackWindow(v)
 	}
 
 	return apiObject
 }
 
-func expandLookbackWindow(tfList []interface{}) *awstypes.LookbackWindow {
+func expandLookbackWindow(tfList []any) *awstypes.LookbackWindow {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1479,7 +1479,7 @@ func expandLookbackWindow(tfList []interface{}) *awstypes.LookbackWindow {
 	return apiObject
 }
 
-func expandRowLevelPermissionTagRules(tfList []interface{}) []awstypes.RowLevelPermissionTagRule {
+func expandRowLevelPermissionTagRules(tfList []any) []awstypes.RowLevelPermissionTagRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1487,7 +1487,7 @@ func expandRowLevelPermissionTagRules(tfList []interface{}) []awstypes.RowLevelP
 	var apiObjects []awstypes.RowLevelPermissionTagRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1503,7 +1503,7 @@ func expandRowLevelPermissionTagRules(tfList []interface{}) []awstypes.RowLevelP
 	return apiObjects
 }
 
-func expandRowLevelPermissionTagRule(tfMap map[string]interface{}) *awstypes.RowLevelPermissionTagRule {
+func expandRowLevelPermissionTagRule(tfMap map[string]any) *awstypes.RowLevelPermissionTagRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -1526,15 +1526,15 @@ func expandRowLevelPermissionTagRule(tfMap map[string]interface{}) *awstypes.Row
 	return apiObject
 }
 
-func FlattenColumnGroups(apiObjects []awstypes.ColumnGroup) []interface{} {
+func FlattenColumnGroups(apiObjects []awstypes.ColumnGroup) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.GeoSpatialColumnGroup != nil {
 			tfMap["geo_spatial_column_group"] = flattenGeoSpatialColumnGroup(apiObject.GeoSpatialColumnGroup)
@@ -1546,15 +1546,15 @@ func FlattenColumnGroups(apiObjects []awstypes.ColumnGroup) []interface{} {
 	return tfList
 }
 
-func FlattenOutputColumns(apiObjects []awstypes.OutputColumn) []interface{} {
+func FlattenOutputColumns(apiObjects []awstypes.OutputColumn) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Description != nil {
 			tfMap[names.AttrDescription] = aws.ToString(apiObject.Description)
@@ -1570,12 +1570,12 @@ func FlattenOutputColumns(apiObjects []awstypes.OutputColumn) []interface{} {
 	return tfList
 }
 
-func flattenGeoSpatialColumnGroup(apiObject *awstypes.GeoSpatialColumnGroup) []interface{} {
+func flattenGeoSpatialColumnGroup(apiObject *awstypes.GeoSpatialColumnGroup) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
 		tfMap["columns"] = apiObject.Columns
@@ -1585,18 +1585,18 @@ func flattenGeoSpatialColumnGroup(apiObject *awstypes.GeoSpatialColumnGroup) []i
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func FlattenColumnLevelPermissionRules(apiObjects []awstypes.ColumnLevelPermissionRule) []interface{} {
+func FlattenColumnLevelPermissionRules(apiObjects []awstypes.ColumnLevelPermissionRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ColumnNames != nil {
 			tfMap["column_names"] = apiObject.ColumnNames
@@ -1611,28 +1611,28 @@ func FlattenColumnLevelPermissionRules(apiObjects []awstypes.ColumnLevelPermissi
 	return tfList
 }
 
-func FlattenDataSetUsageConfiguration(apiObject *awstypes.DataSetUsageConfiguration) []interface{} {
+func FlattenDataSetUsageConfiguration(apiObject *awstypes.DataSetUsageConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["disable_use_as_direct_query_source"] = apiObject.DisableUseAsDirectQuerySource
 	tfMap["disable_use_as_imported_source"] = apiObject.DisableUseAsImportedSource
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func FlattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) []interface{} {
+func FlattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for k, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"field_folders_id": k,
 		}
 
@@ -1649,15 +1649,15 @@ func FlattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) []interface
 	return tfList
 }
 
-func FlattenLogicalTableMap(apiObjects map[string]awstypes.LogicalTable) []interface{} {
+func FlattenLogicalTableMap(apiObjects map[string]awstypes.LogicalTable) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for k, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"logical_table_map_id": k,
 		}
 
@@ -1677,15 +1677,15 @@ func FlattenLogicalTableMap(apiObjects map[string]awstypes.LogicalTable) []inter
 	return tfList
 }
 
-func flattenTransformOperations(apiObjects []awstypes.TransformOperation) []interface{} {
+func flattenTransformOperations(apiObjects []awstypes.TransformOperation) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		switch v := apiObject.(type) {
 		case *awstypes.TransformOperationMemberCastColumnTypeOperation:
@@ -1712,12 +1712,12 @@ func flattenTransformOperations(apiObjects []awstypes.TransformOperation) []inte
 	return tfList
 }
 
-func flattenCastColumnTypeOperation(apiObject *awstypes.CastColumnTypeOperation) []interface{} {
+func flattenCastColumnTypeOperation(apiObject *awstypes.CastColumnTypeOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
 		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
@@ -1727,32 +1727,32 @@ func flattenCastColumnTypeOperation(apiObject *awstypes.CastColumnTypeOperation)
 	}
 	tfMap["new_column_type"] = apiObject.NewColumnType
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCreateColumnsOperation(apiObject *awstypes.CreateColumnsOperation) []interface{} {
+func flattenCreateColumnsOperation(apiObject *awstypes.CreateColumnsOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
 		tfMap["columns"] = flattenCalculatedColumns(apiObject.Columns)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCalculatedColumns(apiObjects []awstypes.CalculatedColumn) interface{} {
+func flattenCalculatedColumns(apiObjects []awstypes.CalculatedColumn) any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ColumnId != nil {
 			tfMap["column_id"] = aws.ToString(apiObject.ColumnId)
@@ -1770,40 +1770,40 @@ func flattenCalculatedColumns(apiObjects []awstypes.CalculatedColumn) interface{
 	return tfList
 }
 
-func flattenFilterOperation(apiObject *awstypes.FilterOperation) []interface{} {
+func flattenFilterOperation(apiObject *awstypes.FilterOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ConditionExpression != nil {
 		tfMap["condition_expression"] = aws.ToString(apiObject.ConditionExpression)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenProjectOperation(apiObject *awstypes.ProjectOperation) []interface{} {
+func flattenProjectOperation(apiObject *awstypes.ProjectOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ProjectedColumns != nil {
 		tfMap["projected_columns"] = apiObject.ProjectedColumns
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRenameColumnOperation(apiObject *awstypes.RenameColumnOperation) []interface{} {
+func flattenRenameColumnOperation(apiObject *awstypes.RenameColumnOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
 		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
@@ -1812,15 +1812,15 @@ func flattenRenameColumnOperation(apiObject *awstypes.RenameColumnOperation) []i
 		tfMap["new_column_name"] = aws.ToString(apiObject.NewColumnName)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTagColumnOperation(apiObject *awstypes.TagColumnOperation) []interface{} {
+func flattenTagColumnOperation(apiObject *awstypes.TagColumnOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
 		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
@@ -1829,18 +1829,18 @@ func flattenTagColumnOperation(apiObject *awstypes.TagColumnOperation) []interfa
 		tfMap[names.AttrTags] = flattenColumnTags(apiObject.Tags)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenColumnTags(apiObjects []awstypes.ColumnTag) []interface{} {
+func flattenColumnTags(apiObjects []awstypes.ColumnTag) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ColumnDescription != nil {
 			tfMap["column_description"] = flattenColumnDescription(apiObject.ColumnDescription)
@@ -1853,26 +1853,26 @@ func flattenColumnTags(apiObjects []awstypes.ColumnTag) []interface{} {
 	return tfList
 }
 
-func flattenColumnDescription(apiObject *awstypes.ColumnDescription) []interface{} {
+func flattenColumnDescription(apiObject *awstypes.ColumnDescription) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Text != nil {
 		tfMap["text"] = aws.ToString(apiObject.Text)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUntagColumnOperation(apiObject *awstypes.UntagColumnOperation) []interface{} {
+func flattenUntagColumnOperation(apiObject *awstypes.UntagColumnOperation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
 		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
@@ -1881,15 +1881,15 @@ func flattenUntagColumnOperation(apiObject *awstypes.UntagColumnOperation) []int
 		tfMap["tag_names"] = apiObject.TagNames
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLogicalTableSource(apiObject *awstypes.LogicalTableSource) []interface{} {
+func flattenLogicalTableSource(apiObject *awstypes.LogicalTableSource) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DataSetArn != nil {
 		tfMap["data_set_arn"] = aws.ToString(apiObject.DataSetArn)
@@ -1901,15 +1901,15 @@ func flattenLogicalTableSource(apiObject *awstypes.LogicalTableSource) []interfa
 		tfMap["physical_table_id"] = aws.ToString(apiObject.PhysicalTableId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenJoinInstruction(apiObject *awstypes.JoinInstruction) []interface{} {
+func flattenJoinInstruction(apiObject *awstypes.JoinInstruction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.LeftJoinKeyProperties != nil {
 		tfMap["left_join_key_properties"] = flattenJoinKeyProperties(apiObject.LeftJoinKeyProperties)
@@ -1928,15 +1928,15 @@ func flattenJoinInstruction(apiObject *awstypes.JoinInstruction) []interface{} {
 	}
 	tfMap[names.AttrType] = apiObject.Type
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenJoinKeyProperties(apiObject *awstypes.JoinKeyProperties) map[string]interface{} {
+func flattenJoinKeyProperties(apiObject *awstypes.JoinKeyProperties) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.UniqueKey != nil {
 		tfMap["unique_key"] = aws.ToBool(apiObject.UniqueKey)
@@ -1945,11 +1945,11 @@ func flattenJoinKeyProperties(apiObject *awstypes.JoinKeyProperties) map[string]
 	return tfMap
 }
 
-func FlattenPhysicalTableMap(apiObjects map[string]awstypes.PhysicalTable) []interface{} {
-	var tfList []interface{}
+func FlattenPhysicalTableMap(apiObjects map[string]awstypes.PhysicalTable) []any {
+	var tfList []any
 
 	for k, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"physical_table_map_id": k,
 		}
 
@@ -1970,12 +1970,12 @@ func FlattenPhysicalTableMap(apiObjects map[string]awstypes.PhysicalTable) []int
 	return tfList
 }
 
-func flattenCustomSQL(apiObject *awstypes.CustomSql) []interface{} {
+func flattenCustomSQL(apiObject *awstypes.CustomSql) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
 		tfMap["columns"] = flattenInputColumns(apiObject.Columns)
@@ -1990,18 +1990,18 @@ func flattenCustomSQL(apiObject *awstypes.CustomSql) []interface{} {
 		tfMap["sql_query"] = aws.ToString(apiObject.SqlQuery)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenInputColumns(apiObjects []awstypes.InputColumn) []interface{} {
+func flattenInputColumns(apiObjects []awstypes.InputColumn) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Name != nil {
 			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
@@ -2014,12 +2014,12 @@ func flattenInputColumns(apiObjects []awstypes.InputColumn) []interface{} {
 	return tfList
 }
 
-func flattenRelationalTable(apiObject *awstypes.RelationalTable) []interface{} {
+func flattenRelationalTable(apiObject *awstypes.RelationalTable) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Catalog != nil {
 		tfMap["catalog"] = aws.ToString(apiObject.Catalog)
@@ -2037,15 +2037,15 @@ func flattenRelationalTable(apiObject *awstypes.RelationalTable) []interface{} {
 		tfMap[names.AttrSchema] = aws.ToString(apiObject.Schema)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenS3Source(apiObject *awstypes.S3Source) []interface{} {
+func flattenS3Source(apiObject *awstypes.S3Source) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DataSourceArn != nil {
 		tfMap["data_source_arn"] = aws.ToString(apiObject.DataSourceArn)
@@ -2057,15 +2057,15 @@ func flattenS3Source(apiObject *awstypes.S3Source) []interface{} {
 		tfMap["upload_settings"] = flattenUploadSettings(apiObject.UploadSettings)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUploadSettings(apiObject *awstypes.UploadSettings) []interface{} {
+func flattenUploadSettings(apiObject *awstypes.UploadSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ContainsHeader != nil {
 		tfMap["contains_header"] = aws.ToBool(apiObject.ContainsHeader)
@@ -2079,15 +2079,15 @@ func flattenUploadSettings(apiObject *awstypes.UploadSettings) []interface{} {
 	}
 	tfMap["text_qualifier"] = apiObject.TextQualifier
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func FlattenRowLevelPermissionDataSet(apiObject *awstypes.RowLevelPermissionDataSet) []interface{} {
+func FlattenRowLevelPermissionDataSet(apiObject *awstypes.RowLevelPermissionDataSet) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Arn != nil {
 		tfMap[names.AttrARN] = aws.ToString(apiObject.Arn)
@@ -2099,72 +2099,72 @@ func FlattenRowLevelPermissionDataSet(apiObject *awstypes.RowLevelPermissionData
 	tfMap["permission_policy"] = apiObject.PermissionPolicy
 	tfMap[names.AttrStatus] = apiObject.Status
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func FlattenRowLevelPermissionTagConfiguration(apiObject *awstypes.RowLevelPermissionTagConfiguration) []interface{} {
+func FlattenRowLevelPermissionTagConfiguration(apiObject *awstypes.RowLevelPermissionTagConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrStatus] = apiObject.Status
 	if apiObject.TagRules != nil {
 		tfMap["tag_rules"] = flattenRowLevelPermissionTagRules(apiObject.TagRules)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func FlattenDataSetRefreshProperties(apiObject *awstypes.DataSetRefreshProperties) interface{} {
+func FlattenDataSetRefreshProperties(apiObject *awstypes.DataSetRefreshProperties) any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.RefreshConfiguration != nil {
 		tfMap["refresh_configuration"] = flattenRefreshConfiguration(apiObject.RefreshConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRefreshConfiguration(apiObject *awstypes.RefreshConfiguration) interface{} {
+func flattenRefreshConfiguration(apiObject *awstypes.RefreshConfiguration) any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.IncrementalRefresh != nil {
 		tfMap["incremental_refresh"] = flattenIncrementalRefresh(apiObject.IncrementalRefresh)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenIncrementalRefresh(apiObject *awstypes.IncrementalRefresh) interface{} {
+func flattenIncrementalRefresh(apiObject *awstypes.IncrementalRefresh) any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.LookbackWindow != nil {
 		tfMap["lookback_window"] = flattenLookbackWindow(apiObject.LookbackWindow)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLookbackWindow(apiObject *awstypes.LookbackWindow) interface{} {
+func flattenLookbackWindow(apiObject *awstypes.LookbackWindow) any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ColumnName != nil {
 		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
@@ -2174,18 +2174,18 @@ func flattenLookbackWindow(apiObject *awstypes.LookbackWindow) interface{} {
 	}
 	tfMap["size_unit"] = apiObject.SizeUnit
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRowLevelPermissionTagRules(apiObjects []awstypes.RowLevelPermissionTagRule) []interface{} {
+func flattenRowLevelPermissionTagRules(apiObjects []awstypes.RowLevelPermissionTagRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ColumnName != nil {
 			tfMap["column_name"] = aws.ToString(apiObject.ColumnName)

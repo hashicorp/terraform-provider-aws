@@ -186,7 +186,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorConfig_allAttributesCapacityUpdated(rName),
+				Config: testAccConnectorConfig_allAttributesCapacityAndConnectorConfigUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafkaconnect", regexache.MustCompile(`connector/`+rName+`/`+kafkaConnectUUIDRegexPattern+`$`)),
@@ -198,7 +198,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"),
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1, t2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
@@ -579,7 +579,7 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-func testAccConnectorConfig_allAttributesCapacityUpdated(rName string) string {
+func testAccConnectorConfig_allAttributesCapacityAndConnectorConfigUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
 		testAccWorkerConfigurationConfig_basic(rName),
@@ -603,7 +603,7 @@ resource "aws_mskconnect_connector" "test" {
   connector_configuration = {
     "connector.class" = "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"
     "tasks.max"       = "1"
-    "topics"          = "t1"
+    "topics"          = "t1, t2"
   }
 
   kafka_cluster {

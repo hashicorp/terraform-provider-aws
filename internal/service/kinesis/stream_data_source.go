@@ -83,7 +83,7 @@ func DataSourceStream() *schema.Resource {
 	}
 }
 
-func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -135,7 +135,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("shard_level_metrics", shardLevelMetrics)
 	d.Set(names.AttrStatus, stream.StreamStatus)
 	if details := stream.StreamModeDetails; details != nil {
-		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
+		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(details)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {

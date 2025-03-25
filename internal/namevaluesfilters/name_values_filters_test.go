@@ -63,7 +63,7 @@ func TestNameValuesFiltersAdd(t *testing.T) {
 	testCases := []struct {
 		name    string
 		filters namevaluesfilters.NameValuesFilters
-		add     interface{}
+		add     any
 		want    map[string][]string
 	}{
 		{
@@ -111,23 +111,23 @@ func TestNameValuesFiltersAdd(t *testing.T) {
 		},
 		{
 			name: "from_set",
-			filters: namevaluesfilters.New(schema.NewSet(testNameValuesFiltersHashSet, []interface{}{
-				map[string]interface{}{
+			filters: namevaluesfilters.New(schema.NewSet(testNameValuesFiltersHashSet, []any{
+				map[string]any{
 					"name": "name1",
-					"values": schema.NewSet(schema.HashString, []interface{}{
+					"values": schema.NewSet(schema.HashString, []any{
 						"value1",
 					}),
 				},
-				map[string]interface{}{
+				map[string]any{
 					"name": "name2",
-					"values": schema.NewSet(schema.HashString, []interface{}{
+					"values": schema.NewSet(schema.HashString, []any{
 						"value2a",
 						"value2b",
 					}),
 				},
-				map[string]interface{}{
+				map[string]any{
 					"name": "name3",
-					"values": schema.NewSet(schema.HashString, []interface{}{
+					"values": schema.NewSet(schema.HashString, []any{
 						"value3",
 					}),
 				},
@@ -176,7 +176,7 @@ func testNameValuesFiltersVerifyMap(t *testing.T, got map[string][]string, want 
 	}
 }
 
-func testNameValuesFiltersHashSet(v interface{}) int {
-	m := v.(map[string]interface{})
+func testNameValuesFiltersHashSet(v any) int {
+	m := v.(map[string]any)
 	return create.StringHashcode(m["name"].(string))
 }

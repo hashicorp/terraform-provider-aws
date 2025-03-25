@@ -178,8 +178,9 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 			},
 			"elastic_gpu_specifications": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
+				Type:       schema.TypeList,
+				Computed:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -190,8 +191,9 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				},
 			},
 			"elastic_inference_accelerator": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
+				Type:       schema.TypeList,
+				Computed:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -809,7 +811,7 @@ func dataSourceLaunchTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -828,7 +830,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	if len(input.Filters) == 0 {

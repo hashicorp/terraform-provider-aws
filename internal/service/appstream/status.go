@@ -13,7 +13,7 @@ import (
 
 // statusFleetState fetches the fleet and its state
 func statusFleetState(ctx context.Context, conn *appstream.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		fleet, err := FindFleetByName(ctx, conn, name)
 
 		if err != nil {
@@ -29,7 +29,7 @@ func statusFleetState(ctx context.Context, conn *appstream.Client, name string) 
 }
 
 func statusImageBuilderState(ctx context.Context, conn *appstream.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindImageBuilderByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -46,7 +46,7 @@ func statusImageBuilderState(ctx context.Context, conn *appstream.Client, name s
 
 // statusUserAvailable fetches the user available
 func statusUserAvailable(ctx context.Context, conn *appstream.Client, username, authType string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		user, err := FindUserByTwoPartKey(ctx, conn, username, authType)
 
 		if tfresource.NotFound(err) {

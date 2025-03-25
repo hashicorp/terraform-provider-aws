@@ -39,7 +39,7 @@ func resourceRuleGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -147,7 +147,7 @@ func resourceRuleGroup() *schema.Resource {
 	}
 }
 
-func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -158,7 +158,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Rules:            expandRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:             getTagsIn(ctx),
-		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]any)),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -172,7 +172,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 		return conn.CreateRuleGroup(ctx, input)
 	})
 
@@ -186,7 +186,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -222,7 +222,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -233,7 +233,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			Name:             aws.String(d.Get(names.AttrName).(string)),
 			Rules:            expandRules(d.Get(names.AttrRule).(*schema.Set).List()),
 			Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
-			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]any)),
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -247,7 +247,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		const (
 			timeout = 5 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 			return conn.UpdateRuleGroup(ctx, input)
 		})
 
@@ -259,7 +259,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -274,7 +274,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
 		return conn.DeleteRuleGroup(ctx, input)
 	})
 

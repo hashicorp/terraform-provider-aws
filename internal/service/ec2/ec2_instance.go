@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -174,7 +176,7 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				Deprecated:    "use 'cpu_options' argument instead",
+				Deprecated:    "cpu_core_count is deprecated. Use cpu_options instead.",
 				ConflictsWith: []string{"cpu_options.0.core_count"},
 			},
 			"cpu_threads_per_core": {
@@ -182,7 +184,7 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				Deprecated:    "use 'cpu_options' argument instead",
+				Deprecated:    "cpu_threads_per_core is deprecated. Use cpu_options instead.",
 				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
@@ -300,9 +302,9 @@ func resourceInstance() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
+					m := v.(map[string]any)
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
@@ -356,9 +358,9 @@ func resourceInstance() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
+					m := v.(map[string]any)
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					if v, ok := m["no_device"].(bool); ok && v {
@@ -817,7 +819,7 @@ func resourceInstance() *schema.Resource {
 					}
 					return false
 				},
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
 						return userDataHashSum(v)
@@ -850,7 +852,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				_, ok := diff.GetOk(names.AttrLaunchTemplate)
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
@@ -899,13 +901,13 @@ func resourceInstance() *schema.Resource {
 
 				return nil
 			},
-			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("launch_template.0.id")
 			}),
-			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("launch_template.0.name")
 			}),
-			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
 				// as part of Update and there is already a public_ip value in state.
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
@@ -924,17 +926,17 @@ func resourceInstance() *schema.Resource {
 
 				return nil
 			},
-			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
-			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
-			customdiff.ForceNewIf("enable_primary_ipv6", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("enable_primary_ipv6", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				o, n := diff.GetChange("enable_primary_ipv6")
 				return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
 			}),
-			customdiff.ForceNewIf(names.AttrInstanceType, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf(names.AttrInstanceType, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 				_, ok := diff.GetOk(names.AttrInstanceType)
@@ -988,7 +990,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 	return strings.ToLower(v) != string(awstypes.VolumeTypeGp3) && new == "0"
 }
 
-func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1004,7 +1006,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tagSpecifications = append(tagSpecifications,
 		tagSpecificationsFromKeyValue(
-			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]interface{}))),
+			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]any))),
 			string(awstypes.ResourceTypeVolume))...)
 
 	input := ec2.RunInstancesInput{
@@ -1049,7 +1051,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.RunInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -1096,13 +1098,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// tags in root_block_device and ebs_block_device
-	blockDeviceTagsToCreate := map[string]map[string]interface{}{}
+	blockDeviceTagsToCreate := map[string]map[string]any{}
 	if v, ok := d.GetOk("root_block_device"); ok {
-		vL := v.([]interface{})
+		vL := v.([]any)
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 
-			blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{})
+			blockDeviceTags, ok := bd[names.AttrTags].(map[string]any)
 			if !ok || len(blockDeviceTags) == 0 {
 				continue
 			}
@@ -1119,9 +1121,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("ebs_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 
-			blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{})
+			blockDeviceTags, ok := bd[names.AttrTags].(map[string]any)
 			if !ok || len(blockDeviceTags) == 0 {
 				continue
 			}
@@ -1145,7 +1147,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceUpdate(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1205,7 +1207,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if instance.MaintenanceOptions != nil {
-		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
+		if err := d.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting maintenance_options: %s", err)
 		}
 	} else {
@@ -1217,7 +1219,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+		if err := d.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting private_dns_name_options: %s", err)
 		}
 	} else {
@@ -1265,7 +1267,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("network_interface"); ok {
 		vL := v.(*schema.Set).List()
 		for _, vi := range vL {
-			mVi := vi.(map[string]interface{})
+			mVi := vi.(map[string]any)
 			configuredDeviceIndexes = append(configuredDeviceIndexes, mVi["device_index"].(int))
 		}
 	}
@@ -1274,9 +1276,9 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var ipv6Addresses []string
 	if len(instance.NetworkInterfaces) > 0 {
 		var primaryNetworkInterface awstypes.InstanceNetworkInterface
-		var networkInterfaces []map[string]interface{}
+		var networkInterfaces []map[string]any
 		for _, iNi := range instance.NetworkInterfaces {
-			ni := make(map[string]interface{})
+			ni := make(map[string]any)
 			if aws.ToInt32(iNi.Attachment.DeviceIndex) == 0 {
 				primaryNetworkInterface = iNi
 			}
@@ -1389,7 +1391,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
-		d.Set("ephemeral_block_device", []interface{}{})
+		d.Set("ephemeral_block_device", []any{})
 	}
 
 	// ARN
@@ -1473,7 +1475,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if instanceCreditSpecification != nil {
-			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+			if err := d.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting credit_specification: %s", err)
 			}
 		} else {
@@ -1493,7 +1495,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if instance.CapacityReservationSpecification != nil {
-		if err := d.Set("capacity_reservation_specification", []interface{}{flattenCapacityReservationSpecificationResponse(instance.CapacityReservationSpecification)}); err != nil {
+		if err := d.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecificationResponse(instance.CapacityReservationSpecification)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting capacity_reservation_specification: %s", err)
 		}
 	} else {
@@ -1514,7 +1516,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
 		}
 
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"instance_interruption_behavior": apiObject.InstanceInterruptionBehavior,
 			"spot_instance_type":             apiObject.Type,
 		}
@@ -1527,9 +1529,9 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			tfMap["valid_until"] = aws.ToTime(v).Format(time.RFC3339)
 		}
 
-		if err := d.Set("instance_market_options", []interface{}{map[string]interface{}{
+		if err := d.Set("instance_market_options", []any{map[string]any{
 			"market_type":  awstypes.MarketTypeSpot,
-			"spot_options": []interface{}{tfMap},
+			"spot_options": []any{tfMap},
 		}}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
 		}
@@ -1542,7 +1544,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1977,8 +1979,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("credit_specification") && !d.IsNewResource() {
-		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]any)[0].(map[string]any))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := ec2.ModifyInstanceCreditSpecificationInput{
 				ClientToken:                  aws.String(id.UniqueId()),
@@ -1996,7 +1998,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("metadata_options") && !d.IsNewResource() {
 		if v, ok := d.GetOk("metadata_options"); ok {
-			if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+			if tfMap, ok := v.([]any)[0].(map[string]any); ok {
 				httpEndpoint := awstypes.InstanceMetadataEndpointState(tfMap["http_endpoint"].(string))
 				input := ec2.ModifyInstanceMetadataOptionsInput{
 					HttpEndpoint: httpEndpoint,
@@ -2135,8 +2137,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// To modify capacity reservation attributes of an instance, instance state needs to be in ec2.InstanceStateNameStopped,
 	// otherwise the modification will return an IncorrectInstanceState error
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
-		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
+		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			if v := expandCapacityReservationSpecification(v.([]any)[0].(map[string]any)); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
 				if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -2180,8 +2182,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("private_dns_name_options") && !d.IsNewResource() {
-		if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 
 			input := ec2.ModifyPrivateDnsNameOptionsInput{
 				InstanceId: aws.String(d.Id()),
@@ -2213,7 +2215,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -2312,7 +2314,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance, ds bool) error {
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance, ds bool) error {
 	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance, ds)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
@@ -2324,20 +2326,18 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 	// the root block device must be copied over to ibds["ebs"]
 	if ibds != nil {
 		if _, ok := d.GetOk("ebs_block_device"); ok {
-			if v, ok := ibds["ebs"].([]map[string]interface{}); ok && len(v) == 0 {
-				if root, ok := ibds["root"].(map[string]interface{}); ok {
+			if v, ok := ibds["ebs"].([]map[string]any); ok && len(v) == 0 {
+				if root, ok := ibds["root"].(map[string]any); ok {
 					// Make deep copy of data
-					m := make(map[string]interface{})
+					m := make(map[string]any)
 
-					for k, v := range root {
-						m[k] = v
-					}
+					maps.Copy(m, root)
 
 					if snapshotID, ok := ibds[names.AttrSnapshotID].(string); ok {
 						m[names.AttrSnapshotID] = snapshotID
 					}
 
-					ibds["ebs"] = []interface{}{m}
+					ibds["ebs"] = []any{m}
 				}
 			}
 		}
@@ -2349,13 +2349,13 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	// This handles the import case which needs to be defaulted to empty
 	if _, ok := d.GetOk("root_block_device"); !ok {
-		if err := d.Set("root_block_device", []interface{}{}); err != nil {
+		if err := d.Set("root_block_device", []any{}); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if ibds["root"] != nil {
-		roots := []interface{}{ibds["root"]}
+		roots := []any{ibds["root"]}
 		if err := d.Set("root_block_device", roots); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
@@ -2364,9 +2364,9 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance, ds bool) (map[string]interface{}, error) {
-	blockDevices := make(map[string]interface{})
-	blockDevices["ebs"] = make([]map[string]interface{}, 0)
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance, ds bool) (map[string]any, error) {
+	blockDevices := make(map[string]any)
+	blockDevices["ebs"] = make([]map[string]any, 0)
 	blockDevices["root"] = nil
 	// Ephemeral devices don't show up in BlockDeviceMappings or DescribeVolumes so we can't actually set them
 
@@ -2402,7 +2402,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 
 	for _, vol := range volResp.Volumes {
 		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]
-		bd := make(map[string]interface{})
+		bd := make(map[string]any)
 
 		bd["volume_id"] = aws.ToString(vol.VolumeId)
 
@@ -2430,11 +2430,11 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		if instanceBd.DeviceName != nil {
 			bd[names.AttrDeviceName] = aws.ToString(instanceBd.DeviceName)
 		}
-		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && ds {
+		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]any)) == 0) && ds {
 			bd[names.AttrTags] = keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 		}
 
-		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && !ds {
+		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]any)) == 0) && !ds {
 			tags := keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 			// default setup, in case we don't find config for the block device (don't resolve duplicates)
@@ -2444,7 +2444,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
 				ebdList := v.(*schema.Set).List()
 				for _, ebd := range ebdList {
-					ebd, ok := ebd.(map[string]interface{})
+					ebd, ok := ebd.(map[string]any)
 					if !ok {
 						continue
 					}
@@ -2458,7 +2458,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if v, ok := d.GetOk("root_block_device"); ok && len(v.([]interface{})) > 0 && blockDeviceIsRoot(instanceBd, instance) {
+			if v, ok := d.GetOk("root_block_device"); ok && len(v.([]any)) > 0 && blockDeviceIsRoot(instanceBd, instance) {
 				bd[names.AttrTags] = tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, "root_block_device[0].tags", nil).Map()
 			}
 		}
@@ -2470,14 +2470,14 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 				bd[names.AttrSnapshotID] = aws.ToString(vol.SnapshotId)
 			}
 
-			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
+			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]any), bd)
 		}
 	}
 	// If we determine the root device is the only block device mapping
 	// in the instance (including ephemerals) after returning from this function,
 	// we'll need to set the ebs_block_device as a clone of the root device
 	// with the snapshot_id populated; thus, we store the ID for safe-keeping
-	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]interface{})) == 0 {
+	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]any)) == 0 {
 		blockDevices[names.AttrSnapshotID] = volResp.Volumes[0].SnapshotId
 	}
 
@@ -2574,7 +2574,7 @@ func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*s
 	return rootDeviceName, nil
 }
 
-func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces interface{}) []awstypes.InstanceNetworkInterfaceSpecification {
+func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces any) []awstypes.InstanceNetworkInterfaceSpecification {
 	networkInterfaces := []awstypes.InstanceNetworkInterfaceSpecification{}
 	// Get necessary items
 	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
@@ -2610,8 +2610,8 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		}
 
 		if v, ok := d.GetOk("ipv6_addresses"); ok {
-			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]interface{})))
-			for i, address := range v.([]interface{}) {
+			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]any)))
+			for i, address := range v.([]any) {
 				ipv6Addresses[i] = awstypes.InstanceIpv6Address{
 					Ipv6Address: aws.String(address.(string)),
 				}
@@ -2631,7 +2631,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		// If we have manually specified network interfaces, build and attach those here.
 		vL := nInterfaces.(*schema.Set).List()
 		for _, v := range vL {
-			ini := v.(map[string]interface{})
+			ini := v.(map[string]any)
 			ni := awstypes.InstanceNetworkInterfaceSpecification{
 				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
 				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
@@ -2651,7 +2651,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("ebs_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
@@ -2707,7 +2707,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("ephemeral_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 			bdm := awstypes.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
@@ -2727,9 +2727,9 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("root_block_device"); ok {
-		vL := v.([]interface{})
+		vL := v.([]any)
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
@@ -2775,8 +2775,8 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			var amiID string
 
-			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				launchTemplateData, err := findLaunchTemplateData(ctx, conn, expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{})))
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				launchTemplateData, err := findLaunchTemplateData(ctx, conn, expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any)))
 
 				if err != nil {
 					return nil, err
@@ -2981,14 +2981,14 @@ type instanceOpts struct {
 	UserData64                        *string
 }
 
-func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
+func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*instanceOpts, error) {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
-		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]any)),
+		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]any)),
 	}
 
 	if v, ok := d.GetOk("disable_api_stop"); ok {
@@ -3005,8 +3005,8 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	var instanceInterruptionBehavior string
 
-	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any))
 		launchTemplateData, err := findLaunchTemplateData(ctx, conn, launchTemplateSpecification)
 
 		if err != nil {
@@ -3029,7 +3029,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]any)) > 0 {
 		if instanceType != "" {
 			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
 
@@ -3038,7 +3038,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 			}
 
 			if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
-				if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+				if v, ok := v.([]any)[0].(map[string]any); ok {
 					opts.CreditSpecification = expandCreditSpecificationRequest(v)
 				} else {
 					log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
@@ -3107,7 +3107,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("cpu_options"); ok {
-		opts.CpuOptions = expandCPUOptions(v.([]interface{}))
+		opts.CpuOptions = expandCPUOptions(v.([]any))
 	} else if v := d.Get("cpu_core_count").(int); v > 0 {
 		// preserved to maintain backward compatibility
 		tc := d.Get("cpu_threads_per_core").(int)
@@ -3175,8 +3175,8 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk("ipv6_addresses"); ok {
-			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]interface{})))
-			for i, address := range v.([]interface{}) {
+			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]any)))
+			for i, address := range v.([]any) {
 				ipv6Addresses[i] = awstypes.InstanceIpv6Address{
 					Ipv6Address: aws.String(address.(string)),
 				}
@@ -3204,20 +3204,20 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.BlockDeviceMappings = blockDevices
 	}
 
-	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		opts.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		opts.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		opts.MaintenanceOptions = expandInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		opts.MaintenanceOptions = expandInstanceMaintenanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("instance_market_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		opts.InstanceMarketOptions = expandInstanceMarketOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("instance_market_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		opts.InstanceMarketOptions = expandInstanceMarketOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	return opts, nil
@@ -3233,7 +3233,7 @@ func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool,
 	if retry {
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
 		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.StartInstances(ctx, &ec2.StartInstancesInput{
 					InstanceIds: []string{id},
 				})
@@ -3493,10 +3493,10 @@ func getVolIDByDeviceName(instance *awstypes.Instance, deviceName string) string
 
 func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	if v, ok := d.GetOk("root_block_device"); ok {
-		vL := v.([]interface{})
+		vL := v.([]any)
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			if blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{}); ok && len(blockDeviceTags) > 0 {
+			bd := v.(map[string]any)
+			if blockDeviceTags, ok := bd[names.AttrTags].(map[string]any); ok && len(blockDeviceTags) > 0 {
 				return true
 			}
 		}
@@ -3505,8 +3505,8 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	if v, ok := d.GetOk("ebs_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			if blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{}); ok && len(blockDeviceTags) > 0 {
+			bd := v.(map[string]any)
+			if blockDeviceTags, ok := bd[names.AttrTags].(map[string]any); ok && len(blockDeviceTags) > 0 {
 				return true
 			}
 		}
@@ -3515,12 +3515,12 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandInstanceMetadataOptions(l []interface{}) *awstypes.InstanceMetadataOptionsRequest {
+func expandInstanceMetadataOptions(l []any) *awstypes.InstanceMetadataOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	opts := &awstypes.InstanceMetadataOptionsRequest{
 		HttpEndpoint: awstypes.InstanceMetadataEndpointState(m["http_endpoint"].(string)),
@@ -3548,12 +3548,12 @@ func expandInstanceMetadataOptions(l []interface{}) *awstypes.InstanceMetadataOp
 	return opts
 }
 
-func expandCPUOptions(l []interface{}) *awstypes.CpuOptionsRequest {
+func expandCPUOptions(l []any) *awstypes.CpuOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	opts := &awstypes.CpuOptionsRequest{}
 
@@ -3573,12 +3573,12 @@ func expandCPUOptions(l []interface{}) *awstypes.CpuOptionsRequest {
 	return opts
 }
 
-func expandEnclaveOptions(l []interface{}) *awstypes.EnclaveOptionsRequest {
+func expandEnclaveOptions(l []any) *awstypes.EnclaveOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	opts := &awstypes.EnclaveOptionsRequest{
 		Enabled: aws.Bool(m[names.AttrEnabled].(bool)),
@@ -3588,7 +3588,7 @@ func expandEnclaveOptions(l []interface{}) *awstypes.EnclaveOptionsRequest {
 }
 
 // Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
-func expandSecondaryPrivateIPAddresses(ips []interface{}) []awstypes.PrivateIpAddressSpecification {
+func expandSecondaryPrivateIPAddresses(ips []any) []awstypes.PrivateIpAddressSpecification {
 	specs := make([]awstypes.PrivateIpAddressSpecification, 0, len(ips))
 	for _, v := range ips {
 		spec := awstypes.PrivateIpAddressSpecification{
@@ -3600,12 +3600,12 @@ func expandSecondaryPrivateIPAddresses(ips []interface{}) []awstypes.PrivateIpAd
 	return specs
 }
 
-func flattenInstanceMetadataOptions(opts *awstypes.InstanceMetadataOptionsResponse) []interface{} {
+func flattenInstanceMetadataOptions(opts *awstypes.InstanceMetadataOptionsResponse) []any {
 	if opts == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"http_endpoint":               opts.HttpEndpoint,
 		"http_protocol_ipv6":          opts.HttpProtocolIpv6,
 		"http_put_response_hop_limit": opts.HttpPutResponseHopLimit,
@@ -3613,15 +3613,15 @@ func flattenInstanceMetadataOptions(opts *awstypes.InstanceMetadataOptionsRespon
 		"instance_metadata_tags":      opts.InstanceMetadataTags,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCPUOptions(opts *awstypes.CpuOptions) []interface{} {
+func flattenCPUOptions(opts *awstypes.CpuOptions) []any {
 	if opts == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"amd_sev_snp": opts.AmdSevSnp,
 	}
 
@@ -3633,22 +3633,22 @@ func flattenCPUOptions(opts *awstypes.CpuOptions) []interface{} {
 		m["threads_per_core"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEnclaveOptions(opts *awstypes.EnclaveOptions) []interface{} {
+func flattenEnclaveOptions(opts *awstypes.EnclaveOptions) []any {
 	if opts == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled: aws.ToBool(opts.Enabled),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandCapacityReservationSpecification(tfMap map[string]interface{}) *awstypes.CapacityReservationSpecification {
+func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.CapacityReservationSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3659,14 +3659,14 @@ func expandCapacityReservationSpecification(tfMap map[string]interface{}) *awsty
 		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
-		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCapacityReservationTarget(tfMap map[string]interface{}) *awstypes.CapacityReservationTarget {
+func expandCapacityReservationTarget(tfMap map[string]any) *awstypes.CapacityReservationTarget {
 	if tfMap == nil {
 		return nil
 	}
@@ -3684,28 +3684,28 @@ func expandCapacityReservationTarget(tfMap map[string]interface{}) *awstypes.Cap
 	return apiObject
 }
 
-func flattenCapacityReservationSpecificationResponse(apiObject *awstypes.CapacityReservationSpecificationResponse) map[string]interface{} {
+func flattenCapacityReservationSpecificationResponse(apiObject *awstypes.CapacityReservationSpecificationResponse) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"capacity_reservation_preference": apiObject.CapacityReservationPreference,
 	}
 
 	if v := apiObject.CapacityReservationTarget; v != nil {
-		tfMap["capacity_reservation_target"] = []interface{}{flattenCapacityReservationTargetResponse(v)}
+		tfMap["capacity_reservation_target"] = []any{flattenCapacityReservationTargetResponse(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCapacityReservationTargetResponse(apiObject *awstypes.CapacityReservationTargetResponse) map[string]interface{} {
+func flattenCapacityReservationTargetResponse(apiObject *awstypes.CapacityReservationTargetResponse) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CapacityReservationId; v != nil {
 		tfMap["capacity_reservation_id"] = aws.ToString(v)
@@ -3758,7 +3758,7 @@ func capacityReservationTargetResponsesEqual(v1 *awstypes.CapacityReservationTar
 	return true
 }
 
-func expandCreditSpecificationRequest(tfMap map[string]interface{}) *awstypes.CreditSpecificationRequest {
+func expandCreditSpecificationRequest(tfMap map[string]any) *awstypes.CreditSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3772,7 +3772,7 @@ func expandCreditSpecificationRequest(tfMap map[string]interface{}) *awstypes.Cr
 	return apiObject
 }
 
-func expandInstanceCreditSpecificationRequest(tfMap map[string]interface{}) awstypes.InstanceCreditSpecificationRequest {
+func expandInstanceCreditSpecificationRequest(tfMap map[string]any) awstypes.InstanceCreditSpecificationRequest {
 	apiObject := awstypes.InstanceCreditSpecificationRequest{}
 
 	if v, ok := tfMap["cpu_credits"].(string); ok && v != "" {
@@ -3782,12 +3782,12 @@ func expandInstanceCreditSpecificationRequest(tfMap map[string]interface{}) awst
 	return apiObject
 }
 
-func flattenInstanceCreditSpecification(apiObject *awstypes.InstanceCreditSpecification) map[string]interface{} {
+func flattenInstanceCreditSpecification(apiObject *awstypes.InstanceCreditSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CpuCredits; v != nil {
 		tfMap["cpu_credits"] = aws.ToString(v)
@@ -3796,7 +3796,7 @@ func flattenInstanceCreditSpecification(apiObject *awstypes.InstanceCreditSpecif
 	return tfMap
 }
 
-func expandInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *awstypes.InstanceMaintenanceOptionsRequest {
+func expandInstanceMaintenanceOptionsRequest(tfMap map[string]any) *awstypes.InstanceMaintenanceOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3810,19 +3810,19 @@ func expandInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func flattenInstanceMaintenanceOptions(apiObject *awstypes.InstanceMaintenanceOptions) map[string]interface{} {
+func flattenInstanceMaintenanceOptions(apiObject *awstypes.InstanceMaintenanceOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"auto_recovery": apiObject.AutoRecovery,
 	}
 
 	return tfMap
 }
 
-func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *awstypes.PrivateDnsNameOptionsRequest {
+func expandPrivateDNSNameOptionsRequest(tfMap map[string]any) *awstypes.PrivateDnsNameOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3844,12 +3844,12 @@ func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenPrivateDNSNameOptionsResponse(apiObject *awstypes.PrivateDnsNameOptionsResponse) map[string]interface{} {
+func flattenPrivateDNSNameOptionsResponse(apiObject *awstypes.PrivateDnsNameOptionsResponse) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"hostname_type": apiObject.HostnameType,
 	}
 
@@ -3864,21 +3864,21 @@ func flattenPrivateDNSNameOptionsResponse(apiObject *awstypes.PrivateDnsNameOpti
 	return tfMap
 }
 
-func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *awstypes.InstanceMarketOptionsRequest {
+func expandInstanceMarketOptionsRequest(tfMap map[string]any) *awstypes.InstanceMarketOptionsRequest {
 	apiObject := &awstypes.InstanceMarketOptionsRequest{}
 
 	if v, ok := tfMap["market_type"]; ok && v.(string) != "" {
 		apiObject.MarketType = awstypes.MarketType(tfMap["market_type"].(string))
 	}
 
-	if v, ok := tfMap["spot_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.SpotOptions = expandSpotMarketOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["spot_options"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.SpotOptions = expandSpotMarketOptions(v.([]any)[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandSpotMarketOptions(tfMap map[string]interface{}) *awstypes.SpotMarketOptions {
+func expandSpotMarketOptions(tfMap map[string]any) *awstypes.SpotMarketOptions {
 	apiObject := &awstypes.SpotMarketOptions{}
 
 	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
@@ -3902,7 +3902,7 @@ func expandSpotMarketOptions(tfMap map[string]interface{}) *awstypes.SpotMarketO
 	return apiObject
 }
 
-func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]any) *awstypes.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3924,7 +3924,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.L
 	return apiObject
 }
 
-func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instanceID, previousLaunchTemplateVersion string) ([]interface{}, error) {
+func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instanceID, previousLaunchTemplateVersion string) ([]any, error) {
 	launchTemplateID, err := findInstanceLaunchTemplateID(ctx, conn, instanceID)
 
 	if err != nil {
@@ -3945,7 +3945,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 		return nil, fmt.Errorf("reading EC2 Launch Template (%s): %w", launchTemplateID, err)
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrID:   launchTemplateID,
 		names.AttrName: name,
 	}
@@ -3959,7 +3959,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 	_, err = findLaunchTemplateVersionByTwoPartKey(ctx, conn, launchTemplateID, currentLaunchTemplateVersion)
 
 	if tfresource.NotFound(err) {
-		return []interface{}{tfMap}, nil
+		return []any{tfMap}, nil
 	}
 
 	if err != nil {
@@ -3983,7 +3983,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 		tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 	}
 
-	return []interface{}{tfMap}, nil
+	return []any{tfMap}, nil
 }
 
 func findInstanceLaunchTemplateID(ctx context.Context, conn *ec2.Client, id string) (string, error) {
@@ -4121,10 +4121,8 @@ func parseInstanceType(s string) (*instanceType, error) {
 
 func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.ArchitectureType) bool {
 	for _, type1 := range slice1 {
-		for _, type2 := range slice2 {
-			if type1 == type2 {
-				return true
-			}
+		if slices.Contains(slice2, type1) {
+			return true
 		}
 	}
 	return false

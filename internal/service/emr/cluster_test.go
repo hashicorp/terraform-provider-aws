@@ -3092,6 +3092,7 @@ func testAccClusterConfig_securityConfiguration(rName string) string {
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_emr_cluster" "test" {
@@ -3173,7 +3174,16 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Enable EMR instance role to use key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.emr_instance_profile.arn}"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -3648,6 +3658,7 @@ func testAccClusterConfig_s3Encryption(rName string) string {
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -3667,12 +3678,29 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
-    }
-  ]
+    },
+    {
+      "Sid": "Enable EMR instance role to use key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.emr_instance_profile.arn}"
+      },
+      "Action": "kms:GenerateDataKey",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Enable EMR service role to use key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.emr_service.arn}"
+      },
+      "Action": "kms:DescribeKey",
+      "Resource": "*"
+    }  ]
 }
 POLICY
 }
@@ -3706,8 +3734,6 @@ resource "aws_emr_cluster" "test" {
 
   service_role = aws_iam_role.emr_service.arn
 }
-
-data "aws_caller_identity" "current" {}
 `, rName))
 }
 

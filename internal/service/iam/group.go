@@ -59,7 +59,7 @@ func resourceGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 			if d.HasChanges(names.AttrName, names.AttrPath) {
 				return d.SetNewComputed(names.AttrARN)
 			}
@@ -69,7 +69,7 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.Group.GroupName))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findGroupByName(ctx, conn, d.Id())
 	})
 
@@ -98,7 +98,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -122,7 +122,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -144,7 +144,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
