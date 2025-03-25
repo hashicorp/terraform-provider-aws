@@ -25,7 +25,6 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam_pool_cidr", name="IPAM Pool CIDR")
-// @Region(global=true)
 func resourceIPAMPoolCIDR() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPoolCIDRCreate,

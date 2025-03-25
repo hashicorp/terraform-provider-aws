@@ -23,7 +23,6 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam_resource_discovery_association", name="IPAM Resource Discovery Association")
-// @Region(global=true)
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceIPAMResourceDiscoveryAssociation() *schema.Resource {

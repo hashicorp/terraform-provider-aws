@@ -1039,7 +1039,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Name:     "IPAM Pool",
 			Tags:     &itypes.ServicePackageResourceTags{},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -1049,7 +1049,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_vpc_ipam_pool_cidrs",
 			Name:     "IPAM Pool CIDRs",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -1059,7 +1059,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_vpc_ipam_pools",
 			Name:     "IPAM Pools",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -1069,7 +1069,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
 			Name:     "IPAM Preview Next CIDR",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2377,7 +2377,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2387,7 +2387,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_vpc_ipam_organization_admin_account",
 			Name:     "IPAM Organization Admin Account",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2400,7 +2400,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2410,7 +2410,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_vpc_ipam_pool_cidr",
 			Name:     "IPAM Pool CIDR",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2420,7 +2420,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
 			Name:     "IPAM Pool CIDR Allocation",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2430,7 +2430,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
 			Name:     "IPAM Preview Next CIDR",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2443,7 +2443,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2456,7 +2456,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
@@ -2469,7 +2469,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
+				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},

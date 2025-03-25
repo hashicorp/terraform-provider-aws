@@ -20,7 +20,6 @@ import (
 )
 
 // @SDKDataSource("aws_vpc_ipam_preview_next_cidr", name="IPAM Preview Next CIDR")
-// @Region(global=true)
 func dataSourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPreviewNextCIDRRead,
