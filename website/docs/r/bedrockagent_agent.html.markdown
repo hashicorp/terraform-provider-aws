@@ -99,6 +99,7 @@ The `guardrail_configuration` configuration block supports the following argumen
 ### `memory_configuration` Block
 
 The `memory_configuration` configuration block supports the following arguments:
+
 * `enabled_memory_types` - (Required) The type of memory being stored by the agent. See [AWS API documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_MemoryConfiguration.html) for possible values.
 * `storage_days` - (Optional) The number of days the agent is configured to retain the conversational context. Minimum value of 0, maximum value of 30.
 
