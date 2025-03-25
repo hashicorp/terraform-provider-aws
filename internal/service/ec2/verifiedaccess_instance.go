@@ -250,7 +250,7 @@ func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProvi
 	}
 
 	if v := apiObject.VerifiedAccessTrustProviderId; v != nil {
-		tfMap[names.AttrVerifiedAccessTrustProviderID] = aws.ToString(v)
+		tfMap["verified_access_trust_provider_id"] = aws.ToString(v)
 	}
 
 	return tfMap
