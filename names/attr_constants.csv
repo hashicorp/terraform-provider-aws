@@ -25,7 +25,6 @@ certificate,Certificate
 certificate_arn,CertificateARN
 certificate_chain,CertificateChain
 cidr_block,CIDRBlock
-cidr_options,CidrOptions
 client_id,ClientID
 client_secret,ClientSecret
 cloudwatch_log_group_arn,CloudWatchLogGroupARN
@@ -136,7 +135,6 @@ path,Path
 permissions,Permissions
 policy,Policy
 port,Port
-port_ranges,PortRanges
 preferred_maintenance_window,PreferredMaintenanceWindow
 prefix,Prefix
 principal,Principal
@@ -149,7 +147,6 @@ protocol,Protocol
 provider_name,ProviderName
 public_key,PublicKey
 publicly_accessible,PubliclyAccessible
-rds_options,RdsOptions
 region,Region
 repository_name,RepositoryName
 resource_arn,ResourceARN
@@ -221,10 +218,6 @@ username,Username
 value,Value
 values,Values
 version,Version
-verified_access_group_id,VerifiedAccessGroupID
-verified_access_instance_id,VerifiedAccessInstanceID
-verified_access_group_arn,VerifiedAccessGroupARN
-verified_access_trust_provider_id,VerifiedAccessTrustProviderID
 virtual_name,VirtualName
 volume_size,VolumeSize
 volume_type,VolumeType
