@@ -31,7 +31,7 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context, planModi
 // The list is Optional+Computed.
 func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, listNestedObjectOptions []fwtypes.ListNestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[T](ctx, listNestedObjectOptions...),
+		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, listNestedObjectOptions...),
 		Optional:      true,
 		Computed:      true,
 		PlanModifiers: planModifiers,

@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -102,20 +101,8 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			"foundation_model": schema.StringAttribute{
 				Required: true,
 			},
-			"guardrail_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationModel](ctx),
-				Optional:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[guardrailConfigurationModel](ctx),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
+			"guardrail_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[guardrailConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrID:              framework.IDAttribute(),
 			"idle_session_ttl_in_seconds": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -136,34 +123,8 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.UTF8LengthBetween(40, 8000),
 				},
 			},
-			"memory_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[memoryConfigurationModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[memoryConfigurationModel](ctx),
-				},
-			},
-			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
-				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[promptOverrideConfigurationModel](ctx),
-				},
-			},
+			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"prompt_override_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[promptOverrideConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -305,17 +266,17 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	}
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if !new.AgentName.Equal(old.AgentName) ||
+	if !new.AgentCollaboration.Equal(old.AgentCollaboration) ||
+		!new.AgentName.Equal(old.AgentName) ||
 		!new.AgentResourceRoleARN.Equal(old.AgentResourceRoleARN) ||
 		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
 		!new.Description.Equal(old.Description) ||
 		!new.Instruction.Equal(old.Instruction) ||
 		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
-		!new.MemoryConfiguration.Equal(old.MemoryConfiguration) ||
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
-		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) ||
-		!new.AgentCollaboration.Equal(old.AgentCollaboration) {
+		!new.MemoryConfiguration.Equal(old.MemoryConfiguration) ||
+		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		var input bedrockagent.UpdateAgentInput
 		response.Diagnostics.Append(flexExpandForUpdate(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {

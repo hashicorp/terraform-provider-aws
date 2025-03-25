@@ -477,7 +477,7 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAgent_memory(t *testing.T) {
+func TestAccBedrockAgentAgent_memoryConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -490,13 +490,13 @@ func TestAccBedrockAgentAgent_memory(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_memory(rName, "anthropic.claude-3-sonnet-20240229-v1:0", "basic claude"),
+				Config: testAccAgentConfig_memoryConfiguration(rName, "anthropic.claude-3-sonnet-20240229-v1:0", "basic claude"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
-					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "memory_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -925,7 +925,7 @@ resource "aws_bedrockagent_agent" "test" {
 `, rName, model, description, collaboration))
 }
 
-func testAccAgentConfig_memory(rName, model, description string) string {
+func testAccAgentConfig_memoryConfiguration(rName, model, description string) string {
 	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name                  = %[1]q
