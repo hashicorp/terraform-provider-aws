@@ -16,6 +16,7 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
+- [Enhanced Multi-Region Support](#enhanced-multi-region-support)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
@@ -69,6 +70,10 @@ Version 6.0.0 removes these `provider` arguments:
 
 * `endpoints.opsworks` - Removed following AWS OpsWorks Stacks End of Life
 * `endpoints.simpledb` and `endpoints.sdb` - Removed following dropping support for Amazon SimpleDB
+
+## Enhanced Multi-Region Support
+
+Blah blah blah.
 
 ## Dropping Support For Amazon SimpleDB
 
