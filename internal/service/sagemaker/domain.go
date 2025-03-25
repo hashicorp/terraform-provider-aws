@@ -1498,12 +1498,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain: %s", err)
 	}
 
-	domainArn := aws.ToString(output.DomainArn)
-	domainID, err := decodeDomainID(domainArn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain (%s): %s", d.Id(), err)
-	}
-
+	domainID := aws.ToString(output.DomainId)
 	d.SetId(domainID)
 
 	if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
