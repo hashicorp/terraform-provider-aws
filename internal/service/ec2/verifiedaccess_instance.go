@@ -40,7 +40,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain: {
+			"cidr_endpoints_custom_subdomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -48,7 +48,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			attrVerifiedAccessInstance_FipsEnabled: {
+			"fips_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -57,7 +57,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			attrVerifiedAccessInstance_TrustProviders: {
+			"verified_access_trust_providers": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -85,7 +85,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 					},
 				},
 			},
-			attrVerifiedAccessInstance_NameServers: {
+			"name_servers": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -105,7 +105,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessInstance),
 	}
 
-	if v, ok := d.GetOk(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain); ok {
+	if v, ok := d.GetOk("cidr_endpoints_custom_subdomain"); ok {
 		input.CidrEndpointsCustomSubDomain = aws.String(v.(string))
 	}
 
@@ -113,7 +113,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(attrVerifiedAccessInstance_FipsEnabled); ok {
+	if v, ok := d.GetOk("fips_enabled"); ok {
 		input.FIPSEnabled = aws.Bool(v.(bool))
 	}
 
@@ -146,19 +146,19 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(names.AttrCreationTime, output.CreationTime)
 	if output.CidrEndpointsCustomSubDomain != nil {
-		d.Set(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain, output.CidrEndpointsCustomSubDomain.SubDomain)
-		d.Set(attrVerifiedAccessInstance_NameServers, output.CidrEndpointsCustomSubDomain.Nameservers)
+		d.Set("cidr_endpoints_custom_subdomain", output.CidrEndpointsCustomSubDomain.SubDomain)
+		d.Set("name_servers", output.CidrEndpointsCustomSubDomain.Nameservers)
 	}
 	d.Set(names.AttrDescription, output.Description)
-	d.Set(attrVerifiedAccessInstance_FipsEnabled, output.FipsEnabled)
+	d.Set("fips_enabled", output.FipsEnabled)
 	d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime)
 
 	if v := output.VerifiedAccessTrustProviders; v != nil {
-		if err := d.Set(attrVerifiedAccessInstance_TrustProviders, flattenVerifiedAccessTrustProviders(v)); err != nil {
+		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting verified_access_trust_providers: %s", err)
 		}
 	} else {
-		d.Set(attrVerifiedAccessInstance_TrustProviders, nil)
+		d.Set("verified_access_trust_providers", nil)
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -176,8 +176,8 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
-		if d.HasChange(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain) {
-			input.CidrEndpointsCustomSubDomain = aws.String(d.Get(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain).(string))
+		if d.HasChange("cidr_endpoints_custom_subdomain") {
+			input.CidrEndpointsCustomSubDomain = aws.String(d.Get("cidr_endpoints_custom_subdomain").(string))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -236,9 +236,9 @@ func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustP
 
 func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProviderCondensed) map[string]any {
 	tfMap := map[string]any{
-		attrVerifiedAccessInstance_TrustProviders_DeviceTrustProviderType: string(apiObject.DeviceTrustProviderType),
-		attrVerifiedAccessInstance_TrustProviders_TrustProviderType:       string(apiObject.TrustProviderType),
-		attrVerifiedAccessInstance_TrustProviders_UserTrustProviderType:   string(apiObject.UserTrustProviderType),
+		"device_trust_provider_type": string(apiObject.DeviceTrustProviderType),
+		"trust_provider_type":        string(apiObject.TrustProviderType),
+		"user_trust_provider_type":   string(apiObject.UserTrustProviderType),
 	}
 
 	if v := apiObject.Description; v != nil {
