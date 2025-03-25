@@ -191,7 +191,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange(names.AttrVerifiedAccessInstanceID) {
+		if d.HasChange("verified_access_instance_id") {
 			input.VerifiedAccessInstanceId = aws.String(d.Get(names.AttrDescription).(string))
 		}
 

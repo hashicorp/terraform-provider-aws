@@ -57,7 +57,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(verifiedAccessAttachmentType_Values(), false),
 			},
-			names.AttrCidrOptions: {
+			"cidr_options": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -276,11 +276,11 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVerifiedAccessGroupID: {
+			"verified_access_group_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrVerifiedAccessInstanceID: {
+			"verified_access_instance_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -297,7 +297,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		ClientToken:           aws.String(id.UniqueId()),
 		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessEndpoint),
-		VerifiedAccessGroupId: aws.String(d.Get(names.AttrVerifiedAccessGroupID).(string)),
+		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
 
 	if v, ok := d.GetOk(attrVerifiedAccessEndpoint_ApplicationDomain); ok {
@@ -316,7 +316,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.EndpointDomainPrefix = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrCidrOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk("cidr_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.CidrOptions = expandCreateVerifiedAccessEndpointCidrOptions(v.([]any)[0].(map[string]any))
 	}
 
@@ -332,7 +332,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrRdsOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk("rds_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.RdsOptions = expandCreateVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
 	}
 
@@ -377,7 +377,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(attrVerifiedAccessEndpoint_ApplicationDomain, ep.ApplicationDomain)
 	d.Set(attrVerifiedAccessEndpoint_AttachmentType, ep.AttachmentType)
-	if err := d.Set(names.AttrCidrOptions, flattenVerifiedAccessEndpointCidrOptions(ep.CidrOptions)); err != nil {
+	if err := d.Set("cidr_options", flattenVerifiedAccessEndpointCidrOptions(ep.CidrOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cidr_options: %s", err)
 	}
 
@@ -392,15 +392,15 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set(attrVerifiedAccessEndpoint_NetworkInterfaceOptions, flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interface_options: %s", err)
 	}
-	if err := d.Set(names.AttrRdsOptions, flattenVerifiedAccessEndpointRdsOptions(ep.RdsOptions)); err != nil {
+	if err := d.Set("rds_options", flattenVerifiedAccessEndpointRdsOptions(ep.RdsOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rds_options: %s", err)
 	}
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
 	if err := d.Set(attrVerifiedAccessEndpoint_SseSpecification, flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
 	}
-	d.Set(names.AttrVerifiedAccessGroupID, ep.VerifiedAccessGroupId)
-	d.Set(names.AttrVerifiedAccessInstanceID, ep.VerifiedAccessInstanceId)
+	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
+	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
 	output, err := findVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
 
@@ -427,8 +427,8 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChanges(names.AttrCidrOptions) {
-			if v, ok := d.GetOk(names.AttrCidrOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if d.HasChanges("cidr_options") {
+			if v, ok := d.GetOk("cidr_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.CidrOptions = expandModifyVerifiedAccessEndpointCidrOptions(v.([]any)[0].(map[string]any))
 			}
 		}
@@ -445,14 +445,14 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 			}
 		}
 
-		if d.HasChanges(names.AttrRdsOptions) {
-			if v, ok := d.GetOk(names.AttrRdsOptions); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if d.HasChanges("rds_options") {
+			if v, ok := d.GetOk("rds_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.RdsOptions = expandModifyVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
-		if d.HasChanges(names.AttrVerifiedAccessGroupID) {
-			input.VerifiedAccessGroupId = aws.String(d.Get(names.AttrVerifiedAccessGroupID).(string))
+		if d.HasChanges("verified_access_group_id") {
+			input.VerifiedAccessGroupId = aws.String(d.Get("verified_access_group_id").(string))
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpoint(ctx, input)
@@ -579,7 +579,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	}
 
 	if v := apiObject.PortRanges; v != nil {
-		tfmap[names.AttrPortRanges] = flattenVerifiedAccessEndpointPortRanges(v)
+		tfmap["port_ranges"] = flattenVerifiedAccessEndpointPortRanges(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {
@@ -609,7 +609,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	}
 
 	if v := apiObject.PortRanges; v != nil {
-		tfmap[names.AttrPortRanges] = flattenVerifiedAccessEndpointPortRanges(v)
+		tfmap["port_ranges"] = flattenVerifiedAccessEndpointPortRanges(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {

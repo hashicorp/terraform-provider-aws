@@ -487,24 +487,6 @@ rules:
     options:
       constant_propagation: false
 
-  - id: literal-cidr_options-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrCidrOptions` for the string literal "cidr_options"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"cidr_options"'
-      - pattern-not-regex: '"cidr_options":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrCidrOptions"
-    options:
-      constant_propagation: false
-
   - id: literal-client_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrClientID` for the string literal "client_id"
@@ -2485,24 +2467,6 @@ rules:
     options:
       constant_propagation: false
 
-  - id: literal-port_ranges-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrPortRanges` for the string literal "port_ranges"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"port_ranges"'
-      - pattern-not-regex: '"port_ranges":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrPortRanges"
-    options:
-      constant_propagation: false
-
   - id: literal-preferred_maintenance_window-string-constant
     languages: [go]
     message: Use the constant `names.AttrPreferredMaintenanceWindow` for the string literal "preferred_maintenance_window"
@@ -2716,24 +2680,6 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrPubliclyAccessible"
-    options:
-      constant_propagation: false
-
-  - id: literal-rds_options-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrRdsOptions` for the string literal "rds_options"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"rds_options"'
-      - pattern-not-regex: '"rds_options":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrRdsOptions"
     options:
       constant_propagation: false
 
@@ -4084,78 +4030,6 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrValues"
-    options:
-      constant_propagation: false
-
-  - id: literal-verified_access_group_arn-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrVerifiedAccessGroupARN` for the string literal "verified_access_group_arn"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"verified_access_group_arn"'
-      - pattern-not-regex: '"verified_access_group_arn":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrVerifiedAccessGroupARN"
-    options:
-      constant_propagation: false
-
-  - id: literal-verified_access_group_id-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrVerifiedAccessGroupID` for the string literal "verified_access_group_id"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"verified_access_group_id"'
-      - pattern-not-regex: '"verified_access_group_id":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrVerifiedAccessGroupID"
-    options:
-      constant_propagation: false
-
-  - id: literal-verified_access_instance_id-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrVerifiedAccessInstanceID` for the string literal "verified_access_instance_id"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"verified_access_instance_id"'
-      - pattern-not-regex: '"verified_access_instance_id":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrVerifiedAccessInstanceID"
-    options:
-      constant_propagation: false
-
-  - id: literal-verified_access_trust_provider_id-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrVerifiedAccessTrustProviderID` for the string literal "verified_access_trust_provider_id"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"verified_access_trust_provider_id"'
-      - pattern-not-regex: '"verified_access_trust_provider_id":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrVerifiedAccessTrustProviderID"
     options:
       constant_propagation: false
 
