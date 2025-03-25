@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -101,8 +102,20 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			"foundation_model": schema.StringAttribute{
 				Required: true,
 			},
-			"guardrail_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[guardrailConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			names.AttrID:              framework.IDAttribute(),
+			"guardrail_configuration": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationModel](ctx),
+				Optional:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[guardrailConfigurationModel](ctx),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			"idle_session_ttl_in_seconds": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -664,8 +677,8 @@ type agentResourceModel struct {
 	ID                          types.String                                                      `tfsdk:"id"`
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
-	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	MemoryConfiguration         fwtypes.ListNestedObjectValueOf[memoryConfigurationModel]         `tfsdk:"memory_configuration"`
+	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`

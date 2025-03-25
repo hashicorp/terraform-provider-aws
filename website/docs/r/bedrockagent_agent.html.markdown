@@ -83,8 +83,8 @@ The following arguments are optional:
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.
 * `idle_session_ttl_in_seconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
 * `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 8000 characters.
-* `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `memory_configuration` (Optional) Configurations for the agent's ability to retain the conversational context.
+* `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `prompt_override_configuration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
 * `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the agent.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
