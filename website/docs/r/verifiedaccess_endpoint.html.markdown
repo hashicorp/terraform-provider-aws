@@ -57,17 +57,17 @@ resource "aws_verifiedaccess_endpoint" "example" {
 
 ```terraform
 resource "aws_verifiedaccess_endpoint" "example" {
-  attachment_type        = "vpc"
-  description            = "example"
-  endpoint_type          = "cidr"
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "cidr"
   cidr_options {
-    cidr                 = aws_subnet.test[0].cidr_block
+    cidr = aws_subnet.test[0].cidr_block
     port_range {
-      from_port          = 443
-      to_port            = 443
+      from_port = 443
+      to_port   = 443
     }
-    protocol             = "tcp"
-    subnet_ids           = [for subnet in aws_subnet.test : subnet.id]
+    protocol   = "tcp"
+    subnet_ids = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -88,7 +88,7 @@ The following arguments are optional:
 
 * `application_domain` - (Optional) The DNS name for users to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `description` - (Optional) A description for the Verified Access endpoint.
-* `domain_certificate_arn` - (Optional) - The ARN of the public TLS/SSL certificate in AWS Certificate Manager to associate with the endpoint. The CN in the certificate must match the DNS name your end users will use to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`. 
+* `domain_certificate_arn` - (Optional) - The ARN of the public TLS/SSL certificate in AWS Certificate Manager to associate with the endpoint. The CN in the certificate must match the DNS name your end users will use to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `sse_specification` - (Optional) The options in use for server side encryption.
 * `load_balancer_options` - (Optional) The load balancer details. This parameter is required if the endpoint type is `load-balancer`.
 * `network_interface_options` - (Optional) The network interface details. This parameter is required if the endpoint type is `network-interface`.

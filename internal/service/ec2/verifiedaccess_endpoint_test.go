@@ -55,7 +55,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVerifiedAccessGroupID),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 					resource.TestCheckResourceAttr(resourceName, "network_interface_options.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_options.0.protocol", "https"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVerifiedAccessGroupID),
 				),
 			},
 			{
@@ -573,14 +573,14 @@ resource "aws_verifiedaccess_trust_provider" "test" {
   user_trust_provider_type = "oidc"
 
   native_application_oidc_options {
-    authorization_endpoint 		= "https://example.com/authorization_endpoint"
-    client_id              		= "s6BhdRkqt3"
-    client_secret          		= "7Fjfp0ZBr1KtDRbnfVdmIw"
-    issuer                 		= "https://example.com"
+    authorization_endpoint      = "https://example.com/authorization_endpoint"
+    client_id                   = "s6BhdRkqt3"
+    client_secret               = "7Fjfp0ZBr1KtDRbnfVdmIw"
+    issuer                      = "https://example.com"
     public_signing_key_endpoint = "https://example.com/signing_endpoint"
-    scope                  		= "test"
-    token_endpoint         		= "https://example.com/token_endpoint"
-    user_info_endpoint     		= "https://example.com/user_info_endpoint"
+    scope                       = "test"
+    token_endpoint              = "https://example.com/token_endpoint"
+    user_info_endpoint          = "https://example.com/user_info_endpoint"
   }
 
   tags = {
@@ -823,21 +823,21 @@ func testAccVerifiedAccessEndpointConfig_Cidr(rName, key, certificate string) st
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
 		fmt.Sprintf(`
-resource "aws_verifiedaccess_endpoint" "test" { 
-  attachment_type        = "vpc"
-  description            = "example"
-  endpoint_type          = "cidr"
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "cidr"
   sse_specification {
     customer_managed_key_enabled = false
   }
   cidr_options {
-	cidr 			  = aws_subnet.test[0].cidr_block
-	port_range {
-	 from_port 		  = 443
-	 to_port          = 443
+    cidr = aws_subnet.test[0].cidr_block
+    port_range {
+      from_port = 443
+      to_port   = 443
     }
-	protocol          = "tcp"
-    subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
+    protocol   = "tcp"
+    subnet_ids = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -854,25 +854,25 @@ func testAccVerifiedAccessEndpointConfig_Cidr_Update(rName, key, certificate str
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
 		fmt.Sprintf(`
-resource "aws_verifiedaccess_endpoint" "test" { 
-  attachment_type        = "vpc"
-  description            = "example"
-  endpoint_type          = "cidr"
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "cidr"
   sse_specification {
     customer_managed_key_enabled = false
   }
   cidr_options {
-	cidr 			  = aws_subnet.test[0].cidr_block
-	port_range {
-	 from_port 		  = 443
-	 to_port          = 443
+    cidr = aws_subnet.test[0].cidr_block
+    port_range {
+      from_port = 443
+      to_port   = 443
     }
-	port_range {
-	 from_port 		  = 9443
-	 to_port          = 9446
+    port_range {
+      from_port = 9443
+      to_port   = 9446
     }
-	protocol          = "tcp"
-    subnet_ids        = [for subnet in aws_subnet.test : subnet.id]
+    protocol   = "tcp"
+    subnet_ids = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -889,6 +889,7 @@ func testAccVerifiedAccessEndpointConfig_Rds(rName, key, certificate string) str
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
 		fmt.Sprintf(`
+
 
 # Security Group para permitir acceso a la BD solo desde la VPC
 resource "aws_security_group" "testrds" {
@@ -921,34 +922,34 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage      = 10                      
-  engine                 = "mysql"                  
-  engine_version         = "8.0"                    
-  instance_class         = "db.t4g.micro"            
-  identifier             = "basic-rds-instance"
-  username               = "tfaccrds"               
-  password               = "SuperSecure123!"         
-  parameter_group_name   = "default.mysql8.0"
-  publicly_accessible    = false                     
-  skip_final_snapshot    = true                      
-  storage_encrypted      = false                     
-  multi_az               = false                     
+  allocated_storage    = 10
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t4g.micro"
+  identifier           = "basic-rds-instance"
+  username             = "tfaccrds"
+  password             = "SuperSecure123!"
+  parameter_group_name = "default.mysql8.0"
+  publicly_accessible  = false
+  skip_final_snapshot  = true
+  storage_encrypted    = false
+  multi_az             = false
 
   vpc_security_group_ids = [aws_security_group.testrds.id]
   db_subnet_group_name   = aws_db_subnet_group.test.name
 }
 
 resource "aws_verifiedaccess_endpoint" "test" {
-  attachment_type        = "vpc"
-  description            = "example"
-  endpoint_type          = "rds"
-  
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "rds"
+
   rds_options {
-	port                 = aws_db_instance.test.port 
-	instance_arn         = aws_db_instance.test.arn
-    endpoint             = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
-    protocol          	 = "tcp"
-    subnet_ids           = [for subnet in aws_subnet.test : subnet.id]
+    port         = aws_db_instance.test.port
+    instance_arn = aws_db_instance.test.arn
+    endpoint     = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol     = "tcp"
+    subnet_ids   = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -965,6 +966,7 @@ func testAccVerifiedAccessEndpointConfig_Rds_Update(rName, key, certificate stri
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
 		fmt.Sprintf(`
+
 
 # Security Group para permitir acceso a la BD solo desde la VPC
 resource "aws_security_group" "testrds" {
@@ -997,18 +999,18 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage      = 10                      
-  engine                 = "mysql"                  
-  engine_version         = "8.0"                    
-  instance_class         = "db.t4g.micro"            
-  identifier             = "basic-rds-instance"
-  username               = "tfaccrds"               
-  password               = "SuperSecure123!"         
-  parameter_group_name   = "default.mysql8.0"
-  publicly_accessible    = false                     
-  skip_final_snapshot    = true                      
-  storage_encrypted      = false                     
-  multi_az               = false
+  allocated_storage    = 10
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t4g.micro"
+  identifier           = "basic-rds-instance"
+  username             = "tfaccrds"
+  password             = "SuperSecure123!"
+  parameter_group_name = "default.mysql8.0"
+  publicly_accessible  = false
+  skip_final_snapshot  = true
+  storage_encrypted    = false
+  multi_az             = false
 
   vpc_security_group_ids = [aws_security_group.testrds.id]
   db_subnet_group_name   = aws_db_subnet_group.test.name
@@ -1016,16 +1018,16 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_verifiedaccess_endpoint" "test" {
-  attachment_type        = "vpc"
-  description            = "example"
-  endpoint_type          = "rds"
-  
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "rds"
+
   rds_options {
-	port                 = aws_db_instance.test.port
-	instance_arn         = aws_db_instance.test.arn
-    endpoint             = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
-    protocol          	 = "tcp"
-    subnet_ids           = [for subnet in aws_subnet.test : subnet.id]
+    port         = aws_db_instance.test.port
+    instance_arn = aws_db_instance.test.arn
+    endpoint     = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol     = "tcp"
+    subnet_ids   = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]

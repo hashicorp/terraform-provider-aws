@@ -78,7 +78,7 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"verified_access_trust_provider_id": {
+						names.AttrVerifiedAccessTrustProviderID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -146,12 +146,8 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(names.AttrCreationTime, output.CreationTime)
 	if output.CidrEndpointsCustomSubDomain != nil {
-		if output.CidrEndpointsCustomSubDomain.SubDomain != nil {
-			d.Set(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain, output.CidrEndpointsCustomSubDomain.SubDomain)
-		}
-		if output.CidrEndpointsCustomSubDomain.Nameservers != nil {
-			d.Set(attrVerifiedAccessInstance_NameServers, output.CidrEndpointsCustomSubDomain.Nameservers)
-		}
+		d.Set(attrVerifiedAccessInstance_CidrEndpointsCustomSubdomain, output.CidrEndpointsCustomSubDomain.SubDomain)
+		d.Set(attrVerifiedAccessInstance_NameServers, output.CidrEndpointsCustomSubDomain.Nameservers)
 	}
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(attrVerifiedAccessInstance_FipsEnabled, output.FipsEnabled)

@@ -6,7 +6,6 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
 	"testing"
 
@@ -225,7 +224,7 @@ func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, se
 	var v1 types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 	subDomainName := "test.demo.com"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
@@ -380,9 +379,9 @@ resource "aws_verifiedaccess_instance" "test" {
 func testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, cidrEndpointsCustomSubDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedaccess_instance" "test" {
-  
+
   cidr_endpoints_custom_subdomain = %[2]q
-  
+
   tags = {
     Name = %[1]q
   }

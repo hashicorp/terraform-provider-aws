@@ -80,7 +80,7 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"port_ranges": schema.SetAttribute{
+			names.AttrPortRanges: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
 				Optional:   true,
 				Computed:   true,
@@ -165,7 +165,7 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 									path.MatchRelative().AtParent().AtName("dns_resource"),
 									path.MatchRelative().AtParent().AtName("ip_resource"),
 								),
-								listvalidator.ConflictsWith(path.MatchRoot("port_ranges"), path.MatchRoot(names.AttrProtocol)),
+								listvalidator.ConflictsWith(path.MatchRoot(names.AttrPortRanges), path.MatchRoot(names.AttrProtocol)),
 							},
 						},
 						"dns_resource": schema.ListNestedBlock{
@@ -192,7 +192,7 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.AlsoRequires(path.MatchRoot("port_ranges")),
+								listvalidator.AlsoRequires(path.MatchRoot(names.AttrPortRanges)),
 							},
 						},
 						"ip_resource": schema.ListNestedBlock{
@@ -206,7 +206,7 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.AlsoRequires(path.MatchRoot("port_ranges")),
+								listvalidator.AlsoRequires(path.MatchRoot(names.AttrPortRanges)),
 							},
 						},
 					},
