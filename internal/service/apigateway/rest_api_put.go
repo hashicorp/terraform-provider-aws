@@ -206,7 +206,7 @@ func waitRestAPIPutCreated(ctx context.Context, conn *apigateway.Client, id stri
 }
 
 func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findRestAPIByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
