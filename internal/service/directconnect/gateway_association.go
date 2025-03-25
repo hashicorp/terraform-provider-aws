@@ -100,7 +100,7 @@ func resourceGatewayAssociation() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-				Deprecated:    "use 'associated_gateway_id' argument instead",
+				Deprecated:    "vpn_gateway_id is deprecated. Use associated_gateway_id instead.",
 			},
 		},
 
@@ -112,7 +112,7 @@ func resourceGatewayAssociation() *schema.Resource {
 	}
 }
 
-func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceGatewayAssociationRead(ctx, d, meta)...)
 }
 
-func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -202,7 +202,7 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceGatewayAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -235,16 +235,17 @@ func resourceGatewayAssociationUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceGatewayAssociationRead(ctx, d, meta)...)
 }
 
-func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGatewayAssociation(ctx, &directconnect.DeleteDirectConnectGatewayAssociationInput{
+	input := directconnect.DeleteDirectConnectGatewayAssociationInput{
 		AssociationId: aws.String(associationID),
-	})
+	}
+	_, err := conn.DeleteDirectConnectGatewayAssociation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags
@@ -261,7 +262,7 @@ func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceGatewayAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	parts := strings.Split(d.Id(), "/")
@@ -368,7 +369,7 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 }
 
 func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGatewayAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

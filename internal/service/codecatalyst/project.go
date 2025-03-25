@@ -67,7 +67,7 @@ const (
 	ResNameProject = "Project"
 )
 
-func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -91,7 +91,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -117,7 +117,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -149,17 +149,18 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCatalyst Project %s", d.Id())
 
-	_, err := conn.DeleteProject(ctx, &codecatalyst.DeleteProjectInput{
+	input := codecatalyst.DeleteProjectInput{
 		Name:      aws.String(d.Id()),
 		SpaceName: aws.String(d.Get("space_name").(string)),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {

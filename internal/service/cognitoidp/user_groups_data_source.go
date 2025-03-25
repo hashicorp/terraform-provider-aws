@@ -29,10 +29,6 @@ type userGroupsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*userGroupsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_cognito_user_groups"
-}
-
 func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

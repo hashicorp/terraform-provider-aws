@@ -57,7 +57,7 @@ func resourceTransitGatewayRegistration() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -86,7 +86,7 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceTransitGatewayRegistrationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -115,7 +115,7 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceTransitGatewayRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -231,7 +231,7 @@ func findTransitGatewayRegistrationByTwoPartKey(ctx context.Context, conn *netwo
 }
 
 func statusTransitGatewayRegistrationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, transitGatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayRegistrationByTwoPartKey(ctx, conn, globalNetworkID, transitGatewayARN)
 
 		if tfresource.NotFound(err) {

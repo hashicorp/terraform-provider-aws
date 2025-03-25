@@ -36,7 +36,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );

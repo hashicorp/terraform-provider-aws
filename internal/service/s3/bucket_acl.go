@@ -148,7 +148,7 @@ func resourceBucketACL() *schema.Resource {
 	}
 }
 
-func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -168,11 +168,11 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	if v, ok := d.GetOk("access_control_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AccessControlPolicy = expandAccessControlPolicy(v.([]interface{}))
+	if v, ok := d.GetOk("access_control_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AccessControlPolicy = expandAccessControlPolicy(v.([]any))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutBucketAcl(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -186,7 +186,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findBucketACL(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -197,7 +197,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceBucketACLRead(ctx, d, meta)...)
 }
 
-func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -232,7 +232,7 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -253,7 +253,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if d.HasChange("access_control_policy") {
-		input.AccessControlPolicy = expandAccessControlPolicy(d.Get("access_control_policy").([]interface{}))
+		input.AccessControlPolicy = expandAccessControlPolicy(d.Get("access_control_policy").([]any))
 	}
 
 	if d.HasChange("acl") {
@@ -303,12 +303,12 @@ func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	return output, nil
 }
 
-func expandAccessControlPolicy(l []interface{}) *types.AccessControlPolicy {
+func expandAccessControlPolicy(l []any) *types.AccessControlPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -319,25 +319,25 @@ func expandAccessControlPolicy(l []interface{}) *types.AccessControlPolicy {
 		result.Grants = expandGrants(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrOwner].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrOwner].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.Owner = expandOwner(v)
 	}
 
 	return result
 }
 
-func expandGrants(l []interface{}) []types.Grant {
+func expandGrants(l []any) []types.Grant {
 	var grants []types.Grant
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		grant := types.Grant{}
 
-		if v, ok := tfMap["grantee"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["grantee"].([]any); ok && len(v) > 0 && v[0] != nil {
 			grant.Grantee = expandACLGrantee(v)
 		}
 
@@ -351,12 +351,12 @@ func expandGrants(l []interface{}) []types.Grant {
 	return grants
 }
 
-func expandACLGrantee(l []interface{}) *types.Grantee {
+func expandACLGrantee(l []any) *types.Grantee {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -382,12 +382,12 @@ func expandACLGrantee(l []interface{}) *types.Grantee {
 	return result
 }
 
-func expandOwner(l []interface{}) *types.Owner {
+func expandOwner(l []any) *types.Owner {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -405,12 +405,12 @@ func expandOwner(l []interface{}) *types.Owner {
 	return owner
 }
 
-func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []interface{} {
+func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if len(apiObject.Grants) > 0 {
 		m["grant"] = flattenGrants(apiObject.Grants)
@@ -420,14 +420,14 @@ func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []interface{} {
 		m[names.AttrOwner] = flattenOwner(apiObject.Owner)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenGrants(grants []types.Grant) []interface{} {
-	var results []interface{}
+func flattenGrants(grants []types.Grant) []any {
+	var results []any
 
 	for _, grant := range grants {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"permission": grant.Permission,
 		}
 
@@ -441,12 +441,12 @@ func flattenGrants(grants []types.Grant) []interface{} {
 	return results
 }
 
-func flattenACLGrantee(grantee *types.Grantee) []interface{} {
+func flattenACLGrantee(grantee *types.Grantee) []any {
 	if grantee == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrType: grantee.Type,
 	}
 
@@ -466,15 +466,15 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 		m[names.AttrURI] = aws.ToString(grantee.URI)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOwner(owner *types.Owner) []interface{} {
+func flattenOwner(owner *types.Owner) []any {
 	if owner == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if owner.DisplayName != nil {
 		m[names.AttrDisplayName] = aws.ToString(owner.DisplayName)
@@ -484,7 +484,7 @@ func flattenOwner(owner *types.Owner) []interface{} {
 		m[names.AttrID] = aws.ToString(owner.ID)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // BucketACLCreateResourceID is a method for creating an ID string

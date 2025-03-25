@@ -10,9 +10,9 @@ import (
 
 const resourceIDSeparator = ","
 
-// CreateResourceID is a generic method for creating an ID string for a bucket-related resource e.g. aws_s3_bucket_versioning.
+// createResourceID is a generic method for creating an ID string for a bucket-related resource e.g. aws_s3_bucket_versioning.
 // The method expects a bucket name and an optional accountID.
-func CreateResourceID(bucket, expectedBucketOwner string) string {
+func createResourceID(bucket, expectedBucketOwner string) string {
 	if expectedBucketOwner == "" {
 		return bucket
 	}
@@ -23,9 +23,9 @@ func CreateResourceID(bucket, expectedBucketOwner string) string {
 	return id
 }
 
-// ParseResourceID is a generic method for parsing an ID string
+// parseResourceID is a generic method for parsing an ID string
 // for a bucket name and accountID if provided.
-func ParseResourceID(id string) (bucket, expectedBucketOwner string, err error) {
+func parseResourceID(id string) (bucket, expectedBucketOwner string, err error) {
 	parts := strings.Split(id, resourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {

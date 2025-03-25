@@ -43,8 +43,6 @@ func resourceAddon() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
@@ -115,7 +113,7 @@ func resourceAddon() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				Deprecated:       `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
+				Deprecated:       `resolve_conflicts is deprecated. The resolve_conflicts attribute can't be set to "PRESERVE" on initial resource creation. Use resolve_conflicts_on_create and/or resolve_conflicts_on_update instead.`,
 			},
 			"resolve_conflicts_on_create": {
 				Type:     schema.TypeString,
@@ -143,7 +141,7 @@ func resourceAddon() *schema.Resource {
 	}
 }
 
-func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -180,7 +178,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateAddon(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -219,7 +217,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAddonRead(ctx, d, meta)...)
 }
 
-func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -261,7 +259,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -334,7 +332,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAddonRead(ctx, d, meta)...)
 }
 
-func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -370,14 +368,14 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func expandAddonPodIdentityAssociations(tfList []interface{}) []types.AddonPodIdentityAssociations {
+func expandAddonPodIdentityAssociations(tfList []any) []types.AddonPodIdentityAssociations {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var addonPodIdentityAssociations []types.AddonPodIdentityAssociations
 	for _, raw := range tfList {
-		tfMap, ok := raw.(map[string]interface{})
+		tfMap, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -396,13 +394,13 @@ func expandAddonPodIdentityAssociations(tfList []interface{}) []types.AddonPodId
 	return addonPodIdentityAssociations
 }
 
-func flattenAddonPodIdentityAssociations(ctx context.Context, associations []string, clusterName string, meta interface{}) ([]interface{}, error) {
+func flattenAddonPodIdentityAssociations(ctx context.Context, associations []string, clusterName string, meta any) ([]any, error) {
 	if len(associations) == 0 {
 		return nil, nil
 	}
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-	var results []interface{}
+	var results []any
 
 	for _, associationArn := range associations {
 		// CreateAddon returns the associationARN. The associationId is extracted from the end of the ARN,
@@ -420,7 +418,7 @@ func flattenAddonPodIdentityAssociations(ctx context.Context, associations []str
 			return nil, err
 		}
 
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrRoleARN: pia.RoleArn,
 			"service_account": pia.ServiceAccount,
 		}
@@ -485,7 +483,7 @@ func findAddonUpdateByThreePartKey(ctx context.Context, conn *eks.Client, cluste
 }
 
 func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
 		if tfresource.NotFound(err) {
@@ -501,7 +499,7 @@ func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName s
 }
 
 func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAddonUpdateByThreePartKey(ctx, conn, clusterName, addonName, id)
 
 		if tfresource.NotFound(err) {

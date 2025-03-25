@@ -71,6 +71,9 @@ class MyConvertedCode extends TerraformStack {
       engine: example.engine,
       engineVersion: example.engineVersion,
       globalClusterIdentifier: example.id,
+      lifecycle: {
+        ignoreChanges: [replicationSourceIdentifier],
+      },
       provider: awsSecondary,
     });
     const awsRdsClusterInstanceSecondary = new RdsClusterInstance(
@@ -157,6 +160,9 @@ class MyConvertedCode extends TerraformStack {
       engine: example.engine,
       engineVersion: example.engineVersion,
       globalClusterIdentifier: example.id,
+      lifecycle: {
+        ignoreChanges: [replicationSourceIdentifier],
+      },
       provider: secondary,
       skipFinalSnapshot: true,
     });
@@ -284,7 +290,7 @@ This resource supports the following arguments:
 * `engineLifecycleSupport` - (Optional) The life cycle type for this DB instance. This setting applies only to Aurora PostgreSQL-based global databases. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `engineVersion` - (Optional) Engine version of the Aurora global database. The `engine`, `engineVersion`, and `instanceClass` (on the `aws_rds_cluster_instance`) must together support global databases. See [Using Amazon Aurora global databases](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html) for more information. By upgrading the engine version, Terraform will upgrade cluster members. **NOTE:** To avoid an `inconsistent final plan` error while upgrading, use the `lifecycle` `ignore_changes` for `engineVersion` meta argument on the associated `aws_rds_cluster` resource as shown above in [Upgrading Engine Versions](#upgrading-engine-versions) example.
 * `forceDestroy` - (Optional) Enable to remove DB Cluster members from Global Cluster on destroy. Required with `sourceDbClusterIdentifier`.
-* `sourceDbClusterIdentifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
+* `sourceDbClusterIdentifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value. **NOTE:** After initial creation, this argument can be removed and replaced with `engine` and `engineVersion`. This allows upgrading the engine version of the Global Cluster.
 * `storageEncrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `sourceDbClusterIdentifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -367,4 +373,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-156443d4e21cae5a2c7c2b49a5777e8e9a5ae664aa64986cebb73272b4a3b1e8 -->
+<!-- cache-key: cdktf-0.20.8 input-75f5bb39a4f7c58422a98329024ee7d3751271479bb15d591f153bfb42e02e25 -->

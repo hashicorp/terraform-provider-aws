@@ -55,7 +55,6 @@ func resourceLoadBalancer() *schema.Resource {
 			customizeDiffLoadBalancerALB,
 			customizeDiffLoadBalancerNLB,
 			customizeDiffLoadBalancerGWLB,
-			verify.SetTagsDiff,
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -205,7 +204,7 @@ func resourceLoadBalancer() *schema.Resource {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
 			},
 			"enforce_security_group_inbound_rules_on_private_link_traffic": {
 				Type:             schema.TypeString,
@@ -231,6 +230,20 @@ func resourceLoadBalancer() *schema.Resource {
 				Computed:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+			},
+			"ipam_pools": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4_ipam_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 			"load_balancer_type": {
 				Type:             schema.TypeString,
@@ -339,7 +352,7 @@ func suppressIfLBTypeNot(types ...awstypes.LoadBalancerTypeEnum) schema.SchemaDi
 	}
 }
 
-func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -382,6 +395,10 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
+	if v, ok := d.GetOk("ipam_pools"); ok {
+		input.IpamPools = expandIPAMPools(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -418,7 +435,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceLoadBalancerUpdate(ctx, d, meta)...)
 		}
 
@@ -430,8 +447,8 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var attributes []awstypes.LoadBalancerAttribute
 
 	if lbType == awstypes.LoadBalancerTypeEnumApplication || lbType == awstypes.LoadBalancerTypeEnumNetwork {
-		if v, ok := d.GetOk("access_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]interface{})[0].(map[string]interface{}), false)...)
+		if v, ok := d.GetOk("access_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]any)[0].(map[string]any), false)...)
 		} else {
 			attributes = append(attributes, awstypes.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
@@ -441,8 +458,8 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if lbType == awstypes.LoadBalancerTypeEnumApplication {
-		if v, ok := d.GetOk("connection_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandLoadBalancerConnectionLogsAttributes(v.([]interface{})[0].(map[string]interface{}), false)...)
+		if v, ok := d.GetOk("connection_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandLoadBalancerConnectionLogsAttributes(v.([]any)[0].(map[string]any), false)...)
 		} else {
 			attributes = append(attributes, awstypes.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
@@ -490,7 +507,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -513,6 +530,9 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
+	if err := d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ipam_pools: %s", err)
+	}
 	d.Set("load_balancer_type", lb.Type)
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
@@ -532,12 +552,12 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("access_logs", []interface{}{flattenLoadBalancerAccessLogsAttributes(attributes)}); err != nil {
+	if err := d.Set("access_logs", []any{flattenLoadBalancerAccessLogsAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
 	if lb.Type == awstypes.LoadBalancerTypeEnumApplication {
-		if err := d.Set("connection_logs", []interface{}{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
+		if err := d.Set("connection_logs", []any{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
 		}
 	}
@@ -547,7 +567,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -555,8 +575,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	var attributes []awstypes.LoadBalancerAttribute
 
 	if d.HasChange("access_logs") {
-		if v, ok := d.GetOk("access_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]interface{})[0].(map[string]interface{}), true)...)
+		if v, ok := d.GetOk("access_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]any)[0].(map[string]any), true)...)
 		} else {
 			attributes = append(attributes, awstypes.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
@@ -566,8 +586,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("connection_logs") {
-		if v, ok := d.GetOk("connection_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandLoadBalancerConnectionLogsAttributes(v.([]interface{})[0].(map[string]interface{}), true)...)
+		if v, ok := d.GetOk("connection_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandLoadBalancerConnectionLogsAttributes(v.([]any)[0].(map[string]any), true)...)
 		} else {
 			attributes = append(attributes, awstypes.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
@@ -640,6 +660,23 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	if d.HasChange("ipam_pools") {
+		input := elasticloadbalancingv2.ModifyIpPoolsInput{
+			LoadBalancerArn: aws.String(d.Id()),
+		}
+		if ipamPools := expandIPAMPools(d.Get("ipam_pools").([]any)); ipamPools == nil {
+			input.RemoveIpamPools = []awstypes.RemoveIpamPoolEnum{awstypes.RemoveIpamPoolEnumIpv4}
+		} else {
+			input.IpamPools = ipamPools
+		}
+
+		_, err := conn.ModifyIpPools(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Load Balancer (%s) IPAM pools: %s", d.Id(), err)
+		}
+	}
+
 	if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) update: %s", d.Id(), err)
 	}
@@ -647,9 +684,15 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+
+	var ipv4IPAMPoolID string
+	if v, ok := d.GetOk("ipam_pools"); ok {
+		ipamPools := expandIPAMPools(v.([]any))
+		ipv4IPAMPoolID = aws.ToString(ipamPools.Ipv4IpamPoolId)
+	}
 
 	log.Printf("[INFO] Deleting ELBv2 Load Balancer: %s", d.Id())
 	_, err := conn.DeleteLoadBalancer(ctx, &elasticloadbalancingv2.DeleteLoadBalancerInput{
@@ -662,8 +705,8 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id()); err != nil {
-		log.Printf("[WARN] Failed to cleanup ENIs for ALB (%s): %s", d.Id(), err)
+	if err := waitForALBNetworkInterfacesToDetach(ctx, ec2conn, d.Id(), ipv4IPAMPoolID); err != nil {
+		log.Printf("[WARN] Failed to wait for ENIs to disappear for ALB (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForNLBNetworkInterfacesToDetach(ctx, ec2conn, d.Id()); err != nil {
@@ -770,7 +813,7 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 	"enable_zonal_shift": {
 		apiAttributeKey:            loadBalancerAttributeZonalShiftConfigEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork},
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork},
 	},
 	"idle_timeout": {
 		apiAttributeKey:            loadBalancerAttributeIdleTimeoutTimeoutSeconds,
@@ -932,7 +975,7 @@ func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalan
 }
 
 func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLoadBalancerByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -968,43 +1011,48 @@ func waitLoadBalancerActive(ctx context.Context, conn *elasticloadbalancingv2.Cl
 	return nil, err
 }
 
-// ALB automatically creates ENI(s) on creation
-// but the cleanup is asynchronous and may take time
-// which then blocks IGW, SG or VPC on deletion
-// So we make the cleanup "synchronous" here
-func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.Client, arn string) error {
+func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, arn, ipv4IPAMPoolID string) error {
 	name, err := loadBalancerNameFromARN(arn)
 	if err != nil {
 		return err
 	}
 
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
-	if err != nil {
-		return err
-	}
-
-	var errs []error
-
-	for _, v := range networkInterfaces {
-		if v.Attachment == nil {
-			continue
+	const (
+		timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
+	)
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
+		if err != nil {
+			return 0, err
 		}
 
-		attachmentID := aws.ToString(v.Attachment.AttachmentId)
-		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
+		for _, v := range networkInterfaces {
+			if v.Attachment == nil {
+				continue
+			}
 
-		if err := tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout); err != nil {
-			errs = append(errs, err)
-			continue
+			if ipv4IPAMPoolID != "" {
+				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+					output, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IPAMPoolID)
+					if err != nil {
+						return nil, err
+					}
+
+					if len(output) == 0 {
+						return nil, &retry.NotFoundError{}
+					}
+
+					return output, nil
+				}); err != nil {
+					return 0, err
+				}
+			}
 		}
 
-		if err := tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
-			errs = append(errs, err)
-			continue
-		}
-	}
+		return len(networkInterfaces), nil
+	})
 
-	return errors.Join(errs...)
+	return err
 }
 
 func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, lbArn string) error {
@@ -1049,9 +1097,9 @@ func flattenSubnetsFromAvailabilityZones(apiObjects []awstypes.AvailabilityZone)
 	})
 }
 
-func flattenSubnetMappingsFromAvailabilityZones(apiObjects []awstypes.AvailabilityZone) []map[string]interface{} {
-	return tfslices.ApplyToAll(apiObjects, func(apiObject awstypes.AvailabilityZone) map[string]interface{} {
-		tfMap := map[string]interface{}{
+func flattenSubnetMappingsFromAvailabilityZones(apiObjects []awstypes.AvailabilityZone) []map[string]any {
+	return tfslices.ApplyToAll(apiObjects, func(apiObject awstypes.AvailabilityZone) map[string]any {
+		tfMap := map[string]any{
 			"outpost_id":       aws.ToString(apiObject.OutpostId),
 			names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
 		}
@@ -1084,7 +1132,7 @@ func suffixFromARN(arn *string) string {
 // cannot have security groups added if none are present, and cannot have
 // all security groups removed. If the type is 'network' and any of these
 // conditions are met, mark the diff as a ForceNew operation.
-func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")
@@ -1174,7 +1222,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	return nil
 }
 
-func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumApplication {
 		return nil
 	}
@@ -1230,7 +1278,7 @@ func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, 
 	return nil
 }
 
-func customizeDiffLoadBalancerGWLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffLoadBalancerGWLB(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumGateway {
 		return nil
 	}
@@ -1242,7 +1290,7 @@ func customizeDiffLoadBalancerGWLB(_ context.Context, diff *schema.ResourceDiff,
 	return nil
 }
 
-func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}, update bool) []awstypes.LoadBalancerAttribute {
+func expandLoadBalancerAccessLogsAttributes(tfMap map[string]any, update bool) []awstypes.LoadBalancerAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1275,7 +1323,7 @@ func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}, update
 	return apiObjects
 }
 
-func expandLoadBalancerConnectionLogsAttributes(tfMap map[string]interface{}, update bool) []awstypes.LoadBalancerAttribute {
+func expandLoadBalancerConnectionLogsAttributes(tfMap map[string]any, update bool) []awstypes.LoadBalancerAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1308,12 +1356,12 @@ func expandLoadBalancerConnectionLogsAttributes(tfMap map[string]interface{}, up
 	return apiObjects
 }
 
-func flattenLoadBalancerAccessLogsAttributes(apiObjects []awstypes.LoadBalancerAttribute) map[string]interface{} {
+func flattenLoadBalancerAccessLogsAttributes(apiObjects []awstypes.LoadBalancerAttribute) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	for _, apiObject := range apiObjects {
 		switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
@@ -1329,12 +1377,12 @@ func flattenLoadBalancerAccessLogsAttributes(apiObjects []awstypes.LoadBalancerA
 	return tfMap
 }
 
-func flattenLoadBalancerConnectionLogsAttributes(apiObjects []awstypes.LoadBalancerAttribute) map[string]interface{} {
+func flattenLoadBalancerConnectionLogsAttributes(apiObjects []awstypes.LoadBalancerAttribute) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	for _, apiObject := range apiObjects {
 		switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
@@ -1350,7 +1398,7 @@ func flattenLoadBalancerConnectionLogsAttributes(apiObjects []awstypes.LoadBalan
 	return tfMap
 }
 
-func expandSubnetMapping(tfMap map[string]interface{}) awstypes.SubnetMapping {
+func expandSubnetMapping(tfMap map[string]any) awstypes.SubnetMapping {
 	apiObject := awstypes.SubnetMapping{}
 
 	if v, ok := tfMap["allocation_id"].(string); ok && v != "" {
@@ -1372,7 +1420,7 @@ func expandSubnetMapping(tfMap map[string]interface{}) awstypes.SubnetMapping {
 	return apiObject
 }
 
-func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
+func expandSubnetMappings(tfList []any) []awstypes.SubnetMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1380,7 +1428,7 @@ func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
 	var apiObjects []awstypes.SubnetMapping
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1392,4 +1440,38 @@ func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
 	}
 
 	return apiObjects
+}
+
+func expandIPAMPools(tfList []any) *awstypes.IpamPools {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.IpamPools
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["ipv4_ipam_pool_id"].(string); ok && v != "" {
+			apiObject.Ipv4IpamPoolId = aws.String(v)
+		}
+	}
+
+	return &apiObject
+}
+
+func flattenIPAMPools(ipamPools *awstypes.IpamPools) []any {
+	if ipamPools == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"ipv4_ipam_pool_id": aws.ToString(ipamPools.Ipv4IpamPoolId),
+	}
+
+	return []any{tfMap}
 }

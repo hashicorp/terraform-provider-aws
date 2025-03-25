@@ -47,10 +47,6 @@ type deploymentResource struct {
 	framework.WithTimeouts
 }
 
-func (*deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_m2_deployment"
-}
-
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -371,7 +367,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 }
 
 func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
 		if tfresource.NotFound(err) {

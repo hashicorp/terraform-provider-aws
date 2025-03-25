@@ -70,7 +70,7 @@ func dataSourcePolicy() *schema.Resource {
 	}
 }
 
-func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -80,7 +80,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if arn == "" {
 		outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return findPolicyByTwoPartKey(ctx, conn, name, pathPrefix)
 			},
 		)
@@ -112,7 +112,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	setTagsOut(ctx, policy.Tags)
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return findPolicyVersion(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)

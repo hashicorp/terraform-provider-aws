@@ -32,10 +32,6 @@ type dataSourceAccessPolicy struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceAccessPolicy) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_access_policy"
-}
-
 func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

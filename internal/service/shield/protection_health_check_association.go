@@ -6,6 +6,7 @@ package shield
 import (
 	"context"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -43,7 +44,7 @@ func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 	}
 }
 
-func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -64,7 +65,7 @@ func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *sche
 	return append(diags, ResourceProtectionHealthCheckAssociationRead(ctx, d, meta)...)
 }
 
-func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -102,7 +103,7 @@ func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema
 	return diags
 }
 
-func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -126,10 +127,5 @@ func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *sche
 }
 
 func stringInSlice(expected string, list []string) bool {
-	for _, item := range list {
-		if item == expected {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, expected)
 }

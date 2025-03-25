@@ -51,7 +51,7 @@ func resourceUserInGroup() *schema.Resource {
 	}
 }
 
-func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceUserInGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -100,16 +100,17 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito Group User: %s", d.Id())
-	_, err := conn.AdminRemoveUserFromGroup(ctx, &cognitoidentityprovider.AdminRemoveUserFromGroupInput{
+	input := cognitoidentityprovider.AdminRemoveUserFromGroupInput{
 		GroupName:  aws.String(d.Get(names.AttrGroupName).(string)),
 		Username:   aws.String(d.Get(names.AttrUsername).(string)),
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
-	})
+	}
+	_, err := conn.AdminRemoveUserFromGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Group User (%s): %s", d.Id(), err)

@@ -79,7 +79,7 @@ func ResourceMember() *schema.Resource {
 	}
 }
 
-func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 	accountID := d.Get(names.AttrAccountID).(string)
@@ -126,7 +126,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
-func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -174,7 +174,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -223,7 +223,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
-func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 

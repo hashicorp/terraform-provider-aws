@@ -32,6 +32,7 @@ This resource supports the following arguments:
 
 ##### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `columns` - (Optional) A list of the [Columns](#column) in the table.
 * `location` - (Optional) The physical location of the table. By default this takes the form of the warehouse location, followed by the database location in the warehouse, followed by the table name.
 * `input_format` - (Optional) The input format: SequenceFileInputFormat (binary), or TextInputFormat, or a custom format.

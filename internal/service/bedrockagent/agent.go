@@ -60,10 +60,6 @@ type agentResource struct {
 	framework.WithTimeouts
 }
 
-func (*agentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent"
-}
-
 func (r *agentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -137,7 +133,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 8000),
+					stringvalidator.UTF8LengthBetween(40, 8000),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
@@ -388,10 +384,11 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	agentID := data.ID.ValueString()
-	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+	input := bedrockagent.DeleteAgentInput{
+		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
-	})
+	}
+	_, err := conn.DeleteAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -414,10 +411,6 @@ func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStat
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	// Set prepare_agent to default value on import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
-}
-
-func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
@@ -544,7 +537,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 }
 
 func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

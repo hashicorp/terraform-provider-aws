@@ -50,10 +50,6 @@ type directConnectGatewayAttachmentResource struct {
 	framework.WithImportByID
 }
 
-func (*directConnectGatewayAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmanager_dx_gateway_attachment"
-}
-
 func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -316,10 +312,6 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 }
 
-func (r *directConnectGatewayAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {
 	input := &networkmanager.GetDirectConnectGatewayAttachmentInput{
 		AttachmentId: aws.String(id),
@@ -346,7 +338,7 @@ func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkma
 }
 
 func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

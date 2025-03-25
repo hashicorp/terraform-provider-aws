@@ -37,8 +37,6 @@ func ResourceMLTransform() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -187,7 +185,7 @@ func ResourceMLTransform() *schema.Resource {
 	}
 }
 
-func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -196,8 +194,8 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 		Role:              aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:              getTagsIn(ctx),
 		Timeout:           aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
-		InputRecordTables: expandMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
-		Parameters:        expandMLTransformParameters(d.Get(names.AttrParameters).([]interface{})),
+		InputRecordTables: expandMLTransformInputRecordTables(d.Get("input_record_tables").([]any)),
+		Parameters:        expandMLTransformParameters(d.Get(names.AttrParameters).([]any)),
 	}
 
 	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
@@ -241,7 +239,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMLTransformRead(ctx, d, meta)...)
 }
 
-func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -303,7 +301,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -340,7 +338,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			input.Parameters = expandMLTransformParameters(v.([]interface{}))
+			input.Parameters = expandMLTransformParameters(v.([]any))
 		}
 
 		log.Printf("[DEBUG] Updating Glue ML Transform: %+v", input)
@@ -353,7 +351,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMLTransformRead(ctx, d, meta)...)
 }
 
-func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -381,11 +379,11 @@ func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandMLTransformInputRecordTables(l []interface{}) []awstypes.GlueTable {
+func expandMLTransformInputRecordTables(l []any) []awstypes.GlueTable {
 	var tables []awstypes.GlueTable
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 
 		table := awstypes.GlueTable{}
 
@@ -411,11 +409,11 @@ func expandMLTransformInputRecordTables(l []interface{}) []awstypes.GlueTable {
 	return tables
 }
 
-func flattenMLTransformInputRecordTables(tables []awstypes.GlueTable) []interface{} {
-	l := []interface{}{}
+func flattenMLTransformInputRecordTables(tables []awstypes.GlueTable) []any {
+	l := []any{}
 
 	for _, table := range tables {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrTableName:    aws.ToString(table.TableName),
 			names.AttrDatabaseName: aws.ToString(table.DatabaseName),
 		}
@@ -434,26 +432,26 @@ func flattenMLTransformInputRecordTables(tables []awstypes.GlueTable) []interfac
 	return l
 }
 
-func expandMLTransformParameters(l []interface{}) *awstypes.TransformParameters {
-	m := l[0].(map[string]interface{})
+func expandMLTransformParameters(l []any) *awstypes.TransformParameters {
+	m := l[0].(map[string]any)
 
 	param := &awstypes.TransformParameters{
 		TransformType: awstypes.TransformType(m["transform_type"].(string)),
 	}
 
-	if v, ok := m["find_matches_parameters"]; ok && len(v.([]interface{})) > 0 {
-		param.FindMatchesParameters = expandMLTransformFindMatchesParameters(v.([]interface{}))
+	if v, ok := m["find_matches_parameters"]; ok && len(v.([]any)) > 0 {
+		param.FindMatchesParameters = expandMLTransformFindMatchesParameters(v.([]any))
 	}
 
 	return param
 }
 
-func flattenMLTransformParameters(parameters *awstypes.TransformParameters) []map[string]interface{} {
+func flattenMLTransformParameters(parameters *awstypes.TransformParameters) []map[string]any {
 	if parameters == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"transform_type": string(parameters.TransformType),
 	}
 
@@ -461,11 +459,11 @@ func flattenMLTransformParameters(parameters *awstypes.TransformParameters) []ma
 		m["find_matches_parameters"] = flattenMLTransformFindMatchesParameters(parameters.FindMatchesParameters)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandMLTransformFindMatchesParameters(l []interface{}) *awstypes.FindMatchesParameters {
-	m := l[0].(map[string]interface{})
+func expandMLTransformFindMatchesParameters(l []any) *awstypes.FindMatchesParameters {
+	m := l[0].(map[string]any)
 
 	param := &awstypes.FindMatchesParameters{}
 
@@ -488,12 +486,12 @@ func expandMLTransformFindMatchesParameters(l []interface{}) *awstypes.FindMatch
 	return param
 }
 
-func flattenMLTransformFindMatchesParameters(parameters *awstypes.FindMatchesParameters) []map[string]interface{} {
+func flattenMLTransformFindMatchesParameters(parameters *awstypes.FindMatchesParameters) []map[string]any {
 	if parameters == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if parameters.PrimaryKeyColumnName != nil {
 		m["primary_key_column_name"] = aws.ToString(parameters.PrimaryKeyColumnName)
@@ -511,14 +509,14 @@ func flattenMLTransformFindMatchesParameters(parameters *awstypes.FindMatchesPar
 		m["precision_recall_trade_off"] = aws.ToFloat64(parameters.PrecisionRecallTradeoff)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMLTransformSchemaColumns(schemaCols []awstypes.SchemaColumn) []interface{} {
-	l := []interface{}{}
+func flattenMLTransformSchemaColumns(schemaCols []awstypes.SchemaColumn) []any {
+	l := []any{}
 
 	for _, schemaCol := range schemaCols {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName: aws.ToString(schemaCol.Name),
 			"data_type":    aws.ToString(schemaCol.DataType),
 		}

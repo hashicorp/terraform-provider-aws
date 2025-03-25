@@ -31,10 +31,6 @@ type dataSourcePolicyStore struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourcePolicyStore) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_verifiedpermissions_policy_store"
-}
-
 func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

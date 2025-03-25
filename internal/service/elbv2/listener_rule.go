@@ -466,7 +466,6 @@ func resourceListenerRule() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			validateListenerActionsCustomDiff(names.AttrAction),
 		),
 	}
@@ -487,7 +486,7 @@ func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppres
 	}
 }
 
-func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -529,7 +528,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 		}
 
@@ -541,11 +540,11 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
 
-func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (any, error) {
 		return findListenerRuleByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -583,44 +582,44 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 
-	conditions := make([]interface{}, len(rule.Conditions))
+	conditions := make([]any, len(rule.Conditions))
 	for i, condition := range rule.Conditions {
-		conditionMap := make(map[string]interface{})
+		conditionMap := make(map[string]any)
 
 		switch aws.ToString(condition.Field) {
 		case "host-header":
-			conditionMap["host_header"] = []interface{}{
-				map[string]interface{}{
+			conditionMap["host_header"] = []any{
+				map[string]any{
 					names.AttrValues: flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
 				},
 			}
 
 		case "http-header":
-			conditionMap["http_header"] = []interface{}{
-				map[string]interface{}{
+			conditionMap["http_header"] = []any{
+				map[string]any{
 					"http_header_name": aws.ToString(condition.HttpHeaderConfig.HttpHeaderName),
 					names.AttrValues:   flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
 				},
 			}
 
 		case "http-request-method":
-			conditionMap["http_request_method"] = []interface{}{
-				map[string]interface{}{
+			conditionMap["http_request_method"] = []any{
+				map[string]any{
 					names.AttrValues: flex.FlattenStringValueSet(condition.HttpRequestMethodConfig.Values),
 				},
 			}
 
 		case "path-pattern":
-			conditionMap["path_pattern"] = []interface{}{
-				map[string]interface{}{
+			conditionMap["path_pattern"] = []any{
+				map[string]any{
 					names.AttrValues: flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
 				},
 			}
 
 		case "query-string":
-			values := make([]interface{}, len(condition.QueryStringConfig.Values))
+			values := make([]any, len(condition.QueryStringConfig.Values))
 			for k, value := range condition.QueryStringConfig.Values {
-				values[k] = map[string]interface{}{
+				values[k] = map[string]any{
 					names.AttrKey:   aws.ToString(value.Key),
 					names.AttrValue: aws.ToString(value.Value),
 				}
@@ -628,8 +627,8 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			conditionMap["query_string"] = values
 
 		case "source-ip":
-			conditionMap["source_ip"] = []interface{}{
-				map[string]interface{}{
+			conditionMap["source_ip"] = []any{
+				map[string]any{
 					names.AttrValues: flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
 				},
 			}
@@ -644,7 +643,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -703,7 +702,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
 
-func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -733,7 +732,7 @@ func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.C
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.PriorityInUseException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.PriorityInUseException](ctx, timeout, func() (any, error) {
 		priority, err := highestListenerRulePriority(ctx, conn, listenerARN)
 		if err != nil {
 			return nil, err
@@ -827,7 +826,7 @@ func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancing
 	return slices.Max(priorities), nil
 }
 
-func validListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
+func validListenerRulePriority(v any, k string) (ws []string, errors []error) {
 	value := v.(int)
 	if value < listenerRulePriorityMin || (value > listenerRulePriorityMax && value != listenerRulePriorityDefault) {
 		errors = append(errors, fmt.Errorf("%q must be in the range %d-%d for normal rule or %d for the default rule", k, listenerRulePriorityMin, listenerRulePriorityMax, listenerRulePriorityDefault))
@@ -851,30 +850,30 @@ func listenerARNFromRuleARN(ruleARN string) string {
 	return ""
 }
 
-func expandRuleConditions(tfList []interface{}) ([]awstypes.RuleCondition, error) {
+func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 	apiObjects := make([]awstypes.RuleCondition, len(tfList))
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects[i] = awstypes.RuleCondition{}
 
 		var field string
 		var attrs int
 
-		if hostHeader, ok := tfMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
+		if hostHeader, ok := tfMap["host_header"].([]any); ok && len(hostHeader) > 0 {
 			field = "host-header"
 			attrs += 1
-			values := hostHeader[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
+			values := hostHeader[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
 			apiObjects[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
-		if httpHeader, ok := tfMap["http_header"].([]interface{}); ok && len(httpHeader) > 0 {
+		if httpHeader, ok := tfMap["http_header"].([]any); ok && len(httpHeader) > 0 {
 			field = "http-header"
 			attrs += 1
-			httpHeaderMap := httpHeader[0].(map[string]interface{})
+			httpHeaderMap := httpHeader[0].(map[string]any)
 			values := httpHeaderMap[names.AttrValues].(*schema.Set)
 
 			apiObjects[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
@@ -883,20 +882,20 @@ func expandRuleConditions(tfList []interface{}) ([]awstypes.RuleCondition, error
 			}
 		}
 
-		if httpRequestMethod, ok := tfMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
+		if httpRequestMethod, ok := tfMap["http_request_method"].([]any); ok && len(httpRequestMethod) > 0 {
 			field = "http-request-method"
 			attrs += 1
-			values := httpRequestMethod[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
+			values := httpRequestMethod[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
 			apiObjects[i].HttpRequestMethodConfig = &awstypes.HttpRequestMethodConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
-		if pathPattern, ok := tfMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
+		if pathPattern, ok := tfMap["path_pattern"].([]any); ok && len(pathPattern) > 0 {
 			field = "path-pattern"
 			attrs += 1
-			values := pathPattern[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
+			values := pathPattern[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
 			apiObjects[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -912,7 +911,7 @@ func expandRuleConditions(tfList []interface{}) ([]awstypes.RuleCondition, error
 				Values: make([]awstypes.QueryStringKeyValuePair, len(values)),
 			}
 			for j, p := range values {
-				valuePair := p.(map[string]interface{})
+				valuePair := p.(map[string]any)
 				elbValuePair := awstypes.QueryStringKeyValuePair{
 					Value: aws.String(valuePair[names.AttrValue].(string)),
 				}
@@ -923,10 +922,10 @@ func expandRuleConditions(tfList []interface{}) ([]awstypes.RuleCondition, error
 			}
 		}
 
-		if sourceIp, ok := tfMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
+		if sourceIp, ok := tfMap["source_ip"].([]any); ok && len(sourceIp) > 0 {
 			field = "source-ip"
 			attrs += 1
-			values := sourceIp[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
+			values := sourceIp[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
 			apiObjects[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
 				Values: flex.ExpandStringValueSet(values),

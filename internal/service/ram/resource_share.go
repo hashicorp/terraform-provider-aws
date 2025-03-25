@@ -76,12 +76,10 @@ func resourceResourceShare() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -104,7 +102,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.ToString(output.ResourceShare.ResourceShareArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, resourceSharePropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, resourceSharePropagationTimeout, func() (any, error) {
 		return findResourceShareOwnerSelfByARN(ctx, conn, d.Id())
 	})
 
@@ -119,7 +117,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceResourceShareRead(ctx, d, meta)...)
 }
 
-func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -165,7 +163,7 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -186,7 +184,7 @@ func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceResourceShareRead(ctx, d, meta)...)
 }
 
-func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -266,7 +264,7 @@ func findResourceShares(ctx context.Context, conn *ram.Client, input *ram.GetRes
 }
 
 func statusResourceShareOwnerSelf(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResourceShareOwnerSelfByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

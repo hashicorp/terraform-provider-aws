@@ -48,7 +48,7 @@ func resourceProxyProtocolPolicy() *schema.Resource {
 	}
 }
 
-func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceProxyProtocolPolicyUpdate(ctx, d, meta)...)
 }
 
-func resourceProxyProtocolPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyProtocolPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceProxyProtocolPolicyRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceProxyProtocolPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyProtocolPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -144,7 +144,7 @@ func resourceProxyProtocolPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceProxyProtocolPolicyRead(ctx, d, meta)...)
 }
 
-func resourceProxyProtocolPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyProtocolPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 

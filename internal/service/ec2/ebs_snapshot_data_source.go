@@ -116,22 +116,22 @@ func dataSourceEBSSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSnapshotsInput{}
+	input := ec2.DescribeSnapshotsInput{}
 
-	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.OwnerIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("owners"); ok && len(v.([]any)) > 0 {
+		input.OwnerIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]interface{})) > 0 {
-		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]any)) > 0 {
+		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
-		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]any)) > 0 {
+		input.SnapshotIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -142,7 +142,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)

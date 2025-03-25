@@ -176,12 +176,10 @@ func ResourceImageBuilder() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -209,8 +207,8 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("domain_join_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DomainJoinInfo = expandDomainJoinInfo(v.([]interface{}))
+	if v, ok := d.GetOk("domain_join_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DomainJoinInfo = expandDomainJoinInfo(v.([]any))
 	}
 
 	if v, ok := d.GetOk("enable_default_internet_access"); ok {
@@ -229,11 +227,11 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ImageName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConfig = expandImageBuilderVPCConfig(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRoleException](ctx, iamPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRoleException](ctx, iamPropagationTimeout, func() (any, error) {
 		return conn.CreateImageBuilder(ctx, input)
 	}, "encountered an error because your IAM role")
 
@@ -250,7 +248,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceImageBuilderRead(ctx, d, meta)...)
 }
 
-func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -277,7 +275,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDescription, imageBuilder.Description)
 	d.Set(names.AttrDisplayName, imageBuilder.DisplayName)
 	if imageBuilder.DomainJoinInfo != nil {
-		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
+		if err = d.Set("domain_join_info", []any{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting domain_join_info: %s", err)
 		}
 	} else {
@@ -290,7 +288,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, imageBuilder.Name)
 	d.Set(names.AttrState, imageBuilder.State)
 	if imageBuilder.VpcConfig != nil {
-		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
+		if err = d.Set(names.AttrVPCConfig, []any{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 		}
 	} else {
@@ -300,20 +298,21 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceImageBuilderRead(ctx, d, meta)
 }
 
-func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream ImageBuilder: %s", d.Id())
-	_, err := conn.DeleteImageBuilder(ctx, &appstream.DeleteImageBuilderInput{
+	input := appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteImageBuilder(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -330,12 +329,12 @@ func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func expandImageBuilderVPCConfig(tfList []interface{}) *awstypes.VpcConfig {
+func expandImageBuilderVPCConfig(tfList []any) *awstypes.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil

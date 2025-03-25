@@ -5,6 +5,8 @@ package s3
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,6 +26,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceBucketLifecycleConfiguration,
+			TypeName: "aws_s3_bucket_lifecycle_configuration",
+			Name:     "Bucket Lifecycle Configuration",
+		},
 		{
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
@@ -122,11 +129,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Bucket Inventory",
 		},
 		{
-			Factory:  resourceBucketLifecycleConfiguration,
-			TypeName: "aws_s3_bucket_lifecycle_configuration",
-			Name:     "Bucket Lifecycle Configuration",
-		},
-		{
 			Factory:  resourceBucketLogging,
 			TypeName: "aws_s3_bucket_logging",
 			Name:     "Bucket Logging",
@@ -218,6 +220,36 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.S3
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*s3.Options){
+		s3.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
+	}
+
+	return s3.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*s3.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*s3.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *s3.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*s3.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

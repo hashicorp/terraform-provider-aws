@@ -164,106 +164,106 @@ func ThemeConfigurationDataSourceSchema() *schema.Schema {
 	return sdkv2.DataSourcePropertyFromResourceProperty(ThemeConfigurationSchema())
 }
 
-func ExpandThemeConfiguration(tfList []interface{}) *awstypes.ThemeConfiguration {
+func ExpandThemeConfiguration(tfList []any) *awstypes.ThemeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ThemeConfiguration{}
 
-	if v, ok := tfMap["data_color_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_color_palette"].([]any); ok && len(v) > 0 {
 		apiObject.DataColorPalette = expandDataColorPalette(v)
 	}
-	if v, ok := tfMap["sheet"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sheet"].([]any); ok && len(v) > 0 {
 		apiObject.Sheet = expandSheetStyle(v)
 	}
-	if v, ok := tfMap["typography"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["typography"].([]any); ok && len(v) > 0 {
 		apiObject.Typography = expandTypography(v)
 	}
-	if v, ok := tfMap["ui_color_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ui_color_palette"].([]any); ok && len(v) > 0 {
 		apiObject.UIColorPalette = expandUIColorPalette(v)
 	}
 
 	return apiObject
 }
 
-func expandDataColorPalette(tfList []interface{}) *awstypes.DataColorPalette {
+func expandDataColorPalette(tfList []any) *awstypes.DataColorPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DataColorPalette{}
 
-	if v, ok := tfMap["colors"].([]interface{}); ok {
+	if v, ok := tfMap["colors"].([]any); ok {
 		apiObject.Colors = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["empty_fill_color"].(string); ok && v != "" {
 		apiObject.EmptyFillColor = aws.String(v)
 	}
-	if v, ok := tfMap["min_max_gradient"].([]interface{}); ok {
+	if v, ok := tfMap["min_max_gradient"].([]any); ok {
 		apiObject.MinMaxGradient = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandSheetStyle(tfList []interface{}) *awstypes.SheetStyle {
+func expandSheetStyle(tfList []any) *awstypes.SheetStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SheetStyle{}
 
-	if v, ok := tfMap["tile"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tile"].([]any); ok && len(v) > 0 {
 		apiObject.Tile = expandTileStyle(v)
 	}
-	if v, ok := tfMap["tile_layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tile_layout"].([]any); ok && len(v) > 0 {
 		apiObject.TileLayout = expandTileLayoutStyle(v)
 	}
 
 	return apiObject
 }
 
-func expandTileStyle(tfList []interface{}) *awstypes.TileStyle {
+func expandTileStyle(tfList []any) *awstypes.TileStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.TileStyle{}
 
-	if v, ok := tfMap["border"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["border"].([]any); ok && len(v) > 0 {
 		apiObject.Border = expandBorderStyle(v)
 	}
 
 	return apiObject
 }
 
-func expandBorderStyle(tfList []interface{}) *awstypes.BorderStyle {
+func expandBorderStyle(tfList []any) *awstypes.BorderStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -277,34 +277,34 @@ func expandBorderStyle(tfList []interface{}) *awstypes.BorderStyle {
 	return apiObject
 }
 
-func expandTileLayoutStyle(tfList []interface{}) *awstypes.TileLayoutStyle {
+func expandTileLayoutStyle(tfList []any) *awstypes.TileLayoutStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.TileLayoutStyle{}
 
-	if v, ok := tfMap["gutter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["gutter"].([]any); ok && len(v) > 0 {
 		apiObject.Gutter = expandGutterStyle(v)
 	}
-	if v, ok := tfMap["margin"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["margin"].([]any); ok && len(v) > 0 {
 		apiObject.Margin = expandMarginStyle(v)
 	}
 
 	return apiObject
 }
 
-func expandGutterStyle(tfList []interface{}) *awstypes.GutterStyle {
+func expandGutterStyle(tfList []any) *awstypes.GutterStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -318,12 +318,12 @@ func expandGutterStyle(tfList []interface{}) *awstypes.GutterStyle {
 	return apiObject
 }
 
-func expandMarginStyle(tfList []interface{}) *awstypes.MarginStyle {
+func expandMarginStyle(tfList []any) *awstypes.MarginStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -337,26 +337,26 @@ func expandMarginStyle(tfList []interface{}) *awstypes.MarginStyle {
 	return apiObject
 }
 
-func expandTypography(tfList []interface{}) *awstypes.Typography {
+func expandTypography(tfList []any) *awstypes.Typography {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.Typography{}
 
-	if v, ok := tfMap["font_families"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_families"].([]any); ok && len(v) > 0 {
 		apiObject.FontFamilies = expandFonts(v)
 	}
 
 	return apiObject
 }
 
-func expandFonts(tfList []interface{}) []awstypes.Font {
+func expandFonts(tfList []any) []awstypes.Font {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -364,7 +364,7 @@ func expandFonts(tfList []interface{}) []awstypes.Font {
 	var apiObjects []awstypes.Font
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -380,7 +380,7 @@ func expandFonts(tfList []interface{}) []awstypes.Font {
 	return apiObjects
 }
 
-func expandFont(tfMap map[string]interface{}) *awstypes.Font {
+func expandFont(tfMap map[string]any) *awstypes.Font {
 	if tfMap == nil {
 		return nil
 	}
@@ -394,12 +394,12 @@ func expandFont(tfMap map[string]interface{}) *awstypes.Font {
 	return apiObject
 }
 
-func expandUIColorPalette(tfList []interface{}) *awstypes.UIColorPalette {
+func expandUIColorPalette(tfList []any) *awstypes.UIColorPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -458,12 +458,12 @@ func expandUIColorPalette(tfList []interface{}) *awstypes.UIColorPalette {
 	return apiObject
 }
 
-func FlattenThemeConfiguration(apiObject *awstypes.ThemeConfiguration) []interface{} {
+func FlattenThemeConfiguration(apiObject *awstypes.ThemeConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DataColorPalette != nil {
 		tfMap["data_color_palette"] = flattenDataColorPalette(apiObject.DataColorPalette)
@@ -478,15 +478,15 @@ func FlattenThemeConfiguration(apiObject *awstypes.ThemeConfiguration) []interfa
 		tfMap["ui_color_palette"] = flattenUIColorPalette(apiObject.UIColorPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataColorPalette(apiObject *awstypes.DataColorPalette) []interface{} {
+func flattenDataColorPalette(apiObject *awstypes.DataColorPalette) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Colors != nil {
 		tfMap["colors"] = apiObject.Colors
@@ -498,15 +498,15 @@ func flattenDataColorPalette(apiObject *awstypes.DataColorPalette) []interface{}
 		tfMap["min_max_gradient"] = apiObject.MinMaxGradient
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSheetStyle(apiObject *awstypes.SheetStyle) []interface{} {
+func flattenSheetStyle(apiObject *awstypes.SheetStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Tile != nil {
 		tfMap["tile"] = flattenTileStyle(apiObject.Tile)
@@ -515,43 +515,43 @@ func flattenSheetStyle(apiObject *awstypes.SheetStyle) []interface{} {
 		tfMap["tile_layout"] = flattenTileLayoutStyle(apiObject.TileLayout)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTileStyle(apiObject *awstypes.TileStyle) []interface{} {
+func flattenTileStyle(apiObject *awstypes.TileStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Border != nil {
 		tfMap["border"] = flattenBorderStyle(apiObject.Border)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBorderStyle(apiObject *awstypes.BorderStyle) []interface{} {
+func flattenBorderStyle(apiObject *awstypes.BorderStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Show != nil {
 		tfMap["show"] = aws.ToBool(apiObject.Show)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTileLayoutStyle(apiObject *awstypes.TileLayoutStyle) []interface{} {
+func flattenTileLayoutStyle(apiObject *awstypes.TileLayoutStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Gutter != nil {
 		tfMap["gutter"] = flattenGutterStyle(apiObject.Gutter)
@@ -560,60 +560,60 @@ func flattenTileLayoutStyle(apiObject *awstypes.TileLayoutStyle) []interface{} {
 		tfMap["margin"] = flattenMarginStyle(apiObject.Margin)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGutterStyle(apiObject *awstypes.GutterStyle) []interface{} {
+func flattenGutterStyle(apiObject *awstypes.GutterStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Show != nil {
 		tfMap["show"] = aws.ToBool(apiObject.Show)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMarginStyle(apiObject *awstypes.MarginStyle) []interface{} {
+func flattenMarginStyle(apiObject *awstypes.MarginStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Show != nil {
 		tfMap["show"] = aws.ToBool(apiObject.Show)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTypography(apiObject *awstypes.Typography) []interface{} {
+func flattenTypography(apiObject *awstypes.Typography) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FontFamilies != nil {
 		tfMap["font_families"] = flattenFonts(apiObject.FontFamilies)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFonts(apiObject []awstypes.Font) []interface{} {
+func flattenFonts(apiObject []awstypes.Font) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.FontFamily != nil {
 			tfMap["font_family"] = aws.ToString(apiObject.FontFamily)
@@ -625,12 +625,12 @@ func flattenFonts(apiObject []awstypes.Font) []interface{} {
 	return tfList
 }
 
-func flattenUIColorPalette(apiObject *awstypes.UIColorPalette) []interface{} {
+func flattenUIColorPalette(apiObject *awstypes.UIColorPalette) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Accent != nil {
 		tfMap["accent"] = aws.ToString(apiObject.Accent)
@@ -681,5 +681,5 @@ func flattenUIColorPalette(apiObject *awstypes.UIColorPalette) []interface{} {
 		tfMap["warning_foreground"] = aws.ToString(apiObject.WarningForeground)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

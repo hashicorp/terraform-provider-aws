@@ -227,7 +227,7 @@ The following arguments are optional:
 * `defaultRedirectUri` - (Optional) Default redirect URI and must be included in the list of callback URLs.
 * `enableTokenRevocation` - (Optional) Enables or disables token revocation.
 * `enablePropagateAdditionalUserContextData` - (Optional) Enables the propagation of additional user context data.
-* `explicitAuthFlows` - (Optional) List of authentication flows. The available options include ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, and ALLOW_REFRESH_TOKEN_AUTH.
+* `explicitAuthFlows` - (Optional) List of authentication flows. The available options include `ADMIN_NO_SRP_AUTH`, `CUSTOM_AUTH_FLOW_ONLY`, `USER_PASSWORD_AUTH`, `ALLOW_ADMIN_USER_PASSWORD_AUTH`, `ALLOW_CUSTOM_AUTH`, `ALLOW_USER_PASSWORD_AUTH`, `ALLOW_USER_SRP_AUTH`, `ALLOW_REFRESH_TOKEN_AUTH`, and `ALLOW_USER_AUTH`.
 * `generateSecret` - (Optional) Boolean flag indicating whether an application secret should be generated.
 * `idTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.id_token`.
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure this option.
@@ -295,4 +295,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e4ce259843b4202690fa1db5b065a672302e8628e165c85aeb14c75e9efb6f75 -->
+<!-- cache-key: cdktf-0.20.8 input-66e8900f6e50594a11b00bb3e30035b97b707b4bc1564bc457f8055fdebfc182 -->

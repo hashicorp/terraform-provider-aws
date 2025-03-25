@@ -14,9 +14,9 @@ import (
 func sortListBasedonTFFile(in []string, d *schema.ResourceData) ([]string, error) {
 	listName := "layer_ids"
 	if attributeCount, ok := d.Get(listName + ".#").(int); ok {
-		for i := 0; i < attributeCount; i++ {
+		for i := range attributeCount {
 			currAttributeId := d.Get(listName + "." + strconv.Itoa(i))
-			for j := 0; j < len(in); j++ {
+			for j := range in {
 				if currAttributeId == in[j] {
 					in[i], in[j] = in[j], in[i]
 				}

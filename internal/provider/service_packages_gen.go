@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
@@ -89,6 +90,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/drs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dsql"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
@@ -159,6 +161,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagevod"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -289,6 +292,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bcmdataexports.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
+		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
 		chatbot.ServicePackage(ctx),
@@ -343,6 +347,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		docdbelastic.ServicePackage(ctx),
 		drs.ServicePackage(ctx),
 		ds.ServicePackage(ctx),
+		dsql.ServicePackage(ctx),
 		dynamodb.ServicePackage(ctx),
 		ec2.ServicePackage(ctx),
 		ecr.ServicePackage(ctx),
@@ -413,6 +418,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		medialive.ServicePackage(ctx),
 		mediapackage.ServicePackage(ctx),
 		mediapackagev2.ServicePackage(ctx),
+		mediapackagevod.ServicePackage(ctx),
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),

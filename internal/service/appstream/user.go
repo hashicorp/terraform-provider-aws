@@ -81,7 +81,7 @@ func ResourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -136,7 +136,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -168,7 +168,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -205,7 +205,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
@@ -215,10 +215,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteUser(ctx, &appstream.DeleteUserInput{
+	input := appstream.DeleteUserInput{
 		AuthenticationType: awstypes.AuthenticationType(authType),
 		UserName:           aws.String(userName),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {

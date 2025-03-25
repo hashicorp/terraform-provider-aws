@@ -16,7 +16,7 @@ Retrieve information about an SSM parameter, including its value.
 
 ### Retrieve an SSM parameter
 
-By default, this ephemeral resource attempst to return decrypted values for secure string parameters.
+By default, this ephemeral resource attempts to return decrypted values for secure string parameters.
 
 ```terraform
 ephemeral "aws_ssm_parameter" "example" {

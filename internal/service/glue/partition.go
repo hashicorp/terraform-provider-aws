@@ -66,6 +66,11 @@ func ResourcePartition() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"additional_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bucket_columns": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -206,13 +211,13 @@ func ResourcePartition() *schema.Resource {
 	}
 }
 
-func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	dbName := d.Get(names.AttrDatabaseName).(string)
 	tableName := d.Get(names.AttrTableName).(string)
-	values := d.Get("partition_values").([]interface{})
+	values := d.Get("partition_values").([]any)
 
 	input := &glue.CreatePartitionInput{
 		CatalogId:      aws.String(catalogID),
@@ -232,7 +237,7 @@ func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePartitionRead(ctx, d, meta)...)
 }
 
-func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -275,7 +280,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -299,7 +304,7 @@ func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePartitionRead(ctx, d, meta)...)
 }
 
-func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -330,15 +335,15 @@ func expandPartitionInput(d *schema.ResourceData) *awstypes.PartitionInput {
 	tableInput := &awstypes.PartitionInput{}
 
 	if v, ok := d.GetOk("storage_descriptor"); ok {
-		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]interface{}))
+		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		tableInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		tableInput.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("partition_values"); ok && len(v.([]interface{})) > 0 {
-		tableInput.Values = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("partition_values"); ok && len(v.([]any)) > 0 {
+		tableInput.Values = flex.ExpandStringValueList(v.([]any))
 	}
 
 	return tableInput

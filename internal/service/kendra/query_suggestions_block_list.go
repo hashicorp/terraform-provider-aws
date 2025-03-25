@@ -98,12 +98,10 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -113,7 +111,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 		IndexId:      aws.String(d.Get("index_id").(string)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
+		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]any)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -122,7 +120,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -157,7 +155,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
-func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -202,7 +200,7 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -231,13 +229,13 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		if d.HasChange("source_s3_path") {
-			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]interface{}))
+			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]any))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra QuerySuggestionsBlockList (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -263,7 +261,7 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
-func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -298,7 +296,7 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 }
 
 func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

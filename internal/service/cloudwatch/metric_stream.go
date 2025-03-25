@@ -47,8 +47,6 @@ func resourceMetricStream() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -200,7 +198,7 @@ func resourceMetricStream() *schema.Resource {
 	}
 }
 
-func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -250,7 +248,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		err := createTags(ctx, conn, aws.ToString(output.Arn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 		}
 
@@ -262,7 +260,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 }
 
-func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -307,7 +305,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -346,14 +344,15 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 }
 
-func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
-	_, err := conn.DeleteMetricStream(ctx, &cloudwatch.DeleteMetricStreamInput{
+	input := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMetricStream(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)
@@ -392,7 +391,7 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 }
 
 func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMetricStreamByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -446,18 +445,18 @@ func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name 
 	return nil, err
 }
 
-func validateMetricStreamName(v interface{}, k string) (ws []string, errors []error) {
+func validateMetricStreamName(v any, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must match [0-9A-Za-z_-]"),
 	)(v, k)
 }
 
-func expandMetricStreamFilters(tfList []interface{}) []types.MetricStreamFilter {
+func expandMetricStreamFilters(tfList []any) []types.MetricStreamFilter {
 	var apiObjects []types.MetricStreamFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -482,16 +481,16 @@ func expandMetricStreamFilters(tfList []interface{}) []types.MetricStreamFilter 
 	return apiObjects
 }
 
-func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []interface{} {
+func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject.Namespace != nil {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"metric_names": apiObject.MetricNames,
 			}
 
@@ -506,11 +505,11 @@ func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []interfa
 	return tfList
 }
 
-func expandMetricStreamStatisticsConfigurations(tfList []interface{}) []types.MetricStreamStatisticsConfiguration {
+func expandMetricStreamStatisticsConfigurations(tfList []any) []types.MetricStreamStatisticsConfiguration {
 	var apiObjects []types.MetricStreamStatisticsConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -535,11 +534,11 @@ func expandMetricStreamStatisticsConfigurations(tfList []interface{}) []types.Me
 	return apiObjects
 }
 
-func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface{}) []types.MetricStreamStatisticsMetric {
+func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []any) []types.MetricStreamStatisticsMetric {
 	var apiObjects []types.MetricStreamStatisticsMetric
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -564,15 +563,15 @@ func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface
 	return apiObjects
 }
 
-func flattenMetricStreamStatisticsConfigurations(apiObjects []types.MetricStreamStatisticsConfiguration) []interface{} {
+func flattenMetricStreamStatisticsConfigurations(apiObjects []types.MetricStreamStatisticsConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.AdditionalStatistics; v != nil {
 			tfMap["additional_statistics"] = flex.FlattenStringValueSet(v)
@@ -588,15 +587,15 @@ func flattenMetricStreamStatisticsConfigurations(apiObjects []types.MetricStream
 	return tfList
 }
 
-func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []types.MetricStreamStatisticsMetric) []interface{} {
+func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []types.MetricStreamStatisticsMetric) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.MetricName; v != nil {
 			tfMap[names.AttrMetricName] = aws.ToString(v)

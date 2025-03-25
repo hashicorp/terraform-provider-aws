@@ -16,14 +16,14 @@ Terraform resource for managing an Amazon S3 Tables Table.
 
 ```terraform
 resource "aws_s3tables_table" "example" {
-  name             = "example-table"
+  name             = "example_table"
   namespace        = aws_s3tables_namespace.example.namespace
   table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
   format           = "ICEBERG"
 }
 
 resource "aws_s3tables_namespace" "example" {
-  namespace        = "example-namespace"
+  namespace        = "example_namespace"
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
 }
 
@@ -41,6 +41,7 @@ The following arguments are required:
 * `name` - (Required) Name of the table.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+  A full list of table naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#naming-rules-table).
 * `namespace` - (Required) Name of the namespace for this table.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
@@ -49,23 +50,23 @@ The following arguments are required:
 The following argument is optional:
 
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration block.
-  [See `maintenance_configuration` below](#maintenance_configuration)
+  [See `maintenance_configuration` below](#maintenance_configuration).
 
-### maintenance_configuration
+### `maintenance_configuration`
 
 The `maintenance_configuration` configuration block supports the following arguments:
 
 * `iceberg_compaction` - (Required) A single Iceberg compaction settings block.
-  [See `iceberg_compaction` below](#iceberg_compaction)
+  [See `iceberg_compaction` below](#iceberg_compaction).
 * `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings block.
-  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management)
+  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
 
 ### `iceberg_compaction`
 
 The `iceberg_compaction` configuration block supports the following arguments:
 
 * `settings` - (Required) Settings for compaction.
-  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings)
+  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
@@ -81,7 +82,7 @@ The `iceberg_compaction.settings` configuration block supports the following arg
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
 * `settings` - (Required) Settings for snapshot management.
-  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings)
+  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 

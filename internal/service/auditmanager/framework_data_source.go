@@ -32,10 +32,6 @@ type dataSourceFramework struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceFramework) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_auditmanager_framework"
-}
-
 func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

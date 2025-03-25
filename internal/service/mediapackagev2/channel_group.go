@@ -49,10 +49,6 @@ type resourceChannelGroup struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceChannelGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_media_packagev2_channel_group"
-}
-
 func (r *resourceChannelGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -160,7 +156,7 @@ func (r *resourceChannelGroup) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -201,7 +197,7 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Channel Group", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Channel Group", map[string]any{
 		names.AttrName: data.Name.ValueString(),
 	})
 
@@ -223,7 +219,7 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (any, error) {
 		return findChannelGroupByID(ctx, conn, data.Name.ValueString())
 	})
 
@@ -237,10 +233,6 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 
 func (r *resourceChannelGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-}
-
-func (r *resourceChannelGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceChannelGroupData struct {
