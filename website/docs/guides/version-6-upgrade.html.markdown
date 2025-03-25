@@ -18,6 +18,7 @@ Upgrade topics:
 - [Provider Arguments](#provider-arguments)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
+- [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 
 <!-- /TOC -->
@@ -94,6 +95,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 * `aws_opsworks_stack`
 * `aws_opsworks_static_web_layer`
 * `aws_opsworks_user_profile`
+
+## resource/aws_redshift_cluster
+
+The `publicly_accessible` attribute now defaults to `false`.
 
 ## resource/aws_redshift_service_account
 
