@@ -127,10 +127,10 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEndpointType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(verifiedAccessEndpointType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointType](),
 			},
 			"load_balancer_options": {
 				Type:     schema.TypeList,

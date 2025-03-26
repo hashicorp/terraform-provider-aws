@@ -306,22 +306,6 @@ const (
 )
 
 const (
-	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
-	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
-	verifiedAccessEndpointTypeRDS              = "rds"
-	verifiedAccessEndpointTypeCIDR             = "cidr"
-)
-
-func verifiedAccessEndpointType_Values() []string {
-	return []string{
-		verifiedAccessEndpointTypeLoadBalancer,
-		verifiedAccessEndpointTypeNetworkInterface,
-		verifiedAccessEndpointTypeRDS,
-		verifiedAccessEndpointTypeCIDR,
-	}
-}
-
-const (
 	verifiedAccessEndpointProtocolHTTP  = "http"
 	verifiedAccessEndpointProtocolHTTPS = "https"
 	verifiedAccessEndpointProtocolTCP   = "tcp"
