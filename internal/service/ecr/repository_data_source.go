@@ -120,7 +120,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{
 		RepositoryName: repository.RepositoryName,
 		RegistryId:     repository.RegistryId,
-	})
+	}, nil)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading images for ECR Repository (%s): %s", d.Id(), err)
