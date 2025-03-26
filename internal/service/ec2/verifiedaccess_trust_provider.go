@@ -244,7 +244,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.SseSpecification = expandCreateVerifiedAccessGenericSSESpecification(v.([]any)[0].(map[string]any))
+		input.SseSpecification = expandVerifiedAccessSSESpecificationRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("user_trust_provider_type"); ok {
@@ -305,7 +305,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 
 	d.Set("policy_reference_name", output.PolicyReferenceName)
 	d.Set("trust_provider_type", output.TrustProviderType)
-	if err := d.Set("sse_specification", flattenVerifiedAccessSSESpecificationRequest(output.SseSpecification)); err != nil {
+	if err := d.Set("sse_specification", flattenVerifiedAccessSSESpecificationResponse(output.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
 	}
 	d.Set("user_trust_provider_type", output.UserTrustProviderType)
