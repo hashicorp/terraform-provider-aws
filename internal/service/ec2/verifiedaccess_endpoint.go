@@ -157,7 +157,6 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
-							ForceNew: true,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
