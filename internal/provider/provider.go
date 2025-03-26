@@ -39,7 +39,7 @@ var (
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(ctx context.Context) (*schema.Provider, error) {
-	log.Printf("Creating Terraform AWS Provider...")
+	log.Printf("Creating Terraform AWS Provider (SDKv2-style)...")
 
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
@@ -314,7 +314,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 // initialize is called from `provider.New` to perform any Terraform Plugin SDK v2-style initialization.
 func initialize(ctx context.Context, provider *schema.Provider) (map[string]conns.ServicePackage, error) {
-	log.Printf("Initializing Terraform AWS Provider...")
+	log.Printf("Initializing Terraform AWS Provider (SDKv2-style)...")
 
 	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)

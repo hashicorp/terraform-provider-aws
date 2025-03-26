@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -36,10 +37,14 @@ var _ provider.ProviderWithEphemeralResources = &fwprovider{}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(primary interface{ Meta() any }) provider.Provider {
-	return &fwprovider{
+func New(primary interface{ Meta() any }) (provider.Provider, error) {
+	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
+
+	provider := &fwprovider{
 		Primary: primary,
 	}
+
+	return provider, nil
 }
 
 type fwprovider struct {
