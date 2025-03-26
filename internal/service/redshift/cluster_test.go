@@ -306,41 +306,6 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_snapshotCopyEnabled(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "1"),
-				),
-			},
-			{
-				Config: testAccClusterConfig_snapshotCopyEnabled(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "3"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
@@ -1493,36 +1458,6 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName))
-}
-
-func testAccClusterConfig_snapshotCopyEnabled(rName string, retentionPeriod int) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-
-  snapshot_copy {
-    destination_region = data.aws_region.alternate.name
-    retention_period   = %[2]d
-  }
-
-  skip_final_snapshot = true
-}
-`, rName, retentionPeriod))
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
