@@ -89,7 +89,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading DataExchange Revision (%s): %s", d.Id(), err)
 	}
 
-	revision, err := FindRevisionById(ctx, conn, dataSetId, revisionId)
+	revision, err := findRevisionByID(ctx, conn, dataSetId, revisionId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataExchange Revision (%s) not found, removing from state", d.Id())

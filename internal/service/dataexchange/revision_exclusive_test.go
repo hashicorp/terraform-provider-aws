@@ -201,7 +201,7 @@ func testAccCheckRevisionExclusiveDestroy(ctx context.Context) resource.TestChec
 			// TIP: ==== FINDERS ====
 			// The find function should be exported. Since it won't be used outside of the package, it can be exported
 			// in the `exports_test.go` file.
-			_, err := tfdataexchange.FindRevisionById(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
+			_, err := tfdataexchange.FindRevisionByID(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -229,7 +229,7 @@ func testAccCheckRevisionExclusiveExists(ctx context.Context, name string, revis
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
-		resp, err := tfdataexchange.FindRevisionById(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
+		resp, err := tfdataexchange.FindRevisionByID(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionExclusive, rs.Primary.ID, err)
 		}

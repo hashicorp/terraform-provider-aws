@@ -9,4 +9,5 @@ var (
 	ResourceRevisionExclusive = newResourceRevisionExclusive
 
 	FindEventActionByID = findEventActionByID
+	FindRevisionByID    = findRevisionByID
 )

@@ -324,7 +324,7 @@ func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	out, err := FindRevisionById(ctx, conn, state.DataSetID.ValueString(), state.ID.ValueString())
+	out, err := findRevisionByID(ctx, conn, state.DataSetID.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -377,6 +377,26 @@ func (r *resourceRevisionExclusive) Delete(ctx context.Context, req resource.Del
 // func (r *resourceRevisionExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 // 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 // }
+
+func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
+	input := dataexchange.GetRevisionInput{
+		DataSetId:  aws.String(dataSetId),
+		RevisionId: aws.String(revisionId),
+	}
+	output, err := conn.GetRevision(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
 
 type resourceRevisionExclusiveModel struct {
 	ARN       types.String                               `tfsdk:"arn"`

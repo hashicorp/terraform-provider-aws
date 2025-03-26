@@ -164,7 +164,7 @@ func testAccCheckRevisionExists(ctx context.Context, n string, v *dataexchange.G
 			return err
 		}
 
-		resp, err := tfdataexchange.FindRevisionById(ctx, conn, dataSetId, revisionId)
+		resp, err := tfdataexchange.FindRevisionByID(ctx, conn, dataSetId, revisionId)
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func testAccCheckRevisionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Try to find the resource
-			_, err = tfdataexchange.FindRevisionById(ctx, conn, dataSetId, revisionId)
+			_, err = tfdataexchange.FindRevisionByID(ctx, conn, dataSetId, revisionId)
 			if tfresource.NotFound(err) {
 				continue
 			}
