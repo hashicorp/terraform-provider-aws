@@ -67,7 +67,8 @@ The following arguments are required:
 * `service_account` - (Required) The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
 
 The following arguments are optional:
-
+* `disable_session_tags` - Disable the tags that are automatically added to role session by Amazon EKS.
+* `target_role_arn` - The Amazon Resource Name (ARN) of the IAM role to be chained to the the IAM role specified as role_arn
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

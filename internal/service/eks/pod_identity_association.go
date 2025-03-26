@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -39,15 +40,18 @@ func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWith
 }
 
 type podIdentityAssociationResourceModel struct {
-	AssociationARN types.String `tfsdk:"association_arn"`
-	AssociationID  types.String `tfsdk:"association_id"`
-	ClusterName    types.String `tfsdk:"cluster_name"`
-	ID             types.String `tfsdk:"id"`
-	Namespace      types.String `tfsdk:"namespace"`
-	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
-	ServiceAccount types.String `tfsdk:"service_account"`
-	Tags           tftags.Map   `tfsdk:"tags"`
-	TagsAll        tftags.Map   `tfsdk:"tags_all"`
+	AssociationARN     types.String `tfsdk:"association_arn"`
+	AssociationID      types.String `tfsdk:"association_id"`
+	ClusterName        types.String `tfsdk:"cluster_name"`
+	DisableSessionTags types.Bool   `tfsdk:"disable_session_tags"`
+	ExternalID         types.String `tfsdk:"external_id"`
+	ID                 types.String `tfsdk:"id"`
+	Namespace          types.String `tfsdk:"namespace"`
+	RoleARN            fwtypes.ARN  `tfsdk:"role_arn"`
+	ServiceAccount     types.String `tfsdk:"service_account"`
+	TargetRoleARN      fwtypes.ARN  `tfsdk:"target_role_arn"`
+	Tags               tftags.Map   `tfsdk:"tags"`
+	TagsAll            tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (model *podIdentityAssociationResourceModel) setID() {
@@ -71,6 +75,17 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"disable_session_tags": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
+			names.AttrExternalID: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrAssociationID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -91,8 +106,12 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			names.AttrRoleARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
 				Required:   true,
+				CustomType: fwtypes.ARNType,
+			},
+			"target_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			"service_account": schema.StringAttribute{
 				Required: true,
@@ -123,8 +142,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, req resourc
 
 	input.ClientRequestToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
-
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreatePodIdentityAssociation(ctx, input)
 	}, "Role provided in the request does not exist")
 
@@ -140,8 +158,11 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, req resourc
 	output := outputRaw.(*eks.CreatePodIdentityAssociationOutput)
 	plan.AssociationARN = fwflex.StringToFramework(ctx, output.Association.AssociationArn)
 	plan.AssociationID = fwflex.StringToFramework(ctx, output.Association.AssociationId)
+	if !plan.ExternalID.IsNull() {
+		plan.ExternalID = fwflex.StringToFramework(ctx, output.Association.ExternalId)
+	}
+	plan.DisableSessionTags = fwflex.BoolToFramework(ctx, output.Association.DisableSessionTags)
 	plan.setID()
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -197,7 +218,9 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 
 	conn := r.Meta().EKSClient(ctx)
 
-	if !new.RoleARN.Equal(old.RoleARN) {
+	if !new.RoleARN.Equal(old.RoleARN) ||
+		!new.TargetRoleARN.Equal(old.TargetRoleARN) ||
+		!new.DisableSessionTags.Equal(old.DisableSessionTags) {
 		input := &eks.UpdatePodIdentityAssociationInput{}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if resp.Diagnostics.HasError() {
@@ -206,7 +229,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, input)
 		}, "Role provided in the request does not exist")
 
@@ -218,7 +241,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 			return
 		}
 	}
-
+	fmt.Printf("New State is %v", new)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
@@ -274,7 +297,6 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 	}
 
 	output, err := conn.DescribePodIdentityAssociation(ctx, input)
-
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
@@ -289,6 +311,5 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 	if output == nil || output.Association == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
-
 	return output.Association, nil
 }
