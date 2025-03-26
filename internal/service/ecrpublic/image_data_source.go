@@ -146,7 +146,8 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	data.Id = types.StringPointerValue(imageDetail.ImageDigest)
 	data.ImagePushedAt = types.Int64Value(imageDetail.ImagePushedAt.Unix())
 	data.ImageURI = types.StringValue(fmt.Sprintf("%s@%s", *repository.RepositoryUri, *imageDetail.ImageDigest))
-	resp.Diagnostics.Append(flex.Flatten(ctx, imageDetail, &data)...)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, imageDetail, &data, flex.WithIgnoredFieldNames([]string{"ImagePushedAt"}))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
