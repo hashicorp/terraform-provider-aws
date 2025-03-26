@@ -24,6 +24,11 @@ func dataSourceOrganization() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOrganizationRead,
 
 		Schema: map[string]*schema.Schema{
+			"describe_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -173,6 +178,11 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("master_account_email", org.MasterAccountEmail)
 	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
+
+	// If describe organization only is requested, return here
+	if d.Get("describe_organization_only").(bool) {
+		return diags
+	}
 
 	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID(ctx)
 	isDelegatedAdministrator := true
