@@ -101,7 +101,6 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 * The `publicly_accessible` attribute now defaults to `false`.
 * Remove `snapshot_copy` from configuration as it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
 
-
 ## resource/aws_redshift_service_account
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
