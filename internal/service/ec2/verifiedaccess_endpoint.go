@@ -317,7 +317,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("cidr_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.CidrOptions = expandCreateVerifiedAccessEndpointCidrOptions(v.([]any)[0].(map[string]any))
+		input.CidrOptions = expandCreateVerifiedAccessEndpointCIDROptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("load_balancer_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -325,7 +325,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
+		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointENIOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("policy_document"); ok {
@@ -333,7 +333,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("rds_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.RdsOptions = expandCreateVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
+		input.RdsOptions = expandCreateVerifiedAccessEndpointRDSOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -341,7 +341,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("sse_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.SseSpecification = expandCreateVerifiedAccessGenericSseSpecification(v.([]any)[0].(map[string]any))
+		input.SseSpecification = expandCreateVerifiedAccessGenericSSESpecification(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVerifiedAccessEndpoint(ctx, input)
@@ -377,7 +377,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("application_domain", ep.ApplicationDomain)
 	d.Set("attachment_type", ep.AttachmentType)
-	if err := d.Set("cidr_options", flattenVerifiedAccessEndpointCidrOptions(ep.CidrOptions)); err != nil {
+	if err := d.Set("cidr_options", flattenVerifiedAccessEndpointCIDROptions(ep.CidrOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cidr_options: %s", err)
 	}
 
@@ -389,14 +389,14 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(ep.LoadBalancerOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer_options: %s", err)
 	}
-	if err := d.Set("network_interface_options", flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
+	if err := d.Set("network_interface_options", flattenVerifiedAccessEndpointENIOptions(ep.NetworkInterfaceOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interface_options: %s", err)
 	}
-	if err := d.Set("rds_options", flattenVerifiedAccessEndpointRdsOptions(ep.RdsOptions)); err != nil {
+	if err := d.Set("rds_options", flattenVerifiedAccessEndpointRDSOptions(ep.RdsOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rds_options: %s", err)
 	}
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
-	if err := d.Set("sse_specification", flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
+	if err := d.Set("sse_specification", flattenVerifiedAccessSSESpecificationRequest(ep.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
 	}
 	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
@@ -429,7 +429,7 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 		if d.HasChanges("cidr_options") {
 			if v, ok := d.GetOk("cidr_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.CidrOptions = expandModifyVerifiedAccessEndpointCidrOptions(v.([]any)[0].(map[string]any))
+				input.CidrOptions = expandModifyVerifiedAccessEndpointCIDROptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -441,13 +441,13 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 		if d.HasChanges("network_interface_options") {
 			if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointEniOptions(v.([]any)[0].(map[string]any))
+				input.NetworkInterfaceOptions = expandModifyVerifiedAccessEndpointENIOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChanges("rds_options") {
 			if v, ok := d.GetOk("rds_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.RdsOptions = expandModifyVerifiedAccessEndpointRdsOptions(v.([]any)[0].(map[string]any))
+				input.RdsOptions = expandModifyVerifiedAccessEndpointRDSOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -537,7 +537,7 @@ func flattenVerifiedAccessEndpointPortRanges(apiObjects []types.VerifiedAccessEn
 	return tfList
 }
 
-func flattenVerifiedAccessEndpointCidrOptions(apiObject *types.VerifiedAccessEndpointCidrOptions) []any {
+func flattenVerifiedAccessEndpointCIDROptions(apiObject *types.VerifiedAccessEndpointCidrOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -593,7 +593,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	return []any{tfmap}
 }
 
-func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndpointEniOptions) []any {
+func flattenVerifiedAccessEndpointENIOptions(apiObject *types.VerifiedAccessEndpointEniOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -619,7 +619,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	return []any{tfmap}
 }
 
-func flattenVerifiedAccessEndpointRdsOptions(apiObject *types.VerifiedAccessEndpointRdsOptions) []any {
+func flattenVerifiedAccessEndpointRDSOptions(apiObject *types.VerifiedAccessEndpointRdsOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -657,7 +657,7 @@ func flattenVerifiedAccessEndpointRdsOptions(apiObject *types.VerifiedAccessEndp
 	return []any{tfmap}
 }
 
-func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
+func flattenVerifiedAccessSSESpecificationRequest(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -675,7 +675,7 @@ func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAcces
 	return []any{tfmap}
 }
 
-func expandCreateVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointCidrOptions {
+func expandCreateVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointCidrOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -701,7 +701,7 @@ func expandCreateVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.
 	return apiobject
 }
 
-func expandCreateVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointRdsOptions {
+func expandCreateVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointRdsOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -816,7 +816,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	return apiobject
 }
 
-func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointEniOptions {
+func expandCreateVerifiedAccessEndpointENIOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointEniOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -841,7 +841,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.C
 	return apiobject
 }
 
-func expandModifyVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointCidrOptions {
+func expandModifyVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointCidrOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -855,7 +855,7 @@ func expandModifyVerifiedAccessEndpointCidrOptions(tfMap map[string]any) *types.
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointRdsOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointRdsOptions {
+func expandModifyVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointRdsOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -903,7 +903,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointEniOptions {
+func expandModifyVerifiedAccessEndpointENIOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointEniOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -924,7 +924,7 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]any) *types.M
 	return apiObject
 }
 
-func expandCreateVerifiedAccessGenericSseSpecification(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
+func expandCreateVerifiedAccessGenericSSESpecification(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}

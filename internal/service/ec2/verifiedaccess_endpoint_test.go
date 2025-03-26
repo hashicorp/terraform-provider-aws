@@ -300,7 +300,7 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 	})
 }
 
-func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -319,7 +319,7 @@ func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore
 		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessEndpointConfig_Cidr(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Config: testAccVerifiedAccessEndpointConfig_cidr(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
@@ -335,7 +335,7 @@ func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore
 				},
 			},
 			{
-				Config: testAccVerifiedAccessEndpointConfig_Cidr_Update(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Config: testAccVerifiedAccessEndpointConfig_cidrUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
@@ -346,7 +346,7 @@ func testAccVerifiedAccessEndpoint_Cidr(t *testing.T, semaphore tfsync.Semaphore
 	})
 }
 
-func testAccVerifiedAccessEndpoint_Rds(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -365,7 +365,7 @@ func testAccVerifiedAccessEndpoint_Rds(t *testing.T, semaphore tfsync.Semaphore)
 		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessEndpointConfig_Rds(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Config: testAccVerifiedAccessEndpointConfig_rds(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
@@ -381,7 +381,7 @@ func testAccVerifiedAccessEndpoint_Rds(t *testing.T, semaphore tfsync.Semaphore)
 				},
 			},
 			{
-				Config: testAccVerifiedAccessEndpointConfig_Rds_Update(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Config: testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
@@ -539,7 +539,7 @@ resource "aws_verifiedaccess_group" "test" {
 `, rName, key, certificate))
 }
 
-func testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate string, subnetCount int) string {
+func testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate string, subnetCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, subnetCount),
 		fmt.Sprintf(`
@@ -819,9 +819,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 `, rName, key, certificate))
 }
 
-func testAccVerifiedAccessEndpointConfig_Cidr(rName, key, certificate string) string {
+func testAccVerifiedAccessEndpointConfig_cidr(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
-		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
 		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   attachment_type = "vpc"
@@ -850,9 +850,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 `, rName, key, certificate))
 }
 
-func testAccVerifiedAccessEndpointConfig_Cidr_Update(rName, key, certificate string) string {
+func testAccVerifiedAccessEndpointConfig_cidrUpdate(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
-		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
 		fmt.Sprintf(`
 resource "aws_verifiedaccess_endpoint" "test" {
   attachment_type = "vpc"
@@ -885,9 +885,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 `, rName, key, certificate))
 }
 
-func testAccVerifiedAccessEndpointConfig_Rds(rName, key, certificate string) string {
+func testAccVerifiedAccessEndpointConfig_rds(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
-		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
 		fmt.Sprintf(`
 
 
@@ -962,9 +962,9 @@ resource "aws_verifiedaccess_endpoint" "test" {
 `, rName, key, certificate))
 }
 
-func testAccVerifiedAccessEndpointConfig_Rds_Update(rName, key, certificate string) string {
+func testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
-		testAccVerifiedAccessEndpointConfig_base_tcp(rName, key, certificate, 2),
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
 		fmt.Sprintf(`
 
 

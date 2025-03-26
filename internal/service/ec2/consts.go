@@ -318,16 +318,16 @@ func verifiedAccessAttachmentType_Values() []string {
 const (
 	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
 	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
-	verifiedAccessEndpointTypeRds              = "rds"
-	verifiedAccessEndpointTypeCidr             = "cidr"
+	verifiedAccessEndpointTypeRDS              = "rds"
+	verifiedAccessEndpointTypeCIDR             = "cidr"
 )
 
 func verifiedAccessEndpointType_Values() []string {
 	return []string{
 		verifiedAccessEndpointTypeLoadBalancer,
 		verifiedAccessEndpointTypeNetworkInterface,
-		verifiedAccessEndpointTypeRds,
-		verifiedAccessEndpointTypeCidr,
+		verifiedAccessEndpointTypeRDS,
+		verifiedAccessEndpointTypeCIDR,
 	}
 }
 

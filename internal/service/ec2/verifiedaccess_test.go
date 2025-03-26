@@ -22,8 +22,8 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			acctest.CtDisappears: testAccVerifiedAccessEndpoint_disappears,
 			"policyDocument":     testAccVerifiedAccessEndpoint_policyDocument,
 			"subnetIDs":          testAccVerifiedAccessEndpoint_subnetIDs,
-			"cidr":               testAccVerifiedAccessEndpoint_Cidr,
-			"rds":                testAccVerifiedAccessEndpoint_Rds,
+			"cidr":               testAccVerifiedAccessEndpoint_cidr,
+			"rds":                testAccVerifiedAccessEndpoint_rds,
 		},
 		"Group": {
 			acctest.CtBasic:      testAccVerifiedAccessGroup_basic,
