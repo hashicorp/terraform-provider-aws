@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -876,36 +875,24 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 						// This is checking the change _after_ the state migration step happens
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								// names.AttrFilter:
-								names.AttrID:                    knownvalue.StringExact(rName),
-								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
-								// "noncurrent_version_transition":
-								// names.AttrPrefix:
+								names.AttrFilter:                    checkFilter_Prefix(""),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										// "newer_noncurrent_versions": knownvalue.Null(), // Actually unknown
+										"noncurrent_days":      knownvalue.Int32Exact(30),
+										names.AttrStorageClass: tfknownvalue.StringExact("STANDARD_IA"),
+									})),
+								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":     checkTransitions(),
 							}),
 						})),
 
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("and"), knownvalue.ListExact([]knownvalue.Check{})),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("object_size_greater_than")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("object_size_less_than")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey(names.AttrPrefix)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrFilter).AtSliceIndex(0).AtMapKey("tag"), knownvalue.ListExact([]knownvalue.Check{})),
-
-						tfplancheck.ExpectKnownValueChange(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("noncurrent_version_transition"),
-							checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
-							),
-							checkNoncurrentVersionTransitions(
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									// "newer_noncurrent_versions": knownvalue.Null(), // Actually unknown
-									"noncurrent_days":      knownvalue.Int32Exact(30),
-									names.AttrStorageClass: tfknownvalue.StringExact("STANDARD_IA"),
-								})),
-						),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("noncurrent_version_transition").AtSliceIndex(0).AtMapKey("newer_noncurrent_versions")),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{

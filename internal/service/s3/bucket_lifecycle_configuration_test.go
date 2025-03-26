@@ -69,7 +69,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -221,7 +221,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_Prefix("logs/"),
+								names.AttrFilter:                    checkFilter_Prefix("logs/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -269,7 +269,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(dateUpdated),
-								names.AttrFilter:                    checkPlanFilter_Prefix("tmp/"),
+								names.AttrFilter:                    checkFilter_Prefix("tmp/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -334,7 +334,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithEmptyPrefix(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_Prefix(""),
+								names.AttrFilter:                    checkFilter_Prefix(""),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -382,7 +382,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithEmptyPrefix(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_GreaterThan(200),
+								names.AttrFilter:                    checkFilter_GreaterThan(200),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -447,7 +447,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_GreaterThan(100),
+								names.AttrFilter:                    checkFilter_GreaterThan(100),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -495,7 +495,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_GreaterThan(200),
+								names.AttrFilter:                    checkFilter_GreaterThan(200),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -560,7 +560,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *t
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_GreaterThan(0),
+								names.AttrFilter:                    checkFilter_GreaterThan(0),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -608,7 +608,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *t
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_GreaterThan(200),
+								names.AttrFilter:                    checkFilter_GreaterThan(200),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -673,7 +673,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_LessThan(500),
+								names.AttrFilter:                    checkFilter_LessThan(500),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -721,7 +721,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_LessThan(5000),
+								names.AttrFilter:                    checkFilter_LessThan(5000),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -793,12 +793,12 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter: checkPlanFilter_And(
+								names.AttrFilter: checkFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(500),
 										"object_size_less_than":    knownvalue.Int64Exact(64000),
-										// names.AttrPrefix:           knownvalue.StringExact(""),
-										names.AttrTags: knownvalue.Null(),
+										names.AttrPrefix:           knownvalue.StringExact(""),
+										names.AttrTags:             knownvalue.Null(),
 									}),
 								),
 								names.AttrID:                    knownvalue.StringExact(rName),
@@ -855,7 +855,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter: checkPlanFilter_And(
+								names.AttrFilter: checkFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(400),
 										"object_size_less_than":    knownvalue.Int64Exact(65000),
@@ -934,7 +934,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter: checkPlanFilter_And(
+								names.AttrFilter: checkFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(500),
 										"object_size_less_than":    knownvalue.Int64Exact(64000),
@@ -1012,7 +1012,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_PrefixToAnd(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1069,7 +1069,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_PrefixToAnd(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
-								names.AttrFilter: checkPlanFilter_And(
+								names.AttrFilter: checkFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										// "object_size_greater_than": knownvalue.Int64Exact(0),
 										// "object_size_less_than":    knownvalue.Int64Exact(0),
@@ -1369,7 +1369,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("config/"),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkPlanNoncurrentVersionExpiration_Days(90),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1417,7 +1417,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("config/"),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkPlanNoncurrentVersionExpiration_Days(100),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1483,7 +1483,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("config/"),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1537,7 +1537,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("config/"),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -1764,7 +1764,7 @@ func TestAccS3BucketLifecycleConfiguration_RulePrefixToFilter(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(90),
-								names.AttrFilter:                    checkPlanFilter_Prefix("path1/"),
+								names.AttrFilter:                    checkFilter_Prefix("path1/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1830,7 +1830,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Tag(acctest.CtKey1, acctest.CtValue1),
+								names.AttrFilter:                    checkFilter_Tag(acctest.CtKey1, acctest.CtValue1),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1878,7 +1878,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Tag(acctest.CtKey2, acctest.CtValue2),
+								names.AttrFilter:                    checkFilter_Tag(acctest.CtKey2, acctest.CtValue2),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1941,7 +1941,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_DeleteMarker(true),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -1989,7 +1989,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_DeleteMarker(false),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -2053,7 +2053,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Empty(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -2101,7 +2101,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Empty(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix2/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix2/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -2165,7 +2165,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(7),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -2213,7 +2213,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(5),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -2287,7 +2287,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2343,7 +2343,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2420,7 +2420,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2492,7 +2492,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2548,7 +2548,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2620,7 +2620,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2676,7 +2676,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2750,7 +2750,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2801,7 +2801,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2860,7 +2860,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2926,7 +2926,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Empty(),
+								names.AttrFilter:                    checkFilter_Prefix(""),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -2974,7 +2974,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_None(),
-								names.AttrFilter:                    checkPlanFilter_Empty(),
+								names.AttrFilter:                    checkFilter_Prefix(""),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
@@ -3192,7 +3192,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(90),
-								names.AttrFilter: checkPlanFilter_And(
+								names.AttrFilter: checkFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(300),
 										// "object_size_less_than":    knownvalue.Int64Exact(0),
@@ -3249,7 +3249,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(90),
-								names.AttrFilter: checkPlanFilter_And(
+								names.AttrFilter: checkFilter_And(
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(0),
 										"object_size_less_than":    knownvalue.Int64Exact(0),
@@ -3299,7 +3299,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(90),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix2"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix2"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -3362,7 +3362,7 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -3425,7 +3425,7 @@ func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_up
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -3473,7 +3473,7 @@ func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_up
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -3536,7 +3536,7 @@ func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_re
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(365),
-								names.AttrFilter:                    checkPlanFilter_Prefix("prefix/"),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
@@ -3797,92 +3797,6 @@ func filterDefaults() map[string]knownvalue.Check {
 		"object_size_less_than":    knownvalue.Null(),
 		names.AttrPrefix:           knownvalue.Null(),
 		"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
-	}
-}
-
-func checkPlanFilter_And(check knownvalue.Check) knownvalue.Check {
-	checks := planFilterDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"and": knownvalue.ListExact([]knownvalue.Check{
-			check,
-		}),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanFilter_Empty() knownvalue.Check {
-	checks := planFilterDefaults()
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanFilter_GreaterThan(size int64) knownvalue.Check {
-	checks := planFilterDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"object_size_greater_than": knownvalue.Int64Exact(size),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanFilter_LessThan(size int64) knownvalue.Check {
-	checks := planFilterDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"object_size_less_than": knownvalue.Int64Exact(size),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanFilter_Prefix(prefix string) knownvalue.Check {
-	checks := planFilterDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		names.AttrPrefix: knownvalue.StringExact(prefix),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func checkPlanFilter_Tag(key, value string) knownvalue.Check {
-	checks := planFilterDefaults()
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"tag": knownvalue.ListExact([]knownvalue.Check{
-			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				names.AttrKey:   knownvalue.StringExact(key),
-				names.AttrValue: knownvalue.StringExact(value),
-			}),
-		}),
-	})
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(
-			checks,
-		),
-	})
-}
-
-func planFilterDefaults() map[string]knownvalue.Check {
-	return map[string]knownvalue.Check{
-		"and": knownvalue.ListExact([]knownvalue.Check{}),
-		// "object_size_greater_than": unknown,
-		// "object_size_less_than":    unknown,
-		// names.AttrPrefix:           unknown,
-		"tag": knownvalue.ListExact([]knownvalue.Check{}),
 	}
 }
 
