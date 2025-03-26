@@ -72,7 +72,7 @@ func (r *resourceAccountParent) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	currentParentAccountID, err := FindParentAccountID(ctx, conn, plan.AccountID.ValueString())
+	currentParentAccountID, err := findParentAccountID(ctx, conn, plan.AccountID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Organizations, create.ErrActionCreating, ResNameAccountParent, plan.AccountID.String(), err),
@@ -108,7 +108,7 @@ func (r *resourceAccountParent) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	// Get the current parent ID
-	parentID, err := FindParentAccountID(ctx, conn, state.AccountID.ValueString())
+	parentID, err := findParentAccountID(ctx, conn, state.AccountID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Organizations, create.ErrActionReading, ResNameAccountParent, state.AccountID.String(), err),
@@ -168,7 +168,7 @@ func (r *resourceAccountParent) Delete(ctx context.Context, req resource.DeleteR
 
 	conn := r.Meta().OrganizationsClient(ctx)
 
-	roots, err := findRoots(ctx, conn, &organizations.ListRootsInput{})
+	root, err := findDefaultRoot(ctx, conn)
 	if err != nil {
 		create.ProblemStandardMessage(names.Organizations, create.ErrActionDeleting, ResNameAccountParent, data.AccountID.String(), err)
 	}
@@ -176,7 +176,7 @@ func (r *resourceAccountParent) Delete(ctx context.Context, req resource.DeleteR
 	input := organizations.MoveAccountInput{
 		AccountId:           flex.StringFromFramework(ctx, data.AccountID),
 		SourceParentId:      flex.StringFromFramework(ctx, data.ParentID),
-		DestinationParentId: roots[0].Id,
+		DestinationParentId: root.Id,
 	}
 
 	_, err = conn.MoveAccount(ctx, &input)
