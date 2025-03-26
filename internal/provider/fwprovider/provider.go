@@ -8,13 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -353,7 +353,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 //
 // All data sources must have unique type names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return p.dataSources
+	return slices.Clone(p.dataSources)
 }
 
 // Resources returns a slice of functions to instantiate each Resource
@@ -361,7 +361,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 //
 // All resources must have unique type names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
-	return p.resources
+	return slices.Clone(p.resources)
 }
 
 // EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
@@ -369,7 +369,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 //
 // All ephemeral resources must have unique type names.
 func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
-	return p.ephemeralResources
+	return slices.Clone(p.ephemeralResources)
 }
 
 // Functions returns a slice of functions to instantiate each Function
