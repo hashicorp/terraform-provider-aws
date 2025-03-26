@@ -119,7 +119,7 @@ func resourceCachediSCSIVolume() *schema.Resource {
 	}
 }
 
-func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -159,7 +159,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -204,7 +204,7 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceCachediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -212,7 +212,7 @@ func resourceCachediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -220,7 +220,7 @@ func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](ctx, timeout, func() (any, error) {
 		return conn.DeleteVolume(ctx, &storagegateway.DeleteVolumeInput{
 			VolumeARN: aws.String(d.Id()),
 		})

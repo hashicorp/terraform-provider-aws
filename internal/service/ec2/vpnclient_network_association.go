@@ -61,7 +61,7 @@ func resourceClientVPNNetworkAssociation() *schema.Resource {
 	}
 }
 
-func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -87,7 +87,7 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceClientVPNNetworkAssociationRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -112,7 +112,7 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -140,7 +140,7 @@ func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceClientVPNNetworkAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClientVPNNetworkAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ",")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

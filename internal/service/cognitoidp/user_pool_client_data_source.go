@@ -182,7 +182,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 	}
 }
 
-func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -224,12 +224,12 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []interface{} {
+func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"user_data_shared": apiObject.UserDataShared,
 	}
 
@@ -249,10 +249,10 @@ func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigura
 		tfMap[names.AttrRoleARN] = aws.ToString(apiObject.RoleArn)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []interface{} {
+func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -262,11 +262,11 @@ func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidi
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"access_token":  apiObject.AccessToken,
 		"id_token":      apiObject.IdToken,
 		"refresh_token": apiObject.RefreshToken,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

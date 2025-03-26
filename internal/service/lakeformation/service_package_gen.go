@@ -26,6 +26,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Data Cells Filter",
 		},
 		{
+			Factory:  newResourceOptIn,
+			TypeName: "aws_lakeformation_opt_in",
+			Name:     "Opt In",
+		},
+		{
 			Factory:  newResourceResourceLFTag,
 			TypeName: "aws_lakeformation_resource_lf_tag",
 			Name:     "Resource LF Tag",

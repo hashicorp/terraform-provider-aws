@@ -6,6 +6,7 @@ package flex
 import (
 	"context"
 	"fmt"
+	"iter"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 // Expand  = TF -->  AWS
@@ -96,7 +98,7 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
-			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
 		}
 	}
@@ -197,7 +199,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -240,7 +242,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -297,7 +299,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -394,7 +396,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -528,7 +530,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -578,7 +580,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -612,7 +614,7 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from list[%s]": v.ElementType(ctx),
 		"to":            vTo.Kind(),
 	})
@@ -641,7 +643,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 			}
 
 			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
-			for i := 0; i < len(to); i++ {
+			for i := range to {
 				vals.Index(i).SetInt(to[i])
 			}
 			vTo.Set(vals)
@@ -684,7 +686,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -715,7 +717,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 			// Copy elements individually to enable expansion of lists of
 			// custom string types (AWS enums)
 			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
-			for i := 0; i < len(to); i++ {
+			for i := range to {
 				vals.Index(i).SetString(to[i])
 			}
 			vTo.Set(vals)
@@ -742,7 +744,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -814,7 +816,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from map[string, %s]": v.ElementType(ctx),
 		"to":                   vTo.Kind(),
 	})
@@ -869,7 +871,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from map[string, %s]": vFrom.ElementType(ctx),
 		"to":                   vTo.Kind(),
 	})
@@ -903,7 +905,7 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from set[%s]": v.ElementType(ctx),
 		"to":           vTo.Kind(),
 	})
@@ -1006,7 +1008,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, sourcePat
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
 	if !reflect.ValueOf(from).IsNil() {
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to.Interface(), expander)...)
+		diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1044,14 +1046,14 @@ func (expander autoExpander) nestedObjectCollectionToSlice(ctx context.Context, 
 	})
 
 	t := reflect.MakeSlice(tSlice, n, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		sourcePath := sourcePath.AtListIndex(i)
 		targetPath := targetPath.AtListIndex(i)
 		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
+		diags.Append(expandStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1091,7 +1093,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 	// Create a new target slice and expand each element.
 	f := reflect.ValueOf(from)
 	m := reflect.MakeMap(vTo.Type())
-	for i := 0; i < f.Len(); i++ {
+	for i := range f.Len() {
 		sourcePath := sourcePath.AtListIndex(i)
 		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 
@@ -1106,7 +1108,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
+		diags.Append(expandStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1124,6 +1126,116 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 	return diags
 }
 
+// expandStruct traverses struct `from`, calling `flexer` for each exported field.
+func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
+		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
+		return diags
+	}
+
+	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
+		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
+		return diags
+	}
+
+	if valTo.Kind() == reflect.Interface {
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+			"from": valFrom.Type(),
+			"to":   valTo.Kind(),
+		})
+		return diags
+	}
+
+	typeFrom := valFrom.Type()
+	typeTo := valTo.Type()
+
+	for fromField := range expandSourceFields(ctx, typeFrom, flexer.getOptions()) {
+		fromFieldName := fromField.Name
+		_, fromFieldOpts := autoflexTags(fromField)
+
+		toField, ok := findFieldFuzzy(ctx, fromFieldName, typeFrom, typeTo, flexer)
+		if !ok {
+			// Corresponding field not found in to.
+			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+			})
+			continue
+		}
+		toFieldName := toField.Name
+		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if !toFieldVal.CanSet() {
+			// Corresponding field value can't be changed.
+			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Matched fields", map[string]any{
+			logAttrKeySourceFieldname: fromFieldName,
+			logAttrKeyTargetFieldname: toFieldName,
+		})
+
+		opts := fieldOpts{
+			legacy: fromFieldOpts.Legacy(),
+		}
+
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		if diags.HasError() {
+			break
+		}
+	}
+
+	return diags
+}
+
+func expandSourceFields(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) iter.Seq[reflect.StructField] {
+	return func(yield func(reflect.StructField) bool) {
+		for field := range tfreflect.ExportedStructFields(typ) {
+			fieldName := field.Name
+			if opts.isIgnoredField(fieldName) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+					logAttrKeySourceFieldname: fieldName,
+				})
+				continue
+			}
+
+			fromNameOverride, _ := autoflexTags(field)
+			if fromNameOverride == "-" {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+					logAttrKeySourceFieldname: fieldName,
+				})
+				continue
+			}
+
+			if fieldName == mapBlockKeyFieldName {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
+					logAttrKeySourceFieldname: mapBlockKeyFieldName,
+				})
+				continue
+			}
+
+			if !yield(field) {
+				return
+			}
+		}
+	}
+}
+
 // mapBlockKey takes a struct and extracts the value of the `key`
 func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -1135,41 +1247,31 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
 
-	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		field := typFrom.Field(i)
-		if field.PkgPath != "" {
-			continue // Skip unexported fields.
-		}
-
+	for field := range tfreflect.ExportedStructFields(valFrom.Type()) {
 		// go from StringValue to string
 		if field.Name == mapBlockKeyFieldName {
-			fieldVal := valFrom.Field(i)
+			fieldVal := valFrom.FieldByIndex(field.Index)
 
-			if v, ok := fieldVal.Interface().(basetypes.StringValue); ok {
-				return reflect.ValueOf(v.ValueString()), diags
-			}
-
-			// this handles things like StringEnum which has a ValueString method but is tricky to get a generic instantiation of
-			fieldType := fieldVal.Type()
-			method, found := fieldType.MethodByName("ValueString")
-			if found {
-				result := fieldType.Method(method.Index).Func.Call([]reflect.Value{fieldVal})
-				if len(result) > 0 {
-					return result[0], diags
+			if v, ok := fieldVal.Interface().(basetypes.StringValuable); ok {
+				v, d := v.ToStringValue(ctx)
+				diags.Append(d...)
+				if d.HasError() {
+					return reflect.Zero(reflect.TypeFor[string]()), diags
 				}
+				return reflect.ValueOf(v.ValueString()), diags
 			}
 
 			// this is not ideal but perhaps better than a panic?
 			// return reflect.ValueOf(fmt.Sprintf("%s", valFrom.Field(i))), diags
 
-			return valFrom.Field(i), diags
+			return fieldVal, diags
 		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "Source has no map block key")
 	diags.Append(diagExpandingNoMapBlockKey(valFrom.Type()))
 
-	return reflect.Zero(reflect.TypeOf("")), diags
+	return reflect.Zero(reflect.TypeFor[string]()), diags
 }
 
 func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Value) diag.Diagnostics {

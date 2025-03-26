@@ -4,6 +4,7 @@ package elasticache
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +26,12 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+		func() (*elasticache.ListTagsForResourceOutput, error) {
+			return conn.ListTagsForResource(ctx, &input, optFns...)
+		},
+		"not in available state",
+	)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -123,7 +130,12 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+			func() (any, error) {
+				return conn.RemoveTagsFromResource(ctx, &input, optFns...)
+			},
+			"not in available state",
+		)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -138,7 +150,12 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+			func() (any, error) {
+				return conn.AddTagsToResource(ctx, &input, optFns...)
+			},
+			"not in available state",
+		)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

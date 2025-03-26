@@ -39,19 +39,19 @@ func (g *Generator) UI() cli.Ui {
 	return g.ui
 }
 
-func (g *Generator) Infof(format string, a ...interface{}) {
+func (g *Generator) Infof(format string, a ...any) {
 	g.ui.Info(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Warnf(format string, a ...interface{}) {
+func (g *Generator) Warnf(format string, a ...any) {
 	g.ui.Warn(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Errorf(format string, a ...interface{}) {
+func (g *Generator) Errorf(format string, a ...any) {
 	g.ui.Error(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Fatalf(format string, a ...interface{}) {
+func (g *Generator) Fatalf(format string, a ...any) {
 	g.Errorf(format, a...)
 	os.Exit(1)
 }

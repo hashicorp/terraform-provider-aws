@@ -127,7 +127,7 @@ func resourceEndpointAccess() *schema.Resource {
 	}
 }
 
-func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -186,7 +186,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner_account", d.Get("owner_account"))
 	d.Set(names.AttrPort, endpointAccess.Port)
 	d.Set(names.AttrSubnetIDs, endpointAccess.SubnetIds)
-	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
+	if err := d.Set("vpc_endpoint", []any{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(endpointAccess.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
@@ -197,7 +197,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -222,7 +222,7 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -272,7 +272,7 @@ func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Clie
 }
 
 func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

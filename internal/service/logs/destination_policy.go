@@ -47,7 +47,7 @@ func resourceDestinationPolicy() *schema.Resource {
 	}
 }
 
-func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -79,7 +79,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDestinationPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 

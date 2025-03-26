@@ -192,7 +192,7 @@ func resourceEventDataStore() *schema.Resource {
 	}
 }
 
-func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -208,7 +208,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
-		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -236,7 +236,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
-func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -267,7 +267,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -277,7 +277,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("advanced_event_selector") {
-			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any))
 		}
 
 		if d.HasChange("billing_mode") {
@@ -333,7 +333,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
-func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -401,7 +401,7 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 }
 
 func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEventDataStoreByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

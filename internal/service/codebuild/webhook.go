@@ -118,7 +118,7 @@ func resourceWebhook() *schema.Resource {
 	}
 }
 
-func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -139,8 +139,8 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FilterGroups = expandWebhookFilterGroups(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.ScopeConfiguration = expandScopeConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]any)) > 0 {
+		input.ScopeConfiguration = expandScopeConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateWebhook(ctx, input)
@@ -156,7 +156,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -188,7 +188,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -219,7 +219,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -254,7 +254,7 @@ func findWebhookByProjectName(ctx context.Context, conn *codebuild.Client, name 
 	return output.Webhook, nil
 }
 
-func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
+func expandWebhookFilterGroups(tfList []any) [][]types.WebhookFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -262,12 +262,12 @@ func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
 	var apiObjects [][]types.WebhookFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]any); ok && len(v) > 0 {
 			apiObjects = append(apiObjects, expandWebhookFilters(v))
 		}
 	}
@@ -275,7 +275,7 @@ func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
 	return apiObjects
 }
 
-func expandWebhookFilters(tfList []interface{}) []types.WebhookFilter {
+func expandWebhookFilters(tfList []any) []types.WebhookFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -283,7 +283,7 @@ func expandWebhookFilters(tfList []interface{}) []types.WebhookFilter {
 	var apiObjects []types.WebhookFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -300,7 +300,7 @@ func expandWebhookFilters(tfList []interface{}) []types.WebhookFilter {
 	return apiObjects
 }
 
-func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
+func expandWebhookFilter(tfMap map[string]any) *types.WebhookFilter {
 	if tfMap == nil {
 		return nil
 	}
@@ -322,12 +322,12 @@ func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
 	return apiObject
 }
 
-func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
+func expandScopeConfiguration(tfList []any) *types.ScopeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &types.ScopeConfiguration{
 		Name:  aws.String(tfMap[names.AttrName].(string)),
@@ -341,15 +341,15 @@ func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
 	return apiObject
 }
 
-func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{} {
+func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrFilter: flattenWebhookFilters(apiObject),
 		}
 		tfList = append(tfList, tfMap)
@@ -358,12 +358,12 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{
 	return tfList
 }
 
-func flattenWebhookFilters(apiObjects []types.WebhookFilter) []interface{} {
+func flattenWebhookFilters(apiObjects []types.WebhookFilter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenWebhookFilter(apiObject))
@@ -372,8 +372,8 @@ func flattenWebhookFilters(apiObjects []types.WebhookFilter) []interface{} {
 	return tfList
 }
 
-func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]any {
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
@@ -388,12 +388,12 @@ func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} 
 	return tfMap
 }
 
-func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) []interface{} {
+func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrName:  apiObject.Name,
 		names.AttrScope: apiObject.Scope,
 	}
@@ -402,5 +402,5 @@ func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) []interface{
 		tfMap[names.AttrDomain] = apiObject.Domain
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

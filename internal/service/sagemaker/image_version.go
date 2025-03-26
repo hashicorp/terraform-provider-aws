@@ -61,7 +61,7 @@ func resourceImageVersion() *schema.Resource {
 	}
 }
 
-func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -73,19 +73,19 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	_, err := conn.CreateImageVersion(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Image Version %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitImageVersionCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image Version (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageVersionRead(ctx, d, meta)...)
 }
 
-func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -93,12 +93,12 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Image Version (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Image Version (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, image.ImageVersionArn)
@@ -111,7 +111,7 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -124,11 +124,11 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Image Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitImageVersionDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image Version (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

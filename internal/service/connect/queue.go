@@ -116,7 +116,7 @@ func resourceQueue() *schema.Resource {
 	}
 }
 
-func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("outbound_caller_config"); ok {
-		input.OutboundCallerConfig = expandOutboundCallerConfig(v.([]interface{}))
+		input.OutboundCallerConfig = expandOutboundCallerConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -160,7 +160,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -208,7 +208,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -275,7 +275,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("outbound_caller_config") {
 		input := &connect.UpdateQueueOutboundCallerConfigInput{
 			InstanceId:           aws.String(instanceID),
-			OutboundCallerConfig: expandOutboundCallerConfig(d.Get("outbound_caller_config").([]interface{})),
+			OutboundCallerConfig: expandOutboundCallerConfig(d.Get("outbound_caller_config").([]any)),
 			QueueId:              aws.String(queueID),
 		}
 
@@ -339,7 +339,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -352,7 +352,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (any, error) {
 		return conn.DeleteQueue(ctx, &connect.DeleteQueueInput{
 			InstanceId: aws.String(instanceID),
 			QueueId:    aws.String(queueID),
@@ -454,12 +454,12 @@ func findQueueQuickConnectSummaries(ctx context.Context, conn *connect.Client, i
 	return output, nil
 }
 
-func expandOutboundCallerConfig(tfList []interface{}) *awstypes.OutboundCallerConfig {
+func expandOutboundCallerConfig(tfList []any) *awstypes.OutboundCallerConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -483,12 +483,12 @@ func expandOutboundCallerConfig(tfList []interface{}) *awstypes.OutboundCallerCo
 	return apiObject
 }
 
-func flattenOutboundCallerConfig(apiObject *awstypes.OutboundCallerConfig) []interface{} {
+func flattenOutboundCallerConfig(apiObject *awstypes.OutboundCallerConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.OutboundCallerIdName; v != nil {
 		tfMap["outbound_caller_id_name"] = aws.ToString(v)
@@ -502,5 +502,5 @@ func flattenOutboundCallerConfig(apiObject *awstypes.OutboundCallerConfig) []int
 		tfMap["outbound_flow_id"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -56,7 +57,7 @@ func resourceAppCookieStickinessPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+				ValidateFunc: func(v any, k string) (ws []string, es []error) {
 					value := v.(string)
 					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
@@ -69,7 +70,7 @@ func resourceAppCookieStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -110,7 +111,7 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceAppCookieStickinessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -144,7 +145,7 @@ func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -233,10 +234,8 @@ func findLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *ela
 			continue
 		}
 
-		for _, v := range v.PolicyNames {
-			if v == policyName {
-				return policy, nil
-			}
+		if slices.Contains(v.PolicyNames, policyName) {
+			return policy, nil
 		}
 	}
 

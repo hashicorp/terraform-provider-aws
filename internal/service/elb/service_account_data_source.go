@@ -65,7 +65,7 @@ func dataSourceServiceAccount() *schema.Resource {
 	}
 }
 
-func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	region := meta.(*conns.AWSClient).Region(ctx)

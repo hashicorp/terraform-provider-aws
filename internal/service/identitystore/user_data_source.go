@@ -152,7 +152,7 @@ func dataSourceUser() *schema.Resource {
 				},
 			},
 			names.AttrFilter: {
-				Deprecated:    "Use the alternate_identifier attribute instead.",
+				Deprecated:    "filter is deprecated. Use alternate_identifier instead.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -278,17 +278,17 @@ func dataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]any)) > 0 {
 		// Use ListUsers for backwards compat.
 		var output []types.User
 		input := &identitystore.ListUsersInput{
-			Filters:         expandFilters(d.Get(names.AttrFilter).([]interface{})),
+			Filters:         expandFilters(d.Get(names.AttrFilter).([]any)),
 			IdentityStoreId: aws.String(identityStoreID),
 		}
 
@@ -328,7 +328,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		d.Set("identity_store_id", user.IdentityStoreId)
 		d.Set("locale", user.Locale)
-		if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
+		if err := d.Set(names.AttrName, []any{flattenName(user.Name)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
 		}
 		d.Set("nickname", user.NickName)
@@ -348,9 +348,9 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	var userID string
 
-	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
 		input := &identitystore.GetUserIdInput{
-			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
+			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
 		}
 
@@ -391,7 +391,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("identity_store_id", user.IdentityStoreId)
 	d.Set("locale", user.Locale)
-	if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
+	if err := d.Set(names.AttrName, []any{flattenName(user.Name)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
 	}
 	d.Set("nickname", user.NickName)

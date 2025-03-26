@@ -69,7 +69,7 @@ const (
 	ResNamePlaybackKeyPair = "Playback Key Pair"
 )
 
-func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -101,7 +101,7 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourcePlaybackKeyPairRead(ctx, d, meta)...)
 }
 
-func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -125,7 +125,7 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)

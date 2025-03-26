@@ -58,7 +58,7 @@ func resourceTransitGatewayPolicyTable() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -84,7 +84,7 @@ func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceTransitGatewayPolicyTableRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -116,7 +116,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceTransitGatewayPolicyTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -124,7 +124,7 @@ func resourceTransitGatewayPolicyTableUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceTransitGatewayPolicyTableRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
