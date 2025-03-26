@@ -14,8 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 
-	// TODO REGION Temporarily disable.
-	// "github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -361,13 +360,12 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					// TODO REGION Temporarily disable.
-					// if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-					// 	diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
-					// 	if diags.HasError() {
-					// 		return ctx, diags
-					// 	}
-					// }
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						if diags.HasError() {
+							return ctx, diags
+						}
+					}
 
 					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
@@ -453,13 +451,12 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					// TODO REGION Temporarily disable.
-					// if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-					// 	diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
-					// 	if diags.HasError() {
-					// 		return ctx, diags
-					// 	}
-					// }
+					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						if diags.HasError() {
+							return ctx, diags
+						}
+					}
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
@@ -520,13 +517,12 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 						var diags diag.Diagnostics
 						var overrideRegion string
 
-						// TODO REGION Temporarily disable.
-						// if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						// 	diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
-						// 	if diags.HasError() {
-						// 		return ctx, diags
-						// 	}
-						// }
+						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+							if diags.HasError() {
+								return ctx, diags
+							}
+						}
 
 						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 						if c != nil {
