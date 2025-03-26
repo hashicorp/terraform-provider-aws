@@ -306,16 +306,6 @@ const (
 )
 
 const (
-	verifiedAccessAttachmentTypeVPC = "vpc"
-)
-
-func verifiedAccessAttachmentType_Values() []string {
-	return []string{
-		verifiedAccessAttachmentTypeVPC,
-	}
-}
-
-const (
 	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
 	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
 	verifiedAccessEndpointTypeRDS              = "rds"
