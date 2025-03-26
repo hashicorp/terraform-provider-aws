@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// verifyRegionInConfiguredPartition is a CustomizeDiff function that verifies that the value of
+// verifyRegionValueInConfiguredPartition is a CustomizeDiff function that verifies that the value of
 // the top-level `region` attribute is in the configured AWS partition.
-func verifyRegionInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+func verifyRegionValueInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), v.(string)); err != nil {
 			return err
@@ -40,6 +40,21 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	if _, ok := d.GetOk(names.AttrRegion); !ok {
 		return d.SetNew(names.AttrRegion, meta.(*conns.AWSClient).AwsConfig(ctx).Region)
+	}
+
+	return nil
+}
+
+// forceNewIfRegionValueChanges is a CustomizeDiff function that forces resource replacement
+// if the value of the top-level `region` attribute changes.
+func forceNewIfRegionValueChanges(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	if d.Id() != "" && d.HasChange(names.AttrRegion) {
+		providerRegion := meta.(*conns.AWSClient).AwsConfig(ctx).Region
+		o, n := d.GetChange(names.AttrRegion)
+		if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
+			return nil
+		}
+		return d.ForceNew(names.AttrRegion)
 	}
 
 	return nil

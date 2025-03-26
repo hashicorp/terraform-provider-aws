@@ -457,10 +457,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						Optional: true,
 						Computed: true,
 					}
-					// If the resource defines no Update handler then Region must be ForceNew
-					// otherwise for regional resources, a change of Region must ForceNew.
-					if r.UpdateWithoutTimeout == nil || !v.IsGlobal {
-						regionSchema.ForceNew = true
+					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
+					if r.UpdateWithoutTimeout == nil {
+						r.UpdateWithoutTimeout = schema.NoopContext
 					}
 
 					if f := r.SchemaFunc; f != nil {
@@ -475,9 +474,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if v.IsValidateOverrideInPartition {
-					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionInConfiguredPartition)
+					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionValueInConfiguredPartition)
 				}
 				customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
+				if !v.IsGlobal {
+					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionValueChanges)
+				}
 				importFuncs = append(importFuncs, importRegion)
 			}
 
