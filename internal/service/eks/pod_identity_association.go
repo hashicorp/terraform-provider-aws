@@ -229,7 +229,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, input)
 		}, "Role provided in the request does not exist")
 
@@ -241,7 +241,6 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 			return
 		}
 	}
-	fmt.Printf("New State is %v", new)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 

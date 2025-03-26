@@ -321,12 +321,6 @@ func testAccPodIdentityAssociationConfig_clusterBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-  endpoints {
-    eks = "https://api.beta.us-west-2.wesley.amazonaws.com"
-  }
-}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "cluster" {
@@ -404,7 +398,7 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "beta.pods.eks.aws.internal"
+        "Service": "pods.eks.amazonaws.com"
       },
       "Action": [
         "sts:AssumeRole",
@@ -490,7 +484,7 @@ resource "aws_iam_role" "test2" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "beta.pods.eks.aws.internal"
+        "Service": "pods.eks.amazonaws.com"
       },
       "Action": [
         "sts:AssumeRole",
@@ -537,7 +531,7 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "beta.pods.eks.aws.internal"
+        "Service": "pods.eks.amazonaws.com"
       },
       "Action": [
         "sts:AssumeRole",
