@@ -154,15 +154,23 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"from_port": {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
-									"to_port":   {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+									"from_port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IsPortNumberOrZero,
+									},
+									"to_port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IsPortNumberOrZero,
+									},
 								},
 							},
 						},
 						names.AttrProtocol: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointProtocol](),
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
@@ -193,15 +201,23 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"from_port": {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
-									"to_port":   {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+									"from_port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IsPortNumberOrZero,
+									},
+									"to_port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IsPortNumberOrZero,
+									},
 								},
 							},
 						},
 						names.AttrProtocol: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointProtocol](),
 						},
 					},
 				},
@@ -216,29 +232,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						names.AttrProtocol: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{verifiedAccessEndpointProtocolTCP}, false),
-						},
 						"cluster_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"instance_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"proxy_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -247,6 +241,28 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"instance_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrPort: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IsPortNumber,
+						},
+						names.AttrProtocol: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(enum.Slice(types.VerifiedAccessEndpointProtocolTcp), false),
+						},
+						"proxy_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,

@@ -306,19 +306,5 @@ const (
 )
 
 const (
-	verifiedAccessEndpointProtocolHTTP  = "http"
-	verifiedAccessEndpointProtocolHTTPS = "https"
-	verifiedAccessEndpointProtocolTCP   = "tcp"
-)
-
-func verifiedAccessEndpointProtocol_Values() []string {
-	return []string{
-		verifiedAccessEndpointProtocolHTTP,
-		verifiedAccessEndpointProtocolHTTPS,
-		verifiedAccessEndpointProtocolTCP,
-	}
-}
-
-const (
 	supportedRegionServiceStateAvailable = "Available"
 )
