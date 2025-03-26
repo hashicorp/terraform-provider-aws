@@ -1,5 +1,9 @@
 ## 5.93.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_api_gateway_rest_api_put` ([#41375](https://github.com/hashicorp/terraform-provider-aws/issues/41375))
+
 ENHANCEMENTS:
 
 * resource/aws_datasync_task: Add `task_mode` argument ([#39979](https://github.com/hashicorp/terraform-provider-aws/issues/39979))
