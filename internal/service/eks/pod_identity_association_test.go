@@ -516,14 +516,14 @@ func testAccPodIdentityAssociationConfig_crossAccountPodIdentityRolesBase(rName,
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "target_account" {
-	provider = "awsalternate"
+  provider = "awsalternate"
 }
 data "aws_caller_identity" "target_account" {
-	provider = "awsalternate"
+  provider = "awsalternate"
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -556,7 +556,7 @@ resource "aws_iam_role_policy" "test" {
           "sts:AssumeRole",
           "sts:TagSession"
         ]
-		Resource = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.target_account.account_id}:role/%[2]s"
+        Resource = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.target_account.account_id}:role/%[2]s"
       }
     ]
   })
@@ -564,7 +564,7 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_iam_role" "target_role" {
   provider = "awsalternate"
-  name = %[2]q
+  name     = %[2]q
 
   assume_role_policy = <<POLICY
 {
@@ -586,7 +586,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "target" {
-  provider = "awsalternate"
+  provider   = "awsalternate"
   policy_arn = "arn:${data.aws_partition.target_account.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
   role       = aws_iam_role.target_role.name
 }
@@ -599,12 +599,12 @@ func testAccPodIdentityAssociationConfig_crossaccount(rName, targetRoleName stri
 		testAccPodIdentityAssociationConfig_crossAccountPodIdentityRolesBase(rName, targetRoleName),
 		fmt.Sprintf(`
 resource "aws_eks_pod_identity_association" "test" {
-  cluster_name    = aws_eks_cluster.test.name
-  namespace       = %[1]q
-  service_account = "%[1]s-sa"
+  cluster_name         = aws_eks_cluster.test.name
+  namespace            = %[1]q
+  service_account      = "%[1]s-sa"
   disable_session_tags = true
-  role_arn        = aws_iam_role.test.arn
-  target_role_arn = aws_iam_role.target_role.arn
+  role_arn             = aws_iam_role.test.arn
+  target_role_arn      = aws_iam_role.target_role.arn
 }
 `, rName))
 }
@@ -615,8 +615,8 @@ func testAccPodIdentityAssociationConfig_updateTargetRoleARN(rName, targetRoleNa
 		testAccPodIdentityAssociationConfig_crossAccountPodIdentityRolesBase(rName, targetRoleName),
 		fmt.Sprintf(`
 resource "aws_iam_role" "target_role2" {
-  provider = "awsalternate"
-  name = "%[2]s-2"
+  provider           = "awsalternate"
+  name               = "%[2]s-2"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -637,18 +637,18 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "target2" {
-  provider = "awsalternate"
+  provider   = "awsalternate"
   policy_arn = "arn:${data.aws_partition.target_account.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
   role       = aws_iam_role.target_role2.name
 }
 
 resource "aws_eks_pod_identity_association" "test" {
-  cluster_name    = aws_eks_cluster.test.name
-  namespace       = %[1]q
-  service_account = "%[1]s-sa"
+  cluster_name         = aws_eks_cluster.test.name
+  namespace            = %[1]q
+  service_account      = "%[1]s-sa"
   disable_session_tags = false
-  role_arn        = aws_iam_role.test.arn
-  target_role_arn = aws_iam_role.target_role2.arn
+  role_arn             = aws_iam_role.test.arn
+  target_role_arn      = aws_iam_role.target_role2.arn
 }
 `, rName, targetRoleName))
 }
