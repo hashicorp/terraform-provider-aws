@@ -418,6 +418,93 @@ func TestAccCloudFormationStackSetInstance_delegatedAdministrator(t *testing.T) 
 	})
 }
 
+func TestAccCloudFormationStackSetInstance_multipleDeploymentTargets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstanceSummaries []awstypes.StackInstanceSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+			acctest.PreCheckMultipleOrganizationalUnitsWithAccounts(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationEndpointID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_multipleDeploymentTargets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
+					"call_as",
+					"deployment_targets",
+				},
+			},
+			{
+				Config: testAccStackSetInstanceConfig_multipleDeploymentTargets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_updateWithOUTargets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstanceSummaries []awstypes.StackInstanceSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+			acctest.PreCheckMultipleOrganizationalUnitsWithAccounts(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationEndpointID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_multipleDeploymentTargets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+				),
+			},
+			{
+				Config: testAccStackSetInstanceConfig_updateWithOUTargets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", "PARALLEL"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStackSetInstanceExists(ctx context.Context, resourceName string, v *awstypes.StackInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -929,6 +1016,55 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   deployment_targets {
     organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_multipleDeploymentTargets(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+data "aws_organizations_organizational_units" "test" {
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
+
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  deployment_targets {
+    organizational_unit_ids = [
+      data.aws_organizations_organizational_units.test.children[0].id,
+      data.aws_organizations_organizational_units.test.children[1].id,
+    ]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_updateWithOUTargets(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+data "aws_organizations_organizational_units" "test" {
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
+
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  operation_preferences {
+    failure_tolerance_count   = 1
+    max_concurrent_percentage = 100
+    concurrency_mode          = "SOFT_FAILURE_TOLERANCE"
+    region_concurrency_type   = "PARALLEL"
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [
+      data.aws_organizations_organizational_units.test.children[0].id,
+      data.aws_organizations_organizational_units.test.children[1].id,
+    ]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
