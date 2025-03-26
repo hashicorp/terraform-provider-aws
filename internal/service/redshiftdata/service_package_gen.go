@@ -33,6 +33,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_redshiftdata_statement",
 			Name:     "Statement",
 		},
+		{
+			Factory:  resourceBatchStatement,
+			TypeName: "aws_redshiftdata_batch_statement",
+		},
 	}
 }
 
