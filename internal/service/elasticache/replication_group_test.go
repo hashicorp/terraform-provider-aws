@@ -4601,7 +4601,7 @@ func testAccReplicationGroupConfig_globalIDBasic(rName string) string {
 		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id        = "%[1]s-s"
+  replication_group_id        = %[1]q
   description                 = "secondary"
   global_replication_group_id = aws_elasticache_global_replication_group.test.global_replication_group_id
   subnet_group_name           = aws_elasticache_subnet_group.test.name
@@ -4617,7 +4617,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 resource "aws_elasticache_replication_group" "primary" {
   provider = awsalternate
 
-  replication_group_id = "%[1]s-p"
+  replication_group_id = %[1]q
   description          = "primary"
   subnet_group_name    = aws_elasticache_subnet_group.primary.name
   node_type            = "cache.m5.large"
