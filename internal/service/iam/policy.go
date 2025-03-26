@@ -102,15 +102,10 @@ func resourcePolicy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"enable_delay_after_policy_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"delay_after_policy_creation": {
+			"delay_after_policy_creation_in_ms": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
+				Default:  -1,
 			},
 		},
 
@@ -248,11 +243,9 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		enableDelayAfterPolicyCreation := d.Get("enable_delay_after_policy_creation").(bool)
-		// Print the retrieved values to the console
-		fmt.Printf("enable_delay_after_policy_creation: %t\n", enableDelayAfterPolicyCreation)
+		delayAfterPolicyCreationInMs := d.Get("delay_after_policy_creation_in_ms").(int)
 
-		if !enableDelayAfterPolicyCreation {
+		if delayAfterPolicyCreationInMs == -1 {
 			input := &iam.CreatePolicyVersionInput{
 				PolicyArn:      aws.String(d.Id()),
 				PolicyDocument: aws.String(policy),
@@ -264,12 +257,10 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
 			}
 		} else {
-			// Creating Policy and Setting the version as Default in one operation is causing
-			// Access issues. Hence to mitigate it, the SetAsDefault is set to false.
-			// Seperating the setDefaultPolicyVersion as a separate operation.
-
-			delayAfterPolicyCreation := d.Get("delay_after_policy_creation").(int)
-			fmt.Printf("delay_after_policy_creation: %d seconds\n", delayAfterPolicyCreation)
+			// Creating a policy and setting its version as default in a single operation can
+			// lead to access issues for users who generate STS tokens by attaching policies.
+			// To mitigate this, separate createPolicyVersion and setDefaultPolicyVersion into
+			// two distinct operations. This is achieved by setting SetAsDefault to false in CreatePolicyVersionInput.
 
 			input := &iam.CreatePolicyVersionInput{
 				PolicyArn:      aws.String(d.Id()),
@@ -284,9 +275,9 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
 			}
 
-			// Ensuring Thread Sleeps for n seconds before Setting version as default version
-			// The value is passed through a variable. Default value is 3secs
-			time.Sleep(time.Duration(delayAfterPolicyCreation) * time.Second)
+			// Ensuring Thread Sleeps for n ms before Setting version as default version
+			// The value is passed through a variable.
+			time.Sleep(time.Duration(delayAfterPolicyCreationInMs) * time.Millisecond)
 
 			policyInput := &iam.SetDefaultPolicyVersionInput{
 				PolicyArn: aws.String(d.Id()),

@@ -400,6 +400,57 @@ func TestAccIAMPolicy_malformedCondition(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicy_updateWithoutDelay(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out awstypes.Policy
+	resourceName := "aws_iam_policy.test"
+	name := "test"
+	description := "policy_create_update_with_delay"
+	delayAfterPolicyCreationVariable := "delay_after_policy_creation_in_ms"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_description(name, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "-1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out awstypes.Policy
+	resourceName := "aws_iam_policy.test"
+	description := "policy_create_update_with_delay"
+	delayAfterPolicyCreationVariable := "delay_after_policy_creation_in_ms"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_updateWithDelay(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "3000"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -745,4 +796,32 @@ resource "aws_iam_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccPolicyConfig_updateWithDelay() string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = "test"
+  path = "/"
+  description = "policy_create_update_with_delay"
+  delay_after_policy_creation_in_ms = 3000
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:Get*",
+        "s3:List*",
+        "s3:PutO*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`)
 }
