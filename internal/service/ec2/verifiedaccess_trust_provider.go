@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -216,8 +216,8 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVerifiedAccessTrustProviderInput{
-		ClientToken:         aws.String(id.UniqueId()),
+	input := ec2.CreateVerifiedAccessTrustProviderInput{
+		ClientToken:         aws.String(sdkid.UniqueId()),
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
 		TagSpecifications:   getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
 		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
@@ -251,7 +251,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		input.UserTrustProviderType = types.UserTrustProviderType(v.(string))
 	}
 
-	output, err := conn.CreateVerifiedAccessTrustProvider(ctx, input)
+	output, err := conn.CreateVerifiedAccessTrustProvider(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Trust Provider: %s", err)
@@ -294,7 +294,6 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	} else {
 		d.Set("oidc_options", nil)
 	}
-
 	if v := output.NativeApplicationOidcOptions; v != nil {
 		if err := d.Set("native_application_oidc_options", flattenNativeApplicationOIDCOptions(v, d.Get("native_application_oidc_options.0.client_secret").(string))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting native_application_oidc_options: %s", err)
@@ -320,8 +319,8 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyVerifiedAccessTrustProviderInput{
-			ClientToken:                   aws.String(id.UniqueId()),
+		input := ec2.ModifyVerifiedAccessTrustProviderInput{
+			ClientToken:                   aws.String(sdkid.UniqueId()),
 			VerifiedAccessTrustProviderId: aws.String(d.Id()),
 		}
 
@@ -341,7 +340,7 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 			}
 		}
 
-		_, err := conn.ModifyVerifiedAccessTrustProvider(ctx, input)
+		_, err := conn.ModifyVerifiedAccessTrustProvider(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Trust Provider (%s): %s", d.Id(), err)
@@ -357,7 +356,7 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 
 	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(id.UniqueId()),
+		ClientToken:                   aws.String(sdkid.UniqueId()),
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &input)
@@ -399,21 +398,27 @@ func flattenNativeApplicationOIDCOptions(apiObject *types.NativeApplicationOidcO
 	if v := apiObject.AuthorizationEndpoint; v != nil {
 		tfMap["authorization_endpoint"] = aws.ToString(v)
 	}
+
 	if v := apiObject.ClientId; v != nil {
 		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
+
 	if v := apiObject.Issuer; v != nil {
 		tfMap[names.AttrIssuer] = aws.ToString(v)
 	}
+
 	if v := apiObject.PublicSigningKeyEndpoint; v != nil {
 		tfMap["public_signing_key_endpoint"] = aws.ToString(v)
 	}
+
 	if v := apiObject.Scope; v != nil {
 		tfMap[names.AttrScope] = aws.ToString(v)
 	}
+
 	if v := apiObject.TokenEndpoint; v != nil {
 		tfMap["token_endpoint"] = aws.ToString(v)
 	}
+
 	if v := apiObject.UserInfoEndpoint; v != nil {
 		tfMap["user_info_endpoint"] = aws.ToString(v)
 	}
@@ -433,18 +438,23 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []any
 	if v := apiObject.AuthorizationEndpoint; v != nil {
 		tfMap["authorization_endpoint"] = aws.ToString(v)
 	}
+
 	if v := apiObject.ClientId; v != nil {
 		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
+
 	if v := apiObject.Issuer; v != nil {
 		tfMap[names.AttrIssuer] = aws.ToString(v)
 	}
+
 	if v := apiObject.Scope; v != nil {
 		tfMap[names.AttrScope] = aws.ToString(v)
 	}
+
 	if v := apiObject.TokenEndpoint; v != nil {
 		tfMap["token_endpoint"] = aws.ToString(v)
 	}
+
 	if v := apiObject.UserInfoEndpoint; v != nil {
 		tfMap["user_info_endpoint"] = aws.ToString(v)
 	}
@@ -476,21 +486,27 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *t
 	if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
 		apiObject.AuthorizationEndpoint = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
 		apiObject.ClientSecret = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		apiObject.Issuer = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
 	}
+
 	if v, ok := tfMap["token_endpoint"].(string); ok && v != "" {
 		apiObject.TokenEndpoint = aws.String(v)
 	}
+
 	if v, ok := tfMap["user_info_endpoint"].(string); ok && v != "" {
 		apiObject.UserInfoEndpoint = aws.String(v)
 	}
@@ -508,24 +524,31 @@ func expandCreateVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap m
 	if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
 		apiObject.AuthorizationEndpoint = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
 		apiObject.ClientSecret = aws.String(v)
 	}
+
 	if v, ok := tfMap["public_signing_key_endpoint"].(string); ok && v != "" {
 		apiObject.PublicSigningKeyEndpoint = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		apiObject.Issuer = aws.String(v)
 	}
+
 	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
 	}
+
 	if v, ok := tfMap["token_endpoint"].(string); ok && v != "" {
 		apiObject.TokenEndpoint = aws.String(v)
 	}
+
 	if v, ok := tfMap["user_info_endpoint"].(string); ok && v != "" {
 		apiObject.UserInfoEndpoint = aws.String(v)
 	}
