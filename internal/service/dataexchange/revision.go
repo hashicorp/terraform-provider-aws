@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_dataexchange_revision", name="Revision")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceRevision() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRevisionCreate,

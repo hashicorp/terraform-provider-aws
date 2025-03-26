@@ -45,6 +45,8 @@ import (
 
 // @FrameworkResource("aws_dataexchange_revision_exclusive", name="Revision Exclusive")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
+// @Testing(noImport=true) // TODO: enable import
 func newResourceRevisionExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRevisionExclusive{}
 
@@ -62,7 +64,7 @@ const (
 type resourceRevisionExclusive struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceRevisionExclusive]
+	framework.WithNoOpUpdate[resourceRevisionExclusiveModel]
 }
 
 func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -92,6 +94,9 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 
 			names.AttrTags:    tftags.TagsAttribute(),
