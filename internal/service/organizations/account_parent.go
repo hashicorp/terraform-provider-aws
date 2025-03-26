@@ -36,6 +36,7 @@ const (
 
 type resourceAccountParent struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
 }
 
 func (r *resourceAccountParent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -52,6 +53,9 @@ func (r *resourceAccountParent) Schema(ctx context.Context, req resource.SchemaR
 			},
 			names.AttrParentID: schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.Any(
 						fwvalidators.AWSOrganizationRootID(),
@@ -123,42 +127,6 @@ func (r *resourceAccountParent) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccountParent) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OrganizationsClient(ctx)
-
-	var plan, state resourceAccountParentModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		input := organizations.MoveAccountInput{
-			AccountId:           flex.StringFromFramework(ctx, plan.AccountID),
-			SourceParentId:      flex.StringFromFramework(ctx, state.ParentID),
-			DestinationParentId: flex.StringFromFramework(ctx, plan.ParentID),
-		}
-
-		_, err := conn.MoveAccount(ctx, &input)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Organizations, create.ErrActionUpdating, ResNameAccountParent, plan.AccountID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
 func (r *resourceAccountParent) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data resourceAccountParentModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -171,6 +139,10 @@ func (r *resourceAccountParent) Delete(ctx context.Context, req resource.DeleteR
 	root, err := findDefaultRoot(ctx, conn)
 	if err != nil {
 		create.ProblemStandardMessage(names.Organizations, create.ErrActionDeleting, ResNameAccountParent, data.AccountID.String(), err)
+	}
+
+	if *root.Id == flex.StringValueFromFramework(ctx, data.ParentID) {
+		return
 	}
 
 	input := organizations.MoveAccountInput{

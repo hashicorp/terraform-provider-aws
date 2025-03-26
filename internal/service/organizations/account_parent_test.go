@@ -69,13 +69,39 @@ func TestAccOrganizationsAccountParent_basic(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParentID), knownvalue.StringRegexp(regexache.MustCompile(`^ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}$`))),
 				},
+			},
+		},
+	})
+}
+
+func TestAccOrganizationsAccountParent_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_organizations_account_parent.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckAccountParentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountParentConfig_root(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountParentExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceAccountParent, resourceName),
+				),
 			},
 		},
 	})
