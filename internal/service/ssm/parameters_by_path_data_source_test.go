@@ -15,9 +15,20 @@ import (
 
 func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "data.aws_ssm_parameters_by_path.test"
+	dataSourceName := "data.aws_ssm_parameters_by_path.test"
+	resourceName1 := "aws_ssm_parameter.test1"
+	resourceName2 := "aws_ssm_parameter.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	paramsResourceAttrCheck := fmt.Sprintf("%s.#", names.AttrParameters)
+	paramsARNPairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrARN)
+	paramsNamePairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrName)
+	paramsTypePairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrType)
+	paramsValuePairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrValue)
+	paramsARNPairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrARN)
+	paramsNamePairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrName)
+	paramsTypePairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrType)
+	paramsValuePairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrValue)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -27,12 +38,17 @@ func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 			{
 				Config: testAccParametersByPathDataSourceConfig_basic(rName1, rName2, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "values.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "with_decryption", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "recursive", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, paramsResourceAttrCheck, "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsARNPairCheck1, resourceName1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsNamePairCheck1, resourceName1, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsTypePairCheck1, resourceName1, names.AttrType),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsValuePairCheck1, resourceName1, names.AttrValue),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsARNPairCheck2, resourceName2, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsNamePairCheck2, resourceName2, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsTypePairCheck2, resourceName2, names.AttrType),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsValuePairCheck2, resourceName2, names.AttrValue),
+					resource.TestCheckResourceAttr(dataSourceName, "with_decryption", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "recursive", acctest.CtFalse),
 				),
 			},
 		},
@@ -74,8 +90,19 @@ data "aws_ssm_parameters_by_path" "test" {
 
 func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "data.aws_ssm_parameters_by_path.recursive"
+	dataSourceName := "data.aws_ssm_parameters_by_path.recursive"
+	resourceName1 := "aws_ssm_parameter.top_level"
+	resourceName2 := "aws_ssm_parameter.nested"
 	pathPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	paramsResourceAttrCheck := fmt.Sprintf("%s.#", names.AttrParameters)
+	paramsARNPairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrARN)
+	paramsNamePairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrName)
+	paramsTypePairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrType)
+	paramsValuePairCheck1 := fmt.Sprintf("%s.0.%s", names.AttrParameters, names.AttrValue)
+	paramsARNPairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrARN)
+	paramsNamePairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrName)
+	paramsTypePairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrType)
+	paramsValuePairCheck2 := fmt.Sprintf("%s.1.%s", names.AttrParameters, names.AttrValue)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -85,11 +112,16 @@ func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
 			{
 				Config: testAccParametersByPathDataSourceConfig_recursion(pathPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "values.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "recursive", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, paramsResourceAttrCheck, "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsARNPairCheck1, resourceName1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsNamePairCheck1, resourceName1, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsTypePairCheck1, resourceName1, names.AttrType),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsValuePairCheck1, resourceName1, names.AttrValue),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsARNPairCheck2, resourceName2, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsNamePairCheck2, resourceName2, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsTypePairCheck2, resourceName2, names.AttrType),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, paramsValuePairCheck2, resourceName2, names.AttrValue),
+					resource.TestCheckResourceAttr(dataSourceName, "recursive", acctest.CtTrue),
 				),
 			},
 		},
