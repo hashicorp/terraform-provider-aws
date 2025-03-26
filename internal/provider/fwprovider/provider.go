@@ -553,14 +553,19 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				continue
 			}
 
-			// TODO REGION Check for top-level "region" attribute.
+			schemaResponse := datasource.SchemaResponse{}
+			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+			if v := v.Region; v != nil && v.IsOverrideEnabled {
+				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
+					continue
+				}
+			}
 
 			if v.Tags != nil {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				schemaResponse := datasource.SchemaResponse{}
-				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
-
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
 					if !v.IsComputed() {
 						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
@@ -576,14 +581,22 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
 			for _, v := range v.EphemeralResources(ctx) {
 				typeName := v.TypeName
-				_, err := v.Factory(ctx)
+				er, err := v.Factory(ctx)
 
 				if err != nil {
 					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
 					continue
 				}
 
-				// TODO REGION Check for top-level "region" attribute.
+				schemaResponse := ephemeral.SchemaResponse{}
+				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
+
+				if v := v.Region; v != nil && v.IsOverrideEnabled {
+					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
+						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
+						continue
+					}
+				}
 			}
 		}
 
@@ -596,14 +609,19 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				continue
 			}
 
-			// TODO REGION Check for top-level "region" attribute.
+			schemaResponse := resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+
+			if v := v.Region; v != nil && v.IsOverrideEnabled {
+				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
+					continue
+				}
+			}
 
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				schemaResponse := resource.SchemaResponse{}
-				r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
-
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
 					if v.IsComputed() {
 						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
