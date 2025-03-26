@@ -1371,7 +1371,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 								"expiration":                        checkExpiration_None(),
 								names.AttrFilter:                    checkFilter_Prefix("config/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
-								"noncurrent_version_expiration":     checkPlanNoncurrentVersionExpiration_Days(90),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(90),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
 								names.AttrPrefix:                    knownvalue.StringExact(""),
 								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1419,7 +1419,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 								"expiration":                        checkExpiration_None(),
 								names.AttrFilter:                    checkFilter_Prefix("config/"),
 								names.AttrID:                        knownvalue.StringExact(rName),
-								"noncurrent_version_expiration":     checkPlanNoncurrentVersionExpiration_Days(100),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(100),
 								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
 								names.AttrPrefix:                    knownvalue.StringExact(""),
 								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -3818,15 +3818,6 @@ func checkNoncurrentVersionExpiration_VersionsAndDays(versions, days int32) know
 		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			"newer_noncurrent_versions": knownvalue.Int32Exact(versions),
 			"noncurrent_days":           knownvalue.Int32Exact(days),
-		}),
-	})
-}
-
-func checkPlanNoncurrentVersionExpiration_Days(days int32) knownvalue.Check {
-	return knownvalue.ListExact([]knownvalue.Check{
-		knownvalue.ObjectExact(map[string]knownvalue.Check{
-			// "newer_noncurrent_versions": unknown,
-			"noncurrent_days": knownvalue.Int32Exact(days),
 		}),
 	})
 }

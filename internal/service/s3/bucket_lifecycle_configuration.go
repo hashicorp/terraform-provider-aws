@@ -302,6 +302,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of schema change
 										PlanModifiers: []planmodifier.Int32{
+											tfint32planmodifier.NullValue(),
 											int32planmodifier.UseStateForUnknown(),
 										},
 										Validators: []validator.Int32{
