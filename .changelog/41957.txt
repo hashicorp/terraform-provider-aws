@@ -3,7 +3,7 @@ resource/aws_verified_access_endpoint: Support `cidr` and `rds` as valid values 
 ```
 
 ```release-note:enhancement
-resource/aws_verified_access_endpoint: Mark `application_domain` and `endpoint_domain_prefix` as Optional
+resource/aws_verified_access_endpoint: Mark `application_domain`, `domain_certificate_arn` and `endpoint_domain_prefix` as Optional
 ```
 
 ```release-note:enhancement
