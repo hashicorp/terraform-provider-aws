@@ -751,7 +751,7 @@ func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.Cl
 	return nil, err
 }
 
-func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, region string) (*awstypes.GlobalReplicationGroupMember, error) {
+func findGlobalReplicationGroupMemberByIDAndRegion(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, replicationGroupRegion string) (*awstypes.GlobalReplicationGroupMember, error) {
 	globalReplicationGroup, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
 	if err != nil {
@@ -763,7 +763,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 
 	for _, v := range globalReplicationGroup.Members {
-		if aws.ToString(v.ReplicationGroupId) == replicationGroupID && aws.ToString(v.ReplicationGroupRegion) == region {
+		if aws.ToString(v.ReplicationGroupId) == replicationGroupID && aws.ToString(v.ReplicationGroupRegion) == replicationGroupRegion {
 			return &v, nil
 		}
 	}
@@ -773,9 +773,9 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, region string) retry.StateRefreshFunc {
+func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, replicationGroupRegion string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID, region)
+		output, err := findGlobalReplicationGroupMemberByIDAndRegion(ctx, conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -793,11 +793,11 @@ const (
 	globalReplicationGroupMemberStatusAssociated = "associated"
 )
 
-func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, region string, timeout time.Duration) (*awstypes.GlobalReplicationGroupMember, error) {
+func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, replicationGroupRegion string, timeout time.Duration) (*awstypes.GlobalReplicationGroupMember, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupMemberStatusAssociated},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID, region),
+		Refresh:    statusGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

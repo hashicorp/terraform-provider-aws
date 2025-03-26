@@ -1082,11 +1082,11 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func disassociateReplicationGroup(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, region string, timeout time.Duration) error {
+func disassociateReplicationGroup(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string, timeout time.Duration) error {
 	input := &elasticache.DisassociateGlobalReplicationGroupInput{
 		GlobalReplicationGroupId: aws.String(globalReplicationGroupID),
 		ReplicationGroupId:       aws.String(replicationGroupID),
-		ReplicationGroupRegion:   aws.String(region),
+		ReplicationGroupRegion:   aws.String(replicationGroupRegion),
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func() (any, error) {
@@ -1105,7 +1105,7 @@ func disassociateReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		return fmt.Errorf("disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", replicationGroupID, globalReplicationGroupID, err)
 	}
 
-	if _, err := waitGlobalReplicationGroupMemberDetached(ctx, conn, globalReplicationGroupID, replicationGroupID, region, timeout); err != nil {
+	if _, err := waitGlobalReplicationGroupMemberDetached(ctx, conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion, timeout); err != nil {
 		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) detach: %w", replicationGroupID, err)
 	}
 
