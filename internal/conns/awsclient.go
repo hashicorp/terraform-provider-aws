@@ -6,7 +6,6 @@ package conns
 import (
 	"context"
 	"fmt"
-	"iter"
 	"maps"
 	"net/http"
 	"os"
@@ -54,10 +53,6 @@ func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackag
 		return nil
 	}
 	return sp
-}
-
-func (c *AWSClient) ServicePackages(context.Context) iter.Seq2[string, ServicePackage] {
-	return maps.All(c.servicePackages)
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
