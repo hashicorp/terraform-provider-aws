@@ -75,8 +75,8 @@ func resourceBucketIntelligentTieringConfiguration() *schema.Resource {
 			},
 			"tiering": {
 				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
+				Optional: true,
+				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"access_tier": {
