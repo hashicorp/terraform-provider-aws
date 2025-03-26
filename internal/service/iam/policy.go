@@ -259,8 +259,9 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		} else {
 			// Creating a policy and setting its version as default in a single operation can
 			// lead to access issues for users who generate STS tokens by attaching policies.
-			// To mitigate this, separate createPolicyVersion and setDefaultPolicyVersion into
+			// To mitigate this, separating createPolicyVersion and setDefaultPolicyVersion into
 			// two distinct operations. This is achieved by setting SetAsDefault to false in CreatePolicyVersionInput.
+			// With this only policy gets created. SetDefaultPolicyVersion should be called as a different API after a delay
 
 			input := &iam.CreatePolicyVersionInput{
 				PolicyArn:      aws.String(d.Id()),
