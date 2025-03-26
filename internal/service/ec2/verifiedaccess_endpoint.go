@@ -70,13 +70,21 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
-						"port_range": { // debe estar en singular aquí también
+						"port_range": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"from_port": {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
-									"to_port":   {Type: schema.TypeInt, Required: true, ValidateFunc: validation.IsPortNumberOrZero},
+									"from_port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IsPortNumberOrZero,
+									},
+									"to_port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IsPortNumberOrZero,
+									},
 								},
 							},
 						},
@@ -84,7 +92,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{verifiedAccessEndpointProtocolTCP}, false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(types.VerifiedAccessEndpointProtocolTcp), false),
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
