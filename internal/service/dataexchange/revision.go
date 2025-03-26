@@ -43,7 +43,7 @@ func ResourceRevision() *schema.Resource {
 			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 16348),
+				ValidateFunc: validation.StringLenBetween(0, 16_348),
 			},
 			"data_set_id": {
 				Type:     schema.TypeString,

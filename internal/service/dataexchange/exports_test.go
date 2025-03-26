@@ -5,7 +5,8 @@ package dataexchange
 
 // Exports for use in tests only.
 var (
-	ResourceEventAction = newEventActionResource
+	ResourceEventAction       = newEventActionResource
+	ResourceRevisionExclusive = newResourceRevisionExclusive
 
 	FindEventActionByID = findEventActionByID
 )
