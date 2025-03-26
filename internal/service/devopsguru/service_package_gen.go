@@ -22,9 +22,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_devopsguru_notification_channel",
 			Name:     "Notification Channel",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -32,9 +31,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_devopsguru_resource_collection",
 			Name:     "Resource Collection",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}
@@ -47,9 +45,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_devopsguru_event_sources_config",
 			Name:     "Event Sources Config",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -57,9 +54,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_devopsguru_notification_channel",
 			Name:     "Notification Channel",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -67,9 +63,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_devopsguru_resource_collection",
 			Name:     "Resource Collection",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -77,9 +72,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_devopsguru_service_integration",
 			Name:     "Service Integration",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}

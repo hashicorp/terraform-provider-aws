@@ -22,9 +22,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_opensearchserverless_access_policy",
 			Name:     "Access Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -35,9 +34,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -45,9 +43,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -55,9 +52,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_opensearchserverless_security_config",
 			Name:     "Security Config",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}
@@ -70,9 +66,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_opensearchserverless_access_policy",
 			Name:     "Access Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -83,9 +78,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -93,9 +87,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -103,9 +96,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_opensearchserverless_security_config",
 			Name:     "Security Config",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -113,9 +105,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_opensearchserverless_security_policy",
 			Name:     "Security Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -123,9 +114,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_opensearchserverless_vpc_endpoint",
 			Name:     "VPC Endpoint",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}

@@ -22,9 +22,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_datazone_domain",
 			Name:     "Domain",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -32,9 +31,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_datazone_environment_blueprint",
 			Name:     "Environment Blueprint",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}
@@ -47,9 +45,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_asset_type",
 			Name:     "Asset Type",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -60,9 +57,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -70,9 +66,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_environment",
 			Name:     "Environment",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -80,9 +75,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_environment_blueprint_configuration",
 			Name:     "Environment Blueprint Configuration",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -90,9 +84,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_environment_profile",
 			Name:     "Environment Profile",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -100,9 +93,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_form_type",
 			Name:     "Form Type",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -110,9 +102,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_glossary",
 			Name:     "Glossary",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -120,9 +111,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_glossary_term",
 			Name:     "Glossary Term",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -130,9 +120,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_project",
 			Name:     "Project",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -140,9 +129,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_datazone_user_profile",
 			Name:     "User Profile",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 	}

@@ -23,9 +23,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_route53_records",
 			Name:     "Records",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -33,9 +32,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_route53_zones",
 			Name:     "Zones",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 	}
@@ -48,9 +46,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_route53_cidr_collection",
 			Name:     "CIDR Collection",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -58,9 +55,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_route53_cidr_location",
 			Name:     "CIDR Location",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -68,9 +64,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_route53_records_exclusive",
 			Name:     "Records Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 	}

@@ -26,9 +26,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 	}
