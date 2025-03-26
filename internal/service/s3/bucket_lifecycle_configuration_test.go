@@ -1487,8 +1487,8 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(30, types.TransitionStorageClassStandardIa),
-									checkPlanNoncurrentVersionTransition_Days(60, types.TransitionStorageClassGlacier),
+									checkNoncurrentVersionTransition_Days(30, types.TransitionStorageClassStandardIa),
+									checkNoncurrentVersionTransition_Days(60, types.TransitionStorageClassGlacier),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1541,8 +1541,8 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(45, types.TransitionStorageClassStandardIa),
-									checkPlanNoncurrentVersionTransition_Days(90, types.TransitionStorageClassGlacier),
+									checkNoncurrentVersionTransition_Days(45, types.TransitionStorageClassStandardIa),
+									checkNoncurrentVersionTransition_Days(90, types.TransitionStorageClassGlacier),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2291,7 +2291,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2347,7 +2347,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2424,7 +2424,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2496,7 +2496,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2552,7 +2552,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2624,7 +2624,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2680,7 +2680,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2754,7 +2754,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2805,7 +2805,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2864,7 +2864,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2930,7 +2930,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+									checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -2978,7 +2978,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkPlanNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+									checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -3831,14 +3831,6 @@ func checkNoncurrentVersionTransition_Days(days int32, class types.TransitionSto
 		"newer_noncurrent_versions": knownvalue.Null(),
 		"noncurrent_days":           knownvalue.Int32Exact(days),
 		names.AttrStorageClass:      tfknownvalue.StringExact(class),
-	})
-}
-
-func checkPlanNoncurrentVersionTransition_Days(days int32, class types.TransitionStorageClass) knownvalue.Check {
-	return knownvalue.ObjectExact(map[string]knownvalue.Check{
-		// "newer_noncurrent_versions": unknown,
-		"noncurrent_days":      knownvalue.Int32Exact(days),
-		names.AttrStorageClass: tfknownvalue.StringExact(class),
 	})
 }
 

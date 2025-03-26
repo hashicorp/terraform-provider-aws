@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1158,7 +1159,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkSchemaV0NoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkSchemaV0NoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+								checkSchemaV0NoncurrentVersionTransition_Days(30, awstypes.TransitionStorageClassStandardIa),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1185,7 +1186,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+								checkNoncurrentVersionTransition_Days(30, awstypes.TransitionStorageClassStandardIa),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1206,7 +1207,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+									checkNoncurrentVersionTransition_Days(30, awstypes.TransitionStorageClassStandardIa),
 								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1256,7 +1257,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkSchemaV0NoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkSchemaV0NoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+								checkSchemaV0NoncurrentVersionTransition_Days(30, awstypes.TransitionStorageClassStandardIa),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1283,7 +1284,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+								checkNoncurrentVersionTransition_Days(30, awstypes.TransitionStorageClassStandardIa),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
@@ -1304,18 +1305,13 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 								names.AttrID:                        knownvalue.StringExact(rName),
 								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
 								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-									knownvalue.ObjectExact(map[string]knownvalue.Check{
-										// "newer_noncurrent_versions": knownvalue.Null(), // Actually unknown
-										"noncurrent_days":      knownvalue.Int32Exact(30),
-										names.AttrStorageClass: tfknownvalue.StringExact("STANDARD_IA"),
-									})),
+									checkNoncurrentVersionTransition_Days(30, awstypes.TransitionStorageClassStandardIa),
+								),
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition":     checkTransitions(),
 							}),
 						})),
-
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("noncurrent_version_transition").AtSliceIndex(0).AtMapKey("newer_noncurrent_versions")),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
