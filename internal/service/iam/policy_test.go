@@ -801,18 +801,43 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_updateWithDelay() string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = "test"
-  path = "/"
   description = "policy_create_update_with_delay"
+  name        = "test"
   delay_after_policy_creation_in_ms = 3000
 
-  policy = <<POLICY
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Action": [
-        "s3:Get*",
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`)
+}
+
+func testAccPolicyConfig_updateWithDelay() string {
+	return fmt.Sprintf(`
+	resource "aws_iam_policy" "test" {
+	name = "test"
+	path = "/"
+	description = "policy_create_update_with_delay"
+	delay_after_policy_creation_in_ms = 3000
+	
+	policy = <<POLICY
+	{
+	"Version": "2012-10-17",
+	"Statement": [
+	{
+	"Action": [
+	"s3:Get*",
         "s3:List*",
         "s3:PutO*"
       ],
