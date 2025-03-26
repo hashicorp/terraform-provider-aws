@@ -300,6 +300,35 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 	})
 }
 
+func TestAccECSClusterCapacityProviders_Rename_CapacityProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterCapacityProvidersConfig_RenameCapacityProvider(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+				),
+			},
+			{
+				Config: testAccClusterCapacityProvidersConfig_RenameCapacityProvider(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+				),
+			},
+		},
+	})
+}
+
 func testAccClusterCapacityProvidersConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -647,4 +676,24 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName)
+}
+
+func testAccClusterCapacityProvidersConfig_RenameCapacityProvider(rName1, rName2 string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_basic(rName2), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster_capacity_providers" "test" {
+  cluster_name = aws_ecs_cluster.test.name
+
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
+
+  default_capacity_provider_strategy {
+    base              = 0
+    weight            = 1
+    capacity_provider = aws_ecs_capacity_provider.test.name
+  }
+}
+`, rName1))
 }
