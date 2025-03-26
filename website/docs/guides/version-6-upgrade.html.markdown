@@ -98,7 +98,9 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 
 ## resource/aws_redshift_cluster
 
-The `publicly_accessible` attribute now defaults to `false`.
+* The `publicly_accessible` attribute now defaults to `false`.
+* Remove `snapshot_copy` from configuration as it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
+
 
 ## resource/aws_redshift_service_account
 
