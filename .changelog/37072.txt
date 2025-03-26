@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codebuild_project: Add plan-time validation to prevent use of `CODEPIPELINE` for `type` in the `secondary_artifacts` and `secondary_sources` blocks
+```
