@@ -56,6 +56,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -493,6 +494,7 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
+
   tags = {
     Name = %[1]q
   }
@@ -606,7 +608,7 @@ resource "aws_verifiedaccess_group" "test" {
 func testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
-		fmt.Sprintf(`
+		`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -625,12 +627,8 @@ resource "aws_verifiedaccess_endpoint" "test" {
   }
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
-`, rName, key, certificate))
+`)
 }
 
 func testAccVerifiedAccessEndpointConfig_networkInterface(rName, key, certificate string) string {
@@ -656,9 +654,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-
-
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_tags1(rName, key, certificate, tagKey1, tagValue1 string) string {
@@ -681,12 +677,12 @@ resource "aws_verifiedaccess_endpoint" "test" {
   verified_access_group_id = aws_verifiedaccess_group.test.id
 
   tags = {
-    %[4]q = %[5]q
+    %[1]q = %[2]q
   }
 }
 
 
-`, rName, key, certificate, tagKey1, tagValue1))
+`, tagKey1, tagValue1))
 }
 
 func testAccVerifiedAccessEndpointConfig_tags2(rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -708,12 +704,12 @@ resource "aws_verifiedaccess_endpoint" "test" {
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
   tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
 
-`, rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2))
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccVerifiedAccessEndpointConfig_policyBase(rName, key, certificate string) string {
@@ -754,11 +750,11 @@ resource "aws_verifiedaccess_endpoint" "test" {
     port                 = 443
     protocol             = "https"
   }
-  policy_document          = %[4]q
+  policy_document          = %[1]q
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
-`, rName, key, certificate, policyDocument))
+`, policyDocument))
 }
 
 func testAccVerifiedAccessEndpointConfig_subnetIDs(rName, key, certificate string) string {
@@ -788,7 +784,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_subnetIDsUpdate(rName, key, certificate string) string {
@@ -816,7 +812,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_cidr(rName, key, certificate string) string {
@@ -847,7 +843,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_cidrUpdate(rName, key, certificate string) string {
@@ -882,18 +878,15 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_rds(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
 		fmt.Sprintf(`
-
-
-# Security Group para permitir acceso a la BD solo desde la VPC
 resource "aws_security_group" "testrds" {
-  name        = "rds-security-group"
+  name        = "%[1]s-rds"
   description = "Grant rds access from VPC"
   vpc_id      = aws_vpc.test.id
 
@@ -910,14 +903,18 @@ resource "aws_security_group" "testrds" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = "rds-subnet-group"
+  name       = %[1]q
   subnet_ids = [for subnet in aws_subnet.test : subnet.id]
 
   tags = {
-    Name = "RDS Subnet Group"
+    Name = %[1]q
   }
 }
 
@@ -926,7 +923,7 @@ resource "aws_db_instance" "test" {
   engine               = "mysql"
   engine_version       = "8.0"
   instance_class       = "db.t4g.micro"
-  identifier           = "basic-rds-instance"
+  identifier           = %[1]q
   username             = "tfaccrds"
   password             = "SuperSecure123!"
   parameter_group_name = "default.mysql8.0"
@@ -945,11 +942,11 @@ resource "aws_verifiedaccess_endpoint" "test" {
   endpoint_type   = "rds"
 
   rds_options {
-    port         = aws_db_instance.test.port
-    instance_arn = aws_db_instance.test.arn
-    endpoint     = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
-    protocol     = "tcp"
-    subnet_ids   = [for subnet in aws_subnet.test : subnet.id]
+    port                = aws_db_instance.test.port
+    rds_db_instance_arn = aws_db_instance.test.arn
+    rds_endpoint        = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol            = "tcp"
+    subnet_ids          = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -959,18 +956,15 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
 		fmt.Sprintf(`
-
-
-# Security Group para permitir acceso a la BD solo desde la VPC
 resource "aws_security_group" "testrds" {
-  name        = "rds-security-group"
+  name        = "%[1]s-rds"
   description = "Grant rds access from VPC"
   vpc_id      = aws_vpc.test.id
 
@@ -987,14 +981,18 @@ resource "aws_security_group" "testrds" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = "rds-subnet-group"
+  name       = %[1]q
   subnet_ids = [for subnet in aws_subnet.test : subnet.id]
 
   tags = {
-    Name = "RDS Subnet Group"
+    Name = %[1]q
   }
 }
 
@@ -1003,7 +1001,7 @@ resource "aws_db_instance" "test" {
   engine               = "mysql"
   engine_version       = "8.0"
   instance_class       = "db.t4g.micro"
-  identifier           = "basic-rds-instance"
+  identifier           = %[1]q
   username             = "tfaccrds"
   password             = "SuperSecure123!"
   parameter_group_name = "default.mysql8.0"
@@ -1023,11 +1021,11 @@ resource "aws_verifiedaccess_endpoint" "test" {
   endpoint_type   = "rds"
 
   rds_options {
-    port         = aws_db_instance.test.port
-    instance_arn = aws_db_instance.test.arn
-    endpoint     = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
-    protocol     = "tcp"
-    subnet_ids   = [for subnet in aws_subnet.test : subnet.id]
+    port                = aws_db_instance.test.port
+    rds_db_instance_arn = aws_db_instance.test.arn
+    rds_endpoint        = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol            = "tcp"
+    subnet_ids          = [for subnet in aws_subnet.test : subnet.id]
   }
 
   security_group_ids       = [aws_security_group.test.id]
@@ -1037,5 +1035,5 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }

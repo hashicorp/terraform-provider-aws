@@ -233,22 +233,6 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrEndpoint: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"instance_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
 						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -259,11 +243,27 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(types.VerifiedAccessEndpointProtocolTcp), false),
 						},
-						"proxy_arn": {
+						"rds_db_cluster_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"rds_db_instance_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"rds_db_proxy_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"rds_endpoint": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
@@ -659,20 +659,20 @@ func flattenVerifiedAccessEndpointRDSOptions(apiObject *types.VerifiedAccessEndp
 		tfMap[names.AttrProtocol] = v
 	}
 
-	if v := apiObject.RdsEndpoint; v != nil {
-		tfMap[names.AttrEndpoint] = v
-	}
-
 	if v := apiObject.RdsDbClusterArn; v != nil {
-		tfMap["cluster_arn"] = v
+		tfMap["rds_db_cluster_arn"] = v
 	}
 
 	if v := apiObject.RdsDbInstanceArn; v != nil {
-		tfMap["instance_arn"] = v
+		tfMap["rds_db_instance_arn"] = v
 	}
 
 	if v := apiObject.RdsDbProxyArn; v != nil {
-		tfMap["proxy_arn"] = v
+		tfMap["rds_db_proxy_arn"] = v
+	}
+
+	if v := apiObject.RdsEndpoint; v != nil {
+		tfMap["rds_endpoint"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
@@ -741,19 +741,19 @@ func expandCreateVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.C
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
-	if v, ok := tfMap["cluster_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["rds_db_cluster_arn"].(string); ok && v != "" {
 		apiObject.RdsDbClusterArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["rds_db_instance_arn"].(string); ok && v != "" {
 		apiObject.RdsDbInstanceArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["proxy_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["rds_db_proxy_arn"].(string); ok && v != "" {
 		apiObject.RdsDbProxyArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrEndpoint].(string); ok && v != "" {
+	if v, ok := tfMap["rds_endpoint"].(string); ok && v != "" {
 		apiObject.RdsEndpoint = aws.String(v)
 	}
 
@@ -892,7 +892,7 @@ func expandModifyVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.M
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrEndpoint]; ok {
+	if v, ok := tfMap["rds_endpoint"]; ok {
 		apiObject.RdsEndpoint = aws.String(v.(string))
 	}
 
