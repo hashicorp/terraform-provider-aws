@@ -523,7 +523,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 	return servicePackageMap, errors.Join(errs...)
 }
 
-// validateResourceSchemas is called from `provider.New` to validate of Terraform Plugin SDK v2-style resource schemas.
+// validateResourceSchemas is called from `provider.New` to validate Terraform Plugin SDK v2-style resource schemas.
 func validateResourceSchemas(ctx context.Context) error {
 	var errs []error
 

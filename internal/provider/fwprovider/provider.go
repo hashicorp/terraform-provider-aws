@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -31,24 +30,58 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var _ provider.Provider = &fwprovider{}
-var _ provider.ProviderWithFunctions = &fwprovider{}
-var _ provider.ProviderWithEphemeralResources = &fwprovider{}
+var (
+	resourceSchemasValidated bool
+)
+
+var (
+	_ provider.Provider                       = &fwprovider{}
+	_ provider.ProviderWithFunctions          = &fwprovider{}
+	_ provider.ProviderWithEphemeralResources = &fwprovider{}
+)
+
+type fwprovider struct {
+	dataSources        []func() datasource.DataSource
+	ephemeralResources []func() ephemeral.EphemeralResource
+	primary            interface{ Meta() any }
+	resources          []func() resource.Resource
+}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(primary interface{ Meta() any }) (provider.Provider, error) {
+func New(ctx context.Context, primary interface{ Meta() any }) (provider.Provider, error) {
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
 	provider := &fwprovider{
-		Primary: primary,
+		dataSources:        make([]func() datasource.DataSource, 0),
+		ephemeralResources: make([]func() ephemeral.EphemeralResource, 0),
+		primary:            primary,
+		resources:          make([]func() resource.Resource, 0),
+	}
+
+	// Acceptance tests call this function multiple times, potentially in parallel.
+	// To avoid "fatal error: concurrent map writes", take a lock.
+	const (
+		mutexKVKey = "provider.New"
+	)
+	conns.GlobalMutexKV.Lock(mutexKVKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
+
+	// Because we try and share resource schemas as much as possible,
+	// we need to ensure that we only validate the resource schemas once.
+	if !resourceSchemasValidated {
+		if err := provider.validateResourceSchemas(ctx); err != nil {
+			return nil, err
+		}
+
+		resourceSchemasValidated = true
+	}
+
+	if err := provider.initialize(ctx); err != nil {
+		return nil, err
 	}
 
 	return provider, nil
-}
-
-type fwprovider struct {
-	Primary interface{ Meta() any }
 }
 
 func (*fwprovider) Metadata(ctx context.Context, request provider.MetadataRequest, response *provider.MetadataResponse) {
@@ -309,7 +342,7 @@ func (*fwprovider) Schema(ctx context.Context, request provider.SchemaRequest, r
 // provider configuration block.
 func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
-	v := p.Primary.Meta()
+	v := p.primary.Meta()
 	response.DataSourceData = v
 	response.ResourceData = v
 	response.EphemeralResourceData = v
@@ -320,42 +353,61 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 //
 // All data sources must have unique type names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	var errs []error
-	var dataSources []func() datasource.DataSource
+	return p.dataSources
+}
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
+// Resources returns a slice of functions to instantiate each Resource
+// implementation.
+//
+// All resources must have unique type names.
+func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	return p.resources
+}
+
+// EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
+// implementation.
+//
+// All ephemeral resources must have unique type names.
+func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+	return p.ephemeralResources
+}
+
+// Functions returns a slice of functions to instantiate each Function
+// implementation.
+//
+// The function type name is determined by the Function implementing
+// the Metadata method. All functions must have unique names.
+func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
+	return []func() function.Function{
+		tffunction.NewARNBuildFunction,
+		tffunction.NewARNParseFunction,
+		tffunction.NewTrimIAMRolePathFunction,
+	}
+}
+
+// initialize is called from `fwprovider.New` to perform any Terraform Framework-style initialization.
+func (p *fwprovider) initialize(ctx context.Context) error {
+	log.Printf("Initializing Terraform AWS Provider (Framework-style)...")
+
+	var errs []error
+
+	for _, sp := range servicePackages(ctx) {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
+			typeName := v.TypeName
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				tflog.Warn(ctx, "creating data source", map[string]any{
-					"service_package_name": n,
-					"error":                err.Error(),
-				})
-
+				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
 				continue
 			}
 
-			typeName := v.TypeName
-			interceptors := dataSourceInterceptors{}
+			var interceptors dataSourceInterceptors
+
+			// TODO REGION Inject a top-level "region" attribute.
+
 			if v.Tags != nil {
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				schemaResponse := datasource.SchemaResponse{}
-				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
-
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if !v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
-					continue
-				}
-
 				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
 			}
 
@@ -384,68 +436,70 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				interceptors: interceptors,
 				typeName:     typeName,
 			}
-			dataSources = append(dataSources, func() datasource.DataSource {
+			p.dataSources = append(p.dataSources, func() datasource.DataSource {
 				return newWrappedDataSource(inner, opts)
 			})
 		}
-	}
 
-	if err := errors.Join(errs...); err != nil {
-		tflog.Warn(ctx, "registering data sources", map[string]any{
-			"error": err.Error(),
-		})
-	}
+		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
+			for _, v := range v.EphemeralResources(ctx) {
+				typeName := v.TypeName
+				inner, err := v.Factory(ctx)
 
-	return dataSources
-}
+				if err != nil {
+					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
+					continue
+				}
 
-// Resources returns a slice of functions to instantiate each Resource
-// implementation.
-//
-// All resources must have unique type names.
-func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
-	var errs []error
-	var resources []func() resource.Resource
+				var interceptors ephemeralResourceInterceptors
 
-	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
-		servicePackageName := sp.ServicePackageName()
+				// TODO REGION Inject a top-level "region" attribute.
+
+				opts := wrappedEphemeralResourceOptions{
+					// bootstrapContext is run on all wrapped methods before any interceptors.
+					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+						var diags diag.Diagnostics
+						var overrideRegion string
+
+						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+							if diags.HasError() {
+								return ctx, diags
+							}
+						}
+
+						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+						if c != nil {
+							ctx = c.RegisterLogger(ctx)
+							ctx = flex.RegisterLogger(ctx)
+							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+						}
+						return ctx, diags
+					},
+					interceptors: interceptors,
+					typeName:     v.TypeName,
+				}
+				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
+					return newWrappedEphemeralResource(inner, opts)
+				})
+			}
+		}
 
 		for _, v := range sp.FrameworkResources(ctx) {
+			typeName := v.TypeName
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource: %w", err))
+				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
 				continue
 			}
 
-			typeName := v.TypeName
 			var modifyPlanFuncs []modifyPlanFunc
-			interceptors := resourceInterceptors{}
+			var interceptors resourceInterceptors
+
+			// TODO REGION Inject a top-level "region" attribute.
+
 			if v.Tags != nil {
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				schemaResponse := resource.SchemaResponse{}
-				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
-
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
-					continue
-				}
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
-					if !v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTagsAll, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
-					continue
-				}
-
 				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)
 				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
@@ -476,95 +530,101 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				modifyPlanFuncs: modifyPlanFuncs,
 				typeName:        typeName,
 			}
-			resources = append(resources, func() resource.Resource {
+			p.resources = append(p.resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)
 			})
 		}
 	}
 
-	if err := errors.Join(errs...); err != nil {
-		tflog.Warn(ctx, "registering resources", map[string]any{
-			"error": err.Error(),
-		})
-	}
-
-	return resources
+	return errors.Join(errs...)
 }
 
-// EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
-// implementation.
-//
-// All ephemeral resources must have unique type names.
-func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+// validateResourceSchemas is called from `fwprovider.New` to validate Terraform Plugin Framework-style resource schemas.
+func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 	var errs []error
-	var ephemeralResources []func() ephemeral.EphemeralResource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages(ctx) {
-		if data, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
-			servicePackageName := data.ServicePackageName()
+	for _, sp := range servicePackages(ctx) {
+		for _, v := range sp.FrameworkDataSources(ctx) {
+			typeName := v.TypeName
+			ds, err := v.Factory(ctx)
 
-			for _, v := range data.EphemeralResources(ctx) {
-				inner, err := v.Factory(ctx)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
+				continue
+			}
+
+			// TODO REGION Check for top-level "region" attribute.
+
+			if v.Tags != nil {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := datasource.SchemaResponse{}
+				ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if !v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
+					continue
+				}
+			}
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
+			for _, v := range v.EphemeralResources(ctx) {
+				typeName := v.TypeName
+				_, err := v.Factory(ctx)
 
 				if err != nil {
-					tflog.Warn(ctx, "creating ephemeral resource", map[string]any{
-						"service_package_name": n,
-						"error":                err.Error(),
-					})
-
+					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
 					continue
 				}
 
-				interceptors := ephemeralResourceInterceptors{}
-				opts := wrappedEphemeralResourceOptions{
-					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-						var diags diag.Diagnostics
-						var overrideRegion string
+				// TODO REGION Check for top-level "region" attribute.
+			}
+		}
 
-						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
-							if diags.HasError() {
-								return ctx, diags
-							}
-						}
+		for _, v := range sp.FrameworkResources(ctx) {
+			typeName := v.TypeName
+			r, err := v.Factory(ctx)
 
-						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-						if c != nil {
-							ctx = c.RegisterLogger(ctx)
-							ctx = flex.RegisterLogger(ctx)
-							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-						}
-						return ctx, diags
-					},
-					interceptors: interceptors,
-					typeName:     v.TypeName,
+			if err != nil {
+				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
+				continue
+			}
+
+			// TODO REGION Check for top-level "region" attribute.
+
+			if v.Tags != nil {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := resource.SchemaResponse{}
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
+					continue
 				}
-				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(inner, opts)
-				})
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
+					if !v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTagsAll, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
 			}
 		}
 	}
 
-	if err := errors.Join(errs...); err != nil {
-		tflog.Warn(ctx, "registering ephemeral resources", map[string]any{
-			"error": err.Error(),
-		})
-	}
-
-	return ephemeralResources
-}
-
-// Functions returns a slice of functions to instantiate each Function
-// implementation.
-//
-// The function type name is determined by the Function implementing
-// the Metadata method. All functions must have unique names.
-func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
-	return []func() function.Function{
-		tffunction.NewARNBuildFunction,
-		tffunction.NewARNParseFunction,
-		tffunction.NewTrimIAMRolePathFunction,
-	}
+	return errors.Join(errs...)
 }

@@ -23,7 +23,7 @@ func ProtoV5ProviderServerFactory(ctx context.Context) (func() tfprotov5.Provide
 		return nil, nil, err
 	}
 
-	secondary, err := fwprovider.New(primary)
+	secondary, err := fwprovider.New(ctx, primary)
 
 	if err != nil {
 		return nil, nil, err
