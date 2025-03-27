@@ -86,7 +86,7 @@ body:
       value: |
         ## Providing Configurations and Logging
 
-        When providing a reproduction configuration and/or debug logging, please paste, upload, or link to a file or [public Gist](https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists) containing the relevant information. Files under 25MB may be [attached directly](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) in the relevant field. Files larger than this should be uploaded to a file hosting service and a link shared. For your security you can also [encrypt the files](https://www.gnupg.org/gph/en/manual/x110.html) using our [GPG public key](https://keybase.io/hashicorp).
+        When providing a reproduction configuration and/or debug logging, please paste, upload, or link to a file or [public Gist](https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists) containing the relevant information. Files under 25MB may be [attached directly](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) in the relevant field. Files larger than this should be uploaded to a file hosting service and a link shared. For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
 
         Configurations should be applyable with minimal modifications, and should not rely on external modules. This helps maintainers and contributors efficiently reproduce issues and implement acceptance tests to ensure any fixes do not regress.
 
