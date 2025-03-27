@@ -6,10 +6,18 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ecr_pull_through_cache_rule: Add `custom_role_arn` and `upstream_repository_prefix` attributes ([#41933](https://github.com/hashicorp/terraform-provider-aws/issues/41933))
 * resource/aws_cognitoidp_user_pool: Mark the `username_configuration` and `username_configuration.case_sensitive` arguments as optional and computed. This will future proof the provider against upstream API changes which may return a default value for the block when omitted during create operations. ([#35439](https://github.com/hashicorp/terraform-provider-aws/issues/35439))
 * resource/aws_datasync_task: Add `task_mode` argument ([#39979](https://github.com/hashicorp/terraform-provider-aws/issues/39979))
+* resource/aws_ecr_pull_through_cache_rule: Add `custom_role_arn` and `upstream_repository_prefix` arguments ([#41933](https://github.com/hashicorp/terraform-provider-aws/issues/41933))
+* resource/aws_ecr_pull_through_cache_rule: Correct plan-time validation of `ecr_repository_prefix` to support a value of `"ROOT"` ([#41933](https://github.com/hashicorp/terraform-provider-aws/issues/41933))
 * resource/aws_elasticache_cluster: Add configurable timeouts for create, update, and delete operations ([#41940](https://github.com/hashicorp/terraform-provider-aws/issues/41940))
 * resource/aws_kinesisanalyticsv2_application: Allow `runtime_environment` to be updated in-place ([#41935](https://github.com/hashicorp/terraform-provider-aws/issues/41935))
+* resource/aws_verified_access_endpoint: Add `cidr_options`, `load_balancer.port_range`, `network_interface_options.port_range`, and `rds_options` arguments ([#41957](https://github.com/hashicorp/terraform-provider-aws/issues/41957))
+* resource/aws_verified_access_endpoint: Mark `application_domain`, `domain_certificate_arn` and `endpoint_domain_prefix` as Optional ([#41957](https://github.com/hashicorp/terraform-provider-aws/issues/41957))
+* resource/aws_verified_access_endpoint: Support `cidr` and `rds` as valid values for `endpoint_type` ([#41957](https://github.com/hashicorp/terraform-provider-aws/issues/41957))
+* resource/aws_verified_access_instance: Add `cidr_endpoint_custom_subdomain` argument and `name_servers` attribute ([#41957](https://github.com/hashicorp/terraform-provider-aws/issues/41957))
+* resource/aws_verified_access_trust_provider: Add `native_application_oidc_options` and `sse_specification` arguments ([#41957](https://github.com/hashicorp/terraform-provider-aws/issues/41957))
 
 BUG FIXES:
 
