@@ -6,7 +6,6 @@ package elb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,7 +16,7 @@ import (
 
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
-var accountIDPerRegionMap = map[string]string{
+var serviceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "098369216593",
 	endpoints.ApEast1RegionID:      "754344448648",
 	endpoints.ApNortheast1RegionID: "582318560864",
@@ -48,6 +47,7 @@ var accountIDPerRegionMap = map[string]string{
 }
 
 // @SDKDataSource("aws_elb_service_account", name="Service Account")
+// @Region(validateOverrideInPartition=false)
 func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
@@ -57,10 +57,6 @@ func dataSourceServiceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 		},
 	}
 }
@@ -68,23 +64,14 @@ func dataSourceServiceAccount() *schema.Resource {
 func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region = v.(string)
-	}
-
-	if v, ok := accountIDPerRegionMap[region]; ok {
+	c := meta.(*conns.AWSClient)
+	region := c.Region(ctx)
+	if v, ok := serviceAccountPerRegionMap[region]; ok {
 		d.SetId(v)
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition(ctx),
-			Service:   "iam",
-			AccountID: v,
-			Resource:  "root",
-		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrARN, c.GlobalARNWithAccount(ctx, "iam", v, "root"))
 
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
+	return sdkdiag.AppendErrorf(diags, "unsupported ELB Service Account Region (%s)", region)
 }

@@ -26,6 +26,7 @@ import (
 )
 
 // @SDKResource("aws_dx_hosted_connection", name="Hosted Connection")
+// @Region(overrideEnabled=false)
 func resourceHostedConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConnectionCreate,

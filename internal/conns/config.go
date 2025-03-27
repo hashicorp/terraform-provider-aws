@@ -194,11 +194,10 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
-	client.region = c.Region
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
-	client.clients = make(map[string]any, 0)
+	client.clients = make(map[string]map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle

@@ -14,6 +14,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -61,8 +62,8 @@ func main() {
 			ephemeralResources:   make(map[string]ResourceDatum, 0),
 			frameworkDataSources: make(map[string]ResourceDatum, 0),
 			frameworkResources:   make(map[string]ResourceDatum, 0),
-			sdkDataSources:       make(map[string]ResourceDatum),
-			sdkResources:         make(map[string]ResourceDatum),
+			sdkDataSources:       make(map[string]ResourceDatum, 0),
+			sdkResources:         make(map[string]ResourceDatum, 0),
 		}
 
 		v.processDir(".")
@@ -73,6 +74,7 @@ func main() {
 
 		s := ServiceDatum{
 			GenerateClient:          l.GenerateClient(),
+			IsGlobal:                l.IsGlobal(),
 			EndpointRegionOverrides: l.EndpointRegionOverrides(),
 			GoV2Package:             l.GoV2Package(),
 			ProviderPackage:         p,
@@ -115,15 +117,19 @@ func main() {
 }
 
 type ResourceDatum struct {
-	FactoryName             string
-	Name                    string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
-	TransparentTagging      bool
-	TagsIdentifierAttribute string
-	TagsResourceType        string
+	FactoryName                       string
+	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
+	IsGlobal                          bool   // Is the resource global?
+	RegionOverrideEnabled             bool
+	TransparentTagging                bool
+	TagsIdentifierAttribute           string
+	TagsResourceType                  string
+	ValidateRegionOverrideInPartition bool
 }
 
 type ServiceDatum struct {
 	GenerateClient          bool
+	IsGlobal                bool // Is the service global?
 	EndpointRegionOverrides map[string]string
 	GoV2Package             string // AWS SDK for Go v2 package name
 	ProviderPackage         string
@@ -201,31 +207,58 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
-	// Look first for tagging annotations.
-	d := ResourceDatum{}
+	// Look first for per-resource annotations such as tagging and Region.
+	d := ResourceDatum{
+		RegionOverrideEnabled:             true,
+		ValidateRegionOverrideInPartition: true,
+	}
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
-		if m := annotation.FindStringSubmatch(line); len(m) > 0 && m[1] == "Tags" {
-			args := common.ParseArgs(m[3])
+		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
+			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			case "Region":
+				if attr, ok := args.Keyword["global"]; ok {
+					if global, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.IsGlobal = global
+					}
+				}
+				if attr, ok := args.Keyword["overrideEnabled"]; ok {
+					if enabled, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideEnabled = enabled
+					}
+				}
+				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
+					if validate, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/validateOverrideInPartition value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.ValidateRegionOverrideInPartition = validate
+					}
+				}
+			case "Tags":
+				d.TransparentTagging = true
 
-			d.TransparentTagging = true
+				if attr, ok := args.Keyword["identifierAttribute"]; ok {
+					if d.TagsIdentifierAttribute != "" {
+						v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					}
 
-			if attr, ok := args.Keyword["identifierAttribute"]; ok {
-				if d.TagsIdentifierAttribute != "" {
-					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
 				}
 
-				d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
-			}
-
-			if attr, ok := args.Keyword["resourceType"]; ok {
-				d.TagsResourceType = attr
+				if attr, ok := args.Keyword["resourceType"]; ok {
+					d.TagsResourceType = attr
+				}
 			}
 		}
 	}
 
+	// Then build the resource maps, looking for duplicates.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -260,6 +293,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.ephemeralResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
+					// TODO REGION Temporarily disabled for FW resources.
+					d.RegionOverrideEnabled = false
 					v.ephemeralResources[typeName] = d
 				}
 			case "FrameworkDataSource":
@@ -283,6 +318,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.frameworkDataSources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
+					// TODO REGION Temporarily disabled for FW resources.
+					d.RegionOverrideEnabled = false
 					v.frameworkDataSources[typeName] = d
 				}
 			case "FrameworkResource":
@@ -306,6 +343,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.frameworkResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
+					// TODO REGION Temporarily disabled for FW resources.
+					d.RegionOverrideEnabled = false
 					v.frameworkResources[typeName] = d
 				}
 			case "SDKDataSource":
@@ -354,7 +393,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Tags":
+			case "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.

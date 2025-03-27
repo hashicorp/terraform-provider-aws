@@ -16,10 +16,14 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
+- [Enhanced Multi-Region Support](#enhanced-multi-region-support)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
+- [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
+- [resource/aws_s3_bucket](#resourceaws_s3_bucket)
+- [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 
 <!-- /TOC -->
 
@@ -70,6 +74,10 @@ Version 6.0.0 removes these `provider` arguments:
 * `endpoints.opsworks` - Removed following AWS OpsWorks Stacks End of Life
 * `endpoints.simpledb` and `endpoints.sdb` - Removed following dropping support for Amazon SimpleDB
 
+## Enhanced Multi-Region Support
+
+Blah blah blah.
+
 ## Dropping Support For Amazon SimpleDB
 
 As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB, the `aws_simpledb_domain` resource has been removed.
@@ -104,3 +112,15 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 ## resource/aws_redshift_service_account
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+
+## resource/aws_config_aggregate_authorization
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
+
+## resource/aws_s3_bucket
+
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+
+## data-source/aws_s3_bucket
+
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
