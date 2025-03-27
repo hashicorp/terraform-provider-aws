@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `key_type` - Type of a usage plan key. Currently, the valid key type is API_KEY.
 * `usage_plan_id` - ID of the API resource
 * `name` - Name of a usage plan key.
-* `value` - Value of a usage plan key.
+* `value` - Value of a usage plan key. This value is marked as sensitive in the Terraform plan output.
 
 ## Import
 
