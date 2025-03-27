@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -358,6 +359,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							NestedObject: schema.NestedBlockObject{
 								PlanModifiers: []planmodifier.Object{
 									ruleTransitionForUnknownDays(),
+								},
+								Validators: []validator.Object{
+									ruleTransitionExactlyOneOfChildren(),
 								},
 								Attributes: map[string]schema.Attribute{
 									"date": schema.StringAttribute{
@@ -1269,4 +1273,58 @@ func (m ruleTransitionForUnknownDaysModifier) PlanModifyObject(ctx context.Conte
 	}
 
 	resp.PlanValue = p.ObjectValue
+}
+
+// ruleTransitionExactlyOneOfChildren acts similarly to `tfobjectvalidator.ExactlyOneOfChildren` except
+// that if neither is set, it only emits a warning.
+func ruleTransitionExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
+	return warnExactlyOneOfChildrenValidator{
+		pathExpressions: expressions,
+	}
+}
+
+type warnExactlyOneOfChildrenValidator struct {
+	pathExpressions path.Expressions
+}
+
+func (av warnExactlyOneOfChildrenValidator) Description(_ context.Context) string {
+	return ""
+}
+
+func (av warnExactlyOneOfChildrenValidator) MarkdownDescription(ctx context.Context) string {
+	return av.Description(ctx)
+}
+
+func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	// If current attribute is unknown, delay validation
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var config transitionModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delay validation until all involved attribute have a known value
+	if config.Date.IsUnknown() || config.Days.IsUnknown() {
+		return
+	}
+
+	paths := path.Paths{
+		req.Path.AtName("date"),
+		req.Path.AtName("days"),
+	}
+	if !config.Date.IsNull() && !config.Days.IsNull() {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			req.Path,
+			fmt.Sprintf("2 attributes specified when one (and only one) of %s is required", paths),
+		))
+	} else if config.Date.IsNull() && config.Days.IsNull() {
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+			req.Path,
+			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", paths),
+		))
+	}
 }
