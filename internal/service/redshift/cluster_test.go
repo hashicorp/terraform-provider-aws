@@ -5,7 +5,6 @@ package redshift_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -615,9 +614,13 @@ func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 				Config: testAccClusterConfig_updateAvailabilityZone(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v2),
-					testAccCheckClusterNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -648,10 +651,14 @@ func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocati
 				Config: testAccClusterConfig_updateAvailabilityZone(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v2),
-					testAccCheckClusterNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -702,16 +709,20 @@ func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName),
+				Config: testAccClusterConfig_unencrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -740,9 +751,13 @@ func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 				Config: testAccClusterConfig_unencrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1086,21 +1101,6 @@ func testAccCheckClusterMasterUsername(c *awstypes.Cluster, value string) resour
 	}
 }
 
-func testAccCheckClusterNotRecreated(i, j *awstypes.Cluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// In lieu of some other uniquely identifying attribute from the API that always changes
-		// when a cluster is destroyed and recreated with the same identifier, we use the SSH key
-		// as it will get regenerated when a cluster is destroyed.
-		// Certain update operations (e.g KMS encrypting a cluster) will change ClusterCreateTime.
-		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
-		if aws.ToString(i.ClusterPublicKey) != aws.ToString(j.ClusterPublicKey) {
-			return errors.New("Redshift Cluster was recreated")
-		}
-
-		return nil
-	}
-}
-
 func testAccClusterConfig_updateNodeCount(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
@@ -1247,7 +1247,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
-  encrypted                           = true
+  encrypted                           = false
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
