@@ -209,6 +209,82 @@ func TestAccLightsailInstancePublicPorts_disappears_Instance(t *testing.T) {
 	})
 }
 
+func TestAccLightsailInstancePublicPorts_icmpPing(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_instance_public_ports.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancePublicPortsConfig_icmpPing(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
+						"cidrs.0":          "0.0.0.0/0",
+						names.AttrProtocol: "icmp",
+						"from_port":        "8",
+						"to_port":          "-1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
+						"ipv6_cidrs.0":     "::/0",
+						names.AttrProtocol: "icmpv6",
+						"from_port":        "128",
+						"to_port":          acctest.Ct0,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailInstancePublicPorts_icmpAll(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_instance_public_ports.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancePublicPortsConfig_icmpAll(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
+						"cidrs.0":          "0.0.0.0/0",
+						names.AttrProtocol: "icmp",
+						"from_port":        "-1",
+						"to_port":          "-1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
+						"ipv6_cidrs.0":     "::/0",
+						names.AttrProtocol: "icmpv6",
+						"from_port":        "-1",
+						"to_port":          "-1",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstancePublicPortsExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -264,7 +340,7 @@ func testAccCheckInstancePublicPortsDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccInstancePublicPortsConfig_basic(rName string) string {
+func testAccInstancePublicPortsConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -281,7 +357,13 @@ resource "aws_lightsail_instance" "test" {
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
 }
+`, rName)
+}
 
+func testAccInstancePublicPortsConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstancePublicPortsConfigBase(rName),
+		`	
 resource "aws_lightsail_instance_public_ports" "test" {
   instance_name = aws_lightsail_instance.test.name
 
@@ -291,27 +373,13 @@ resource "aws_lightsail_instance_public_ports" "test" {
     to_port   = 80
   }
 }
-`, rName)
+`)
 }
 
 func testAccInstancePublicPortsConfig_multiple(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_lightsail_instance" "test" {
-  name              = %[1]q
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
-}
-
+	return acctest.ConfigCompose(
+		testAccInstancePublicPortsConfigBase(rName),
+		`
 resource "aws_lightsail_instance_public_ports" "test" {
   instance_name = aws_lightsail_instance.test.name
 
@@ -327,27 +395,13 @@ resource "aws_lightsail_instance_public_ports" "test" {
     to_port   = 443
   }
 }
-`, rName)
+`)
 }
 
 func testAccInstancePublicPortsConfig_cidrs(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_lightsail_instance" "test" {
-  name              = %[1]q
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
-}
-
+	return acctest.ConfigCompose(
+		testAccInstancePublicPortsConfigBase(rName),
+		`
 resource "aws_lightsail_instance_public_ports" "test" {
   instance_name = aws_lightsail_instance.test.name
 
@@ -358,27 +412,13 @@ resource "aws_lightsail_instance_public_ports" "test" {
     cidrs     = ["192.168.1.0/24", "1.1.1.1/32"]
   }
 }
-`, rName)
+`)
 }
 
 func testAccInstancePublicPortsConfig_cidrListAliases(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_lightsail_instance" "test" {
-  name              = %[1]q
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
-}
-
+	return acctest.ConfigCompose(
+		testAccInstancePublicPortsConfigBase(rName),
+		`
 resource "aws_lightsail_instance_public_ports" "test" {
   instance_name = aws_lightsail_instance.test.name
 
@@ -389,5 +429,53 @@ resource "aws_lightsail_instance_public_ports" "test" {
     cidr_list_aliases = ["lightsail-connect"]
   }
 }
-`, rName)
+`)
+}
+
+func testAccInstancePublicPortsConfig_icmpPing(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstancePublicPortsConfigBase(rName),
+		`
+resource "aws_lightsail_instance_public_ports" "test" {
+  instance_name = aws_lightsail_instance.test.name
+
+  port_info {
+    cidrs     = ["0.0.0.0/0"]
+    protocol  = "icmp"
+    from_port = 8
+    to_port   = -1
+  }
+
+  port_info {
+    ipv6_cidrs = ["::/0"]
+    protocol   = "icmpv6"
+    from_port  = 128
+    to_port    = 0
+  }
+}
+`)
+}
+
+func testAccInstancePublicPortsConfig_icmpAll(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstancePublicPortsConfigBase(rName),
+		`
+resource "aws_lightsail_instance_public_ports" "test" {
+  instance_name = aws_lightsail_instance.test.name
+
+  port_info {
+    cidrs     = ["0.0.0.0/0"]
+    protocol  = "icmp"
+    from_port = -1
+    to_port   = -1
+  }
+
+  port_info {
+    ipv6_cidrs = ["::/0"]
+    protocol   = "icmpv6"
+    from_port  = -1
+    to_port    = -1
+  }
+}
+`)
 }
