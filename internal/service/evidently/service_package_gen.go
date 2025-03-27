@@ -95,7 +95,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		evidently.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *evidently.Options) {
-			if region := config["region"].(string); o.Region != region {
+			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
 					"service":         "evidently",
 					"original_region": o.Region,

@@ -239,7 +239,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		servicecatalog.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *servicecatalog.Options) {
-			if region := config["region"].(string); o.Region != region {
+			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
 					"service":         "servicecatalog",
 					"original_region": o.Region,

@@ -62,7 +62,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		costoptimizationhub.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *costoptimizationhub.Options) {
-			if region := config["region"].(string); o.Region != region {
+			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
 					"service":         "costoptimizationhub",
 					"original_region": o.Region,

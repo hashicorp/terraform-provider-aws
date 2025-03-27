@@ -83,7 +83,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		inspector2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *inspector2.Options) {
-			if region := config["region"].(string); o.Region != region {
+			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
 					"service":         "inspector2",
 					"original_region": o.Region,
