@@ -1,4 +1,5 @@
-## 5.93.0 (Unreleased)
+## 5.94.0 (Unreleased)
+## 5.93.0 (March 27, 2025)
 
 FEATURES:
 
