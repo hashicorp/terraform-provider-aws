@@ -189,7 +189,7 @@ jobs:
                         {
                           "type": "link",
                           "text": ${{ toJSON(env.ISSUE_TITLE) }}
-                          "url": env.ISSUE_URL
+                          "url": ${{ env.ISSUE_URL }}
                         }
                       ]
                     }
