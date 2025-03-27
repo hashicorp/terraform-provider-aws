@@ -28,7 +28,9 @@ func TestAccOrganizationsAccountParent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_account_parent.test"
-	ouName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ou1Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ou2Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ou3Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,10 +40,10 @@ func TestAccOrganizationsAccountParent_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckAccountParentDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountParentConfig_root(),
+				Config: testAccAccountParentConfig_organizationalUnit1(ou1Name, ou2Name, ou3Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountParentExists(ctx, resourceName),
 				),
@@ -52,7 +54,7 @@ func TestAccOrganizationsAccountParent_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParentID), knownvalue.StringRegexp(regexache.MustCompile(`^r-[0-9a-z]{4,32}$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParentID), knownvalue.StringRegexp(regexache.MustCompile(`^ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}$`))),
 				},
 			},
 			{
@@ -63,7 +65,7 @@ func TestAccOrganizationsAccountParent_basic(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 			{
-				Config: testAccAccountParentConfig_organizationalUnit(ouName),
+				Config: testAccAccountParentConfig_organizationalUnit2(ou1Name, ou2Name, ou3Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountParentExists(ctx, resourceName),
 				),
@@ -77,6 +79,36 @@ func TestAccOrganizationsAccountParent_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParentID), knownvalue.StringRegexp(regexache.MustCompile(`^ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}$`))),
 				},
 			},
+			{
+				Config: testAccAccountParentConfig_organizationalUnit3(ou1Name, ou2Name, ou3Name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountParentExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParentID), knownvalue.StringRegexp(regexache.MustCompile(`^ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}$`))),
+				},
+			},
+			{
+				Config: testAccAccountParentConfig_root(ou1Name, ou2Name, ou3Name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountParentExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParentID), knownvalue.StringRegexp(regexache.MustCompile(`^r-[0-9a-z]{4,32}$`))),
+				},
+			},
 		},
 	})
 }
@@ -85,6 +117,9 @@ func TestAccOrganizationsAccountParent_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_account_parent.test"
+	ou1Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ou2Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ou3Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -94,14 +129,15 @@ func TestAccOrganizationsAccountParent_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckAccountParentDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountParentConfig_root(),
+				Config: testAccAccountParentConfig_root(ou1Name, ou2Name, ou3Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountParentExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceAccountParent, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -129,66 +165,64 @@ func testAccCheckAccountParentExists(ctx context.Context, name string) resource.
 	}
 }
 
-func testAccCheckAccountParentDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
-
-		root, err := tforganizations.FindDefaultRoot(ctx, conn)
-		if err != nil {
-			return err
-		}
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_organizations_account_parent" {
-				continue
-			}
-
-			parentID, err := tforganizations.FindParentAccountID(ctx, conn, rs.Primary.Attributes[names.AttrAccountID])
-			if err != nil {
-				return err
-			}
-
-			if *parentID == *root.Id {
-				continue
-			}
-
-			return fmt.Errorf("Found account %s outside of org root", rs.Primary.Attributes[names.AttrAccountID])
-		}
-		return nil
-	}
-}
-
-func testAccAccountParentConfig_root() string {
-	return `
+func testAccAccountParentConfig_base(firstOU, secondOU, thirdOU string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
 }
 
 data "aws_organizations_organization" "current" {}
 
-resource "aws_organizations_account_parent" "test" {
-  account_id = data.aws_caller_identity.alternate.account_id
-  parent_id  = data.aws_organizations_organization.current.roots[0].id
-}
-`
-}
-
-func testAccAccountParentConfig_organizationalUnit(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "alternate" {
-  provider = "awsalternate"
-}
-
-data "aws_organizations_organization" "current" {}
-
-resource "aws_organizations_organizational_unit" "test" {
+resource "aws_organizations_organizational_unit" "first" {
   name      = %[1]q
   parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 
+resource "aws_organizations_organizational_unit" "second" {
+  name      = %[2]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+resource "aws_organizations_organizational_unit" "third" {
+  name      = %[3]q
+  parent_id = aws_organizations_organizational_unit.second.id
+}
+
+`, firstOU, secondOU, thirdOU))
+}
+
+func testAccAccountParentConfig_root(firstOU, secondOU, thirdOU string) string {
+	return acctest.ConfigCompose(testAccAccountParentConfig_base(firstOU, secondOU, thirdOU), `
 resource "aws_organizations_account_parent" "test" {
   account_id = data.aws_caller_identity.alternate.account_id
-  parent_id  = aws_organizations_organizational_unit.test.id
+  parent_id  = data.aws_organizations_organization.current.roots[0].id
 }
-`, rName)
+`)
+}
+
+func testAccAccountParentConfig_organizationalUnit1(firstOU, secondOU, thirdOU string) string {
+	return acctest.ConfigCompose(testAccAccountParentConfig_base(firstOU, secondOU, thirdOU), `
+resource "aws_organizations_account_parent" "test" {
+  account_id = data.aws_caller_identity.alternate.account_id
+  parent_id  = aws_organizations_organizational_unit.first.id
+}
+`)
+}
+
+func testAccAccountParentConfig_organizationalUnit2(firstOU, secondOU, thirdOU string) string {
+	return acctest.ConfigCompose(testAccAccountParentConfig_base(firstOU, secondOU, thirdOU), `
+resource "aws_organizations_account_parent" "test" {
+  account_id = data.aws_caller_identity.alternate.account_id
+  parent_id  = aws_organizations_organizational_unit.second.id
+}
+`)
+}
+
+func testAccAccountParentConfig_organizationalUnit3(firstOU, secondOU, thirdOU string) string {
+	return acctest.ConfigCompose(testAccAccountParentConfig_base(firstOU, secondOU, thirdOU), `
+resource "aws_organizations_account_parent" "test" {
+  account_id = data.aws_caller_identity.alternate.account_id
+  parent_id  = aws_organizations_organizational_unit.third.id
+}
+`)
 }

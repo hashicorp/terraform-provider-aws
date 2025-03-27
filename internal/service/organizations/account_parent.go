@@ -37,6 +37,7 @@ const (
 type resourceAccountParent struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
+	framework.WithNoOpDelete
 }
 
 func (r *resourceAccountParent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -125,40 +126,6 @@ func (r *resourceAccountParent) Read(ctx context.Context, req resource.ReadReque
 	state.ParentID = types.StringPointerValue(parentID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceAccountParent) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data resourceAccountParentModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().OrganizationsClient(ctx)
-
-	root, err := findDefaultRoot(ctx, conn)
-	if err != nil {
-		create.ProblemStandardMessage(names.Organizations, create.ErrActionDeleting, ResNameAccountParent, data.AccountID.String(), err)
-	}
-
-	if *root.Id == flex.StringValueFromFramework(ctx, data.ParentID) {
-		return
-	}
-
-	input := organizations.MoveAccountInput{
-		AccountId:           flex.StringFromFramework(ctx, data.AccountID),
-		SourceParentId:      flex.StringFromFramework(ctx, data.ParentID),
-		DestinationParentId: root.Id,
-	}
-
-	_, err = conn.MoveAccount(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Organizations, create.ErrActionUpdating, ResNameAccountParent, data.AccountID.String(), err),
-			err.Error(),
-		)
-		return
-	}
 }
 
 func (r *resourceAccountParent) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
