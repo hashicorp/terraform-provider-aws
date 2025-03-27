@@ -19,6 +19,7 @@ Upgrade topics:
 - [Enhanced Multi-Region Support](#enhanced-multi-region-support)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
+- [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
 - [resource/aws_s3_bucket](#resourceaws_s3_bucket)
@@ -102,6 +103,11 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 * `aws_opsworks_stack`
 * `aws_opsworks_static_web_layer`
 * `aws_opsworks_user_profile`
+
+## resource/aws_redshift_cluster
+
+* The `publicly_accessible` attribute now defaults to `false`.
+* Remove `snapshot_copy` from configuration as it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
 
 ## resource/aws_redshift_service_account
 

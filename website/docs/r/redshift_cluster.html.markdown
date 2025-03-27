@@ -96,7 +96,7 @@ This resource supports the following arguments:
   No longer supported by the AWS API.
   Always returns `auto`.
 * `number_of_nodes` - (Optional) The number of compute nodes in the cluster. This parameter is required when the ClusterType parameter is specified as multi-node. Default is 1.
-* `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `true`.
+* `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `false`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
 * `enhanced_vpc_routing` - (Optional) If true , enhanced VPC routing is enabled.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `encrypted` needs to be set to true.
@@ -111,7 +111,6 @@ This resource supports the following arguments:
 * `logging` - (Optional, **Deprecated**) Logging, documented below.
 * `maintenance_track_name` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
-* `snapshot_copy` - (Optional, **Deprecated**) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Blocks
@@ -126,14 +125,6 @@ For more information on the permissions required for the bucket, please read the
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
 * `log_destination_type` - (Optional) The log destination type. An enum with possible values of `s3` and `cloudwatch`.
 * `log_exports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`. Valid log types are `connectionlog`, `userlog`, and `useractivitylog`.
-
-#### `snapshot_copy`
-
-~> The `snapshot_copy` argument is deprecated. Use the [`aws_redshift_snapshot_copy`](./redshift_snapshot_copy.html.markdown) resource instead. This argument will be removed in a future major version.
-
-* `destination_region` - (Required) The destination region that you want to copy snapshots to.
-* `retention_period` - (Optional) The number of days to retain automated snapshots in the destination region after they are copied from the source region. Defaults to `7`.
-* `grant_name` - (Optional) The name of the snapshot copy grant to use when snapshots of an AWS KMS-encrypted cluster are copied to the destination region.
 
 ## Attribute Reference
 
