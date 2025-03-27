@@ -12,7 +12,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -400,15 +404,75 @@ func TestAccIAMPolicy_malformedCondition(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicy_region(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_region(rName, acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("policy/%s", rName)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccPolicyRegionImportStateIDFunc(resourceName, acctest.AlternateRegion()),
+			},
+			{
+				Config: testAccPolicyConfig_region(rName, acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM Policy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
@@ -451,11 +515,22 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func testAccPolicyRegionImportStateIDFunc(n, region string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		return fmt.Sprintf("%s@%s", rs.Primary.Attributes[names.AttrID], region), nil
+	}
+}
+
 func testAccPolicyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  description = %q
-  name        = %q
+  description = %[2]q
+  name        = %[1]q
 
   policy = <<EOF
 {
@@ -472,13 +547,13 @@ resource "aws_iam_policy" "test" {
 }
 EOF
 }
-`, description, rName)
+`, rName, description)
 }
 
 func testAccPolicyConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -524,7 +599,7 @@ EOF
 func testAccPolicyConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name_prefix = %q
+  name_prefix = %[1]q
 
   policy = <<EOF
 {
@@ -547,8 +622,8 @@ EOF
 func testAccPolicyConfig_path(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
-  path = %q
+  name = %[1]q
+  path = %[2]q
 
   policy = <<EOF
 {
@@ -571,8 +646,8 @@ EOF
 func testAccPolicyConfig_basic(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name   = %q
-  policy = %q
+  name   = %[1]q
+  policy = %[2]q
 }
 `, rName, policy)
 }
@@ -650,7 +725,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_policyDuplicateKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -679,7 +754,7 @@ EOF
 func testAccPolicyConfig_MalformedCondition_setup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -700,7 +775,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_MalformedCondition_failure(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -724,7 +799,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_MalformedCondition_fix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -745,4 +820,29 @@ resource "aws_iam_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccPolicyConfig_region(rName, region string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  region = %[2]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName, region)
 }
