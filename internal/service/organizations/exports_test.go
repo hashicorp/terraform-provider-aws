@@ -15,7 +15,6 @@ var (
 	ResourceResourcePolicy         = resourceResourcePolicy
 
 	FindAccountByID                  = findAccountByID
-	FindDefaultRoot                  = findDefaultRoot
 	FindOrganizationalUnitByID       = findOrganizationalUnitByID
 	FindParentAccountID              = findParentAccountID
 	FindPolicyAttachmentByTwoPartKey = findPolicyAttachmentByTwoPartKey

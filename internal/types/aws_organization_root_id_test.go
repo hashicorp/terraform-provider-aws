@@ -11,7 +11,7 @@ func TestIsAWSOrganizationRootID(t *testing.T) { // nosemgrep:ci.aws-in-func-nam
 	}{
 		{id: "", valid: false},
 		{id: "r-abc", valid: false},
-		{id: "-e3zd", valid: true},
+		{id: "-e3zd", valid: false},
 		{id: "r-y7zf", valid: true},
 	} {
 		ok := IsAWSOrganizationRootID(tc.id)

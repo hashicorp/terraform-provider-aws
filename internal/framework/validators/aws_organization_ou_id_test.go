@@ -44,7 +44,7 @@ func TestAWSOrganizationOUIDValidator(t *testing.T) { // nosemgrep:ci.aws-in-fun
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid AWS organizational unit ID, got: r-xy6ffog945kghe8jjg948984jf8e2ifo3e`,
+					`Attribute test value must be a valid AWS organizational unit ID, got: ou-z7jt-19mqs9sp42iu99e322rt46hf9er237hf9xc`,
 				),
 			},
 		},
