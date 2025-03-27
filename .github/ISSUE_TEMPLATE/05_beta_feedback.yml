@@ -154,6 +154,7 @@ body:
       label: GenAI / LLM Assisted Development
       description: |
         If you used a generative AI / LLM tool to assist in the development of your config, please let us know which tool you used here.
+      value: n/a
     validations:
       required: false
 
