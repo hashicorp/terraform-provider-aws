@@ -418,7 +418,7 @@ func TestAccIAMPolicy_updateWithoutDelay(t *testing.T) {
 				Config: testAccPolicyConfig_description(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "-1"),
 				),
 			},
@@ -432,6 +432,7 @@ func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 	description := "policy_create_update_with_delay"
 	delayAfterPolicyCreationVariable := "delay_after_policy_creation_in_ms"
+	policy := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -440,10 +441,10 @@ func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_updateWithDelay(),
+				Config: testAccPolicyConfig_updateWithDelay(description, policy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "3000"),
 				),
 			},
@@ -798,27 +799,13 @@ resource "aws_iam_policy" "test" {
 `, rName)
 }
 
-func testAccPolicyConfig_updateWithDelay() string {
+func testAccPolicyConfig_updateWithDelay(description, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  description = "policy_create_update_with_delay"
-  name        = "test"
+  description = %q
   delay_after_policy_creation_in_ms = 3000
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+  name   = "test"
+  policy = %q
 }
-EOF
-}
-`)
+`, description, policy)
 }
