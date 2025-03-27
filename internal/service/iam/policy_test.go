@@ -432,7 +432,6 @@ func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 	description := "policy_create_update_with_delay"
 	delayAfterPolicyCreationVariable := "delay_after_policy_creation_in_ms"
-	policy := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -441,7 +440,7 @@ func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_updateWithDelay(description, policy),
+				Config: testAccPolicyConfig_updateWithDelay("test", description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
@@ -799,18 +798,7 @@ resource "aws_iam_policy" "test" {
 `, rName)
 }
 
-func testAccPolicyConfig_updateWithDelay(description, policy string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_policy" "test" {
-  description 			= %q
-  delay_after_policy_creation_in_ms = 3000
-  name   				= "test"
-  policy 				= %q
-}
-`, description, policy)
-}
-
-func testAccPolicyConfig_descriptionTest(rName, description string) string {
+func testAccPolicyConfig_updateWithDelay(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   description 			     = %q
