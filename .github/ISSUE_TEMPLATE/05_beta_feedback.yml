@@ -149,6 +149,15 @@ body:
       required: false
 
   - type: textarea
+    id: genai_llm
+    attributes:
+      label: GenAI / LLM Assisted Development
+      description: |
+        If you used a generative AI / LLM tool to assist in the development of your config, please let us know which tool you used here.
+    validations:
+      required: false
+
+  - type: textarea
     attributes:
       label: Imprtant Facts and References
       description: |
