@@ -54,7 +54,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *cloudfrontkeyvaluestore.Options) {
 			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
-					"service":         "cloudfrontkeyvaluestore",
+					"service":         p.ServicePackageName(),
 					"original_region": o.Region,
 					"override_region": region,
 				})

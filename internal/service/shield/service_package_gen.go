@@ -138,7 +138,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *shield.Options) {
 			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
-					"service":         "shield",
+					"service":         p.ServicePackageName(),
 					"original_region": o.Region,
 					"override_region": region,
 				})
@@ -150,7 +150,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			case endpoints.AwsPartitionID:
 				if region := endpoints.UsEast1RegionID; o.Region != region {
 					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
-						"service":         "shield",
+						"service":         p.ServicePackageName(),
 						"original_region": o.Region,
 						"override_region": region,
 					})

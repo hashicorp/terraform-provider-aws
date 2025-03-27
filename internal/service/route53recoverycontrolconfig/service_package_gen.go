@@ -86,7 +86,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *route53recoverycontrolconfig.Options) {
 			if region := config[names.AttrRegion].(string); o.Region != region {
 				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
-					"service":         "route53recoverycontrolconfig",
+					"service":         p.ServicePackageName(),
 					"original_region": o.Region,
 					"override_region": region,
 				})
@@ -98,7 +98,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			case endpoints.AwsPartitionID:
 				if region := endpoints.UsWest2RegionID; o.Region != region {
 					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
-						"service":         "route53recoverycontrolconfig",
+						"service":         p.ServicePackageName(),
 						"original_region": o.Region,
 						"override_region": region,
 					})
