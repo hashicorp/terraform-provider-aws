@@ -159,7 +159,7 @@ body:
 
   - type: textarea
     attributes:
-      label: Imprtant Facts and References
+      label: Important Facts and References
       description: |
         If there is any additional information that might be relevant, provide those details here. This might include information such as, but not limited to:
 
