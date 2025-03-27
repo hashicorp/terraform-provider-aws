@@ -801,8 +801,8 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_updateWithDelay(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  description 			     = %q
-  name        			     = %q
+  description                       = %q
+  name                              = %q
   delay_after_policy_creation_in_ms = 3000
 
   policy = <<EOF
