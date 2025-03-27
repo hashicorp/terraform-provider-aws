@@ -7,6 +7,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ecr_pull_through_cache_rule: Add `custom_role_arn` and `upstream_repository_prefix` attributes ([#41933](https://github.com/hashicorp/terraform-provider-aws/issues/41933))
+* resource/aws_codepipeline:  Adds `trigger_all` attribute ([#42008](https://github.com/hashicorp/terraform-provider-aws/issues/42008))
+* resource/aws_codepipeline: Removal of `trigger` argument now properly removes custom trigger definitions ([#42008](https://github.com/hashicorp/terraform-provider-aws/issues/42008))
 * resource/aws_cognitoidp_user_pool: Mark the `username_configuration` and `username_configuration.case_sensitive` arguments as optional and computed. This will future proof the provider against upstream API changes which may return a default value for the block when omitted during create operations. ([#35439](https://github.com/hashicorp/terraform-provider-aws/issues/35439))
 * resource/aws_datasync_task: Add `task_mode` argument ([#39979](https://github.com/hashicorp/terraform-provider-aws/issues/39979))
 * resource/aws_ecr_pull_through_cache_rule: Add `custom_role_arn` and `upstream_repository_prefix` arguments ([#41933](https://github.com/hashicorp/terraform-provider-aws/issues/41933))
