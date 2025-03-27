@@ -1387,6 +1387,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
 			}
+			if err := d.Set("volume_configuration", flattenVolumeConfigurations(ctx, deployment.VolumeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
+			}
+			if sc := deployment.ServiceConnectConfiguration; sc != nil {
+				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(*sc)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
+				}
+			}
 		}
 	}
 
@@ -1399,9 +1407,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set(names.AttrPropagateTags, service.PropagateTags)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
-	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
-	// }
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
@@ -2332,6 +2337,22 @@ func expandServiceConnectConfiguration(sc []any) *awstypes.ServiceConnectConfigu
 	return config
 }
 
+func flattenServiceConnectConfiguration(sc awstypes.ServiceConnectConfiguration) map[string]any {
+	raw := map[string]any{
+		names.AttrEnabled: sc.Enabled,
+	}
+	if l := sc.LogConfiguration; l != nil {
+		raw["log_configuration"] = []any{flattenLogConfiguration(*l)}
+	}
+	if n := sc.Namespace; n != nil {
+		raw[names.AttrNamespace] = aws.ToString(n)
+	}
+	if s := sc.Services; s != nil {
+		raw["service"] = flattenServices(s)
+	}
+	return raw
+}
+
 func expandLogConfiguration(lc []any) *awstypes.LogConfiguration {
 	if len(lc) == 0 {
 		return &awstypes.LogConfiguration{}
@@ -2350,6 +2371,19 @@ func expandLogConfiguration(lc []any) *awstypes.LogConfiguration {
 	}
 
 	return config
+}
+
+func flattenLogConfiguration(sc awstypes.LogConfiguration) map[string]any {
+	raw := map[string]any{
+		"log_driver": string(sc.LogDriver),
+	}
+	if o := sc.Options; o != nil {
+		raw["options"] = flex.FlattenStringValueMap(o)
+	}
+	if s := sc.SecretOptions; s != nil {
+		raw["secret_option"] = flattenSecretOption(s)
+	}
+	return raw
 }
 
 func expandSecretOptions(sop []any) []awstypes.Secret {
@@ -2376,6 +2410,21 @@ func expandSecretOptions(sop []any) []awstypes.Secret {
 	}
 
 	return out
+}
+
+func flattenSecretOption(ss []awstypes.Secret) []any {
+	results := []any{}
+	for _, s := range ss {
+		raw := map[string]any{}
+		if n := s.Name; n != nil {
+			raw[names.AttrName] = aws.ToString(n)
+		}
+		if v := s.ValueFrom; v != nil {
+			raw["value_from"] = aws.ToString(v)
+		}
+		results = append(results, raw)
+	}
+	return results
 }
 
 func expandVolumeConfigurations(ctx context.Context, vc []any) []awstypes.ServiceVolumeConfiguration {
@@ -2472,6 +2521,80 @@ func expandTagSpecifications(ctx context.Context, ts []any) []awstypes.EBSTagSpe
 	return s
 }
 
+func flattenVolumeConfigurations(ctx context.Context, vcs []awstypes.ServiceVolumeConfiguration) []any {
+	if len(vcs) == 0 {
+		return nil
+	}
+
+	results := make([]any, 0, len(vcs))
+	for _, vc := range vcs {
+		c := map[string]any{
+			names.AttrName: aws.ToString(vc.Name),
+		}
+		if v := vc.ManagedEBSVolume; v != nil {
+			c["managed_ebs_volume"] = []any{flattenManagedEBSVolume(ctx, *v)}
+		}
+		results = append(results, c)
+	}
+	return results
+}
+
+func flattenManagedEBSVolume(ctx context.Context, v awstypes.ServiceManagedEBSVolumeConfiguration) map[string]any {
+	raw := map[string]any{
+		names.AttrRoleARN: aws.ToString(v.RoleArn),
+	}
+	if b := v.Encrypted; b != nil {
+		raw[names.AttrEncrypted] = aws.ToBool(b)
+	}
+	if f := v.FilesystemType; f != "" {
+		raw["file_system_type"] = string(f)
+	}
+	if i := v.Iops; i != nil {
+		raw[names.AttrIOPS] = aws.ToInt32(i)
+	}
+	if k := v.KmsKeyId; k != nil {
+		raw[names.AttrKMSKeyID] = aws.ToString(k)
+	}
+	if s := v.SizeInGiB; s != nil {
+		raw["size_in_gb"] = aws.ToInt32(s)
+	}
+	if s := v.SnapshotId; s != nil {
+		raw[names.AttrSnapshotID] = aws.ToString(s)
+	}
+	if t := v.Throughput; t != nil {
+		raw[names.AttrThroughput] = aws.ToInt32(t)
+	}
+	if t := v.VolumeType; t != nil {
+		raw[names.AttrVolumeType] = aws.ToString(t)
+	}
+	if ts := v.TagSpecifications; ts != nil {
+		raw["tag_specifications"] = flattenTagSpecifications(ctx, v.TagSpecifications)
+	}
+
+	return raw
+}
+
+func flattenTagSpecifications(ctx context.Context, ts []awstypes.EBSTagSpecification) []any {
+	var results []any
+
+	for _, c := range ts {
+		raw := map[string]any{}
+
+		if t := c.ResourceType; t != "" {
+			raw[names.AttrResourceType] = string(t)
+		}
+		if p := c.PropagateTags; p != "" {
+			raw[names.AttrPropagateTags] = string(p)
+		}
+		if t := c.Tags; t != nil {
+			raw[names.AttrTags] = KeyValueTags(ctx, t).IgnoreAWS().Map()
+		}
+		results = append(results, c)
+	}
+
+	return results
+}
+
 func expandServices(srv []any) []awstypes.ServiceConnectService {
 	if len(srv) == 0 {
 		return nil
@@ -2512,6 +2635,33 @@ func expandServices(srv []any) []awstypes.ServiceConnectService {
 	return out
 }
 
+func flattenServices(scs []awstypes.ServiceConnectService) []any {
+	results := []any{}
+	for _, sc := range scs {
+		raw := map[string]any{}
+		if a := sc.ClientAliases; a != nil {
+			raw["client_alias"] = flattenClientAliases(a)
+		}
+		if d := sc.DiscoveryName; d != nil {
+			raw["discovery_name"] = aws.ToString(d)
+		}
+		if i := sc.IngressPortOverride; i != nil {
+			raw["ingress_port_override"] = aws.ToInt32(i)
+		}
+		if p := sc.PortName; p != nil {
+			raw["port_name"] = aws.ToString(p)
+		}
+		if t := sc.Timeout; t != nil {
+			raw[names.AttrTimeout] = []any{flattenTimeout(*t)}
+		}
+		if tls := sc.Tls; tls != nil {
+			raw["tls"] = []any{flattenTLS(*tls)}
+		}
+		results = append(results, raw)
+	}
+	return results
+}
+
 func expandTimeout(timeout []any) *awstypes.TimeoutConfiguration {
 	if len(timeout) == 0 {
 		return nil
@@ -2529,6 +2679,17 @@ func expandTimeout(timeout []any) *awstypes.TimeoutConfiguration {
 		timeoutConfig.PerRequestTimeoutSeconds = aws.Int32(int32(v))
 	}
 	return timeoutConfig
+}
+
+func flattenTimeout(c awstypes.TimeoutConfiguration) map[string]any {
+	raw := map[string]any{}
+	if i := c.IdleTimeoutSeconds; i != nil {
+		raw["idle_timeout_seconds"] = aws.ToInt32(i)
+	}
+	if p := c.PerRequestTimeoutSeconds; p != nil {
+		raw["per_request_timeout_seconds"] = aws.ToInt32(p)
+	}
+	return raw
 }
 
 func expandTLS(tls []any) *awstypes.ServiceConnectTlsConfiguration {
@@ -2553,6 +2714,20 @@ func expandTLS(tls []any) *awstypes.ServiceConnectTlsConfiguration {
 	return tlsConfig
 }
 
+func flattenTLS(c awstypes.ServiceConnectTlsConfiguration) map[string]any {
+	raw := map[string]any{}
+	if i := c.IssuerCertificateAuthority; i != nil {
+		raw["issuer_cert_authority"] = []any{flattenIssuerCertAuthority(*i)}
+	}
+	if k := c.KmsKey; k != nil {
+		raw[names.AttrKMSKey] = aws.ToString(k)
+	}
+	if r := c.RoleArn; r != nil {
+		raw[names.AttrRoleARN] = aws.ToString(r)
+	}
+	return raw
+}
+
 func expandIssuerCertAuthority(pca []any) *awstypes.ServiceConnectTlsCertificateAuthority {
 	if len(pca) == 0 {
 		return nil
@@ -2568,6 +2743,14 @@ func expandIssuerCertAuthority(pca []any) *awstypes.ServiceConnectTlsCertificate
 		config.AwsPcaAuthorityArn = aws.String(v)
 	}
 	return config
+}
+
+func flattenIssuerCertAuthority(c awstypes.ServiceConnectTlsCertificateAuthority) map[string]any {
+	raw := map[string]any{}
+	if a := c.AwsPcaAuthorityArn; a != nil {
+		raw["aws_pca_authority_arn"] = aws.ToString(a)
+	}
+	return raw
 }
 
 func expandClientAliases(srv []any) []awstypes.ServiceConnectClientAlias {
@@ -2594,6 +2777,21 @@ func expandClientAliases(srv []any) []awstypes.ServiceConnectClientAlias {
 	}
 
 	return out
+}
+
+func flattenClientAliases(as []awstypes.ServiceConnectClientAlias) []any {
+	results := []any{}
+	for _, c := range as {
+		raw := map[string]any{}
+		if p := c.Port; p != nil {
+			raw[names.AttrPort] = aws.ToInt32(p)
+		}
+		if d := c.DnsName; d != nil {
+			raw[names.AttrDNSName] = aws.ToString(d)
+		}
+		results = append(results, raw)
+	}
+	return results
 }
 
 func flattenServiceRegistries(srs []awstypes.ServiceRegistry) []map[string]any {
