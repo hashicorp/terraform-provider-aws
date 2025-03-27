@@ -1,4 +1,26 @@
-## 5.92.0 (Unreleased)
+## 5.93.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_api_gateway_rest_api_put` ([#41375](https://github.com/hashicorp/terraform-provider-aws/issues/41375))
+
+ENHANCEMENTS:
+
+* resource/aws_cognitoidp_user_pool: Mark the `username_configuration` and `username_configuration.case_sensitive` arguments as optional and computed. This will future proof the provider against upstream API changes which may return a default value for the block when omitted during create operations. ([#35439](https://github.com/hashicorp/terraform-provider-aws/issues/35439))
+* resource/aws_datasync_task: Add `task_mode` argument ([#39979](https://github.com/hashicorp/terraform-provider-aws/issues/39979))
+* resource/aws_elasticache_cluster: Add configurable timeouts for create, update, and delete operations ([#41940](https://github.com/hashicorp/terraform-provider-aws/issues/41940))
+* resource/aws_kinesisanalyticsv2_application: Allow `runtime_environment` to be updated in-place ([#41935](https://github.com/hashicorp/terraform-provider-aws/issues/41935))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Fix `InvalidParameterCombination: To enable the Advanced mode of Database Insights, modify your cluster to enable Performance Insights and set the retention period for Performance Insights to at least 465 days` errors when enabling `database_insights_mode` on existing instances ([#41960](https://github.com/hashicorp/terraform-provider-aws/issues/41960))
+* resource/aws_eip: Prevents application from failing when hitting "InvalidAction" error for specific regions ([#41920](https://github.com/hashicorp/terraform-provider-aws/issues/41920))
+* resource/aws_elasticache_replication_group: Retry `InvalidReplicationGroupState` exceptions during tagging operations ([#41954](https://github.com/hashicorp/terraform-provider-aws/issues/41954))
+* resource/aws_elasticache_replication_group: Wait for replication group to become available before all modification operations ([#40320](https://github.com/hashicorp/terraform-provider-aws/issues/40320))
+* resource/aws_iot_domain_configuration: Change `domain_name` to Computed ([#41985](https://github.com/hashicorp/terraform-provider-aws/issues/41985))
+* resource/aws_lakeformation_opt_in: Fix error when expanding `resource_data.table_wildcard` attribute ([#41939](https://github.com/hashicorp/terraform-provider-aws/issues/41939))
+
+## 5.92.0 (March 20, 2025)
 
 NOTES:
 

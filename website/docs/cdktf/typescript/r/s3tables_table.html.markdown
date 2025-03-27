@@ -37,7 +37,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );
@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
     awsS3TablesNamespaceExample.overrideLogicalId("example");
     const awsS3TablesTableExample = new S3TablesTable(this, "example_2", {
       format: "ICEBERG",
-      name: "example-table",
+      name: "example_table",
       namespace: Token.asString(awsS3TablesNamespaceExample.namespace),
       tableBucketArn: Token.asString(
         awsS3TablesNamespaceExample.tableBucketArn
