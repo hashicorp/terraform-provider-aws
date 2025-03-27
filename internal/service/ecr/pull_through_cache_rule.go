@@ -85,7 +85,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
-	input := &ecr.CreatePullThroughCacheRuleInput{
+	input := ecr.CreatePullThroughCacheRuleInput{
 		EcrRepositoryPrefix: aws.String(repositoryPrefix),
 		UpstreamRegistryUrl: aws.String(d.Get("upstream_registry_url").(string)),
 	}
@@ -102,7 +102,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 		input.UpstreamRepositoryPrefix = aws.String(v.(string))
 	}
 
-	_, err := conn.CreatePullThroughCacheRule(ctx, input)
+	_, err := conn.CreatePullThroughCacheRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
@@ -143,9 +143,8 @@ func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
-	input := &ecr.UpdatePullThroughCacheRuleInput{
-		EcrRepositoryPrefix: aws.String(repositoryPrefix),
+	input := ecr.UpdatePullThroughCacheRuleInput{
+		EcrRepositoryPrefix: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk("credential_arn"); ok && v != "" {
@@ -156,13 +155,11 @@ func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceD
 		input.CustomRoleArn = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdatePullThroughCacheRule(ctx, input)
+	_, err := conn.UpdatePullThroughCacheRule(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return sdkdiag.AppendErrorf(diags, "updating ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
-
-	d.SetId(repositoryPrefix)
 
 	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
 }
