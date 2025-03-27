@@ -2296,7 +2296,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Date(date, types.TransitionStorageClassStandardIa),
+									checkTransition_Date(date, types.TransitionStorageClassStandardIa),
 								),
 							}),
 						})),
@@ -2352,7 +2352,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Date(dateUpdated, types.TransitionStorageClassStandardIa),
+									checkTransition_Date(dateUpdated, types.TransitionStorageClassStandardIa),
 								),
 							}),
 						})),
@@ -2429,7 +2429,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
+									checkTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
 								),
 							}),
 						})),
@@ -2501,7 +2501,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_StorageClass(types.TransitionStorageClassIntelligentTiering),
+									checkTransition_StorageClass(types.TransitionStorageClassIntelligentTiering),
 								),
 							}),
 						})),
@@ -2557,7 +2557,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_StorageClass(types.TransitionStorageClassGlacier),
+									checkTransition_StorageClass(types.TransitionStorageClassGlacier),
 								),
 							}),
 						})),
@@ -2629,7 +2629,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 							}),
 						})),
@@ -2685,7 +2685,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Days(0, types.TransitionStorageClassGlacier),
+									checkTransition_Days(0, types.TransitionStorageClassGlacier),
 								),
 							}),
 						})),
@@ -2759,7 +2759,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 							}),
 						})),
@@ -2810,7 +2810,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
+									checkTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
 								),
 							}),
 						})),
@@ -2869,7 +2869,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 								names.AttrPrefix: knownvalue.StringExact(""),
 								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 								"transition": checkTransitions(
-									checkPlanTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+									checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
 								),
 							}),
 						})),
@@ -3872,44 +3872,6 @@ func transitionDefaults(class types.TransitionStorageClass) map[string]knownvalu
 	return map[string]knownvalue.Check{
 		"date":                 knownvalue.Null(),
 		"days":                 knownvalue.Null(),
-		names.AttrStorageClass: tfknownvalue.StringExact(class),
-	}
-}
-
-func checkPlanTransition_Date(date string, class types.TransitionStorageClass) knownvalue.Check {
-	checks := planTransitionDefaults(class)
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"date": knownvalue.StringExact(date),
-	})
-	return knownvalue.ObjectExact(
-		checks,
-	)
-}
-
-func checkPlanTransition_Days(days int64, class types.TransitionStorageClass) knownvalue.Check {
-	checks := planTransitionDefaults(class)
-	maps.Copy(checks, map[string]knownvalue.Check{
-		"days": knownvalue.Int64Exact(days),
-	})
-	return knownvalue.ObjectExact(
-		checks,
-	)
-}
-
-func checkPlanTransition_StorageClass(class types.TransitionStorageClass) knownvalue.Check {
-	checks := planTransitionDefaults(class)
-	maps.Copy(checks, map[string]knownvalue.Check{
-		// "days": knownvalue.Int64Exact(0),
-	})
-	return knownvalue.ObjectExact(
-		checks,
-	)
-}
-
-func planTransitionDefaults(class types.TransitionStorageClass) map[string]knownvalue.Check {
-	return map[string]knownvalue.Check{
-		"date": knownvalue.Null(),
-		// "days": unknown,
 		names.AttrStorageClass: tfknownvalue.StringExact(class),
 	}
 }

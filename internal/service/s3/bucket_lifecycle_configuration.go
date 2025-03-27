@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -355,6 +356,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 						"transition": schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[transitionModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								PlanModifiers: []planmodifier.Object{
+									ruleTransitionForUnknownDays(),
+								},
 								Attributes: map[string]schema.Attribute{
 									"date": schema.StringAttribute{
 										CustomType: timetypes.RFC3339Type{},
@@ -362,7 +366,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
-										Computed: true,
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(0),
 										},
@@ -1204,4 +1211,62 @@ func (m ruleFilterPrefixUnknownModifier) PlanModifyString(ctx context.Context, r
 	} else {
 		resp.PlanValue = types.StringNull()
 	}
+}
+
+// ruleTransitionForUnknownDays handles the planned value for `rule.transition.days`
+// * If no value is set
+//   - If `date` isn't set, default to 0
+//   - Otherwise, default to `null`
+//
+// Plan modifier cannot be set on `days` attribute because of https://github.com/hashicorp/terraform-plugin-framework/issues/1122
+func ruleTransitionForUnknownDays() planmodifier.Object {
+	return ruleTransitionForUnknownDaysModifier{}
+}
+
+type ruleTransitionForUnknownDaysModifier struct{}
+
+func (m ruleTransitionForUnknownDaysModifier) Description(_ context.Context) string {
+	return ""
+}
+
+func (m ruleTransitionForUnknownDaysModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m ruleTransitionForUnknownDaysModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	var plan transitionModel
+	resp.Diagnostics.Append(req.PlanValue.As(ctx, &plan, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is a known planned value.
+	if !plan.Days.IsUnknown() {
+		return
+	}
+
+	var config transitionModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if config.Days.IsUnknown() {
+		return
+	}
+
+	if config.Date.IsNull() {
+		plan.Days = types.Int32Value(0)
+	} else {
+		plan.Days = types.Int32Null()
+	}
+
+	p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+	resp.Diagnostics.Append(d...)
+	if d.HasError() {
+		return
+	}
+
+	resp.PlanValue = p.ObjectValue
 }

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -1332,7 +1331,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 						VersionConstraint: providerVersion_5_86_0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, types.TransitionStorageClassStandardIa),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1348,12 +1347,12 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkNoncurrentVersionTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 							"transition": checkTransitions(
-								checkTransition_Date(date, types.TransitionStorageClassStandardIa),
+								checkTransition_Date(date, awstypes.TransitionStorageClassStandardIa),
 							),
 						}),
 					})),
@@ -1362,7 +1361,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, types.TransitionStorageClassStandardIa),
+				Config:                   testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1378,12 +1377,12 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkNoncurrentVersionTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 							"transition": checkTransitions(
-								checkTransition_Date(date, types.TransitionStorageClassStandardIa),
+								checkTransition_Date(date, awstypes.TransitionStorageClassStandardIa),
 							),
 						}),
 					})),
@@ -1422,7 +1421,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 						VersionConstraint: providerVersion_5_86_0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, types.TransitionStorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1438,12 +1437,12 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkNoncurrentVersionTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 							"transition": checkTransitions(
-								checkTransition_StorageClass(types.TransitionStorageClassIntelligentTiering),
+								checkTransition_StorageClass(awstypes.TransitionStorageClassIntelligentTiering),
 							),
 						}),
 					})),
@@ -1452,7 +1451,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, types.TransitionStorageClassIntelligentTiering),
+				Config:                   testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1468,12 +1467,12 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkNoncurrentVersionTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 							"transition": checkTransitions(
-								checkTransition_StorageClass(types.TransitionStorageClassIntelligentTiering),
+								checkTransition_StorageClass(awstypes.TransitionStorageClassIntelligentTiering),
 							),
 						}),
 					})),
@@ -1512,7 +1511,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 						VersionConstraint: providerVersion_5_86_0,
 					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1528,12 +1527,12 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkNoncurrentVersionTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 							"transition": checkTransitions(
-								checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 						}),
 					})),
@@ -1542,7 +1541,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassIntelligentTiering),
+				Config:                   testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1558,12 +1557,12 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 							names.AttrID:                        knownvalue.StringExact(rName),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
-								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkNoncurrentVersionTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 							names.AttrPrefix: knownvalue.StringExact(""),
 							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
 							"transition": checkTransitions(
-								checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								checkTransition_Days(0, awstypes.TransitionStorageClassIntelligentTiering),
 							),
 						}),
 					})),
