@@ -2563,8 +2563,26 @@ func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
 		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:  enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
+		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2584,27 +2602,6 @@ func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id
 		Target:  []string{},
 		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
-		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

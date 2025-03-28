@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -147,6 +148,215 @@ func resourcePipeline() *schema.Resource {
 									Optional:     true,
 									ValidateFunc: validation.IntBetween(5, 86400),
 								},
+							},
+						},
+					},
+				}
+			}
+
+			triggerSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"git_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"pull_request": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"branches": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													"events": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 3,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[types.GitPullRequestEventType](),
+														},
+													},
+													"file_paths": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"push": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"branches": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													"file_paths": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													names.AttrTags: {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"source_action_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+											),
+										},
+									},
+								},
+							},
+							"provider_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
 							},
 						},
 					},
@@ -400,213 +610,8 @@ func resourcePipeline() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-				"trigger": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					MaxItems: 50,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"git_configuration": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"pull_request": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MinItems: 1,
-											MaxItems: 3,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"branches": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"excludes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-																"includes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-															},
-														},
-													},
-													"events": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MinItems: 1,
-														MaxItems: 3,
-														Elem: &schema.Schema{
-															Type:             schema.TypeString,
-															ValidateDiagFunc: enum.Validate[types.GitPullRequestEventType](),
-														},
-													},
-													"file_paths": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"excludes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-																"includes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-										"push": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MinItems: 1,
-											MaxItems: 3,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"branches": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"excludes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-																"includes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-															},
-														},
-													},
-													"file_paths": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"excludes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-																"includes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-															},
-														},
-													},
-													names.AttrTags: {
-														Type:     schema.TypeList,
-														Optional: true,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"excludes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-																"includes": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MinItems: 1,
-																	MaxItems: 8,
-																	Elem: &schema.Schema{
-																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(1, 255),
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-										"source_action_name": {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-											),
-										},
-									},
-								},
-							},
-							"provider_type": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
-							},
-						},
-					},
-				},
+				"trigger":         triggerSchema(),
+				"trigger_all":     sdkv2.DataSourcePropertyFromResourceProperty(triggerSchema()),
 				"variable": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -698,8 +703,9 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set(names.AttrStage, flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
-	if err := d.Set("trigger", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
+	d.Set("trigger", d.Get("trigger"))
+	if err := d.Set("trigger_all", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting trigger_all: %s", err)
 	}
 	if err := d.Set("variable", flattenVariableDeclarations(pipeline.Variables)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
@@ -828,7 +834,13 @@ func hashGitHubToken(token string) string {
 }
 
 func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclaration, error) {
-	apiObject := &types.PipelineDeclaration{}
+	pipelineType := types.PipelineType(d.Get("pipeline_type").(string))
+	apiObject := &types.PipelineDeclaration{
+		Name:         aws.String(d.Get(names.AttrName).(string)),
+		PipelineType: pipelineType,
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+		Stages:       expandStageDeclarations(d.Get(names.AttrStage).([]any)),
+	}
 
 	if v, ok := d.GetOk("artifact_store"); ok && v.(*schema.Set).Len() > 0 {
 		artifactStores := expandArtifactStores(v.(*schema.Set).List())
@@ -859,23 +871,9 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		apiObject.ExecutionMode = types.ExecutionMode(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
-		apiObject.Name = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("pipeline_type"); ok {
-		apiObject.PipelineType = types.PipelineType(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
-		apiObject.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrStage); ok && len(v.([]any)) > 0 {
-		apiObject.Stages = expandStageDeclarations(v.([]any))
-	}
-
-	if v, ok := d.GetOk("trigger"); ok && len(v.([]any)) > 0 {
+	// explicitly send trigger for all V2 pipelines (even when unset) to ensure
+	// removed custom triggers are handled correctly
+	if v, ok := d.GetOk("trigger"); (ok && len(v.([]any)) > 0) || pipelineType == types.PipelineTypeV2 {
 		apiObject.Triggers = expandTriggerDeclarations(v.([]any))
 	}
 
@@ -1391,10 +1389,6 @@ func expandTriggerDeclaration(tfMap map[string]any) *types.PipelineTriggerDeclar
 }
 
 func expandTriggerDeclarations(tfList []any) []types.PipelineTriggerDeclaration {
-	if len(tfList) == 0 {
-		return nil
-	}
-
 	var apiObjects []types.PipelineTriggerDeclaration
 
 	for _, tfMapRaw := range tfList {
