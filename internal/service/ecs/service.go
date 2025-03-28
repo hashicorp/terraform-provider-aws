@@ -859,6 +859,7 @@ func resourceService() *schema.Resource {
 						names.AttrNamespace: {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"service": {
 							Type:     schema.TypeList,
@@ -1387,11 +1388,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
 			}
-			if err := d.Set("volume_configuration", flattenVolumeConfigurations(ctx, deployment.VolumeConfigurations)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
+			if vc := deployment.VolumeConfigurations; len(vc) > 0 {
+				if err := d.Set("volume_configuration", flattenVolumeConfigurations(ctx, vc)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
+				}
 			}
 			if sc := deployment.ServiceConnectConfiguration; sc != nil {
-				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(*sc)); err != nil {
+				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(sc)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
 				}
 			}
@@ -2337,7 +2340,11 @@ func expandServiceConnectConfiguration(sc []any) *awstypes.ServiceConnectConfigu
 	return config
 }
 
-func flattenServiceConnectConfiguration(sc awstypes.ServiceConnectConfiguration) map[string]any {
+func flattenServiceConnectConfiguration(sc *awstypes.ServiceConnectConfiguration) []any {
+	if sc == nil {
+		return nil
+	}
+
 	raw := map[string]any{
 		names.AttrEnabled: sc.Enabled,
 	}
@@ -2350,7 +2357,7 @@ func flattenServiceConnectConfiguration(sc awstypes.ServiceConnectConfiguration)
 	if s := sc.Services; s != nil {
 		raw["service"] = flattenServices(s)
 	}
-	return raw
+	return []any{raw}
 }
 
 func expandLogConfiguration(lc []any) *awstypes.LogConfiguration {

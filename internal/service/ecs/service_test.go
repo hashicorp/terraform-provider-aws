@@ -396,7 +396,7 @@ func TestAccECSService_VolumeConfiguration_tagSpecifications(t *testing.T) {
 
 func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service awstypes.Service
+	var service1, service2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -409,19 +409,36 @@ func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 			{
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp2", 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
+					testAccCheckServiceExists(ctx, resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", "8"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 			{
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
+					testAccCheckServiceExists(ctx, resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", "8"),
 				),
 			},
 			{
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 16),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
+					testAccCheckServiceExists(ctx, resourceName, &service2),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", "16"),
 				),
 			},
 		},
@@ -1522,6 +1539,15 @@ func TestAccECSService_ServiceConnect_basic(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 		},
 	})
