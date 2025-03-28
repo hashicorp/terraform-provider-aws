@@ -27,4 +27,6 @@ The following arguments are required:
 ## Attribute Reference
 
 See the [DocumentDB Cluster Resource](/docs/providers/aws/r/docdb_cluster.html) for details on the
-returned attributes - they are identical for all attributes, except the `tags_all`. These are currently not supported.
+returned attributes - they are identical for all attributes, except the `tags_all`. If you need to get the tags for this resource, use the attribute `tags` as described below.
+
+* `tags` - A map of tags assigned to the resource.

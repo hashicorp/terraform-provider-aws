@@ -123,6 +123,7 @@ func dataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	dbClusterId := d.Get(names.AttrClusterIdentifier).(string)
 	dbc, err := findDBClusterByID(ctx, conn, dbClusterId)
@@ -158,7 +159,15 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
 
-	// tags, err := listTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, aws.ToString(dbc.DBClusterArn))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for DocumentDB Cluster (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }

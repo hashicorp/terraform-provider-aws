@@ -37,8 +37,8 @@ func TestAccDocDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "master_username"),
-					// resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
 		},
@@ -53,6 +53,10 @@ resource "aws_docdb_cluster" "test" {
   master_password     = "avoid-plaintext-passwords"
   master_username     = "tfacctest"
   skip_final_snapshot = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_docdb_cluster" "test" {
