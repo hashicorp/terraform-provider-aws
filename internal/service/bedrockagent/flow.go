@@ -384,7 +384,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																						Required: true,
 																					},
 																					"additional_model_request_fields": schema.StringAttribute{
-																						Optional: true,
+																						CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+																						Optional:   true,
 																					},
 																				},
 																				Blocks: map[string]schema.Block{
@@ -427,6 +428,10 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockMemberCachePointModel](ctx),
 																																		Validators: []validator.List{
 																																			listvalidator.SizeAtMost(1),
+																																			listvalidator.ExactlyOneOf(
+																																				path.MatchRelative().AtParent().AtName("cache_point"),
+																																				path.MatchRelative().AtParent().AtName("text"),
+																																			),
 																																		},
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
@@ -562,7 +567,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																								NestedObject: schema.NestedBlockObject{
 																																									Attributes: map[string]schema.Attribute{
 																																										"value": schema.StringAttribute{
-																																											Required: true,
+																																											CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+																																											Required:   true,
 																																										},
 																																									},
 																																								},
@@ -627,7 +633,39 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																									Validators: []validator.List{
 																										listvalidator.SizeAtMost(1),
 																									},
-																									// TODO
+																									NestedObject: schema.NestedBlockObject{
+																										Attributes: map[string]schema.Attribute{
+																											"text": schema.StringAttribute{
+																												Required: true,
+																											},
+																										},
+																										Blocks: map[string]schema.Block{
+																											"cache_point": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointModel](ctx),
+																												Validators: []validator.List{
+																													listvalidator.SizeAtMost(1),
+																												},
+																												NestedObject: schema.NestedBlockObject{
+																													Attributes: map[string]schema.Attribute{
+																														"type": schema.StringAttribute{
+																															// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
+																															Required: true,
+																														},
+																													},
+																												},
+																											},
+																											"input_variables": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
+																												NestedObject: schema.NestedBlockObject{
+																													Attributes: map[string]schema.Attribute{
+																														"name": schema.StringAttribute{
+																															Required: true,
+																														},
+																													},
+																												},
+																											},
+																										},
+																									},
 																								},
 																							},
 																						},
@@ -1870,7 +1908,7 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 		return diags
 	case awstypes.ContentBlockMemberText:
 		var model contentBlockMemberTextModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := flex.Flatten(ctx, t.Value, &model.Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1908,7 +1946,7 @@ func (m contentBlockModel) Expand(ctx context.Context) (result any, diags diag.D
 		}
 
 		var r awstypes.ContentBlockMemberText
-		diags.Append(flex.Expand(ctx, contentBlockText, &r.Value)...)
+		diags.Append(flex.Expand(ctx, contentBlockText.Value, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1933,8 +1971,8 @@ type promptInputVariableModel struct {
 
 // Tagged union
 type systemContentBlockModel struct {
-	CachePoint fwtypes.ObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
-	Text       fwtypes.ObjectValueOf[systemContentBlockMemberTextModel]       `tfsdk:"text"`
+	CachePoint fwtypes.ListNestedObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
+	Text       fwtypes.ListNestedObjectValueOf[systemContentBlockMemberTextModel]       `tfsdk:"text"`
 }
 
 func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1947,18 +1985,18 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags dia
 			return diags
 		}
 
-		m.CachePoint = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	case awstypes.SystemContentBlockMemberText:
 		var model systemContentBlockMemberTextModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := flex.Flatten(ctx, t.Value, &model.Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
 
-		m.Text = fwtypes.NewObjectValueOfMust(ctx, &model)
+		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
 	default:
@@ -1990,7 +2028,7 @@ func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags 
 		}
 
 		var r awstypes.SystemContentBlockMemberText
-		diags.Append(flex.Expand(ctx, systemContentBlockText, &r.Value)...)
+		diags.Append(flex.Expand(ctx, systemContentBlockText.Value, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -2103,7 +2141,7 @@ func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.D
 	switch t := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
 		var model toolInputSchemaMemberJsonModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := flex.Flatten(ctx, t.Value, &model.Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -2127,7 +2165,7 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags dia
 		}
 
 		var r awstypes.ToolInputSchemaMemberJson
-		diags.Append(flex.Expand(ctx, toolInputSchemaJson, &r.Value)...)
+		diags.Append(flex.Expand(ctx, toolInputSchemaJson.Value, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -2206,7 +2244,7 @@ func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Dia
 
 		return &r, diags
 	case !m.Auto.IsNull():
-		toolChoiceAuto, d := m.Any.ToPtr(ctx)
+		toolChoiceAuto, d := m.Auto.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -2220,7 +2258,7 @@ func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Dia
 
 		return &r, diags
 	case !m.Tool.IsNull():
-		toolChoiceTool, d := m.Any.ToPtr(ctx)
+		toolChoiceTool, d := m.Tool.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -2250,7 +2288,7 @@ type toolChoiceMemberToolModel struct {
 
 type promptTemplateConfigurationMemberTextModel struct {
 	Text           types.String                                              `tfsdk:"text"`
-	CachePoint     fwtypes.ObjectValueOf[cachePointModel]                    `tfsdk:"cache_point"`
+	CachePoint     fwtypes.ListNestedObjectValueOf[cachePointModel]          `tfsdk:"cache_point"`
 	InputVariables fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variables"`
 }
 
