@@ -2,22 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
 	// TIP: ==== IMPORTS ====
@@ -40,14 +24,15 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	// "github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
 	// TIP: You will often need to import the package that this test file lives
@@ -69,69 +54,6 @@ import (
 // 7. Helper functions (exists, destroy, check, etc.)
 // 8. Functions that return Terraform configurations
 
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestFilterExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfinspector2.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
 // standard functionality of the resource as possible, and test importing, if
@@ -141,13 +63,25 @@ func TestFilterExampleUnitTest(t *testing.T) {
 // Acceptance test access AWS and cost money to run.
 func TestAccInspector2Filter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
 	// TIP: This is a long-running test guard for tests that run longer than
 	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	action_1 := string(awstypes.FilterActionNone)
+	description_1 := "TestDescription_1"
+	comparison_1 := string(awstypes.StringComparisonEquals)
+	account_id_1 := "111222333444"
+	reason_1 := "TestReason_1"
 
-	var filter inspector2.DescribeFilterResponse
+	action_2 := string(awstypes.FilterActionSuppress)
+	description_2 := "TestDescription_2"
+	comparison_2 := string(awstypes.StringComparisonNotEquals)
+	account_id_2 := "444333222111"
+	reason_2 := "TestReason_2"
+
+	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
@@ -162,30 +96,70 @@ func TestAccInspector2Filter_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFilterConfig_basic(rName),
+				Config: testAccFilterConfig_basic(rName, action_1, description_1, comparison_1, account_id_1, reason_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
+					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
+					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.aws_account_id.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.aws_account_id.*", map[string]string{
+						"comparison": comparison_1,
+						"value":      account_id_1,
 					}),
 					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
 					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
+					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccFilterImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccFilterConfig_basic(rName, action_2, description_2, comparison_2, account_id_2, reason_2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFilterExists(ctx, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
+					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.aws_account_id.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.aws_account_id.*", map[string]string{
+						"comparison": comparison_2,
+						"value":      account_id_2,
+					}),
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccFilterImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
+}
+
+func testAccFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes[names.AttrARN], nil
+	}
 }
 
 func TestAccInspector2Filter_disappears(t *testing.T) {
@@ -194,7 +168,13 @@ func TestAccInspector2Filter_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filter inspector2.DescribeFilterResponse
+	action_1 := string(awstypes.FilterActionNone)
+	description_1 := "TestDescription_1"
+	comparison_1 := string(awstypes.StringComparisonEquals)
+	account_id_1 := "111222333444"
+	reason_1 := "TestReason_1"
+
+	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
@@ -209,7 +189,7 @@ func TestAccInspector2Filter_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFilterConfig_basic(rName, testAccFilterVersionNewer),
+				Config: testAccFilterConfig_basic(rName, action_1, description_1, comparison_1, account_id_1, reason_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
@@ -235,41 +215,40 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			
 			// TIP: ==== FINDERS ====
 			// The find function should be exported. Since it won't be used outside of the package, it can be exported
 			// in the `exports_test.go` file.
-			_, err := tfinspector2.FindFilterByID(ctx, conn, rs.Primary.ID)
+			_, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameFilter, rs.Primary.ID, err)
+				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameFilter, rs.Primary.Attributes[names.AttrARN], err)
 			}
 
-			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameFilter, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameFilter, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFilterExists(ctx context.Context, name string, filter *inspector2.DescribeFilterResponse) resource.TestCheckFunc {
+func testAccCheckFilterExists(ctx context.Context, name string, filter *awstypes.Filter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes[names.AttrARN] == "" {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
-		resp, err := tfinspector2.FindFilterByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, rs.Primary.ID, err)
+			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, rs.Primary.Attributes[names.AttrARN], err)
 		}
 
 		*filter = *resp
@@ -293,39 +272,29 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckFilterNotRecreated(before, after *inspector2.DescribeFilterResponse) resource.TestCheckFunc {
+func testAccCheckFilterNotRecreated(before, after *awstypes.Filter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.FilterId), aws.ToString(after.FilterId); before != after {
-			return create.Error(names.Inspector2, create.ErrActionCheckingNotRecreated, tfinspector2.ResNameFilter, aws.ToString(before.FilterId), errors.New("recreated"))
+		if beforeArn, afterArn := aws.ToString(before.Arn), aws.ToString(after.Arn); beforeArn != afterArn {
+			return create.Error(names.Inspector2, create.ErrActionCheckingNotRecreated, tfinspector2.ResNameFilter, beforeArn, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccFilterConfig_basic(rName, version string) string {
+func testAccFilterConfig_basic(rName, action, description, comparison, account_id, reason string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_inspector2_filter" "test" {
-  filter_name             = %[1]q
-  engine_type             = "ActiveInspector2"
-  engine_version          = %[2]q
-  host_instance_type      = "inspector2.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
+  name             	= %[1]q
+  action			= %[2]q
+  description 		= %[3]q
+  filter_criteria {
+    aws_account_id {
+      comparison = %[4]q
+      value      = %[5]q
+    }
   }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  reason 			= %[6]q
 }
-`, rName, version)
+`, rName, action, description, comparison, account_id, reason)
 }

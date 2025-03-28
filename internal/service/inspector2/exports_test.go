@@ -8,10 +8,12 @@ var (
 	ResourceDelegatedAdminAccount     = resourceDelegatedAdminAccount
 	ResourceMemberAssociation         = resourceMemberAssociation
 	ResourceOrganizationConfiguration = resourceOrganizationConfiguration
+	ResourceFilter                    = newResourceFilter
 
 	FindDelegatedAdminAccountByID = findDelegatedAdminAccountByID
 	FindMemberByAccountID         = findMemberByAccountID
 	FindOrganizationConfiguration = findOrganizationConfiguration
+	FindFilterByARN               = findFilterByARN
 
 	EnablerID      = enablerID
 	ParseEnablerID = parseEnablerID
