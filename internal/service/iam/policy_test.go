@@ -462,20 +462,6 @@ func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 	})
 }
 
-func testAccVerifyLatestPolicyId(before *awstypes.Policy, after *awstypes.Policy) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before == nil || after == nil {
-			return fmt.Errorf("No IAM Policy ID is set")
-		}
-
-		if before.DefaultVersionId == after.DefaultVersionId {
-			return fmt.Errorf("Policy not updated")
-		}
-		return nil
-	}
-
-}
-
 func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -523,6 +509,19 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 			return fmt.Errorf("IAM Policy %s still exists", rs.Primary.ID)
 		}
 
+		return nil
+	}
+}
+
+func testAccVerifyLatestPolicyId(before *awstypes.Policy, after *awstypes.Policy) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before == nil || after == nil {
+			return fmt.Errorf("No IAM Policy ID is set")
+		}
+
+		if before.DefaultVersionId == after.DefaultVersionId {
+			return fmt.Errorf("Policy not updated")
+		}
 		return nil
 	}
 }
