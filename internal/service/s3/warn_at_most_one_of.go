@@ -6,6 +6,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,54 +15,54 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-// This is a copy of `stringvalidator.ExactlyOneOf` and `schemavalidator.ExactlyOneOfValidator`
-// that returns a warning instead of an error.
+// This is inspired by `stringvalidator.ExactlyOneOf` and `schemavalidator.ExactlyOneOfValidator`
+// It returns a warning instead of an error.
 // It could likely be moved to an internal validators package if useful elsewhere.
 
-func warnExactlyOneOf(expressions ...path.Expression) validator.String {
-	return ExactlyOneOfValidator{
+func warnAtMostOneOf(expressions ...path.Expression) validator.String {
+	return AtMostOneOfValidator{
 		PathExpressions: expressions,
 	}
 }
 
-type ExactlyOneOfValidator struct {
+type AtMostOneOfValidator struct {
 	PathExpressions path.Expressions
 }
 
-type ExactlyOneOfValidatorRequest struct {
+type AtMostOneOfValidatorRequest struct {
 	Config         tfsdk.Config
 	ConfigValue    attr.Value
 	Path           path.Path
 	PathExpression path.Expression
 }
 
-type ExactlyOneOfValidatorResponse struct {
+type AtMostOneOfValidatorResponse struct {
 	Diagnostics diag.Diagnostics
 }
 
-func (av ExactlyOneOfValidator) Description(ctx context.Context) string {
+func (av AtMostOneOfValidator) Description(ctx context.Context) string {
 	return av.MarkdownDescription(ctx)
 }
 
-func (av ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.PathExpressions)
+func (av AtMostOneOfValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Ensure that at most one attribute from this collection is set: %q", av.PathExpressions)
 }
 
-func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
-	validateReq := ExactlyOneOfValidatorRequest{
+func (av AtMostOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	validateReq := AtMostOneOfValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
 		Path:           req.Path,
 		PathExpression: req.PathExpression,
 	}
-	validateResp := &ExactlyOneOfValidatorResponse{}
+	validateResp := &AtMostOneOfValidatorResponse{}
 
 	av.Validate(ctx, validateReq, validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfValidatorRequest, res *ExactlyOneOfValidatorResponse) {
+func (av AtMostOneOfValidator) Validate(ctx context.Context, req AtMostOneOfValidatorRequest, res *AtMostOneOfValidatorResponse) {
 	count := 0
 	expressions := req.PathExpression.MergeExpressions(av.PathExpressions...)
 
@@ -115,17 +116,16 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfVa
 		}
 	}
 
-	if count == 0 {
-		res.Diagnostics.Append(warnInvalidAttributeCombinationDiagnostic(
-			req.Path,
-			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", expressions),
-		))
-	}
-
 	if count > 1 {
+		var attributeNames []string
+		for _, expr := range expressions {
+			attributeName, _ := expr.Steps().LastStep()
+			attributeNames = append(attributeNames, attributeName.String())
+		}
+
 		res.Diagnostics.Append(warnInvalidAttributeCombinationDiagnostic(
 			req.Path,
-			fmt.Sprintf("%d attributes specified when one (and only one) of %s is required", count, expressions),
+			fmt.Sprintf("%d attributes specified when at most one of [%s] is allowed", count, strings.Join(attributeNames, ", ")),
 		))
 	}
 }

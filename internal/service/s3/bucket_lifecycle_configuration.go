@@ -115,7 +115,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 							Computed:           true, // Because of Legacy value handling
 							DeprecationMessage: "Use filter instead",
 							Validators: []validator.String{
-								warnExactlyOneOf(
+								warnAtMostOneOf(
 									path.MatchRelative().AtParent().AtName(names.AttrFilter),
 								),
 							},
@@ -197,11 +197,12 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										Validators: []validator.String{
-											warnExactlyOneOf(
+											warnAtMostOneOf(
 												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
 												path.MatchRelative().AtParent().AtName("object_size_less_than"),
 												path.MatchRelative().AtParent().AtName("and"),
 												path.MatchRelative().AtParent().AtName("tag"),
+												path.MatchRelative().AtParent().AtName(names.AttrPrefix),
 											),
 										},
 									},
