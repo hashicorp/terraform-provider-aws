@@ -138,15 +138,24 @@ resource "aws_db_instance_role_association" "test" {
   role_arn               = aws_iam_role.test.arn
 }
 
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = "avoid-plaintext-passwords"
+  password            = data.aws_secretsmanager_random_password.test.random_password
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 data "aws_rds_orderable_db_instance" "test" {
