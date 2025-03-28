@@ -243,6 +243,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
 													PlanModifiers: []planmodifier.Int64{
+														tfint64planmodifier.LegacyValue(),
 														int64planmodifier.UseStateForUnknown(),
 													},
 													Validators: []validator.Int64{
@@ -253,6 +254,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
 													PlanModifiers: []planmodifier.Int64{
+														tfint64planmodifier.LegacyValue(),
 														int64planmodifier.UseStateForUnknown(),
 													},
 													Validators: []validator.Int64{

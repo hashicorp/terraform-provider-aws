@@ -602,11 +602,9 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
 							names.AttrFilter: checkFilter_And(
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
+								checkAnd(map[string]knownvalue.Check{
 									"object_size_greater_than": knownvalue.Int64Exact(500),
 									"object_size_less_than":    knownvalue.Int64Exact(64000),
-									names.AttrPrefix:           knownvalue.StringExact(""),
-									names.AttrTags:             knownvalue.Null(),
 								}),
 							),
 							names.AttrID:                    knownvalue.StringExact(rName),
@@ -628,11 +626,9 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter: checkFilter_And(
-									knownvalue.ObjectExact(map[string]knownvalue.Check{
+									checkAnd(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(500),
 										"object_size_less_than":    knownvalue.Int64Exact(64000),
-										names.AttrPrefix:           knownvalue.StringExact(""),
-										names.AttrTags:             knownvalue.Null(),
 									}),
 								),
 								names.AttrID:                    knownvalue.StringExact(rName),
@@ -721,11 +717,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Date(date),
 							names.AttrFilter: checkFilter_And(
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
+								checkAnd(map[string]knownvalue.Check{
 									"object_size_greater_than": knownvalue.Int64Exact(500),
 									"object_size_less_than":    knownvalue.Int64Exact(64000),
 									names.AttrPrefix:           knownvalue.StringExact(rName),
-									names.AttrTags:             knownvalue.Null(),
 								}),
 							),
 							names.AttrID:                    knownvalue.StringExact(rName),
@@ -747,11 +742,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Date(date),
 								names.AttrFilter: checkFilter_And(
-									knownvalue.ObjectExact(map[string]knownvalue.Check{
+									checkAnd(map[string]knownvalue.Check{
 										"object_size_greater_than": knownvalue.Int64Exact(500),
 										"object_size_less_than":    knownvalue.Int64Exact(64000),
 										names.AttrPrefix:           knownvalue.StringExact(rName),
-										names.AttrTags:             knownvalue.Null(),
 									}),
 								),
 								names.AttrID:                    knownvalue.StringExact(rName),
@@ -841,10 +835,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(90),
 							names.AttrFilter: checkFilter_And(
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"object_size_greater_than": knownvalue.Int64Exact(0),
-									"object_size_less_than":    knownvalue.Int64Exact(0),
-									names.AttrPrefix:           knownvalue.StringExact(""),
+								checkAnd(map[string]knownvalue.Check{
 									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
 										acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 										acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
@@ -870,10 +861,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(90),
 								names.AttrFilter: checkFilter_And(
-									knownvalue.ObjectExact(map[string]knownvalue.Check{
-										"object_size_greater_than": knownvalue.Int64Exact(0),
-										"object_size_less_than":    knownvalue.Int64Exact(0),
-										names.AttrPrefix:           knownvalue.StringExact(""),
+									checkAnd(map[string]knownvalue.Check{
 										names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
 											acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 											acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
@@ -968,10 +956,8 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_ZeroL
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(1),
 							names.AttrFilter: checkFilter_And(
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"object_size_greater_than": knownvalue.Int64Exact(0),
-									"object_size_less_than":    knownvalue.Int64Exact(0),
-									names.AttrPrefix:           knownvalue.StringExact("baseline/"),
+								checkAnd(map[string]knownvalue.Check{
+									names.AttrPrefix: knownvalue.StringExact("baseline/"),
 									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
 										"Key":   knownvalue.StringExact("data-lifecycle-action"),
 										"Value": knownvalue.StringExact("delete"),
@@ -997,10 +983,8 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_ZeroL
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 								"expiration":                        checkExpiration_Days(1),
 								names.AttrFilter: checkFilter_And(
-									knownvalue.ObjectExact(map[string]knownvalue.Check{
-										"object_size_greater_than": knownvalue.Int64Exact(0),
-										"object_size_less_than":    knownvalue.Int64Exact(0),
-										names.AttrPrefix:           knownvalue.StringExact("baseline/"),
+									checkAnd(map[string]knownvalue.Check{
+										names.AttrPrefix: knownvalue.StringExact("baseline/"),
 										names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
 											"Key":   knownvalue.StringExact("data-lifecycle-action"),
 											"Value": knownvalue.StringExact("delete"),
