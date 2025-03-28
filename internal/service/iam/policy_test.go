@@ -468,9 +468,7 @@ func testAccVerifyLatestPolicyId(before *awstypes.Policy, after *awstypes.Policy
 			return fmt.Errorf("No IAM Policy ID is set")
 		}
 
-		if before.DefaultVersionId != after.DefaultVersionId {
-			fmt.Sprintf("Policy ID Before %s", before.DefaultVersionId)
-			fmt.Sprintf("Policy ID After %s", after.DefaultVersionId)
+		if before.DefaultVersionId == after.DefaultVersionId {
 			return fmt.Errorf("Policy not updated")
 		}
 		return nil
