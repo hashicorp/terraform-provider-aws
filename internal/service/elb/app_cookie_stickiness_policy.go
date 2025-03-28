@@ -230,8 +230,6 @@ func findLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *ela
 		return nil, err
 	}
 
-	//return tfresource.AssertSingleValueResult(tfslices.)
-
 	for _, v := range lb.ListenerDescriptions {
 		if v.Listener == nil {
 			continue
