@@ -25,7 +25,7 @@ func TestAccDocDBClusterDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBClusterDataSourceConfig_basic(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "availability_zones.#", resourceName, "availability_zones.#"),
@@ -45,7 +45,7 @@ func TestAccDocDBClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDocDBClusterDataSourceConfig_basic(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q

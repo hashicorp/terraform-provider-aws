@@ -133,7 +133,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.ToString(dbc.DBClusterIdentifier))
-	d.Set(names.AttrARN, aws.ToString(dbc.DBClusterArn))
+	clusterARN := aws.ToString(dbc.DBClusterArn)
+	d.Set(names.AttrARN, clusterARN)
 	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
@@ -159,7 +160,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
 
-	tags, err := listTags(ctx, conn, aws.ToString(dbc.DBClusterArn))
+	tags, err := listTags(ctx, conn, clusterARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for DocumentDB Cluster (%s): %s", d.Id(), err)
