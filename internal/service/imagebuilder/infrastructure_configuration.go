@@ -326,7 +326,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		}
 
 		if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-			input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]interface{})))
+			input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 		}
 
 		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
