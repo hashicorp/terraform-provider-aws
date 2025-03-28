@@ -177,7 +177,7 @@ func dataSourceImage() *schema.Resource {
 	}
 }
 
-func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -208,14 +208,14 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
 	if image.ImageScanningConfiguration != nil {
-		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
+		if err := d.Set("image_scanning_configuration", []any{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if image.ImageTestsConfiguration != nil {
-		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
+		if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
 		}
 	} else {
@@ -228,7 +228,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("platform", image.Platform)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
-		if err := d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)}); err != nil {
+		if err := d.Set("output_resources", []any{flattenOutputResources(image.OutputResources)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
 			return sdkdiag.AppendErrorf(diags, "setting output_resources: %s", err)
 		}
 	} else {

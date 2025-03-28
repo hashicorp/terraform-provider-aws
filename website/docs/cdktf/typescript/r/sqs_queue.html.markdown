@@ -14,6 +14,8 @@ Amazon SQS (Simple Queue Service) is a fully managed message queuing service tha
 
 !> AWS will hang indefinitely, leading to a `timeout while waiting` error, when creating or updating an `aws_sqs_queue` with an associated [`aws_sqs_queue_policy`](/docs/providers/aws/r/sqs_queue_policy.html) if `Version = "2012-10-17"` is not explicitly set in the policy.
 
+!> AWS will hang indefinitely and trigger a `timeout while waiting` error when creating or updating an `aws_sqs_queue` if `kmsDataKeyReusePeriodSeconds` is set to a non-default value, `sqsManagedSseEnabled` is `false` (explicitly or by default), and `kmsMasterKeyId` is not set.
+
 ## Example Usage
 
 ```typescript
@@ -268,4 +270,4 @@ Using `terraform import`, import SQS Queues using the queue `url`. For example:
 % terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-50c64f3b222e3652bc567f78ac5bb9cbbb32d5584dbfa4595962ddbde6efa099 -->
+<!-- cache-key: cdktf-0.20.8 input-943c7e4f3f17fb9dfc25e8b24a198c3d7fa0075b6c0597cf08c012cc2b50de08 -->

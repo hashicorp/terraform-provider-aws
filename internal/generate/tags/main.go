@@ -71,6 +71,12 @@ var (
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
 
+	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
+	retryErrorMessage     = flag.String("RetryErrorMessage", "", "error message to retry, must be used with RetryTagOps")
+	retryTagOps           = flag.Bool("RetryTagOps", false, "whether to retry tag operations")
+	retryTagsListTagsType = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as ListTagsForResourceOutput, must be used with RetryTagOps")
+	retryTimeout          = flag.Duration("RetryTimeout", 1*time.Minute, "amount of time tag operations should retry")
+
 	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
 	tagInIDNeedValueSlice = flag.Bool("TagInIDNeedValueSlice", false, "tagInIDNeedValueSlice")
@@ -158,6 +164,11 @@ type TemplateData struct {
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
+	RetryErrorCode             string
+	RetryErrorMessage          string
+	RetryTagOps                bool
+	RetryTagsListTagsType      string
+	RetryTimeout               string
 	ServiceTagsMap             bool
 	SetTagsOutFunc             string
 	TagInCustomVal             string
@@ -253,6 +264,11 @@ func main() {
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
+		RetryErrorCode:             *retryErrorCode,
+		RetryErrorMessage:          *retryErrorMessage,
+		RetryTagOps:                *retryTagOps,
+		RetryTagsListTagsType:      *retryTagsListTagsType,
+		RetryTimeout:               formatDuration(*retryTimeout),
 		ServiceTagsMap:             *serviceTagsMap,
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -95,8 +94,8 @@ func newAccountSweeper(resource *schema.Resource, d *schema.ResourceData, client
 	}
 }
 
-func (as accountSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	if err := as.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+func (as accountSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := as.sweepable.Delete(ctx, optFns...); err != nil {
 		if strings.Contains(err.Error(), "exceeded close account quota") {
 			tflog.Info(ctx, "Ignoring error", map[string]any{
 				"error": err.Error(),
@@ -196,8 +195,8 @@ func newOrganizationalUnitSweeper(resource *schema.Resource, d *schema.ResourceD
 	}
 }
 
-func (ous organizationalUnitSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	if err := ous.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+func (ous organizationalUnitSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := ous.sweepable.Delete(ctx, optFns...); err != nil {
 		if strings.Contains(err.Error(), "OrganizationalUnitNotEmptyException:") {
 			tflog.Info(ctx, "Ignoring error", map[string]any{
 				"error": err.Error(),

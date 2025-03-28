@@ -410,15 +410,8 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_vpc_ipam", &resource.Sweeper{
-		Name: "aws_vpc_ipam",
-		F:    sweepIPAMs,
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_resource_discovery", &resource.Sweeper{
-		Name: "aws_vpc_ipam_resource_discovery",
-		F:    sweepIPAMResourceDiscoveries,
-	})
+	awsv2.Register("aws_vpc_ipam", sweepIPAMs)
+	awsv2.Register("aws_vpc_ipam_resource_discovery", sweepIPAMResourceDiscoveries)
 
 	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
 		Name: "aws_ami",
@@ -2664,73 +2657,59 @@ func sweepCustomerGateways(region string) error {
 	return nil
 }
 
-func sweepIPAMs(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepIPAMs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
-	input := ec2.DescribeIpamsInput{}
+	var input ec2.DescribeIpamsInput
 	var sweepResources []sweep.Sweepable
 
 	pages := ec2.NewDescribeIpamsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Ipams {
+			id := aws.ToString(v.IpamId)
+
+			// Skip free tier IPAMs with CIDRs in public scope, as it will take up to 48 hours for the CIDR to become available for future allocations.
+			if v.Tier == awstypes.IpamTierFree {
+				v, err := findIPAMScopeByID(ctx, conn, aws.ToString(v.PublicDefaultScopeId))
+
+				if err != nil {
+					return nil, err
+				}
+
+				if aws.ToInt32(v.PoolCount) > 0 {
+					log.Printf("[INFO] Skipping IPAM %s: Lingering free tier allocations", id)
+					continue
+				}
+			}
+
 			r := resourceIPAM()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.IpamId))
+			d.SetId(id)
 			d.Set("cascade", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepIPAMResourceDiscoveries(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepIPAMResourceDiscoveries(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
-	input := ec2.DescribeIpamResourceDiscoveriesInput{}
+	var input ec2.DescribeIpamResourceDiscoveriesInput
 	var sweepResources []sweep.Sweepable
 
 	pages := ec2.NewDescribeIpamResourceDiscoveriesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IPAM Resource Discovery sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing IPAM Resource Discoveries (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.IpamResourceDiscoveries {
@@ -2745,13 +2724,7 @@ func sweepIPAMResourceDiscoveries(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Resource Discoveries (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepAMIs(region string) error {

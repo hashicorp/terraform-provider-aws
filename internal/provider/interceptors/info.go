@@ -13,13 +13,13 @@ import (
 
 func InfoFromContext(ctx context.Context, c *conns.AWSClient) (conns.ServicePackage, string, string, *tftags.InContext, bool) {
 	if inContext, ok := conns.FromContext(ctx); ok {
-		if sp := c.ServicePackage(ctx, inContext.ServicePackageName); sp != nil {
+		if sp := c.ServicePackage(ctx, inContext.ServicePackageName()); sp != nil {
 			serviceName, err := names.HumanFriendly(sp.ServicePackageName())
 			if err != nil {
 				serviceName = "<service>"
 			}
 
-			resourceName := inContext.ResourceName
+			resourceName := inContext.ResourceName()
 			if resourceName == "" {
 				resourceName = "<thing>"
 			}

@@ -12,7 +12,7 @@ import (
 )
 
 func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByARN(ctx, conn, clusterArn)
 
 		if tfresource.NotFound(err) {
@@ -28,7 +28,7 @@ func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) 
 }
 
 func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingControlArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRoutingControlByARN(ctx, conn, routingControlArn)
 
 		if tfresource.NotFound(err) {
@@ -44,7 +44,7 @@ func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingContr
 }
 
 func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findControlPanelByARN(ctx, conn, controlPanelArn)
 
 		if tfresource.NotFound(err) {
@@ -60,7 +60,7 @@ func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelAr
 }
 
 func statusSafetyRule(ctx context.Context, conn *r53rcc.Client, safetyRuleArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSafetyRuleByARN(ctx, conn, safetyRuleArn)
 
 		if tfresource.NotFound(err) {

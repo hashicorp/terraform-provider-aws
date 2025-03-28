@@ -14,7 +14,7 @@ func TestValidAssumeRoleDuration(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		val         interface{}
+		val         any
 		expectedErr *regexp.Regexp
 	}{
 		{

@@ -52,6 +52,7 @@ This data source exports the following attributes in addition to the arguments a
 * `autoMinorVersionUpgrade` - Indicates that minor version patches are applied automatically.
 * `availabilityZone` - Name of the Availability Zone the DB instance is located in.
 * `backupRetentionPeriod` - Specifies the number of days for which automatic DB snapshots are retained.
+* `databaseInsightsMode` - The mode of Database Insights that is enabled for the DB instance.
 * `dbClusterIdentifier` - If the DB instance is a member of a DB cluster, contains the name of the DB cluster that the DB instance is a member of.
 * `dbInstanceArn` - ARN for the DB instance.
 * `dbInstanceClass` - Contains the name of the compute and memory capacity class of the DB instance.
@@ -96,4 +97,4 @@ The `masterUserSecret` configuration block supports the following attributes:
 * `secretArn` - The Amazon Resource Name (ARN) of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
-<!-- cache-key: cdktf-0.20.8 input-156ff5865fbb8f8d95843d45c98755bb49f6b9ca52d29fab4979c7c7d124577a -->
+<!-- cache-key: cdktf-0.20.8 input-c2ecfd582ca8b9e530b9e379afc4eed00eb577e75d053cca214aa40c806c4575 -->

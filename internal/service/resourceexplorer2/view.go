@@ -295,7 +295,7 @@ func (r *viewResource) Delete(ctx context.Context, request resource.DeleteReques
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
-	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteView(ctx, &resourceexplorer2.DeleteViewInput{

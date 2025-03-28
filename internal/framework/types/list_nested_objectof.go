@@ -238,7 +238,7 @@ func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithEleme
 	elements := val.Elements()
 	n := len(elements)
 	slice := make([]*T, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		ptr, d := objectValueObjectPtr[T](ctx, elements[i])
 		diags.Append(d...)
 		if diags.HasError() {

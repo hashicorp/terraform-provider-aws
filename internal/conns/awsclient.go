@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,7 +31,6 @@ type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
 	clients                   map[string]any
-	conns                     map[string]any
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
@@ -116,10 +116,20 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 
 // GlobalARN returns a global (no Region) ARN for the specified service namespace and resource.
 func (c *AWSClient) GlobalARN(ctx context.Context, service, resource string) string {
+	return c.GlobalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+}
+
+// GlobalARNNoAccount returns a global (no Region) ARN for the specified service namespace and resource without AWS account ID.
+func (c *AWSClient) GlobalARNNoAccount(ctx context.Context, service, resource string) string {
+	return c.GlobalARNWithAccount(ctx, service, "", resource)
+}
+
+// GlobalARNWithAccount returns a global (no Region) ARN for the specified service namespace, resource and account ID.
+func (c *AWSClient) GlobalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		AccountID: c.AccountID(ctx),
+		AccountID: accountID,
 		Resource:  resource,
 	}.String()
 }
@@ -267,7 +277,7 @@ func (c *AWSClient) DNSSuffix(context.Context) string {
 
 // ReverseDNSPrefix returns the reverse DNS prefix for the configured AWS partition.
 func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
-	return ReverseDNS(c.DNSSuffix(ctx))
+	return dns.Reverse(c.DNSSuffix(ctx))
 }
 
 // EC2RegionalPrivateDNSSuffix returns the EC2 private DNS suffix for the configured AWS Region.
@@ -298,17 +308,6 @@ func (c *AWSClient) EC2PrivateDNSNameForIP(ctx context.Context, ip string) strin
 // EC2PublicDNSNameForIP returns a EC2 public DNS name in the configured AWS Region.
 func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string {
 	return c.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPublicDNSSuffix(ctx)))
-}
-
-// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
-func ReverseDNS(hostname string) string {
-	parts := strings.Split(hostname, ".")
-
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
-	}
-
-	return strings.Join(parts, ".")
 }
 
 func convertIPToDashIP(ip string) string {

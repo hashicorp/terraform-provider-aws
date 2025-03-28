@@ -166,7 +166,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -197,14 +197,14 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	}.String()
 	d.Set(names.AttrARN, arn)
 	if eni.Association != nil {
-		if err := d.Set("association", []interface{}{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
+		if err := d.Set("association", []any{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting association: %s", err)
 		}
 	} else {
 		d.Set("association", nil)
 	}
 	if eni.Attachment != nil {
-		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachmentForDataSource(eni.Attachment)}); err != nil {
+		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachmentForDataSource(eni.Attachment)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
 		}
 	} else {
@@ -230,12 +230,12 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]interface{} {
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AttachmentId; v != nil {
 		tfMap["attachment_id"] = aws.ToString(v)

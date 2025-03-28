@@ -1,0 +1,368 @@
+name: Auto Triage
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  pull_request_target:
+    types:
+      - closed
+      - edited
+      - opened
+
+  issues:
+    types:
+      - closed
+      - edited
+      - opened
+
+env:
+  AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+  GH_CLI_SUBCOMMAND: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+  ISSUE_URL: ${{ github.event.issue.html_url ||  github.event.pull_request.html_url }}
+  ITEM_TYPE: ${{ github.event_name == 'issues' && 'Issue' || 'Pull Request' }}
+
+jobs:
+  labelers:
+    name: Labelers
+    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: .github
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ env.AUTHOR }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+          core_contributors: ${{ secrets.CORE_CONTRIBUTORS }}
+          partners: ${{ secrets.PARTNERS }}
+
+      - name: Add needs-triage
+        if: |
+          github.event.action == 'opened'
+          && steps.community_check.outputs.maintainer == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --add-label needs-triage
+
+      - name: Apply Pull Request Service Labels
+        if: github.event_name == 'pull_request_target'
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
+        with:
+          configuration-path: .github/labeler-pr-triage.yml
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply Pull Request Size Labels
+        if: github.event_name == 'pull_request_target'
+        uses: codelytv/pr-size-labeler@1c3422395d899286d5ee2c809fd5aed264d5eb9b # v1.10.2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: "size/XS"
+          xs_max_size: "30"
+          s_label: "size/S"
+          s_max_size: "60"
+          m_label: "size/M"
+          m_max_size: "150"
+          l_label: "size/L"
+          l_max_size: "300"
+          xl_label: "size/XL"
+          message_if_xl: ""
+
+      - name: Apply Issue Service Labels
+        if: github.event_name == 'issues'
+        uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler-issue-triage.yml
+          enable-versioned-regex: 0
+          include-title: 1
+
+      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
+        id: token
+        if: github.event_name == 'issues'
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Apply Issue Labels that Trigger Events
+        if: github.event_name == 'issues'
+        uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
+        with:
+          repo-token: ${{ steps.token.outputs.token }}
+          configuration-path: .github/labeler-issue-trigger.yml
+          enable-versioned-regex: 0
+          include-title: 1
+
+      - name: Credit Core Contributor Contributions
+        if: |
+          github.event_name == 'pull_request_target'
+          && steps.community_check.outputs.core_contributor == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'external-maintainer')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh pr edit $ISSUE_URL --add-label external-maintainer
+
+      - name: Credit Partner Contributions
+        if: |
+          github.event_name == 'pull_request_target'
+          && steps.community_check.outputs.partner == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'partner')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh pr edit $ISSUE_URL --add-label partner
+
+  community_note:
+    name: Community Note
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: First Interaction Check
+        id: first_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          echo "contributions=$(gh $GH_CLI_SUBCOMMAND list --repo hashicorp/terraform-provider-aws --state all --json url --jq '.[].url' --author $AUTHOR | wc -l)" >> "$GITHUB_OUTPUT"
+
+      - name: First Interaction Snippet
+        if: steps.first_check.outputs.contributions == 0
+        shell: bash
+        run: |
+          echo "Welcome @$AUTHOR :wave:
+
+          It looks like this is your first $ITEM_TYPE submission to the Terraform AWS Provider repository. Thank you very much for taking the time to do so, and welcome to the community! :tada:
+
+          ---
+          " >> note.md
+
+      - name: Community Note Snippet
+        shell: bash
+        run: |
+          echo "### Community Guidelines
+
+          This comment is added to every new $ITEM_TYPE to provide quick reference to how the Terraform AWS Provider is maintained. Please review the information below, and thank you for contributing to the community that keeps the provider thriving! :rocket:
+
+          #### Voting for Prioritization
+
+          * Please vote on this $ITEM_TYPE by adding a :+1: [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original post to help the community and maintainers prioritize it.
+          * Please see our [prioritization guide](https://hashicorp.github.io/terraform-provider-aws/prioritization/) for additional information on how the maintainers handle prioritization.
+          * Please **do not** leave "+1" or other comments that do not add relevant new information or questions; they generate extra noise for others following the $ITEM_TYPE and do not help prioritize the request.
+          " >> note.md
+
+      - name: Issue Volunteer Snippet
+        if: github.event_name == 'issues'
+        shell: bash
+        run: |
+          echo "### Volunteering to Work on This Issue
+
+          * If you are interested in working on this issue, please leave a comment.
+          * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
+          * For new resources and data sources, use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) to generate scaffolding with comments detailing common expectations.
+          " >> note.md
+
+      - name: Pull Request Authors Snippet
+        if: github.event_name == 'pull_request_target'
+        shell: bash
+        run: |
+          echo "### Pull Request Authors
+
+          * Review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) relating to the type of change you are making to ensure all of the necessary steps have been taken.
+          * Whether or not the branch has been rebased will **not** impact prioritization, but doing so is always a welcome surprise.
+          " >> note.md
+
+      - name: Debug Output
+        if: env.RUNNER_DEBUG == 1
+        shell: bash
+        run: cat note.md
+
+      - name: Post Comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh $GH_CLI_SUBCOMMAND comment $ISSUE_URL --body-file note.md
+
+  warning_comment:
+    name: Warn of Potential Issues
+    if: |
+      github.event_name == 'pull_request_target'
+      && contains(fromJSON('["opened", "edited"]'), github.event.action)
+    runs-on: ubuntu-latest
+    env:
+      START_TEXT: "### :warning: We've detected the following potential issues with your pull request"
+    steps:
+      - name: Maintainer Editability
+        id: maintainer_editability
+        if: |
+          github.event.pull_request.head.repo.full_name != 'hashicorp/terraform-provider-aws'
+          && !github.event.pull_request.maintainer_can_modify
+        shell: bash
+        run: |
+          echo '#### Maintainer Edit Permissions:
+
+          At times, our maintainers need to make direct edits to pull requests in order to prepare it to be merged. At the time of opening this pull request, your settings do not allow maintainers to make such edits. If possible, update your settings as described in the following document. If your fork is owned by an organization that limits your ability to make this change, please let us know.
+
+          [GitHub: Allowing changes to a pull request branch created from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork)
+          ' >> note.md
+
+      - name: Filter Changes
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            dependencies:
+              - '.ci/providerlint/**'
+              - 'go.mod'
+              - 'go.sum'
+            changelog:
+              - 'CHANGELOG.md'
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        id: checkout
+        if: |
+          steps.filter.outputs.dependencies == 'true'
+          || steps.filter.outputs.changelog == 'true'
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Community Check
+        if: steps.checkout.outcome != 'skipped'
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ env.AUTHOR }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Dependencies
+        id: dependencies
+        if: |
+          steps.filter.outputs.dependencies == 'true'
+          && steps.community_check.outputs.maintainer == 'false'
+        shell: bash
+        run: |
+          echo '#### Dependency Changes
+
+          Typically Go dependency changes are handled in this repository by dependabot or the maintainers. This is to prevent pull request merge conflicts and further delay reviews of contributions. For more information, see the [Dependency Updates](https://hashicorp.github.io/terraform-provider-aws/dependency-updates/) section of the contributing guide.
+
+          Remove any changes to the `go.mod` or `go.sum` files and commit them into this pull request to prevent delays with reviewing and potentially merging it.
+
+          <details>
+          <summary>Additional details (Click to expand)</summary>
+
+          * Check [open pull requests with the `dependencies` label](https://github.com/hashicorp/terraform-provider-aws/pulls?q=is%3Aopen+is%3Apr+label%3Adependencies) to view other dependency updates.
+          * If this pull request includes an update the AWS Go SDK (or any other dependency) version, only updates submitted via dependabot will be merged. This pull request will need to remove these changes and will need to be rebased after the existing dependency update via dependabot has been merged for this pull request to be reviewed.
+          * If this pull request is for supporting a new AWS service:
+            * Ensure the new AWS service changes are following the [Adding a New AWS Service](https://hashicorp.github.io/terraform-provider-aws/add-a-new-service/) section of the contributing guide, in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
+            * If this pull request is already a separate pull request from the above item, you can ignore this message.
+          </details>
+          ' >> note.md
+
+      - name: Changelog
+        id: changelog
+        if: |
+          steps.filter.outputs.changelog == 'true'
+          && steps.community_check.outputs.maintainer == 'false'
+        shell: bash
+        run: |
+          echo '#### Changelog Changes
+
+          The `CHANGELOG.md` file contents are handled by the maintainers during merge. This is to prevent pull request merge conflicts, especially for contributions which may not be merged immediately. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for additional information.
+
+          Remove any changes to the `CHANGELOG.md` file and commit them in this pull request to prevent delays with reviewing and potentially merging it.
+          ' >> note.md
+
+      - name: Start Message
+        id: start
+        if: |
+          steps.maintainer_editability.outcome != 'skipped'
+          || steps.dependencies.outcome != 'skipped'
+          || steps.changelog.outcome != 'skipped'
+        shell: bash
+        run: |
+          { echo $START_TEXT; echo ; cat note.md; } > tmpnote && mv tmpnote note.md
+
+      - name: Check for Existing Comment
+        id: prc
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: ${{ env.START_TEXT }}
+
+      - name: Issues Corrected
+        id: corrected
+        if: |
+          steps.prc.outputs.comment-id != ''
+          && steps.start.outcome == 'skipped'
+        shell: bash
+        run: |
+          echo ':white_check_mark: Thank you for correcting the previously detected issues! The maintainers appreciate your efforts to make the review process as smooth as possible.' >> note.md
+
+      - name: Add or Update Comment
+        if: |
+          steps.start.outcome != 'skipped'
+          || steps.corrected.outcome != 'skipped'
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.prc.outputs.comment-id }}
+          edit-mode: replace
+          body-path: note.md
+
+  closed_items:
+    name: Handle Closed Items
+    if: github.event.action == 'closed'
+    env:
+      CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove Triage Labels
+        if: |
+          contains(fromJSON(env.CURRENT_LABELS), 'needs-triage')
+          || contains(fromJSON(env.CURRENT_LABELS), 'waiting-response')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --remove-label needs-triage,waiting-response
+
+      - name: Add Note
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh $GH_CLI_SUBCOMMAND comment $ISSUE_URL --body "> [!WARNING]
+          > This Issue has been closed, meaning that any additional comments are much easier for the maintainers to miss. Please assume that the maintainers will not see them.
+          >
+          > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed."
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        id: checkout
+        if: github.event.pull_request.merged
+        with:
+          sparse-checkout: .ci
+
+      - name: Get Current Milestone Name
+        id: get-current-milestone
+        if: steps.checkout.outcome != 'skipped'
+        shell: bash
+        run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
+
+      - name: Add Items to Milestone
+        if: steps.checkout.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE: ${{ steps.get-current-milestone.outputs.current_milestone }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: .ci/scripts/add-to-milestone.sh

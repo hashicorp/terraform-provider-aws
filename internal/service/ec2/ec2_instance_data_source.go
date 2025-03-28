@@ -123,9 +123,9 @@ func dataSourceInstance() *schema.Resource {
 					},
 				},
 				// This should not be necessary, but currently is (see #7198)
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
+					m := v.(map[string]any)
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
@@ -406,7 +406,7 @@ func dataSourceInstance() *schema.Resource {
 }
 
 // dataSourceInstanceRead performs the instanceID lookup
-func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -415,7 +415,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			svcTags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
@@ -464,7 +464,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance) error {
+func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance) error {
 	d.SetId(aws.ToString(instance.InstanceId))
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -560,7 +560,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
-		d.Set("ephemeral_block_device", []interface{}{})
+		d.Set("ephemeral_block_device", []any{})
 	}
 
 	// Lookup and Set Instance Attributes
@@ -619,7 +619,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if instanceCreditSpecification != nil {
-			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+			if err := d.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
 				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		} else {
@@ -634,7 +634,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if instance.MaintenanceOptions != nil {
-		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
+		if err := d.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
 			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
@@ -646,7 +646,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+		if err := d.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
 			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {

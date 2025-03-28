@@ -433,7 +433,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 }
 
 func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSubscriberByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

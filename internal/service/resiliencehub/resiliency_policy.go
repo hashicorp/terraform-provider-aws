@@ -129,14 +129,14 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrPolicy: schema.SingleNestedBlock{
+			names.AttrPolicy: schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Description: "The resiliency failure policy.",
 				CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyPolicyModel](ctx),
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
 				Blocks: map[string]schema.Block{
-					"az": schema.SingleNestedBlock{
+					"az": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential availability zone disruptions.",
 						Validators: []validator.Object{
@@ -144,7 +144,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 						},
 						Attributes: requiredObjAttrs,
 					},
-					"hardware": schema.SingleNestedBlock{
+					"hardware": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential infrastructure disruptions.",
 						Validators: []validator.Object{
@@ -152,7 +152,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 						},
 						Attributes: requiredObjAttrs,
 					},
-					"software": schema.SingleNestedBlock{
+					"software": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential application disruptions.",
 						Validators: []validator.Object{
@@ -160,7 +160,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 						},
 						Attributes: requiredObjAttrs,
 					},
-					names.AttrRegion: schema.SingleNestedBlock{
+					names.AttrRegion: schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential region disruptions.",
 						Validators: []validator.Object{
@@ -484,7 +484,7 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 }
 
 func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

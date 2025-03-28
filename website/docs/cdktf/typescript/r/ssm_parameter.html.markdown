@@ -14,6 +14,8 @@ Provides an SSM Parameter resource.
 
 ~> **Note:** `overwrite` also makes it possible to overwrite an existing SSM Parameter that's not created by Terraform before. This argument has been deprecated and will be removed in v6.0.0 of the provider. For more information on how this affects the behavior of this resource, see [this issue comment](https://github.com/hashicorp/terraform-provider-aws/issues/25636#issuecomment-1623661159).
 
+-> **Note:** Write-Only argument `valueWo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Basic example
@@ -148,4 +150,4 @@ Using `terraform import`, import SSM Parameters using the parameter store `name`
 % terraform import aws_ssm_parameter.my_param /my_path/my_paramname
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f4d0b884befc154a7773f40b16913bd89e865ce0a90c3bc002fa073829b02285 -->
+<!-- cache-key: cdktf-0.20.8 input-9eb79d134ec3490dee74413abe3f74bdae7ba9b5d291368296b26f497f0f0dbf -->

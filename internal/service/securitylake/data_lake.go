@@ -406,7 +406,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 }
 
 func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -422,7 +422,7 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
