@@ -1,7 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
 go 1.23.7
-
 require (
 	github.com/YakDriver/tfproviderdocs v0.17.0
 	github.com/client9/misspell v0.3.4
@@ -11,7 +10,7 @@ require (
 	github.com/katbyte/terrafmt v0.5.5
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.7
-	github.com/terraform-linters/tflint v0.55.1
+	github.com/terraform-linters/tflint v0.56.0
 	mvdan.cc/gofumpt v0.7.0
 )
 
@@ -298,7 +297,7 @@ require (
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/sourcegraph/go-lsp v0.0.0-20240223163137-f80c5dd31dfd // indirect
 	github.com/sourcegraph/jsonrpc2 v0.2.0 // indirect
-	github.com/spf13/afero v1.12.0 // indirect
+	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
@@ -310,7 +309,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tdakkota/asciicheck v0.4.1 // indirect
 	github.com/terraform-linters/tflint-plugin-sdk v0.22.0 // indirect
-	github.com/terraform-linters/tflint-ruleset-terraform v0.10.0 // indirect
+	github.com/terraform-linters/tflint-ruleset-terraform v0.11.0 // indirect
 	github.com/tetafro/godot v1.5.0 // indirect
 	github.com/thanhpk/randstr v1.0.6 // indirect
 	github.com/theupdateframework/go-tuf v0.7.0 // indirect
