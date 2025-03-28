@@ -138,3 +138,23 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `result` - String result of the lambda function invocation.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Invocation using the `function_name_qualiefier_result_hash`. For example:
+
+```terraform
+import {
+  to = aws_lambda_invocation.test_lambda
+  id = "my_test_lambda_function_$LATEST_b326b5062b2f0e69046810717534cb09"
+}
+```
+
+Using `terraform import`, import Lambda Functions using the `function_name`. For example:
+
+```console
+% terraform import my_test_lambda_function_$LATEST_b326b5062b2f0e69046810717534cb09
+```
+
+Because it is not possible to retrieve previous invocations, during the next apply `terraform` will update the resource calling again the function.
+To compute the `result_hash`, it is necessary to hash it with the standard `md5` hash function.
