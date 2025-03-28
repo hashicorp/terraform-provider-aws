@@ -328,6 +328,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				return
 			}
 			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 
 		case !asset.ImportAssetsFromSignedURL.IsNull():
 			importAssetsFromSignedURL, d := asset.ImportAssetsFromSignedURL.ToPtr(ctx)
@@ -486,7 +487,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				return
 			}
 			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
-
+			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 		}
 	}
 
