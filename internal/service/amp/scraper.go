@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -174,6 +176,35 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
+			"role_configuration": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[scraperRoleConfigurationModel](ctx),
+				Attributes: map[string]schema.Attribute{
+					"source_role_arn": schema.StringAttribute{
+						Optional:   true,
+						CustomType: fwtypes.ARNType,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
+						Validators: []validator.String{
+							stringvalidator.AlsoRequires(
+								path.MatchRelative().AtParent().AtName("target_role_arn"),
+							),
+						},
+					},
+					"target_role_arn": schema.StringAttribute{
+						Optional:   true,
+						CustomType: fwtypes.ARNType,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
+						Validators: []validator.String{
+							stringvalidator.AlsoRequires(
+								path.MatchRelative().AtParent().AtName("source_role_arn"),
+							),
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -223,6 +254,18 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	roleConfigurationData, diags := data.RoleConfiguration.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	roleConfiguration := awstypes.RoleConfiguration{}
+	resp.Diagnostics.Append(flex.Expand(ctx, roleConfigurationData, &roleConfiguration)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	source := awstypes.SourceMemberEksConfiguration{}
 	resp.Diagnostics.Append(flex.Expand(ctx, eksSourceData, &source.Value)...)
 	if resp.Diagnostics.HasError() {
@@ -237,6 +280,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		Destination:         &destination,
 		Source:              &source,
 		ScrapeConfiguration: &scrapeConfiguration,
+		RoleConfiguration:   &roleConfiguration,
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -325,6 +369,14 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
 		data.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(v.Value))
 	}
+	if scraper.RoleConfiguration != nil {
+		var roleConfigurationData scraperRoleConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, scraper.RoleConfiguration, &roleConfigurationData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.RoleConfiguration = fwtypes.NewObjectValueOfMust(ctx, &roleConfigurationData)
+	}
 	if v, ok := scraper.Source.(*awstypes.SourceMemberEksConfiguration); ok {
 		var eksSourceData scraperEKSSourceModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, &v.Value, &eksSourceData)...)
@@ -396,6 +448,7 @@ type scraperResourceModel struct {
 	Destination         fwtypes.ListNestedObjectValueOf[scraperDestinationModel] `tfsdk:"destination"`
 	ID                  types.String                                             `tfsdk:"id"`
 	RoleARN             types.String                                             `tfsdk:"role_arn"`
+	RoleConfiguration   fwtypes.ObjectValueOf[scraperRoleConfigurationModel]     `tfsdk:"role_configuration"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
 	Tags                tftags.Map                                               `tfsdk:"tags"`
@@ -419,6 +472,11 @@ type scraperEKSSourceModel struct {
 	ClusterARN       fwtypes.ARN                      `tfsdk:"cluster_arn"`
 	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
 	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
+}
+
+type scraperRoleConfigurationModel struct {
+	SourceRoleArn fwtypes.ARN `tfsdk:"source_role_arn"`
+	TargetRoleArn fwtypes.ARN `tfsdk:"target_role_arn"`
 }
 
 func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.ScraperDescription, error) {
