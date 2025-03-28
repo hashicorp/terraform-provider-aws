@@ -34,14 +34,14 @@ class MyConvertedCode(TerraformStack):
             name="example-bucket"
         )
         aws_s3_tables_namespace_example = S3TablesNamespace(self, "example_1",
-            namespace="example-namespace",
+            namespace="example_namespace",
             table_bucket_arn=example.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_s3_tables_namespace_example.override_logical_id("example")
         aws_s3_tables_table_example = S3TablesTable(self, "example_2",
             format="ICEBERG",
-            name="example-table",
+            name="example_table",
             namespace=Token.as_string(aws_s3_tables_namespace_example.namespace),
             table_bucket_arn=Token.as_string(aws_s3_tables_namespace_example.table_bucket_arn)
         )

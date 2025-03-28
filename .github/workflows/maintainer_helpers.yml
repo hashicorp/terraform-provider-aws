@@ -170,18 +170,30 @@ jobs:
               "channel" : "${{ secrets.SLACK_CHANNEL }}",
               "blocks": [
                 {
-                  "type": "section",
+                  "type": "header",
                   "text": {
-                    "type": "mrkdwn",
-                    "text": ":warning: The following has been labeled as a ${{ github.event.label.name }}:"
+                    "type": "plain_text",
+                    "text": ":warning: The following ${{ github.event_name == 'issues' && 'issue' || 'pull request' }} has been labeled as a ${{ github.event.label.name }}:",
+                    "emoji": true
                   }
                 },
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ${{ toJSON(format('<{0}|{1}>', env.ISSUE_URL, env.ISSUE_TITLE)) }}
-                  }
+                  "type": "divider"
+                },
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "link",
+                          "text": ${{ toJSON(env.ISSUE_TITLE) }}
+                          "url": env.ISSUE_URL
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
