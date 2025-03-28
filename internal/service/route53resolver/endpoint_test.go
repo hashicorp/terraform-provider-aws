@@ -6,6 +6,7 @@ package route53resolver_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
@@ -233,6 +234,24 @@ func TestAccRoute53ResolverEndpoint_resolverEndpointType(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverEndpoint_LimitExceededException_failsFast(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEndpointConfig_LimitExceededException(rName, "LIMITEXCEED"),
+				ExpectError: regexp.MustCompile("LimitExceededException"),
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
@@ -300,7 +319,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccEndpointConfig_base(rName string) string {
+func testAccEndpointConfig_base(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.0.0.0/16"
@@ -314,10 +333,10 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 3
+  count = %[2]d
 
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index %% length(data.aws_availability_zones.available.names)]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
   tags = {
@@ -335,7 +354,7 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccEndpointConfig_base_ipv6(rName string) string {
@@ -380,7 +399,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccEndpointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), `
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, 3), `
 resource "aws_route53_resolver_endpoint" "test" {
   direction = "INBOUND"
 
@@ -428,7 +447,7 @@ resource "aws_route53_resolver_endpoint" "test" {
 }
 
 func testAccEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, 3), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
   direction = "INBOUND"
 
@@ -456,7 +475,7 @@ resource "aws_route53_resolver_endpoint" "test" {
 }
 
 func testAccEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, 3), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
   direction = "INBOUND"
 
@@ -485,7 +504,7 @@ resource "aws_route53_resolver_endpoint" "test" {
 }
 
 func testAccEndpointConfig_outbound(rName, name string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, 3), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
   direction              = "OUTBOUND"
   resolver_endpoint_type = "IPV4"
@@ -507,7 +526,7 @@ resource "aws_route53_resolver_endpoint" "test" {
 }
 
 func testAccEndpointConfig_updatedOutbound(rName, name string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, 3), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
   direction = "OUTBOUND"
   name      = %[1]q
@@ -515,6 +534,49 @@ resource "aws_route53_resolver_endpoint" "test" {
   resolver_endpoint_type = "IPV4"
 
   security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  protocols = ["Do53", "DoH"]
+}
+`, name))
+}
+
+func testAccEndpointConfig_LimitExceededException(rName, name string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, 7), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "OUTBOUND"
+  name      = %[1]q
+
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[6].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[5].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[4].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[3].id
+  }
 
   ip_address {
     subnet_id = aws_subnet.test[2].id
