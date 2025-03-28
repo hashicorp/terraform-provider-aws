@@ -70,8 +70,9 @@ func TestAccDataExchangeRevisionExclusive_importFromS3(t *testing.T) {
 									}),
 								}),
 							}),
-							names.AttrName: knownvalue.StringExact("test"),
-							"updated_at":   knownvalue.NotNull(),
+							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
+							names.AttrName:                  knownvalue.StringExact("test"),
+							"updated_at":                    knownvalue.NotNull(),
 						}),
 					})),
 
@@ -154,8 +155,9 @@ func TestAccDataExchangeRevisionExclusive_importMultipleFromS3(t *testing.T) {
 									}),
 								}),
 							}),
-							names.AttrName: knownvalue.StringExact("test-0"),
-							"updated_at":   knownvalue.NotNull(),
+							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
+							names.AttrName:                  knownvalue.StringExact("test-0"),
+							"updated_at":                    knownvalue.NotNull(),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:       tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
@@ -171,7 +173,137 @@ func TestAccDataExchangeRevisionExclusive_importMultipleFromS3(t *testing.T) {
 									}),
 								}),
 							}),
-							names.AttrName: knownvalue.StringExact("test-1"),
+							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
+							names.AttrName:                  knownvalue.StringExact("test-1"),
+							"updated_at":                    knownvalue.NotNull(),
+						}),
+					})),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
+		},
+	})
+}
+
+// lintignore:AT002
+func TestAccDataExchangeRevisionExclusive_importFromSignedURL(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var revision dataexchange.GetRevisionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dataexchange_revision_exclusive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRevisionExclusiveConfig_importFromSignedURL(rName, "test-fixtures/data.json"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrARN:           tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
+							names.AttrCreatedAt:     knownvalue.NotNull(),
+							names.AttrID:            knownvalue.NotNull(),
+							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{}),
+							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"filename": knownvalue.StringExact("./test-fixtures/data.json"),
+								}),
+							}),
+							names.AttrName: knownvalue.StringExact("./test-fixtures/data.json"),
+							"updated_at":   knownvalue.NotNull(),
+						}),
+					})),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
+		},
+	})
+}
+
+// lintignore:AT002
+func TestAccDataExchangeRevisionExclusive_importMultipleFromSignedURL(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var revision dataexchange.GetRevisionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dataexchange_revision_exclusive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRevisionExclusiveConfig_importMultipleFromSignedURL(rName, "test-fixtures/data.json", "test-fixtures/data2.json"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrARN:           tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
+							names.AttrCreatedAt:     knownvalue.NotNull(),
+							names.AttrID:            knownvalue.NotNull(),
+							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{}),
+							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"filename": knownvalue.StringExact("./test-fixtures/data.json"),
+								}),
+							}),
+							names.AttrName: knownvalue.StringExact("./test-fixtures/data.json"),
+							"updated_at":   knownvalue.NotNull(),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrARN:           tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
+							names.AttrCreatedAt:     knownvalue.NotNull(),
+							names.AttrID:            knownvalue.NotNull(),
+							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{}),
+							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"filename": knownvalue.StringExact("./test-fixtures/data2.json"),
+								}),
+							}),
+							names.AttrName: knownvalue.StringExact("./test-fixtures/data2.json"),
 							"updated_at":   knownvalue.NotNull(),
 						}),
 					})),
@@ -318,4 +450,50 @@ resource "aws_s3_object" "test" {
   content = "test"
 }
 `, rName)
+}
+
+func testAccRevisionExclusiveConfig_importFromSignedURL(rName, filename string) string {
+	return fmt.Sprintf(`
+resource "aws_dataexchange_revision_exclusive" "test" {
+  data_set_id = aws_dataexchange_data_set.test.id
+
+  asset {
+    import_assets_from_signed_url {
+      filename = "${path.module}/%[2]s"
+    }
+  }
+}
+
+resource "aws_dataexchange_data_set" "test" {
+  asset_type  = "S3_SNAPSHOT"
+  description = %[1]q
+  name        = %[1]q
+}
+`, rName, filename)
+}
+
+func testAccRevisionExclusiveConfig_importMultipleFromSignedURL(rName, filename, filename2 string) string {
+	return fmt.Sprintf(`
+resource "aws_dataexchange_revision_exclusive" "test" {
+  data_set_id = aws_dataexchange_data_set.test.id
+
+  asset {
+    import_assets_from_signed_url {
+      filename = "${path.module}/%[2]s"
+    }
+  }
+
+  asset {
+    import_assets_from_signed_url {
+      filename = "${path.module}/%[3]s"
+    }
+  }
+}
+
+resource "aws_dataexchange_data_set" "test" {
+  asset_type  = "S3_SNAPSHOT"
+  description = %[1]q
+  name        = %[1]q
+}
+`, rName, filename, filename2)
 }

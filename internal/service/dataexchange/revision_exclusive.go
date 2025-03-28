@@ -5,9 +5,13 @@ package dataexchange
 
 import (
 	"context"
+	"crypto/md5"
 	"errors"
 	"fmt"
+	"io"
 	"iter"
+	"net/http"
+	"os"
 	"slices"
 	"time"
 
@@ -40,6 +44,7 @@ import (
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -163,6 +168,19 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 								},
 							},
 						},
+						"import_assets_from_signed_url": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[importAssetsFromSignedURLModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"filename": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -215,73 +233,49 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	assets := make([]assetModel, len(plan.Assets.Elements()))
 	existingAssetIDs := make([]string, 0, len(plan.Assets.Elements()))
 	for i, asset := range nestedObjectCollectionAllMust(ctx, plan.Assets) {
-		importAssetsFromS3, d := asset.ImportAssetsFromS3.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if d.HasError() {
-			return
-		}
+		switch {
+		case !asset.ImportAssetsFromS3.IsNull():
+			importAssetsFromS3, d := asset.ImportAssetsFromS3.ToPtr(ctx)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
+				return
+			}
 
-		var importAssetsFromS3RequestDetails awstypes.ImportAssetsFromS3RequestDetails
-		resp.Diagnostics.Append(flex.Expand(ctx, importAssetsFromS3, &importAssetsFromS3RequestDetails)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		importAssetsFromS3RequestDetails.DataSetId = plan.DataSetID.ValueStringPointer()
-		importAssetsFromS3RequestDetails.RevisionId = plan.ID.ValueStringPointer()
+			var importAssetsFromS3RequestDetails awstypes.ImportAssetsFromS3RequestDetails
+			resp.Diagnostics.Append(flex.Expand(ctx, importAssetsFromS3, &importAssetsFromS3RequestDetails)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			importAssetsFromS3RequestDetails.DataSetId = plan.DataSetID.ValueStringPointer()
+			importAssetsFromS3RequestDetails.RevisionId = plan.ID.ValueStringPointer()
 
-		requestDetails := awstypes.RequestDetails{
-			ImportAssetsFromS3: &importAssetsFromS3RequestDetails,
-		}
-		createJobInput := dataexchange.CreateJobInput{
-			Type:    awstypes.TypeImportAssetsFromS3,
-			Details: &requestDetails,
-		}
-		createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-				err.Error(),
-			)
-			return
-		}
-		if createJobOutput == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			requestDetails := awstypes.RequestDetails{
+				ImportAssetsFromS3: &importAssetsFromS3RequestDetails,
+			}
+			createJobInput := dataexchange.CreateJobInput{
+				Type:    awstypes.TypeImportAssetsFromS3,
+				Details: &requestDetails,
+			}
+			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			if createJobOutput == nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					errors.New("empty output").Error(),
+				)
+				return
+			}
 
-		startJobInput := dataexchange.StartJobInput{
-			JobId: createJobOutput.Id,
-		}
-		_, err = conn.StartJob(ctx, &startJobInput)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-				err.Error(),
-			)
-			return
-		}
-
-		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-				err.Error(),
-			)
-			return
-		}
-
-		listAssetsInput := dataexchange.ListRevisionAssetsInput{
-			DataSetId:  plan.DataSetID.ValueStringPointer(),
-			RevisionId: plan.ID.ValueStringPointer(),
-		}
-		var newAsset awstypes.AssetEntry
-		paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &listAssetsInput)
-		for paginator.HasMorePages() {
-			page, err := paginator.NextPage(ctx)
+			startJobInput := dataexchange.StartJobInput{
+				JobId: createJobOutput.Id,
+			}
+			_, err = conn.StartJob(ctx, &startJobInput)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
@@ -290,24 +284,218 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				return
 			}
 
-			for _, v := range page.Assets {
-				if !slices.Contains(existingAssetIDs, aws.ToString(v.Id)) {
-					newAsset = v
+			createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
+			listAssetsInput := dataexchange.ListRevisionAssetsInput{
+				DataSetId:  plan.DataSetID.ValueStringPointer(),
+				RevisionId: plan.ID.ValueStringPointer(),
+			}
+			var newAsset awstypes.AssetEntry
+			paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &listAssetsInput)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+						err.Error(),
+					)
+					return
+				}
+
+				for _, v := range page.Assets {
+					if !slices.Contains(existingAssetIDs, aws.ToString(v.Id)) {
+						newAsset = v
+					}
 				}
 			}
+			if newAsset.Id == nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					"missing new asset",
+				)
+				return
+			}
+			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+
+		case !asset.ImportAssetsFromSignedURL.IsNull():
+			importAssetsFromSignedURL, d := asset.ImportAssetsFromSignedURL.ToPtr(ctx)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
+				return
+			}
+
+			var importAssetFromSignedUrlRequestDetails awstypes.ImportAssetFromSignedUrlRequestDetails
+			importAssetFromSignedUrlRequestDetails.DataSetId = plan.DataSetID.ValueStringPointer()
+			importAssetFromSignedUrlRequestDetails.RevisionId = plan.ID.ValueStringPointer()
+			// Default `AssetName` to last path component?
+			importAssetFromSignedUrlRequestDetails.AssetName = importAssetsFromSignedURL.Filename.ValueStringPointer()
+			// Stream MD5
+			f, err := os.Open(importAssetsFromSignedURL.Filename.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			defer f.Close()
+
+			h := md5.New()
+			if _, err := io.Copy(h, f); err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
+			hash := h.Sum(nil)
+			importAssetFromSignedUrlRequestDetails.Md5Hash = aws.String(itypes.Base64Encode(hash))
+
+			requestDetails := awstypes.RequestDetails{
+				ImportAssetFromSignedUrl: &importAssetFromSignedUrlRequestDetails,
+			}
+			createJobInput := dataexchange.CreateJobInput{
+				Type:    awstypes.TypeImportAssetFromSignedUrl,
+				Details: &requestDetails,
+			}
+			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			if createJobOutput == nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					errors.New("empty output").Error(),
+				)
+				return
+			}
+
+			// Upload file to URL with PUT operation
+			_, err = f.Seek(0, 0)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			info, err := f.Stat()
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			// TODO: Add timeout for upload
+			request, err := http.NewRequestWithContext(ctx, http.MethodPut, *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, f)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			request.ContentLength = info.Size()
+			request.Header.Set("Content-MD5", itypes.Base64Encode(hash))
+			// TODO: User-Agent header
+
+			httpClient := r.Meta().AwsConfig(ctx).HTTPClient
+			response, err := httpClient.Do(request)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			if !(response.StatusCode >= http.StatusOK && response.StatusCode <= http.StatusIMUsed) {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					fmt.Sprintf("Uploading to %q\n\nUnexpected HTTP response: %s", *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, response.Status),
+				)
+				return
+			}
+			io.Copy(io.Discard, response.Body)
+			response.Body.Close()
+
+			// Start Job
+			startJobInput := dataexchange.StartJobInput{
+				JobId: createJobOutput.Id,
+			}
+			_, err = conn.StartJob(ctx, &startJobInput)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
+			createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
+			// List assets
+			listAssetsInput := dataexchange.ListRevisionAssetsInput{
+				DataSetId:  plan.DataSetID.ValueStringPointer(),
+				RevisionId: plan.ID.ValueStringPointer(),
+			}
+			var newAsset awstypes.AssetEntry
+			paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &listAssetsInput)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+						err.Error(),
+					)
+					return
+				}
+
+				for _, v := range page.Assets {
+					if !slices.Contains(existingAssetIDs, aws.ToString(v.Id)) {
+						newAsset = v
+					}
+				}
+			}
+			if newAsset.Id == nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					"missing new asset",
+				)
+				return
+			}
+			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+
 		}
-		if newAsset.Id == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
-				"missing new asset",
-			)
-			return
-		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 	}
 
 	assetsVal, d := fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, assets)
@@ -417,12 +605,13 @@ type resourceRevisionExclusiveModel struct {
 }
 
 type assetModel struct {
-	ARN                types.String                                             `tfsdk:"arn"`
-	CreatedAt          timetypes.RFC3339                                        `tfsdk:"created_at"`
-	ID                 types.String                                             `tfsdk:"id"`
-	ImportAssetsFromS3 fwtypes.ListNestedObjectValueOf[importAssetsFromS3Model] `tfsdk:"import_assets_from_s3"`
-	Name               types.String                                             `tfsdk:"name"`
-	UpdatedAt          timetypes.RFC3339                                        `tfsdk:"updated_at"`
+	ARN                       types.String                                                    `tfsdk:"arn"`
+	CreatedAt                 timetypes.RFC3339                                               `tfsdk:"created_at"`
+	ID                        types.String                                                    `tfsdk:"id"`
+	ImportAssetsFromS3        fwtypes.ListNestedObjectValueOf[importAssetsFromS3Model]        `tfsdk:"import_assets_from_s3"`
+	ImportAssetsFromSignedURL fwtypes.ListNestedObjectValueOf[importAssetsFromSignedURLModel] `tfsdk:"import_assets_from_signed_url"`
+	Name                      types.String                                                    `tfsdk:"name"`
+	UpdatedAt                 timetypes.RFC3339                                               `tfsdk:"updated_at"`
 }
 
 type importAssetsFromS3Model struct {
@@ -434,26 +623,8 @@ type assetSourceModel struct {
 	Key    types.String `tfsdk:"key"`
 }
 
-func sweepRevisions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := dataexchange.ListDataSetRevisionsInput{}
-	conn := client.DataExchangeClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := dataexchange.NewListDataSetRevisionsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Revisions {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceRevisionExclusive, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id))),
-			)
-		}
-	}
-
-	return sweepResources, nil
+type importAssetsFromSignedURLModel struct {
+	Filename types.String `tfsdk:"filename"`
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) {
@@ -544,4 +715,26 @@ func nestedObjectCollectionAllMust[T any](ctx context.Context, v nestedObjectCol
 
 type nestedObjectCollectionValue[T any] interface {
 	ToSlice(context.Context) ([]*T, diag.Diagnostics)
+}
+
+func sweepRevisions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := dataexchange.ListDataSetRevisionsInput{}
+	conn := client.DataExchangeClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := dataexchange.NewListDataSetRevisionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Revisions {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceRevisionExclusive, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
