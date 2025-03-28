@@ -352,17 +352,17 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			}
 			defer f.Close()
 
-			h := md5.New()
-			if _, err := io.Copy(h, f); err != nil {
+			hash, err := md5Reader(f)
+			importAssetFromSignedUrlRequestDetails.Md5Hash = aws.String(hash)
+
+			_, err = f.Seek(0, 0)
+			if err != nil {
 				resp.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
 					err.Error(),
 				)
 				return
 			}
-
-			hash := h.Sum(nil)
-			importAssetFromSignedUrlRequestDetails.Md5Hash = aws.String(itypes.Base64Encode(hash))
 
 			requestDetails := awstypes.RequestDetails{
 				ImportAssetFromSignedUrl: &importAssetFromSignedUrlRequestDetails,
@@ -388,14 +388,6 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			}
 
 			// Upload file to URL with PUT operation
-			_, err = f.Seek(0, 0)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-					err.Error(),
-				)
-				return
-			}
 			info, err := f.Stat()
 			if err != nil {
 				resp.Diagnostics.AddError(
@@ -414,7 +406,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				return
 			}
 			request.ContentLength = info.Size()
-			request.Header.Set("Content-MD5", itypes.Base64Encode(hash))
+			request.Header.Set("Content-MD5", hash)
 			// TODO: User-Agent header
 
 			httpClient := r.Meta().AwsConfig(ctx).HTTPClient
@@ -715,6 +707,15 @@ func nestedObjectCollectionAllMust[T any](ctx context.Context, v nestedObjectCol
 
 type nestedObjectCollectionValue[T any] interface {
 	ToSlice(context.Context) ([]*T, diag.Diagnostics)
+}
+
+func md5Reader(src io.Reader) (string, error) {
+	h := md5.New()
+	if _, err := io.Copy(h, src); err != nil {
+		return "", err
+	}
+
+	return itypes.Base64Encode(h.Sum(nil)), nil
 }
 
 func sweepRevisions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
