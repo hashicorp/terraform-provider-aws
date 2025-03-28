@@ -257,11 +257,12 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
 			}
 		} else {
-			// Creating a policy and setting its version as default in a single operation can
-			// lead to access issues for users who generate STS tokens by attaching policies.
-			// To mitigate this, separating createPolicyVersion and setDefaultPolicyVersion into
-			// two distinct operations. This is achieved by setting SetAsDefault to false in CreatePolicyVersionInput.
-			// With this only policy gets created. SetDefaultPolicyVersion should be called as a different API after a delay
+
+			// Creating a policy and setting its version as default in a single operation can expose a brief interval where
+			// valid STS tokens with attached Session Policies are rejected by AWS authorization servers that have
+			// not received the new default policy version. Separating this into two distinct actions of creating a policy version,
+			// pausing briefly, and then setting that to the default version can avoid this issue, and may be required
+			// in environments with very high S3 IO loads.
 
 			input := &iam.CreatePolicyVersionInput{
 				PolicyArn:      aws.String(d.Id()),
