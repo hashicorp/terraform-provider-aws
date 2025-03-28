@@ -136,6 +136,32 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 						},
 					},
 					Blocks: map[string]schema.Block{
+						"create_s3_data_access_from_s3_bucket": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[createS3DataAccessFromS3BucketModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"asset_source": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[s3DataAccessAssetSourceModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrBucket: schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"import_assets_from_s3": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[importAssetsFromS3Model](ctx),
 							Validators: []validator.List{
@@ -488,6 +514,102 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			}
 			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
+
+		case !asset.CreateS3DataAccessFromS3Bucket.IsNull():
+			createS3DataAccessFromS3Bucket, d := asset.CreateS3DataAccessFromS3Bucket.ToPtr(ctx)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
+				return
+			}
+
+			var createS3DataAccessFromS3BucketRequestDetails awstypes.CreateS3DataAccessFromS3BucketRequestDetails
+			resp.Diagnostics.Append(flex.Expand(ctx, createS3DataAccessFromS3Bucket, &createS3DataAccessFromS3BucketRequestDetails)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			createS3DataAccessFromS3BucketRequestDetails.DataSetId = plan.DataSetID.ValueStringPointer()
+			createS3DataAccessFromS3BucketRequestDetails.RevisionId = plan.ID.ValueStringPointer()
+
+			requestDetails := awstypes.RequestDetails{
+				CreateS3DataAccessFromS3Bucket: &createS3DataAccessFromS3BucketRequestDetails,
+			}
+			createJobInput := dataexchange.CreateJobInput{
+				Type:    awstypes.TypeCreateS3DataAccessFromS3Bucket,
+				Details: &requestDetails,
+			}
+			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+			if createJobOutput == nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					errors.New("empty output").Error(),
+				)
+				return
+			}
+
+			startJobInput := dataexchange.StartJobInput{
+				JobId: createJobOutput.Id,
+			}
+			_, err = conn.StartJob(ctx, &startJobInput)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
+			createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
+			listAssetsInput := dataexchange.ListRevisionAssetsInput{
+				DataSetId:  plan.DataSetID.ValueStringPointer(),
+				RevisionId: plan.ID.ValueStringPointer(),
+			}
+			var newAsset awstypes.AssetEntry
+			paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &listAssetsInput)
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+						err.Error(),
+					)
+					return
+				}
+
+				for _, v := range page.Assets {
+					if !slices.Contains(existingAssetIDs, aws.ToString(v.Id)) {
+						newAsset = v
+					}
+				}
+			}
+			if newAsset.Id == nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					"missing new asset",
+				)
+				return
+			}
+			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 		}
 	}
 
@@ -598,13 +720,14 @@ type resourceRevisionExclusiveModel struct {
 }
 
 type assetModel struct {
-	ARN                       types.String                                                    `tfsdk:"arn"`
-	CreatedAt                 timetypes.RFC3339                                               `tfsdk:"created_at"`
-	ID                        types.String                                                    `tfsdk:"id"`
-	ImportAssetsFromS3        fwtypes.ListNestedObjectValueOf[importAssetsFromS3Model]        `tfsdk:"import_assets_from_s3"`
-	ImportAssetsFromSignedURL fwtypes.ListNestedObjectValueOf[importAssetsFromSignedURLModel] `tfsdk:"import_assets_from_signed_url"`
-	Name                      types.String                                                    `tfsdk:"name"`
-	UpdatedAt                 timetypes.RFC3339                                               `tfsdk:"updated_at"`
+	ARN                            types.String                                                         `tfsdk:"arn"`
+	CreatedAt                      timetypes.RFC3339                                                    `tfsdk:"created_at"`
+	CreateS3DataAccessFromS3Bucket fwtypes.ListNestedObjectValueOf[createS3DataAccessFromS3BucketModel] `tfsdk:"create_s3_data_access_from_s3_bucket"`
+	ID                             types.String                                                         `tfsdk:"id"`
+	ImportAssetsFromS3             fwtypes.ListNestedObjectValueOf[importAssetsFromS3Model]             `tfsdk:"import_assets_from_s3"`
+	ImportAssetsFromSignedURL      fwtypes.ListNestedObjectValueOf[importAssetsFromSignedURLModel]      `tfsdk:"import_assets_from_signed_url"`
+	Name                           types.String                                                         `tfsdk:"name"`
+	UpdatedAt                      timetypes.RFC3339                                                    `tfsdk:"updated_at"`
 }
 
 type importAssetsFromS3Model struct {
@@ -618,6 +741,14 @@ type assetSourceModel struct {
 
 type importAssetsFromSignedURLModel struct {
 	Filename types.String `tfsdk:"filename"`
+}
+
+type createS3DataAccessFromS3BucketModel struct {
+	AssetSource fwtypes.ListNestedObjectValueOf[s3DataAccessAssetSourceModel] `tfsdk:"asset_source"`
+}
+
+type s3DataAccessAssetSourceModel struct {
+	Bucket types.String `tfsdk:"bucket"`
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) {
