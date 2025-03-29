@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -272,6 +273,9 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												names.AttrTags: schema.MapAttribute{
 													ElementType: types.StringType,
 													Optional:    true,
+													Validators: []validator.Map{
+														mapvalidator.SizeAtLeast(1),
+													},
 												},
 											},
 										},
