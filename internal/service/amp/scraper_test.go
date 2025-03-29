@@ -206,16 +206,16 @@ resource "aws_prometheus_scraper" "test" {
 
   destination {
     amp {
-	  # workspace needs to be in a different account, same as target_role_arn
+      # workspace needs to be in a different account, same as target_role_arn
       workspace_arn = ""
     }
   }
 
   role_configuration {
-	source_role_arn = aws_iam_role.test.arn
+    source_role_arn = aws_iam_role.test.arn
 
-	# needs a role from a different account
-	target_role_arn = ""
+    # needs a role from a different account
+    target_role_arn = ""
   }
 }
 `, rName, scrapeConfigBlob))
