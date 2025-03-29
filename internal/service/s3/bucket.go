@@ -64,6 +64,24 @@ func resourceBucket() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
+		Identity: &schema.ResourceIdentity{
+			Version: 1,
+			Schema: map[string]*schema.Schema{
+				"account_id": {
+					Type:              schema.TypeString,
+					OptionalForImport: true,
+				},
+				"region": {
+					Type:              schema.TypeString,
+					OptionalForImport: true,
+				},
+				"bucket": {
+					Type:              schema.TypeString,
+					RequiredForImport: true,
+				},
+			},
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -763,6 +781,22 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.SetId(bucket)
+	identity, err := d.Identity()
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = identity.Set("account_id", meta.(*conns.AWSClient).AccountID(ctx))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = identity.Set("region", region)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = identity.Set("bucket", bucket)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findBucket(ctx, conn, d.Id())
