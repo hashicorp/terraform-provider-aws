@@ -159,6 +159,67 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 		},
 	})
 }
+func TestAccAMPScraper_roleConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_roleConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccScraperConfig_roleConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+  alias                = %[1]q
+  scrape_configuration = %[2]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+	  # workspace needs to be in a different account, same as target_role_arn
+      workspace_arn = ""
+    }
+  }
+
+  role_configuration {
+	source_role_arn = aws_iam_role.test.arn
+
+	# needs a role from a different account
+	target_role_arn = ""
+  }
+}
+`, rName, scrapeConfigBlob))
+}
 
 func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
