@@ -21,6 +21,13 @@ func TestAccMediaPackageV2_serial(t *testing.T) {
 			acctest.CtDisappears: testAccMediaPackageV2ChannelGroup_disappears,
 			"tags":               testAccMediaPackageV2ChannelGroup_tagsSerial,
 		},
+		"Channel": {
+			acctest.CtBasic:      testAccMediaPackageV2Channel_basic,
+			"cmaf":               testAccMediaPackageV2Channel_cmaf,
+			"description":        testAccMediaPackageV2Channel_description,
+			acctest.CtDisappears: testAccMediaPackageV2Channel_disappears,
+			"tags":               testAccMediaPackageV2Channel_tagsSerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
