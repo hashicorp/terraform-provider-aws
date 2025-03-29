@@ -102,3 +102,5 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |
 | `TF_TEST_ELASTICACHE_RESERVED_CACHE_NODE` | Flag to enable resource tests for ElastiCache reserved nodes. Set to `1` to run tests |
 | `TRUST_ANCHOR_CERTIFICATE` | Trust anchor certificate for KMS custom key store acceptance tests. |
+| `INVOICING_INVOICE_RECEIVER_ACCOUNT_ID` | Identifier of AWS Account for Invoice Unit Invoice Receiver. |
+| `INVOICING_INVOICE_LINKED_ACCOUNT_ID` | Identifier of AWS Account for Invoice Unit Linked account. |
