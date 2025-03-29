@@ -12,8 +12,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -404,9 +406,29 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
+			var isRegionOverrideEnabled bool
+			if v := v.Region; v != nil && v.IsOverrideEnabled {
+				isRegionOverrideEnabled = true
+			}
+
 			var interceptors dataSourceInterceptors
 
-			// TODO REGION Inject a top-level "region" attribute.
+			if isRegionOverrideEnabled {
+				v := v.Region
+
+				schemaResponse := datasource.SchemaResponse{}
+				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
+					// Inject a top-level "region" attribute.
+					schemaResponse.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
+						Optional:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+					}
+				}
+
+				// TODO REGION Add a ConfigValidator for Region.
+			}
 
 			if v.Tags != nil {
 				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
@@ -452,9 +474,30 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					continue
 				}
 
+				var isRegionOverrideEnabled bool
+				if v := v.Region; v != nil && v.IsOverrideEnabled {
+					isRegionOverrideEnabled = true
+				}
+
 				var interceptors ephemeralResourceInterceptors
 
 				// TODO REGION Inject a top-level "region" attribute.
+				if isRegionOverrideEnabled {
+					v := v.Region
+
+					schemaResponse := ephemeral.SchemaResponse{}
+					inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
+
+					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
+						// Inject a top-level "region" attribute.
+						schemaResponse.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
+							Optional:    true,
+							Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+						}
+					}
+
+					// TODO REGION Add a ConfigValidator for Region.
+				}
 
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
