@@ -380,6 +380,14 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			defer f.Close()
 
 			hash, err := md5Reader(f)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
+
 			importAssetFromSignedUrlRequestDetails.Md5Hash = aws.String(hash)
 
 			_, err = f.Seek(0, 0)
@@ -452,7 +460,14 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				)
 				return
 			}
-			io.Copy(io.Discard, response.Body)
+			_, err = io.Copy(io.Discard, response.Body)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					err.Error(),
+				)
+				return
+			}
 			response.Body.Close()
 
 			// Start Job
@@ -751,7 +766,7 @@ type s3DataAccessAssetSourceModel struct {
 	Bucket types.String `tfsdk:"bucket"`
 }
 
-func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) {
+func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StateWaiting, awstypes.StateInProgress),
 		Target:       enum.Slice(awstypes.StateCompleted),
