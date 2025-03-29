@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -494,10 +495,39 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
+			var isRegionOverrideEnabled bool
+			if v := v.Region; v != nil && v.IsOverrideEnabled {
+				isRegionOverrideEnabled = true
+			}
+
 			var modifyPlanFuncs []modifyPlanFunc
 			var interceptors resourceInterceptors
 
-			// TODO REGION Inject a top-level "region" attribute.
+			if isRegionOverrideEnabled {
+				v := v.Region
+
+				schemaResponse := resource.SchemaResponse{}
+				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+
+				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
+					// Inject a top-level "region" attribute.
+					schemaResponse.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
+						Optional:    true,
+						Computed:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+					}
+				}
+
+				if v.IsValidateOverrideInPartition {
+					modifyPlanFuncs = append(modifyPlanFuncs, verifyRegionValueInConfiguredPartition)
+				}
+				modifyPlanFuncs = append(modifyPlanFuncs, defaultRegionValue)
+				if !v.IsGlobal {
+					modifyPlanFuncs = append(modifyPlanFuncs, forceNewIfRegionValueChanges)
+				}
+
+				// TODO REGION: Ensure that WithNoUpdate.Update isn't invoked on region change.
+			}
 
 			if v.Tags != nil {
 				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)

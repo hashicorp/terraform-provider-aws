@@ -353,8 +353,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
 					regionSchema := &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
 					}
 
 					if f := r.SchemaFunc; f != nil {
@@ -453,9 +454,10 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
 					regionSchema := &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
+						Type:        schema.TypeString,
+						Optional:    true,
+						Computed:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
 					}
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {

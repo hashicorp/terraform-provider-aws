@@ -273,7 +273,7 @@ func (r tagsInterceptor) getIdentifier(ctx context.Context, d interface {
 }
 
 // setTagsAll is a plan modifier that calculates the new value for the `tags_all` attribute.
-func setTagsAll(ctx context.Context, meta *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func setTagsAll(ctx context.Context, c *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	// If the entire plan is null, the resource is planned for destruction.
 	if request.Plan.Raw.IsNull() {
 		return
@@ -286,7 +286,7 @@ func setTagsAll(ctx context.Context, meta *conns.AWSClient, request resource.Mod
 	}
 
 	if planTags.IsWhollyKnown() {
-		allTags := meta.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(meta.IgnoreTagsConfig(ctx))
+		allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(c.IgnoreTagsConfig(ctx))
 		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
 	} else {
 		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
