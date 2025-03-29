@@ -414,7 +414,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	return diags
 }

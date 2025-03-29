@@ -172,7 +172,7 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]any)))
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	output, err := conn.CreateRepositoryCreationTemplate(ctx, input)
@@ -234,7 +234,7 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("repository_policy", policyToSet)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }
@@ -289,7 +289,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrResourceTags) {
-		input.ResourceTags = Tags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]any)))
+		input.ResourceTags = svcTags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]any)))
 	}
 
 	_, err := conn.UpdateRepositoryCreationTemplate(ctx, input)

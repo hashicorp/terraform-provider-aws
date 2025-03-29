@@ -115,7 +115,7 @@ func crossAccountSetTags(ctx context.Context, conn *vpclattice.Client, diags dia
 			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice %s (%s): %s", resName, resARN, err)
 		}
 
-		setTagsOut(ctx, Tags(tags))
+		setTagsOut(ctx, svcTags(tags))
 	}
 
 	return diags
