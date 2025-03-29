@@ -197,7 +197,7 @@ resource "aws_prometheus_scraper" "example" {
 
   scrape_configuration = "..."
 }
-
+```
 
 ## Argument Reference
 
