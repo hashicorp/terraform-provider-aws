@@ -65,8 +65,9 @@ func resourceUsagePlanKey() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrValue: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 		},
 	}
