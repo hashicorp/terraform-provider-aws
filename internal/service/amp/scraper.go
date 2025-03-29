@@ -88,6 +88,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrDestination: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperDestinationModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
@@ -134,6 +135,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"eks": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[scraperEKSSourceModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
@@ -176,31 +178,39 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"role_configuration": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[scraperRoleConfigurationModel](ctx),
-				Attributes: map[string]schema.Attribute{
-					"source_role_arn": schema.StringAttribute{
-						Optional:   true,
-						CustomType: fwtypes.ARNType,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
+			"role_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[roleConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"source_role_arn": schema.StringAttribute{
+							Optional:   true,
+							CustomType: fwtypes.ARNType,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.AlsoRequires(
+									path.MatchRelative().AtParent().AtName("target_role_arn"),
+								),
+							},
 						},
-						Validators: []validator.String{
-							stringvalidator.AlsoRequires(
-								path.MatchRelative().AtParent().AtName("target_role_arn"),
-							),
-						},
-					},
-					"target_role_arn": schema.StringAttribute{
-						Optional:   true,
-						CustomType: fwtypes.ARNType,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
-						},
-						Validators: []validator.String{
-							stringvalidator.AlsoRequires(
-								path.MatchRelative().AtParent().AtName("source_role_arn"),
-							),
+						"target_role_arn": schema.StringAttribute{
+							Optional:   true,
+							CustomType: fwtypes.ARNType,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.AlsoRequires(
+									path.MatchRelative().AtParent().AtName("source_role_arn"),
+								),
+							},
 						},
 					},
 				},
@@ -370,12 +380,12 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 		data.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(v.Value))
 	}
 	if scraper.RoleConfiguration != nil {
-		var roleConfigurationData scraperRoleConfigurationModel
+		var roleConfigurationData roleConfigurationModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, scraper.RoleConfiguration, &roleConfigurationData)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		data.RoleConfiguration = fwtypes.NewObjectValueOfMust(ctx, &roleConfigurationData)
+		data.RoleConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &roleConfigurationData)
 	}
 	if v, ok := scraper.Source.(*awstypes.SourceMemberEksConfiguration); ok {
 		var eksSourceData scraperEKSSourceModel
@@ -448,7 +458,7 @@ type scraperResourceModel struct {
 	Destination         fwtypes.ListNestedObjectValueOf[scraperDestinationModel] `tfsdk:"destination"`
 	ID                  types.String                                             `tfsdk:"id"`
 	RoleARN             types.String                                             `tfsdk:"role_arn"`
-	RoleConfiguration   fwtypes.ObjectValueOf[scraperRoleConfigurationModel]     `tfsdk:"role_configuration"`
+	RoleConfiguration   fwtypes.ListNestedObjectValueOf[roleConfigurationModel]  `tfsdk:"role_configuration"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
 	Tags                tftags.Map                                               `tfsdk:"tags"`
@@ -474,9 +484,9 @@ type scraperEKSSourceModel struct {
 	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
 }
 
-type scraperRoleConfigurationModel struct {
-	SourceRoleArn fwtypes.ARN `tfsdk:"source_role_arn"`
-	TargetRoleArn fwtypes.ARN `tfsdk:"target_role_arn"`
+type roleConfigurationModel struct {
+	SourceRoleARN fwtypes.ARN `tfsdk:"source_role_arn"`
+	TargetRoleARN fwtypes.ARN `tfsdk:"target_role_arn"`
 }
 
 func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.ScraperDescription, error) {
