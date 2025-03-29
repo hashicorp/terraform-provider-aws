@@ -23,6 +23,7 @@ import (
 const (
 	linkingModeAllRegions                = "ALL_REGIONS"
 	linkingModeAllRegionsExceptSpecified = "ALL_REGIONS_EXCEPT_SPECIFIED"
+	linkingModeNoRegions                 = "NO_REGIONS"
 	linkingModeSpecifiedRegions          = "SPECIFIED_REGIONS"
 )
 
@@ -30,6 +31,7 @@ func linkingMode_Values() []string {
 	return []string{
 		linkingModeAllRegions,
 		linkingModeAllRegionsExceptSpecified,
+		linkingModeNoRegions,
 		linkingModeSpecifiedRegions,
 	}
 }
