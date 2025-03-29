@@ -296,6 +296,24 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
+	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
+		input := &lambda.RemovePermissionInput{
+			FunctionName: aws.String(name),
+			StatementId:  aws.String("FunctionURLAllowPublicAccess"),
+		}
+
+		if qualifier != "" {
+			input.Qualifier = aws.String(qualifier)
+		}
+
+		log.Printf("[DEBUG] Removing Lambda Function URL Permission: : %s", input)
+		_, err = conn.RemovePermissionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "removing Lambda Function URL (%s) permission %s", d.Id(), err)
+		}
+	}
+
 	return diags
 }
 
