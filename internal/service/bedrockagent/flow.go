@@ -135,7 +135,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"connections": schema.ListNestedBlock{
+						"connection": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -201,7 +201,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"nodes": schema.ListNestedBlock{
+						"node": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -407,7 +407,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																									},
 																									NestedObject: schema.NestedBlockObject{
 																										Blocks: map[string]schema.Block{
-																											"messages": schema.ListNestedBlock{
+																											"message": schema.ListNestedBlock{
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[messageModel](ctx),
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
@@ -461,7 +461,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																													},
 																												},
 																											},
-																											"input_variables": schema.ListNestedBlock{
+																											"input_variable": schema.ListNestedBlock{
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
@@ -512,7 +512,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																												},
 																												NestedObject: schema.NestedBlockObject{
 																													Blocks: map[string]schema.Block{
-																														"tools": schema.ListNestedBlock{
+																														"tool": schema.ListNestedBlock{
 																															CustomType: fwtypes.NewListNestedObjectTypeOf[toolModel](ctx),
 																															NestedObject: schema.NestedBlockObject{
 																																Blocks: map[string]schema.Block{
@@ -654,7 +654,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																													},
 																												},
 																											},
-																											"input_variables": schema.ListNestedBlock{
+																											"input_variable": schema.ListNestedBlock{
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
@@ -1198,8 +1198,8 @@ type resourceFlowModel struct {
 }
 
 type flowDefinitionModel struct {
-	Connections fwtypes.ListNestedObjectValueOf[flowConnectionModel] `tfsdk:"connections"`
-	Nodes       fwtypes.ListNestedObjectValueOf[flowNodeModel]       `tfsdk:"nodes"`
+	Connections fwtypes.ListNestedObjectValueOf[flowConnectionModel] `tfsdk:"connection"`
+	Nodes       fwtypes.ListNestedObjectValueOf[flowNodeModel]       `tfsdk:"node"`
 }
 
 type flowConnectionModel struct {
@@ -1876,8 +1876,8 @@ func (m templateConfigurationModel) Expand(ctx context.Context) (result any, dia
 }
 
 type promptTemplateConfigurationMemberChatModel struct {
-	Messages          fwtypes.ListNestedObjectValueOf[messageModel]             `tfsdk:"messages"`
-	InputVariables    fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variables"`
+	Messages          fwtypes.ListNestedObjectValueOf[messageModel]             `tfsdk:"message"`
+	InputVariables    fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variable"`
 	System            fwtypes.ListNestedObjectValueOf[systemContentBlockModel]  `tfsdk:"system"`
 	ToolConfiguration fwtypes.ListNestedObjectValueOf[toolConfigurationModel]   `tfsdk:"tool_configuration"`
 }
@@ -2048,7 +2048,7 @@ type systemContentBlockMemberTextModel struct {
 }
 
 type toolConfigurationModel struct {
-	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tools"`
+	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 	ToolChoice fwtypes.ListNestedObjectValueOf[toolChoiceModel] `tfsdk:"tool_choice"`
 }
 
@@ -2289,7 +2289,7 @@ type toolChoiceMemberToolModel struct {
 type promptTemplateConfigurationMemberTextModel struct {
 	Text           types.String                                              `tfsdk:"text"`
 	CachePoint     fwtypes.ListNestedObjectValueOf[cachePointModel]          `tfsdk:"cache_point"`
-	InputVariables fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variables"`
+	InputVariables fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variable"`
 }
 
 type cachePointModel struct {
