@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -56,25 +57,7 @@ func TestAccDataExchangeRevisionExclusive_importFromS3(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName),
-											names.AttrKey:    knownvalue.StringExact("test"),
-										}),
-									}),
-								}),
-							}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							names.AttrName:                  knownvalue.StringExact("test"),
-							"updated_at":                    knownvalue.NotNull(),
-						}),
+						checkAssetImportFromS3(rName, "test"),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -142,44 +125,8 @@ func TestAccDataExchangeRevisionExclusive_importMultipleFromS3(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName + "-0"),
-											names.AttrKey:    knownvalue.StringExact("test-0"),
-										}),
-									}),
-								}),
-							}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							names.AttrName:                  knownvalue.StringExact("test-0"),
-							"updated_at":                    knownvalue.NotNull(),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName + "-1"),
-											names.AttrKey:    knownvalue.StringExact("test-1"),
-										}),
-									}),
-								}),
-							}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							names.AttrName:                  knownvalue.StringExact("test-1"),
-							"updated_at":                    knownvalue.NotNull(),
-						}),
+						checkAssetImportFromS3(rName+"-0", "test-0"),
+						checkAssetImportFromS3(rName+"-1", "test-1"),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -225,20 +172,7 @@ func TestAccDataExchangeRevisionExclusive_importFromSignedURL(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3":                knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"filename": knownvalue.StringExact("./test-fixtures/data.json"),
-								}),
-							}),
-							names.AttrName: knownvalue.StringExact("./test-fixtures/data.json"),
-							"updated_at":   knownvalue.NotNull(),
-						}),
+						checkAssetImportFromSignedURL("./test-fixtures/data.json"),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -284,34 +218,8 @@ func TestAccDataExchangeRevisionExclusive_importMultipleFromSignedURL(t *testing
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3":                knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"filename": knownvalue.StringExact("./test-fixtures/data.json"),
-								}),
-							}),
-							names.AttrName: knownvalue.StringExact("./test-fixtures/data.json"),
-							"updated_at":   knownvalue.NotNull(),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3":                knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"filename": knownvalue.StringExact("./test-fixtures/data2.json"),
-								}),
-							}),
-							names.AttrName: knownvalue.StringExact("./test-fixtures/data2.json"),
-							"updated_at":   knownvalue.NotNull(),
-						}),
+						checkAssetImportFromSignedURL("./test-fixtures/data.json"),
+						checkAssetImportFromSignedURL("./test-fixtures/data2.json"),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -357,39 +265,8 @@ func TestAccDataExchangeRevisionExclusive_importFromS3AndSignedURL(t *testing.T)
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3":                knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"filename": knownvalue.StringExact("./test-fixtures/data.json"),
-								}),
-							}),
-							names.AttrName: knownvalue.StringExact("./test-fixtures/data.json"),
-							"updated_at":   knownvalue.NotNull(),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:                    knownvalue.NotNull(),
-							names.AttrID:                           knownvalue.NotNull(),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName),
-											names.AttrKey:    knownvalue.StringExact("test"),
-										}),
-									}),
-								}),
-							}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							names.AttrName:                  knownvalue.StringExact("test"),
-							"updated_at":                    knownvalue.NotNull(),
-						}),
+						checkAssetImportFromSignedURL("./test-fixtures/data.json"),
+						checkAssetImportFromS3(rName, "test"),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -434,24 +311,7 @@ func TestAccDataExchangeRevisionExclusive_createS3DataAccessFromS3Bucket_basic(t
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                   tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:             knownvalue.NotNull(),
-							names.AttrID:                    knownvalue.NotNull(),
-							"import_assets_from_s3":         knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName),
-										}),
-									}),
-								}),
-							}),
-							names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(`^s3-data-access-[a-f0-9]{32}$`)), // `s3-data-access-<asset id>`
-							"updated_at":   knownvalue.NotNull(),
-						}),
+						checkAssetS3DataAccess(rName),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -496,42 +356,8 @@ func TestAccDataExchangeRevisionExclusive_createS3DataAccessFromS3Bucket_multipl
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                   tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:             knownvalue.NotNull(),
-							names.AttrID:                    knownvalue.NotNull(),
-							"import_assets_from_s3":         knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName + "-0"),
-										}),
-									}),
-								}),
-							}),
-							names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(`^s3-data-access-[a-f0-9]{32}$`)), // `s3-data-access-<asset id>`
-							"updated_at":   knownvalue.NotNull(),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                   tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/\w+`)),
-							names.AttrCreatedAt:             knownvalue.NotNull(),
-							names.AttrID:                    knownvalue.NotNull(),
-							"import_assets_from_s3":         knownvalue.ListExact([]knownvalue.Check{}),
-							"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{}),
-							"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"asset_source": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											names.AttrBucket: knownvalue.StringExact(rName + "-1"),
-										}),
-									}),
-								}),
-							}),
-							names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(`^s3-data-access-[a-f0-9]{32}$`)), // `s3-data-access-<asset id>`
-							"updated_at":   knownvalue.NotNull(),
-						}),
+						checkAssetS3DataAccess(rName + "-0"),
+						checkAssetS3DataAccess(rName + "-1"),
 					})),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -609,6 +435,73 @@ func testAccCheckRevisionExclusiveExists(ctx context.Context, name string, revis
 		*revisionexclusive = *resp
 
 		return nil
+	}
+}
+
+func checkAssetImportFromS3(bucket, key string) knownvalue.Check {
+	checks := assetDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"import_assets_from_s3": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"asset_source": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrBucket: knownvalue.StringExact(bucket),
+						names.AttrKey:    knownvalue.StringExact(key),
+					}),
+				}),
+			}),
+		}),
+		names.AttrName: knownvalue.StringExact(key),
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func checkAssetImportFromSignedURL(filename string) knownvalue.Check {
+	checks := assetDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"import_assets_from_signed_url": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"filename": knownvalue.StringExact(filename),
+			}),
+		}),
+		names.AttrName: knownvalue.StringExact(filename),
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func checkAssetS3DataAccess(bucket string) knownvalue.Check {
+	checks := assetDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"asset_source": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrBucket: knownvalue.StringExact(bucket),
+					}),
+				}),
+			}),
+		}),
+		names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(`^s3-data-access-[a-f0-9]{32}$`)), // `s3-data-access-<asset id>`
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func assetDefaults() map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		// ARN format `data-sets/<dataset id>/revisions/<revision id>/assets/<asset id>`
+		names.AttrARN:                          tfknownvalue.RegionalARNRegexp("dataexchange", regexache.MustCompile(`data-sets/\w+/revisions/\w+/assets/[a-f0-9]{32}`)),
+		names.AttrCreatedAt:                    knownvalue.NotNull(),
+		names.AttrID:                           knownvalue.NotNull(),
+		"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{}),
+		"import_assets_from_s3":                knownvalue.ListExact([]knownvalue.Check{}),
+		"import_assets_from_signed_url":        knownvalue.ListExact([]knownvalue.Check{}),
+		"updated_at":                           knownvalue.NotNull(),
 	}
 }
 
