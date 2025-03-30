@@ -195,88 +195,6 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 	})
 }
 
-func testAccScraperConfig_roleConfiguration(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccScraperConfig_base(rName), fmt.Sprintf(`
-resource "aws_prometheus_workspace" "target" {
-  provider = "awsalternate"
-
-  alias = %[1]q
-
-  tags = {
-    AMPAgentlessScraper = ""
-  }
-}
-
-resource "aws_iam_role" "source" {
-  provider = "awsalternate"
-
-  name = "%[1]s-source"
-
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "scraper.aps.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role" "target" {
-  name = "%[1]s-target"
-
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": aws_iam_role.source.arn
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy_attachment" "target {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonPrometheusRemoteWriteAccess"
-  role       = aws_iam_role.target.name
-}
-
-resource "aws_prometheus_scraper" "test" {
-  alias                = %[1]q
-  scrape_configuration = %[2]q
-
-  source {
-    eks {
-      cluster_arn = aws_eks_cluster.test.arn
-      subnet_ids  = aws_subnet.test[*].id
-    }
-  }
-
-  destination {
-    amp {
-      workspace_arn = aws_prometheus_workspace.target.arn
-    }
-  }
-
-  role_configuration {
-    source_role_arn = aws_iam_role.source.arn
-    target_role_arn = aws_iam_role.target.arn
-  }
-}
-`, rName, scrapeConfigBlob))
-}
-
 func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
@@ -534,6 +452,88 @@ resource "aws_prometheus_scraper" "test" {
     amp {
       workspace_arn = aws_prometheus_workspace.test.arn
     }
+  }
+}
+`, rName, scrapeConfigBlob))
+}
+
+func testAccScraperConfig_roleConfiguration(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccScraperConfig_base(rName), fmt.Sprintf(`
+resource "aws_prometheus_workspace" "target" {
+  provider = "awsalternate"
+
+  alias = %[1]q
+
+  tags = {
+    AMPAgentlessScraper = ""
+  }
+}
+
+resource "aws_iam_role" "source" {
+  provider = "awsalternate"
+
+  name = "%[1]s-source"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scraper.aps.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role" "target" {
+  name = "%[1]s-target"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": aws_iam_role.source.arn
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "target" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonPrometheusRemoteWriteAccess"
+  role       = aws_iam_role.target.name
+}
+
+resource "aws_prometheus_scraper" "test" {
+  alias                = %[1]q
+  scrape_configuration = %[2]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.target.arn
+    }
+  }
+
+  role_configuration {
+    source_role_arn = aws_iam_role.source.arn
+    target_role_arn = aws_iam_role.target.arn
   }
 }
 `, rName, scrapeConfigBlob))
