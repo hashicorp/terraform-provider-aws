@@ -14,22 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// verifyRegionValueInConfiguredPartition is a plan modifier that verifies that the value of
+// validateRegionValueInConfiguredPartition is a config validator that validates that the value of
 // the top-level `region` attribute is in the configured AWS partition.
-func verifyRegionValueInConfiguredPartition(ctx context.Context, c *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		return
-	}
-
-	var planRegion types.String
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrRegion), &planRegion)...)
+func validateRegionValueInConfiguredPartition(ctx context.Context, c *conns.AWSClient, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var configRegion types.String
+	response.Diagnostics.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrRegion), &configRegion)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !planRegion.IsNull() && !planRegion.IsUnknown() {
-		if err := validateRegionInPartition(ctx, c, planRegion.ValueString()); err != nil {
+	if !configRegion.IsNull() && !configRegion.IsUnknown() {
+		if err := validateRegionInPartition(ctx, c, configRegion.ValueString()); err != nil {
 			response.Diagnostics.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
 		}
 	}

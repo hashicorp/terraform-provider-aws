@@ -476,7 +476,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if v.IsValidateOverrideInPartition {
-					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionValueInConfiguredPartition)
+					customizeDiffFuncs = append(customizeDiffFuncs, validateRegionValueInConfiguredPartition)
 				}
 				customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
 				if !v.IsGlobal {

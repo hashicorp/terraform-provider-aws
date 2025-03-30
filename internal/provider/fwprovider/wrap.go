@@ -245,12 +245,16 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 // modifyPlanFunc modifies a Terraform plan.
 type modifyPlanFunc func(context.Context, *conns.AWSClient, resource.ModifyPlanRequest, *resource.ModifyPlanResponse)
 
+// validateConfigFunc validates a Terraform configuration.
+type validateConfigFunc func(context.Context, *conns.AWSClient, resource.ValidateConfigRequest, *resource.ValidateConfigResponse)
+
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     resourceInterceptors
-	modifyPlanFuncs  []modifyPlanFunc
-	typeName         string
+	bootstrapContext    contextFunc
+	interceptors        resourceInterceptors
+	modifyPlanFuncs     []modifyPlanFunc
+	typeName            string
+	validateConfigFuncs []validateConfigFunc
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -414,6 +418,13 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
+		}
+
+		for _, f := range w.opts.validateConfigFuncs {
+			f(ctx, w.meta, request, response)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		}
 
 		v.ValidateConfig(ctx, request, response)

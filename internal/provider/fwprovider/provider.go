@@ -543,6 +543,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				isRegionOverrideEnabled = true
 			}
 
+			var validateConfigFuncs []validateConfigFunc
 			var modifyPlanFuncs []modifyPlanFunc
 			var interceptors resourceInterceptors
 
@@ -562,7 +563,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				}
 
 				if v.IsValidateOverrideInPartition {
-					modifyPlanFuncs = append(modifyPlanFuncs, verifyRegionValueInConfiguredPartition)
+					validateConfigFuncs = append(validateConfigFuncs, validateRegionValueInConfiguredPartition)
 				}
 				modifyPlanFuncs = append(modifyPlanFuncs, defaultRegionValue)
 				if !v.IsGlobal {

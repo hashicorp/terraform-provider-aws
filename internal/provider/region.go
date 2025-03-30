@@ -15,10 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TODO REGION This should be a ConfigValidator.
-// verifyRegionValueInConfiguredPartition is a CustomizeDiff function that verifies that the value of
+// validateRegionValueInConfiguredPartition is a CustomizeDiff function that validates that the value of
 // the top-level `region` attribute is in the configured AWS partition.
-func verifyRegionValueInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+func validateRegionValueInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), v.(string)); err != nil {
 			return err
