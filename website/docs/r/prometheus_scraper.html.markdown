@@ -236,7 +236,6 @@ The following arguments are optional:
 * `source_role_arn` - (Required) The Amazon Resource Name (ARN) of the source role configuration. Must be an IAM role ARN.
 * `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the target role configuration. Must be an IAM role ARN.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
