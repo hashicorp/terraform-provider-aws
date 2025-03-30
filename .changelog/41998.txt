@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_ecs_service: Include `volume_configuration`, `service_connect_configurations` when syncing resource data for refresh, import [GH-41997]
+resource/aws_ecs_service: Fix missing `volume_configuration` and `service_connect_configurations` values from state read/refresh
 ```
