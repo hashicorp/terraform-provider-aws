@@ -1049,25 +1049,11 @@ func resourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrThroughput: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(0, 1000),
-									},
-									names.AttrVolumeType: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
 									"tag_specifications": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrResourceType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.EBSResourceType](),
-												},
 												names.AttrPropagateTags: {
 													Type:     schema.TypeString,
 													Optional: true,
@@ -1079,9 +1065,23 @@ func resourceService() *schema.Resource {
 													},
 													ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
 												},
+												names.AttrResourceType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.EBSResourceType](),
+												},
 												names.AttrTags: tftags.TagsSchema(),
 											},
 										},
+									},
+									names.AttrThroughput: {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 1000),
+									},
+									names.AttrVolumeType: {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 								},
 							},
@@ -1266,7 +1266,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if v, ok := d.GetOk("volume_configuration"); ok && len(v.([]any)) > 0 {
-		input.VolumeConfigurations = expandVolumeConfigurations(ctx, v.([]any))
+		input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, v.([]any))
 	}
 
 	output, err := retryServiceCreate(ctx, conn, &input)
@@ -1571,7 +1571,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if d.HasChange("volume_configuration") {
-			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]any))
+			input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, d.Get("volume_configuration").([]any))
 		}
 
 		if d.HasChange("vpc_lattice_configurations") {
@@ -2317,32 +2317,33 @@ func flattenPlacementStrategy(apiObjects []awstypes.PlacementStrategy) []any {
 	return tfList
 }
 
-func expandServiceConnectConfiguration(sc []any) *awstypes.ServiceConnectConfiguration {
-	if len(sc) == 0 {
+func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectConfiguration {
+	if len(tfList) == 0 {
 		return &awstypes.ServiceConnectConfiguration{
 			Enabled: false,
 		}
 	}
-	raw := sc[0].(map[string]any)
 
-	config := &awstypes.ServiceConnectConfiguration{}
-	if v, ok := raw[names.AttrEnabled].(bool); ok {
-		config.Enabled = v
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ServiceConnectConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = v
 	}
 
-	if v, ok := raw["log_configuration"].([]any); ok && len(v) > 0 {
-		config.LogConfiguration = expandLogConfiguration(v)
+	if v, ok := tfMap["log_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.LogConfiguration = expandLogConfiguration(v)
 	}
 
-	if v, ok := raw[names.AttrNamespace].(string); ok && v != "" {
-		config.Namespace = aws.String(v)
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
 	}
 
-	if v, ok := raw["service"].([]any); ok && len(v) > 0 {
-		config.Services = expandServices(v)
+	if v, ok := tfMap["service"].([]any); ok && len(v) > 0 {
+		apiObject.Services = expandServices(v)
 	}
 
-	return config
+	return apiObject
 }
 
 func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfiguration) []any {
@@ -2367,24 +2368,27 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 	return []any{tfMap}
 }
 
-func expandLogConfiguration(lc []any) *awstypes.LogConfiguration {
-	if len(lc) == 0 {
+func expandLogConfiguration(tfList []any) *awstypes.LogConfiguration {
+	if len(tfList) == 0 {
 		return &awstypes.LogConfiguration{}
 	}
-	raw := lc[0].(map[string]any)
 
-	config := &awstypes.LogConfiguration{}
-	if v, ok := raw["log_driver"].(string); ok && v != "" {
-		config.LogDriver = awstypes.LogDriver(v)
-	}
-	if v, ok := raw["options"].(map[string]any); ok && len(v) > 0 {
-		config.Options = flex.ExpandStringValueMap(v)
-	}
-	if v, ok := raw["secret_option"].([]any); ok && len(v) > 0 {
-		config.SecretOptions = expandSecretOptions(v)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.LogConfiguration{}
+
+	if v, ok := tfMap["log_driver"].(string); ok && v != "" {
+		apiObject.LogDriver = awstypes.LogDriver(v)
 	}
 
-	return config
+	if v, ok := tfMap["options"].(map[string]any); ok && len(v) > 0 {
+		apiObject.Options = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["secret_option"].([]any); ok && len(v) > 0 {
+		apiObject.SecretOptions = expandSecrets(v)
+	}
+
+	return apiObject
 }
 
 func flattenLogConfiguration(apiObject awstypes.LogConfiguration) map[string]any {
@@ -2402,30 +2406,32 @@ func flattenLogConfiguration(apiObject awstypes.LogConfiguration) map[string]any
 	return tfMap
 }
 
-func expandSecretOptions(sop []any) []awstypes.Secret {
-	if len(sop) == 0 {
+func expandSecrets(tfList []any) []awstypes.Secret {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []awstypes.Secret
-	for _, item := range sop {
-		raw, ok := item.(map[string]any)
+	var apiObjects []awstypes.Secret
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		var config awstypes.Secret
-		if v, ok := raw[names.AttrName].(string); ok && v != "" {
-			config.Name = aws.String(v)
+		var apiObject awstypes.Secret
+
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
 		}
-		if v, ok := raw["value_from"].(string); ok && v != "" {
-			config.ValueFrom = aws.String(v)
+		if v, ok := tfMap["value_from"].(string); ok && v != "" {
+			apiObject.ValueFrom = aws.String(v)
 		}
 
-		out = append(out, config)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return out
+	return apiObjects
 }
 
 func flattenSecrets(apiObjects []awstypes.Secret) []any {
@@ -2447,98 +2453,102 @@ func flattenSecrets(apiObjects []awstypes.Secret) []any {
 	return tfList
 }
 
-func expandVolumeConfigurations(ctx context.Context, vc []any) []awstypes.ServiceVolumeConfiguration {
-	if len(vc) == 0 {
+func expandServiceVolumeConfigurations(ctx context.Context, tfList []any) []awstypes.ServiceVolumeConfiguration {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	vcs := make([]awstypes.ServiceVolumeConfiguration, 0)
+	apiObjects := make([]awstypes.ServiceVolumeConfiguration, 0)
 
-	for _, raw := range vc {
-		p := raw.(map[string]any)
-
-		config := awstypes.ServiceVolumeConfiguration{
-			Name: aws.String(p[names.AttrName].(string)),
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.ServiceVolumeConfiguration{
+			Name: aws.String(tfMap[names.AttrName].(string)),
 		}
 
-		if v, ok := p["managed_ebs_volume"].([]any); ok && len(v) > 0 {
-			config.ManagedEBSVolume = expandManagedEBSVolume(ctx, v)
+		if v, ok := tfMap["managed_ebs_volume"].([]any); ok && len(v) > 0 {
+			apiObject.ManagedEBSVolume = expandServiceManagedEBSVolumeConfiguration(ctx, v)
 		}
-		vcs = append(vcs, config)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return vcs
+	return apiObjects
 }
 
-func expandManagedEBSVolume(ctx context.Context, ebs []any) *awstypes.ServiceManagedEBSVolumeConfiguration {
-	if len(ebs) == 0 {
+func expandServiceManagedEBSVolumeConfiguration(ctx context.Context, tfList []any) *awstypes.ServiceManagedEBSVolumeConfiguration {
+	if len(tfList) == 0 {
 		return &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	}
-	raw := ebs[0].(map[string]any)
 
-	config := &awstypes.ServiceManagedEBSVolumeConfiguration{}
-	if v, ok := raw[names.AttrRoleARN].(string); ok && v != "" {
-		config.RoleArn = aws.String(v)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ServiceManagedEBSVolumeConfiguration{}
+
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
+		apiObject.Encrypted = aws.Bool(v)
 	}
-	if v, ok := raw[names.AttrEncrypted].(bool); ok {
-		config.Encrypted = aws.Bool(v)
+	if v, ok := tfMap["file_system_type"].(string); ok && v != "" {
+		apiObject.FilesystemType = awstypes.TaskFilesystemType(v)
 	}
-	if v, ok := raw["file_system_type"].(string); ok && v != "" {
-		config.FilesystemType = awstypes.TaskFilesystemType(v)
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
+		apiObject.Iops = aws.Int32(int32(v))
 	}
-	if v, ok := raw[names.AttrIOPS].(int); ok && v != 0 {
-		config.Iops = aws.Int32(int32(v))
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
 	}
-	if v, ok := raw[names.AttrKMSKeyID].(string); ok && v != "" {
-		config.KmsKeyId = aws.String(v)
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
 	}
-	if v, ok := raw["size_in_gb"].(int); ok && v != 0 {
-		config.SizeInGiB = aws.Int32(int32(v))
+	if v, ok := tfMap["size_in_gb"].(int); ok && v != 0 {
+		apiObject.SizeInGiB = aws.Int32(int32(v))
 	}
-	if v, ok := raw[names.AttrSnapshotID].(string); ok && v != "" {
-		config.SnapshotId = aws.String(v)
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
+		apiObject.SnapshotId = aws.String(v)
 	}
-	if v, ok := raw[names.AttrThroughput].(int); ok && v != 0 {
-		config.Throughput = aws.Int32(int32(v))
+	if v, ok := tfMap["tag_specifications"].([]any); ok && len(v) > 0 {
+		apiObject.TagSpecifications = expandEBSTagSpecifications(ctx, v)
 	}
-	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
-		config.VolumeType = aws.String(v)
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
+		apiObject.Throughput = aws.Int32(int32(v))
 	}
-	if v, ok := raw["tag_specifications"].([]any); ok && len(v) > 0 {
-		config.TagSpecifications = expandTagSpecifications(ctx, v)
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
+		apiObject.VolumeType = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandTagSpecifications(ctx context.Context, ts []any) []awstypes.EBSTagSpecification {
-	if len(ts) == 0 {
+func expandEBSTagSpecifications(ctx context.Context, tfList []any) []awstypes.EBSTagSpecification {
+	if len(tfList) == 0 {
 		return []awstypes.EBSTagSpecification{}
 	}
 
-	var s []awstypes.EBSTagSpecification
-	for _, item := range ts {
-		raw, ok := item.(map[string]any)
+	var apiObjects []awstypes.EBSTagSpecification
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		var config awstypes.EBSTagSpecification
-		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
-			config.ResourceType = awstypes.EBSResourceType(v)
+		var apiObject awstypes.EBSTagSpecification
+
+		if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
+			apiObject.PropagateTags = awstypes.PropagateTags(v)
 		}
-		if v, ok := raw[names.AttrPropagateTags].(string); ok && v != "" {
-			config.PropagateTags = awstypes.PropagateTags(v)
+		if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
+			apiObject.ResourceType = awstypes.EBSResourceType(v)
 		}
-		if v, ok := raw[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 			if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
-				config.Tags = svcTags(v)
+				apiObject.Tags = svcTags(v)
 			}
 		}
-		s = append(s, config)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return s
+	return apiObjects
 }
 
 func flattenServiceVolumeConfigurations(ctx context.Context, apiObjects []awstypes.ServiceVolumeConfiguration) []any {
@@ -2580,6 +2590,9 @@ func flattenServiceManagedEBSVolumeConfiguration(ctx context.Context, apiObject 
 	if v := apiObject.KmsKeyId; v != nil {
 		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
 	}
+	if v := apiObject.RoleArn; v != nil {
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
+	}
 	if v := apiObject.SizeInGiB; v != nil {
 		tfMap["size_in_gb"] = aws.ToInt32(v)
 	}
@@ -2615,7 +2628,7 @@ func flattenEBSTagSpecifications(ctx context.Context, apiObjects []awstypes.EBST
 			tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 
-		tfList = append(tfList, apiObject)
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
