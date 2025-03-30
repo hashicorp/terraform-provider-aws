@@ -427,7 +427,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					}
 				}
 
-				// TODO REGION Add a ConfigValidator for Region.
+				interceptors = append(interceptors, newRegionDataSourceInterceptor(v.IsValidateOverrideInPartition))
 			}
 
 			if v.Tags != nil {

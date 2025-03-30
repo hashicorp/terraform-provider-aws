@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -94,4 +96,44 @@ func forceNewIfRegionValueChanges(ctx context.Context, c *conns.AWSClient, reque
 	if !planRegion.Equal(stateRegion) {
 		response.RequiresReplace = path.Paths{path.Root(names.AttrRegion)}
 	}
+}
+
+// regionDataSourceInterceptor implements per-resource Region override functionality for data sources.
+type regionDataSourceInterceptor struct {
+	validateRegionInPartition bool
+}
+
+func newRegionDataSourceInterceptor(validateRegionInPartition bool) dataSourceInterceptor {
+	return &regionDataSourceInterceptor{
+		validateRegionInPartition: validateRegionInPartition,
+	}
+}
+
+func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch response, when := opts.response, opts.when; when {
+	case Before:
+		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value here.
+		if r.validateRegionInPartition {
+			if inContext, ok := conns.FromContext(ctx); ok {
+				if v := inContext.OverrideRegion(); v != "" {
+					if err := validateRegionInPartition(ctx, c, v); err != nil {
+						diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
+
+						return diags
+					}
+				}
+			}
+		}
+	case After:
+		// Set region in state after R.
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
 }
