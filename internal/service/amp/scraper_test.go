@@ -470,8 +470,6 @@ resource "aws_prometheus_workspace" "target" {
 }
 
 resource "aws_iam_role" "source" {
-  provider = "awsalternate"
-
   name = "%[1]s-source"
 
   assume_role_policy = <<POLICY
@@ -491,6 +489,8 @@ POLICY
 }
 
 resource "aws_iam_role" "target" {
+  provider = "awsalternate"
+
   name = "%[1]s-target"
 
   assume_role_policy = <<POLICY
@@ -500,7 +500,7 @@ resource "aws_iam_role" "target" {
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": aws_iam_role.source.arn
+        "AWS": "${aws_iam_role.source.arn}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -510,6 +510,8 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "target" {
+  provider = "awsalternate"
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonPrometheusRemoteWriteAccess"
   role       = aws_iam_role.target.name
 }
