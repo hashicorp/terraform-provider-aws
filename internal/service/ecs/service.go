@@ -2332,15 +2332,12 @@ func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectCon
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = v
 	}
-
 	if v, ok := tfMap["log_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LogConfiguration = expandLogConfiguration(v)
 	}
-
 	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
-
 	if v, ok := tfMap["service"].([]any); ok && len(v) > 0 {
 		apiObject.Services = expandServiceConnectServices(v)
 	}
@@ -2381,11 +2378,9 @@ func expandLogConfiguration(tfList []any) *awstypes.LogConfiguration {
 	if v, ok := tfMap["log_driver"].(string); ok && v != "" {
 		apiObject.LogDriver = awstypes.LogDriver(v)
 	}
-
 	if v, ok := tfMap["options"].(map[string]any); ok && len(v) > 0 {
 		apiObject.Options = flex.ExpandStringValueMap(v)
 	}
-
 	if v, ok := tfMap["secret_option"].([]any); ok && len(v) > 0 {
 		apiObject.SecretOptions = expandSecrets(v)
 	}
