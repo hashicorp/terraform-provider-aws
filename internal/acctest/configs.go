@@ -854,10 +854,10 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
 `, rName, model))
 }
 
-// ConfigRandomPassword returns the configuration for a data source that
-// describes a random password. The data source is named 'test'. Use
-// data.aws_secretsmanager_random_password.test.random_password to
-// reference the password value.
+// ConfigRandomPassword returns the configuration for an ephemeral resource that
+// describes a random password. The ephemeral resource is named 'test'. Use
+// ephemeral.aws_secretsmanager_random_password.test.random_password to
+// reference the password value, assigning it to a write-only argument ("_wo").
 //
 // The function accepts a variable number of string arguments in the format
 // "key=value". The following keys are supported:
@@ -870,12 +870,11 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
 //   - include_space: Whether to include a space character. Default is false.
 //   - require_each_included_type: Whether to require at least one character from each included type. Default is false.
 //
-// Ensure that you use lifecycle.ignore_changes to prevent Terraform from
-// detecting changes to the password value, as it is generated randomly on each
-// plan/apply. For example:
+// Called without overrides, the function returns the default configuration:
 //
-//	lifecycle {
-//	  ignore_changes = [password]
+//	ephemeral "aws_secretsmanager_random_password" "test" {
+//	  password_length     = 20
+//	  exclude_punctuation = true
 //	}
 func ConfigRandomPassword(overrides ...string) string {
 	// Default configuration values
