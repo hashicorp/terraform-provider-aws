@@ -28,6 +28,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  newResourceIndex,
+			TypeName: "aws_qbusiness_index",
+			Name:     "Index",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
 }
 
