@@ -140,7 +140,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
-					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
+					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -200,7 +200,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
-					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
+					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -260,7 +260,7 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 	}
 }
 
-func testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCAllocationDeleted(ctx context.Context, nIPAMPool, nVPC string) resource.TestCheckFunc {
+func testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx context.Context, nIPAMPool, nVPC string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rsIPAMPool, ok := s.RootModule().Resources[nIPAMPool]
 		if !ok {

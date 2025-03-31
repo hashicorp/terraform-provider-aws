@@ -21,7 +21,13 @@ import (
 )
 
 const (
+	defaultCreateTagsFunc         = "createTags"
+	defaultGetTagFunc             = "findTag"
+	defaultGetTagsInFunc          = "getTagsIn"
+	defaultKeyValueTagsFunc       = "keyValueTags"
 	defaultListTagsFunc           = "listTags"
+	defaultSetTagsOutFunc         = "setTagsOut"
+	defaultTagsFunc               = "svcTags"
 	defaultUpdateTagsFunc         = "updateTags"
 	defaultWaitTagsPropagatedFunc = "waitTagsPropagated"
 )
@@ -30,9 +36,9 @@ var (
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 
 	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	createTagsFunc           = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
+	createTagsFunc           = flag.String("CreateTagsFunc", defaultCreateTagsFunc, "createTagsFunc")
 	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
-	getTagFunc               = flag.String("GetTagFunc", "findTag", "getTagFunc")
+	getTagFunc               = flag.String("GetTagFunc", defaultGetTagFunc, "getTagFunc")
 	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
 	listTagsFunc             = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
@@ -44,10 +50,10 @@ var (
 	emptyMap         = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 	serviceTagsSlice = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
 
-	keyValueTagsFunc = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
-	tagsFunc         = flag.String("TagsFunc", "Tags", "tagsFunc")
-	getTagsInFunc    = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
-	setTagsOutFunc   = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
+	keyValueTagsFunc = flag.String("KeyValueTagsFunc", defaultKeyValueTagsFunc, "keyValueTagsFunc")
+	tagsFunc         = flag.String("TagsFunc", defaultTagsFunc, "tagsFunc")
+	getTagsInFunc    = flag.String("GetTagsInFunc", defaultGetTagsInFunc, "getTagsInFunc")
+	setTagsOutFunc   = flag.String("SetTagsOutFunc", defaultSetTagsOutFunc, "setTagsOutFunc")
 
 	waitForPropagation      = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 	waitTagsPropagatedFunc  = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
@@ -64,6 +70,12 @@ var (
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
+
+	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
+	retryErrorMessage     = flag.String("RetryErrorMessage", "", "error message to retry, must be used with RetryTagOps")
+	retryTagOps           = flag.Bool("RetryTagOps", false, "whether to retry tag operations")
+	retryTagsListTagsType = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as ListTagsForResourceOutput, must be used with RetryTagOps")
+	retryTimeout          = flag.Duration("RetryTimeout", 1*time.Minute, "amount of time tag operations should retry")
 
 	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
@@ -152,6 +164,11 @@ type TemplateData struct {
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
+	RetryErrorCode             string
+	RetryErrorMessage          string
+	RetryTagOps                bool
+	RetryTagsListTagsType      string
+	RetryTimeout               string
 	ServiceTagsMap             bool
 	SetTagsOutFunc             string
 	TagInCustomVal             string
@@ -247,6 +264,11 @@ func main() {
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
+		RetryErrorCode:             *retryErrorCode,
+		RetryErrorMessage:          *retryErrorMessage,
+		RetryTagOps:                *retryTagOps,
+		RetryTagsListTagsType:      *retryTagsListTagsType,
+		RetryTimeout:               formatDuration(*retryTimeout),
 		ServiceTagsMap:             *serviceTagsMap,
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,

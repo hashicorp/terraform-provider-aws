@@ -339,7 +339,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {

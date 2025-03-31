@@ -5065,6 +5065,38 @@ func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(false)),
 				},
 			},
+			{
+				Config: testAccInstanceConfig_databaseInsightsMode(rName, "standard", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+			{
+				Config: testAccInstanceConfig_databaseInsightsMode(rName, "advanced", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
 		},
 	})
 }

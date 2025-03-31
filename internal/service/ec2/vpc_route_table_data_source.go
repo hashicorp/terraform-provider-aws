@@ -211,7 +211,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		},
 	)
 	req.Filters = append(req.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, tags.(map[string]any))),
+		svcTags(tftags.New(ctx, tags.(map[string]any))),
 	)...)
 	req.Filters = append(req.Filters, newCustomFilterList(
 		filter.(*schema.Set),
