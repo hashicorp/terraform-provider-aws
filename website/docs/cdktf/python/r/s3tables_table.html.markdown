@@ -153,4 +153,4 @@ Using `terraform import`, import S3 Tables Table using the `table_bucket_arn`, t
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-797ff4b5faf99758da256f313992983b4f90adbb830aef7b731a39cfaa1ebb91 -->
+<!-- cache-key: cdktf-0.20.8 input-1b0334bf078537baac156fabb7f8bff27cbf2351a1e4db60cfa59ebb04a9a318 -->

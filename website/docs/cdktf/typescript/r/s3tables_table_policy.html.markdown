@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_2",
       {
-        namespace: ["example_namespace"],
+        namespace: ["example-namespace"],
         tableBucketArn: example.arn,
       }
     );
@@ -130,4 +130,4 @@ Using `terraform import`, import S3 Tables Table Policy using the `tableBucketAr
 % terraform import aws_s3tables_table_policy.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8a785b6f52d0ea0fd3ea7c49dc448a77c5d6b604d2d3279af70874b10ee9c3bd -->
+<!-- cache-key: cdktf-0.20.8 input-9064db639219bd282501d3f58248ca0e5376035d2d8525aa2646cefa8ee340e5 -->
