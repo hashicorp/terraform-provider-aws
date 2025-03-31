@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -478,6 +479,8 @@ func checkAssetS3DataAccess(bucket string) knownvalue.Check {
 	maps.Copy(checks, map[string]knownvalue.Check{
 		"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"access_point_alias": knownvalue.StringRegexp(regexache.MustCompile(`[-a-z0-9]+-s3alias`)),
+				"access_point_arn":   tfknownvalue.RegionalARNRegexpIgnoreAccount("s3", regexache.MustCompile(`accesspoint/`+verify.UUIDRegexPattern)),
 				"asset_source": knownvalue.ListExact([]knownvalue.Check{
 					knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrBucket: knownvalue.StringExact(bucket),

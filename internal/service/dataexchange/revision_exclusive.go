@@ -142,6 +142,14 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"access_point_alias": schema.StringAttribute{
+										Computed: true,
+									},
+									"access_point_arn": schema.StringAttribute{
+										Computed: true,
+									},
+								},
 								Blocks: map[string]schema.Block{
 									"asset_source": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[s3DataAccessAssetSourceModel](ctx),
@@ -623,6 +631,20 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			if resp.Diagnostics.HasError() {
 				return
 			}
+
+			details := newAsset.AssetDetails.S3DataAccessAsset
+
+			dataAccess, d := asset.CreateS3DataAccessFromS3Bucket.ToPtr(ctx)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
+				return
+			}
+
+			dataAccess.AccessPointAlias = types.StringPointerValue(details.S3AccessPointAlias)
+			dataAccess.AccessPointARN = types.StringPointerValue(details.S3AccessPointArn)
+
+			asset.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dataAccess)
+
 			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 		}
@@ -759,7 +781,9 @@ type importAssetsFromSignedURLModel struct {
 }
 
 type createS3DataAccessFromS3BucketModel struct {
-	AssetSource fwtypes.ListNestedObjectValueOf[s3DataAccessAssetSourceModel] `tfsdk:"asset_source"`
+	AccessPointAlias types.String                                                  `tfsdk:"access_point_alias"`
+	AccessPointARN   types.String                                                  `tfsdk:"access_point_arn"`
+	AssetSource      fwtypes.ListNestedObjectValueOf[s3DataAccessAssetSourceModel] `tfsdk:"asset_source"`
 }
 
 type s3DataAccessAssetSourceModel struct {
