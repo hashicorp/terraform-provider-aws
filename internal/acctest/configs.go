@@ -907,7 +907,7 @@ func ConfigRandomPassword(overrides ...string) string {
 	// Build the Terraform configuration string
 	var builder strings.Builder
 	builder.WriteString(`
-data "aws_secretsmanager_random_password" "test" {
+ephemeral "aws_secretsmanager_random_password" "test" {
 `)
 
 	// Add default keys

@@ -39,9 +39,9 @@ import (
 
 func TestAccRDSInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,9 +121,9 @@ func TestAccRDSInstance_basic(t *testing.T) {
 
 func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
@@ -157,9 +157,9 @@ func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 
 func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
@@ -193,9 +193,9 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 
 func TestAccRDSInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -221,9 +221,9 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 
 func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -265,9 +265,9 @@ func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
 
 func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -303,9 +303,9 @@ func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 
 func TestAccRDSInstance_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -344,6 +344,8 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 
 func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -374,6 +376,8 @@ func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
 
 func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -411,6 +415,8 @@ func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 
 func TestAccRDSInstance_networkType(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -445,9 +451,9 @@ func TestAccRDSInstance_networkType(t *testing.T) {
 
 func TestAccRDSInstance_optionGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -473,9 +479,9 @@ func TestAccRDSInstance_optionGroup(t *testing.T) {
 
 func TestAccRDSInstance_iamAuth(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -501,9 +507,9 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 
 func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var dbInstance1 types.DBInstance
 
@@ -548,6 +554,8 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 
 func TestAccRDSInstance_db2(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -579,6 +587,10 @@ func TestAccRDSInstance_db2(t *testing.T) {
 
 func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
+
 	var dbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
@@ -607,9 +619,9 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 
 func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var dbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -635,6 +647,8 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 
 func TestAccRDSInstance_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -682,6 +696,8 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 
 func TestAccRDSInstance_FinalSnapshotIdentifier_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -719,6 +735,8 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_basic(t *testing.T) {
 
 func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -745,9 +763,9 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) 
 
 func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var dbInstance types.DBInstance
 
@@ -788,6 +806,8 @@ func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 
 func TestAccRDSInstance_Storage_maxAllocated(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -837,6 +857,8 @@ func TestAccRDSInstance_Storage_maxAllocated(t *testing.T) {
 
 func TestAccRDSInstance_password(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -888,6 +910,8 @@ func TestAccRDSInstance_password(t *testing.T) {
 
 func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -940,6 +964,10 @@ func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
 
 func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
+
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -978,6 +1006,8 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 
 func TestAccRDSInstance_ErrorOnConvertToManageOnStoppedInstance(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1022,6 +1052,10 @@ func TestAccRDSInstance_ErrorOnConvertToManageOnStoppedInstance(t *testing.T) {
 
 func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
+
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -1061,6 +1095,8 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 
 func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1107,6 +1143,8 @@ func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1166,6 +1204,8 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_promoteNull(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1219,6 +1259,8 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteNull(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_promoteEmptyString(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1272,6 +1314,8 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteEmptyString(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1322,6 +1366,8 @@ func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1353,6 +1399,8 @@ func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1392,6 +1440,8 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1430,6 +1480,8 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_addLater(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1466,6 +1518,8 @@ func TestAccRDSInstance_ReplicateSourceDB_addLater(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1497,6 +1551,8 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1528,6 +1584,8 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1560,6 +1618,8 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 
 func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1591,6 +1651,8 @@ func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T)
 
 func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1622,6 +1684,8 @@ func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) 
 
 func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1652,6 +1716,8 @@ func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1682,6 +1748,8 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1713,6 +1781,8 @@ func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1744,6 +1814,8 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_basic(t *testing.T) 
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1775,6 +1847,8 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(t *test
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameVPC(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1821,6 +1895,8 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameVPC(t *testing.T
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1854,6 +1930,8 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testi
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1887,6 +1965,8 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1931,6 +2011,11 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance types.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1968,6 +2053,8 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1999,6 +2086,8 @@ func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *te
 
 func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2030,6 +2119,8 @@ func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2061,6 +2152,8 @@ func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2092,6 +2185,8 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_monitoring_sourceAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2129,6 +2224,8 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring_sourceAlreadyExists(t *test
 
 func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2160,6 +2257,8 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_networkType(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2191,6 +2290,8 @@ func TestAccRDSInstance_ReplicateSourceDB_networkType(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2225,6 +2326,8 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *tes
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2259,6 +2362,8 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth(t
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2292,6 +2397,8 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue(t
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2324,6 +2431,8 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica(t *test
 
 func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2355,6 +2464,8 @@ func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2386,6 +2497,8 @@ func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2419,6 +2532,8 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 
 func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2464,6 +2579,8 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2496,6 +2613,8 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2556,6 +2675,8 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/11905
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2599,6 +2720,8 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2643,6 +2766,8 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 
 func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNamePostgres(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2688,6 +2813,8 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNamePostgres
 func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T) {
 	t.Skip("Skipping due to upstream error")
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2730,6 +2857,8 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 
 func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2778,6 +2907,11 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -2811,6 +2945,8 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2856,6 +2992,8 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2906,6 +3044,8 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 
 func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2946,6 +3086,8 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2985,6 +3127,8 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3023,6 +3167,8 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3056,6 +3202,8 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3089,6 +3237,8 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3122,6 +3272,8 @@ func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3155,6 +3307,8 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 
 func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3188,6 +3342,8 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 
 func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3220,6 +3376,8 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3253,6 +3411,8 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 
 func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3286,6 +3446,8 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 
 func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3319,6 +3481,8 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3352,6 +3516,8 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3389,6 +3555,8 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 
 func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3422,6 +3590,8 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 
 func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3465,6 +3635,8 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3498,6 +3670,8 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 
 func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3531,6 +3705,8 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3564,6 +3740,8 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3597,6 +3775,8 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3630,6 +3810,8 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3664,6 +3846,8 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3698,6 +3882,8 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3731,6 +3917,8 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3779,6 +3967,11 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
@@ -3817,6 +4010,8 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 
 func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3853,6 +4048,8 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 // and tags is set which was missing its ARN used for tagging
 func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3887,6 +4084,8 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 
 func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3899,7 +4098,10 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 30),
@@ -3946,6 +4148,8 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 
 func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -3992,6 +4196,8 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 
 func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4037,6 +4243,8 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 
 func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4082,9 +4290,9 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 
 func TestAccRDSInstance_portUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 
@@ -4118,6 +4326,8 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 
 func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4157,6 +4367,8 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 
 func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4199,6 +4411,8 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 
 func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4231,6 +4445,8 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 
 func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4275,6 +4491,8 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 
 func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4309,6 +4527,8 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
 
 func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4344,6 +4564,8 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 
 func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4375,9 +4597,9 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 
 func TestAccRDSInstance_Versions_minor(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4400,9 +4622,9 @@ func TestAccRDSInstance_Versions_minor(t *testing.T) {
 
 func TestAccRDSInstance_CloudWatchLogsExport_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
@@ -4441,6 +4663,8 @@ func TestAccRDSInstance_CloudWatchLogsExport_basic(t *testing.T) {
 
 func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4483,6 +4707,8 @@ func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 
 func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4539,6 +4765,8 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 
 func TestAccRDSInstance_CloudWatchLogsExport_msSQL(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4577,6 +4805,8 @@ func TestAccRDSInstance_CloudWatchLogsExport_msSQL(t *testing.T) {
 
 func TestAccRDSInstance_CloudWatchLogsExport_oracle(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4616,9 +4846,9 @@ func TestAccRDSInstance_CloudWatchLogsExport_oracle(t *testing.T) {
 
 func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var dbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4654,6 +4884,8 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 }
 func TestAccRDSInstance_CloudWatchLogsExport_postgresql_iam_db_auth(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4683,6 +4915,8 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql_iam_db_auth(t *testing.T
 
 func TestAccRDSInstance_dedicatedLogVolume_enableOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4719,6 +4953,8 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnCreate(t *testing.T) {
 
 func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4778,6 +5014,8 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
 
 func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4806,6 +5044,8 @@ func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8792
 func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4854,6 +5094,8 @@ func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 
 func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4902,6 +5144,8 @@ func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 
 func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4961,6 +5205,8 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 
 func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5019,6 +5265,8 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 
 func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5103,6 +5351,8 @@ func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 
 func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5140,6 +5390,8 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 
 func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5179,6 +5431,8 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 
 func TestAccRDSInstance_CACertificate_latest(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5207,6 +5461,8 @@ func TestAccRDSInstance_CACertificate_latest(t *testing.T) {
 
 func TestAccRDSInstance_CACertificate_update(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5241,6 +5497,8 @@ func TestAccRDSInstance_CACertificate_update(t *testing.T) {
 
 func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5283,6 +5541,8 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 
 func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5325,6 +5585,8 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 
 func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5354,6 +5616,8 @@ func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
 
 func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5402,6 +5666,8 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 
 func TestAccRDSInstance_Oracle_nationalCharacterSet(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5442,6 +5708,8 @@ func TestAccRDSInstance_Oracle_nationalCharacterSet(t *testing.T) {
 
 func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5482,6 +5750,12 @@ func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 
 func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -5507,6 +5781,12 @@ func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 
 func TestAccRDSInstance_Outposts_coIPDisabledToEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -5548,6 +5828,12 @@ func TestAccRDSInstance_Outposts_coIPDisabledToEnabled(t *testing.T) {
 
 func TestAccRDSInstance_Outposts_coIPEnabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -5589,6 +5875,12 @@ func TestAccRDSInstance_Outposts_coIPEnabledToDisabled(t *testing.T) {
 
 func TestAccRDSInstance_Outposts_coIPRestoreToPointInTime(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceName := "aws_db_instance.test"
@@ -5628,6 +5920,12 @@ func TestAccRDSInstance_Outposts_coIPRestoreToPointInTime(t *testing.T) {
 
 func TestAccRDSInstance_Outposts_coIPSnapshotIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
@@ -5657,6 +5955,8 @@ func TestAccRDSInstance_Outposts_coIPSnapshotIdentifier(t *testing.T) {
 
 func TestAccRDSInstance_Outposts_backupTarget(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5685,6 +5985,8 @@ func TestAccRDSInstance_Outposts_backupTarget(t *testing.T) {
 
 func TestAccRDSInstance_license(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5731,6 +6033,8 @@ func TestAccRDSInstance_license(t *testing.T) {
 
 func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5782,6 +6086,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 
 func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5836,6 +6142,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 // Updating tags should bypass the Blue/Green Deployment
 func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5887,6 +6195,8 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 
 func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5938,6 +6248,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 
 func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -5991,6 +6303,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 
 func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6043,6 +6357,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 
 func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6108,6 +6424,8 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 
 func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6143,6 +6461,8 @@ func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing
 
 func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6219,6 +6539,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 
 func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6377,6 +6699,8 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 
 func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6430,6 +6754,8 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 
 func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6483,6 +6809,8 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 
 func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6537,9 +6865,9 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 // // https://github.com/hashicorp/terraform-provider-aws/issues/33512
 func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
@@ -6576,6 +6904,8 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/33512
 func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6615,6 +6945,8 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/33512
 func TestAccRDSInstance_Storage_changeIOPSGP3(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6654,6 +6986,8 @@ func TestAccRDSInstance_Storage_changeIOPSGP3(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/33512
 func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6692,6 +7026,8 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 
 func TestAccRDSInstance_Storage_postgres(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6748,6 +7084,8 @@ func TestAccRDSInstance_Storage_postgres(t *testing.T) {
 // consider this a pass, as before in 3760 the request would fail
 func TestAccRDSInstance_Storage_changeIOPSio1(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6783,6 +7121,8 @@ func TestAccRDSInstance_Storage_changeIOPSio1(t *testing.T) {
 
 func TestAccRDSInstance_Storage_changeIOPSio2(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6818,6 +7158,8 @@ func TestAccRDSInstance_Storage_changeIOPSio2(t *testing.T) {
 
 func TestAccRDSInstance_NewIdentifier_pending(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -6864,6 +7206,8 @@ func TestAccRDSInstance_NewIdentifier_pending(t *testing.T) {
 
 func TestAccRDSInstance_NewIdentifier_immediately(t *testing.T) {
 	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -7292,17 +7636,14 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7322,7 +7663,8 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   apply_immediately       = true
 
@@ -7330,10 +7672,6 @@ resource "aws_db_instance" "test" {
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7367,13 +7705,10 @@ resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name = aws_db_parameter_group.test.name
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   skip_final_snapshot  = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, customerId, siteId))
 }
@@ -7389,12 +7724,9 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, identifierPrefix))
 }
@@ -7409,12 +7741,9 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `)
 }
@@ -7435,16 +7764,13 @@ resource "aws_db_instance" "test" {
   db_name                  = "test"
   parameter_group_name     = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot      = true
-  password                 = data.aws_secretsmanager_random_password.test.random_password
+  password_wo              = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version      = 1
   username                 = "tfacctest"
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7464,17 +7790,14 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7521,17 +7844,14 @@ resource "aws_db_instance" "test" {
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
   storage_encrypted       = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7553,7 +7873,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   db_subnet_group_name = aws_db_subnet_group.test.name
@@ -7563,10 +7884,6 @@ resource "aws_db_instance" "test" {
 
   backup_retention_period = 0
   apply_immediately       = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7613,7 +7930,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   db_subnet_group_name = aws_db_subnet_group.test2.name
@@ -7625,10 +7943,6 @@ resource "aws_db_instance" "test" {
   apply_immediately       = true
 
   depends_on = [aws_db_subnet_group.test]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7651,15 +7965,12 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
   network_type            = %[2]q
   apply_immediately       = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, networkType))
 }
@@ -7685,12 +7996,9 @@ resource "aws_db_instance" "test" {
   db_name             = "test"
   option_group_name   = aws_db_option_group.test.name
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7713,12 +8021,9 @@ resource "aws_db_instance" "test" {
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "test"
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7737,12 +8042,9 @@ resource "aws_db_instance" "test" {
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "test"
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, cert))
 }
@@ -7772,16 +8074,13 @@ resource "aws_db_instance" "test" {
   engine_version                      = data.aws_rds_engine_version.default.version
   instance_class                      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                             = "test"
-  password                            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                 = 1
   username                            = "tfacctest"
   backup_retention_period             = 0
   skip_final_snapshot                 = true
   parameter_group_name                = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   iam_database_authentication_enabled = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
@@ -7799,7 +8098,8 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   backup_retention_period = 1
 
@@ -7807,10 +8107,6 @@ resource "aws_db_instance" "test" {
 
   skip_final_snapshot       = true
   final_snapshot_identifier = %[1]q
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7914,7 +8210,8 @@ resource "aws_db_instance" "test" {
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                    = "test"
-  password                   = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version        = 1
   username                   = "tfacctest"
   backup_retention_period    = 0
 
@@ -7933,10 +8230,6 @@ resource "aws_db_instance" "test" {
     bucket_prefix  = %[1]q
     ingestion_role = aws_iam_role.test.arn
   }
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -7954,7 +8247,8 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   backup_retention_period = 1
 
@@ -7965,10 +8259,6 @@ resource "aws_db_instance" "test" {
 
   tags = {
     Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 `, rName1, rName2))
@@ -8030,13 +8320,10 @@ resource "aws_db_instance" "test" {
   monitoring_interval = %[4]d
   monitoring_role_arn = aws_iam_role.test.arn
   db_name             = "baz"
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   skip_final_snapshot = true
   username            = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses, monitoringInterval))
 }
@@ -8066,13 +8353,10 @@ resource "aws_db_instance" "test" {
   identifier          = %[3]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "baz"
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   skip_final_snapshot = true
   username            = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
@@ -8133,13 +8417,10 @@ resource "aws_db_instance" "test" {
   monitoring_interval = 5
   monitoring_role_arn = aws_iam_role.test.arn
   db_name             = "baz"
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   skip_final_snapshot = true
   username            = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses))
 }
@@ -8158,13 +8439,10 @@ resource "aws_db_instance" "test" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "baz"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -8265,7 +8543,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -8275,10 +8554,6 @@ resource "aws_db_instance" "test" {
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = 200
   iops              = %[5]d
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, sType, iops))
 }
@@ -8294,7 +8569,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3306
@@ -8302,10 +8578,6 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 
   apply_immediately = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -8321,7 +8593,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3305
@@ -8329,10 +8602,6 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 
   apply_immediately = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -8352,13 +8621,10 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_security_group" "test" {
@@ -8398,13 +8664,10 @@ resource "aws_db_instance" "test" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
   timezone                = "Alaskan Standard Time"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_security_group" "test" {
@@ -8494,18 +8757,15 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name     = %[2]q
-  password = data.aws_secretsmanager_random_password.test.random_password
-  type     = "MicrosoftAD"
-  edition  = "Standard"
+  name                = %[2]q
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
+  type                = "MicrosoftAD"
+  edition             = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -8526,31 +8786,25 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name     = %[2]q
-  password = data.aws_secretsmanager_random_password.test.random_password
-  type     = "MicrosoftAD"
-  edition  = "Standard"
+  name                = %[2]q
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
+  type                = "MicrosoftAD"
+  edition             = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 `, rName, domain2))
@@ -8570,31 +8824,25 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory-2.id
   domain_iam_role_name = aws_iam_role.role.name
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name     = %[2]q
-  password = data.aws_secretsmanager_random_password.test.random_password
-  type     = "MicrosoftAD"
-  edition  = "Standard"
+  name                = %[2]q
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
+  type                = "MicrosoftAD"
+  edition             = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 `, rName, domain2))
@@ -8611,12 +8859,9 @@ resource "aws_db_instance" "origin" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "origin" {
@@ -8634,7 +8879,8 @@ resource "aws_db_instance" "test" {
   identifier              = "%[1]s-restore"
   instance_class          = aws_db_instance.origin.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
@@ -8642,10 +8888,6 @@ resource "aws_db_instance" "test" {
   domain_iam_role_name = aws_iam_role.role.name
 
   snapshot_identifier = aws_db_snapshot.origin.id
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -8760,17 +9002,14 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
   domain_fqdn             = %[2]q
   domain_ou               = %[3]q
   domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
   domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, domain, domainOu))
 }
@@ -8790,17 +9029,14 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
   domain_fqdn             = %[2]q
   domain_ou               = %[3]q
   domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
   domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_secretsmanager_secret" "example-2" {
@@ -8851,17 +9087,14 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
   domain_fqdn             = %[2]q
   domain_ou               = %[3]q
   domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
   domain_dns_ips          = ["123.124.125.126", "123.124.125.126"]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, domain, domainOu))
 }
@@ -8872,6 +9105,7 @@ func testAccInstanceConfig_mssqlSelfManagedDomainSnapshotRestore(rName, domain, 
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
 
+
 resource "aws_db_instance" "origin" {
   allocated_storage   = 20
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -8879,12 +9113,9 @@ resource "aws_db_instance" "origin" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "origin" {
@@ -8902,7 +9133,8 @@ resource "aws_db_instance" "test" {
   identifier              = "%[1]s-restore"
   instance_class          = aws_db_instance.origin.instance_class
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
@@ -8912,10 +9144,6 @@ resource "aws_db_instance" "test" {
   domain_dns_ips         = ["123.124.125.126", "123.124.125.127"]
 
   snapshot_identifier = aws_db_snapshot.origin.id
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, domain, domainOu))
 }
@@ -8933,12 +9161,9 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -8957,13 +9182,10 @@ resource "aws_db_instance" "restore" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot     = true
   snapshot_identifier     = aws_db_snapshot.test.id
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_security_group" "test" {
@@ -9000,13 +9222,10 @@ resource "aws_db_instance" "test" {
   identifier                  = %[2]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                     = "baz"
-  password                    = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                 = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version         = 1
   skip_final_snapshot         = true
   username                    = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, allowMajorVersionUpgrade, rName))
 }
@@ -9023,13 +9242,10 @@ resource "aws_db_instance" "bar" {
   engine_version      = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   db_name             = "baz"
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "foo"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9048,7 +9264,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   skip_final_snapshot  = true
 
@@ -9056,10 +9273,6 @@ resource "aws_db_instance" "test" {
     "audit",
     "error",
   ]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9078,7 +9291,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   skip_final_snapshot  = true
 
@@ -9089,10 +9303,6 @@ resource "aws_db_instance" "test" {
     "error",
     "general",
   ]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9111,7 +9321,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   skip_final_snapshot  = true
 
@@ -9122,10 +9333,6 @@ resource "aws_db_instance" "test" {
     "general",
     "slowquery",
   ]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9144,15 +9351,12 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   skip_final_snapshot  = true
 
   apply_immediately = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9167,13 +9371,10 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9261,14 +9462,11 @@ resource "aws_db_instance" "test" {
   engine                 = data.aws_rds_orderable_db_instance.test.engine
   identifier             = %[1]q
   instance_class         = data.aws_rds_orderable_db_instance.test.instance_class
-  password               = data.aws_secretsmanager_random_password.test.random_password
+  password_wo            = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version    = 1
   username               = "tfacctest"
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9294,14 +9492,11 @@ resource "aws_db_instance" "test" {
   engine                 = data.aws_rds_orderable_db_instance.test.engine
   identifier             = %[1]q
   instance_class         = data.aws_rds_orderable_db_instance.test.instance_class
-  password               = data.aws_secretsmanager_random_password.test.random_password
+  password_wo            = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version    = 1
   username               = "tfacctest"
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9317,13 +9512,10 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[2]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, deletionProtection, rName))
 }
@@ -9358,13 +9550,10 @@ resource "aws_db_instance" "test" {
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name            = aws_db_parameter_group.test.name
-  password                        = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                     = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version             = 1
   username                        = "tfacctest"
   skip_final_snapshot             = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, customerId, siteId))
 }
@@ -9388,13 +9577,10 @@ resource "aws_db_instance" "test" {
   identifier                      = %[3]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   license_model                   = "bring-your-own-license"
-  password                        = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                     = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version             = 1
   username                        = "tfacctest"
   skip_final_snapshot             = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
 }
@@ -9418,13 +9604,10 @@ resource "aws_db_instance" "test" {
   instance_class           = data.aws_rds_orderable_db_instance.test.instance_class
   license_model            = "bring-your-own-license"
   nchar_character_set_name = "UTF8"
-  password                 = data.aws_secretsmanager_random_password.test.random_password
+  password_wo              = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version      = 1
   username                 = "tfacctest"
   skip_final_snapshot      = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
 }
@@ -9447,13 +9630,10 @@ resource "aws_db_instance" "test" {
   identifier          = %[3]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = "bring-your-own-license"
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
 }
@@ -9470,13 +9650,10 @@ resource "aws_db_instance" "test" {
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   license_model                   = data.aws_rds_orderable_db_instance.test.license_model
-  password                        = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                     = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version             = 1
   username                        = "tfacctest"
   skip_final_snapshot             = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9493,13 +9670,10 @@ resource "aws_db_instance" "test" {
   engine                          = data.aws_rds_engine_version.default.engine
   identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  password                        = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                     = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version             = 1
   username                        = "tfacctest"
   skip_final_snapshot             = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
 }
@@ -9515,13 +9689,10 @@ resource "aws_db_instance" "test" {
   identifier            = %[1]q
   instance_class        = data.aws_rds_orderable_db_instance.test.instance_class
   max_allocated_storage = %[2]d
-  password              = data.aws_secretsmanager_random_password.test.random_password
+  password_wo           = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version   = 1
   username              = "tfacctest"
   skip_final_snapshot   = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, maxAllocatedStorage))
 }
@@ -9672,13 +9843,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9701,13 +9869,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9729,13 +9894,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9758,13 +9920,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -9780,13 +9939,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9813,13 +9969,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9842,13 +9995,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9868,13 +10018,10 @@ resource "aws_db_instance" "source" {
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `)
 }
@@ -9903,13 +10050,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9946,15 +10090,12 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[3]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
   iops                    = 1100
   storage_type            = "io1"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -9992,15 +10133,12 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[4]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
   iops                    = 1000
   storage_type            = "io1"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10026,13 +10164,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10056,13 +10191,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10087,13 +10219,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10117,13 +10246,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10149,13 +10275,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10188,14 +10311,11 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_subnet_group" "source" {
@@ -10225,14 +10345,11 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_subnet_group" "source" {
@@ -10262,14 +10379,11 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -10381,13 +10495,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_engine_version.default.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10427,18 +10538,15 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name     = %[2]q
-  password = data.aws_secretsmanager_random_password.test.random_password
-  type     = "MicrosoftAD"
-  edition  = "Standard"
+  name                = %[2]q
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
+  type                = "MicrosoftAD"
+  edition             = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -10460,15 +10568,12 @@ resource "aws_db_instance" "source" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   license_model           = "license-included"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10651,13 +10756,10 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10773,13 +10875,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10804,13 +10903,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10834,13 +10930,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10866,13 +10959,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10897,13 +10987,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10929,13 +11016,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -10960,13 +11044,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -10982,13 +11063,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11019,13 +11097,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11061,13 +11136,10 @@ resource "aws_db_instance" "source" {
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name    = aws_db_parameter_group.test.name
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11111,13 +11183,10 @@ resource "aws_db_instance" "source" {
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name    = aws_db_parameter_group.source.name
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_parameter_group" "source" {
@@ -11154,13 +11223,10 @@ resource "aws_db_instance" "source" {
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   parameter_group_name    = aws_db_parameter_group.test.name
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11194,13 +11260,10 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11224,13 +11287,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11263,13 +11323,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11297,14 +11354,11 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   ca_cert_identifier      = data.aws_rds_certificate.latest.id
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11339,16 +11393,13 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -11377,16 +11428,13 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -11416,13 +11464,10 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -11461,7 +11506,8 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 3
@@ -11472,10 +11518,6 @@ resource "aws_db_instance" "source" {
     update = "120m"
   }
   ca_cert_identifier = "rds-ca-rsa2048-g1"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName))
 }
@@ -11551,15 +11593,12 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 3
   parameter_group_name    = aws_db_parameter_group.source.name
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_parameter_group" "source" {
@@ -11629,15 +11668,12 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 3
   parameter_group_name    = aws_db_parameter_group.source.name
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_parameter_group" "source" {
@@ -11678,16 +11714,13 @@ resource "aws_db_instance" "source" {
   storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   db_name                 = "MAINDB"
   username                = "oadmin"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   apply_immediately       = true
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -11733,13 +11766,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11792,13 +11822,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11827,13 +11854,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11860,13 +11884,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11892,13 +11913,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11924,13 +11942,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -11966,13 +11981,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[3]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12021,13 +12033,10 @@ resource "aws_db_instance" "source" {
   engine_version      = data.aws_rds_orderable_db_instance.postgres13.engine_version
   identifier          = "%[3]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.postgres13.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12066,13 +12075,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12101,13 +12107,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12135,13 +12138,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12170,13 +12170,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12206,13 +12203,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12242,13 +12236,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12348,13 +12339,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12393,13 +12381,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12428,13 +12413,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12462,13 +12444,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12498,13 +12477,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12533,13 +12509,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12595,13 +12568,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12630,13 +12600,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12665,13 +12632,10 @@ resource "aws_db_instance" "source" {
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12712,13 +12676,10 @@ resource "aws_db_instance" "source" {
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12746,13 +12707,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12780,16 +12738,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
 
   tags = {
     key1 = "value-old"
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -12821,16 +12776,13 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
 
   tags = {
     key1 = "value1"
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -12869,13 +12821,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12912,13 +12861,10 @@ resource "aws_db_instance" "source" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = "%[1]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -12965,13 +12911,10 @@ resource "aws_db_instance" "test" {
   identifier              = %[3]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "mydb"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
@@ -13001,15 +12944,12 @@ resource "aws_db_instance" "test" {
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                               = "mydb"
-  password                              = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                           = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                   = 1
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
   skip_final_snapshot                   = true
   username                              = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
@@ -13043,13 +12983,10 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = %[3]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
@@ -13083,16 +13020,13 @@ resource "aws_db_instance" "test" {
   engine_version                        = data.aws_rds_engine_version.default.version
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
-  password                              = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                           = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                   = 1
   performance_insights_enabled          = true
   performance_insights_kms_key_id       = aws_kms_key.test.arn
   performance_insights_retention_period = 7
   skip_final_snapshot                   = true
   username                              = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
@@ -13122,15 +13056,12 @@ resource "aws_db_instance" "test" {
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                               = "mydb"
-  password                              = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                           = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                   = 1
   performance_insights_enabled          = true
   performance_insights_retention_period = %[4]d
   skip_final_snapshot                   = true
   username                              = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, performanceInsightsRetentionPeriod))
 }
@@ -13184,13 +13115,10 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = "%[3]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -13253,13 +13181,10 @@ resource "aws_db_instance" "source" {
   engine_version      = data.aws_rds_engine_version.default.version
   identifier          = "%[3]s-source"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -13304,16 +13229,13 @@ resource "aws_db_instance" "test" {
   identifier                            = %[3]q
   instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                               = "mydb"
-  password                              = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                           = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                   = 1
   database_insights_mode                = %[4]q
   performance_insights_enabled          = %[5]t
   performance_insights_retention_period = %[6]s
   skip_final_snapshot                   = true
   username                              = "foo"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
 }
@@ -13329,7 +13251,8 @@ resource "aws_db_instance" "test" {
   engine_version      = "15.6"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
   apply_immediately   = true
@@ -13340,10 +13263,6 @@ resource "aws_db_instance" "test" {
   iops              = 1000
 
   dedicated_log_volume = %[2]t
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, enabled))
 }
@@ -13358,16 +13277,13 @@ resource "aws_db_instance" "test" {
   engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
 
   backup_retention_period  = 1
   delete_automated_backups = false
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -13436,15 +13352,12 @@ resource "aws_db_instance" "test" {
   db_name                   = "test"
   parameter_group_name      = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot       = true
-  password                  = data.aws_secretsmanager_random_password.test.random_password
+  password_wo               = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version       = 1
   username                  = "tfacctest"
   db_subnet_group_name      = aws_db_subnet_group.test.name
   storage_encrypted         = true
   customer_owned_ip_enabled = %[2]t
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, coipEnabled, backupRetentionPeriod))
 }
@@ -13502,15 +13415,12 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.test.name
   storage_encrypted       = true
   backup_target           = %[2]q
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, backupTarget, backupRetentionPeriod))
 }
@@ -13527,13 +13437,10 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -13557,16 +13464,13 @@ resource "aws_db_instance" "test" {
   identifier                  = %[1]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   kms_key_id                  = aws_cloudformation_stack.test.outputs["RDSCustomSQLServerKMSKey"]
-  password                    = data.aws_secretsmanager_random_password.test.random_password
+  password_wo                 = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version         = 1
   username                    = "tfacctest"
   skip_final_snapshot         = true
   storage_encrypted           = true
   vpc_security_group_ids      = [aws_cloudformation_stack.test.outputs["RDSCustomSecurityGroup"]]
   db_subnet_group_name        = aws_cloudformation_stack.test.outputs["DBSubnetGroup"]
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName))
 }
@@ -13585,15 +13489,12 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${local.engine_version.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -13659,17 +13560,14 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
@@ -13689,15 +13587,12 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = aws_db_parameter_group.test.name
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -13728,7 +13623,8 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   tags = {
@@ -13737,10 +13633,6 @@ resource "aws_db_instance" "test" {
 
   blue_green_update {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 `, rName, tagKey1, tagValue1))
@@ -13765,15 +13657,12 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 `, rName))
@@ -13820,15 +13709,12 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = data.aws_db_parameter_group.test.name
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   blue_green_update {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
@@ -13878,13 +13764,10 @@ resource "aws_db_instance" "source" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[6]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -13941,13 +13824,10 @@ resource "aws_db_instance" "source" {
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -13999,7 +13879,8 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
 
   blue_green_update {
@@ -14007,10 +13888,6 @@ resource "aws_db_instance" "test" {
   }
 
   deletion_protection = %[6]t
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, deletionProtection))
 }
@@ -14053,12 +13930,9 @@ resource "aws_db_instance" "test" {
   db_name                 = "test"
   parameter_group_name    = "default.${local.engine_version.parameter_group_family}"
   skip_final_snapshot     = true
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -14097,7 +13971,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = data.aws_rds_engine_version.default.engine == "%[2]s" ? null : "test" # using %[2]q breaks linter
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -14106,10 +13981,6 @@ resource "aws_db_instance" "test" {
 
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = %[3]d
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, tfrds.InstanceEngineSQLServerExpress, allocatedStorage))
 }
@@ -14125,7 +13996,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -14137,10 +14009,6 @@ resource "aws_db_instance" "test" {
 
   iops               = %[2]d
   storage_throughput = %[3]d
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, iops, throughput))
 }
@@ -14172,15 +14040,12 @@ resource "aws_db_instance" "test" {
   iops                 = %[4]d
   license_model        = data.aws_rds_orderable_db_instance.test.license_model
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   skip_final_snapshot  = true
   storage_throughput   = %[5]d
   storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
   username             = "tfacctest"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEngineSQLServerStandard, mainInstanceClasses, rName, iops, throughput))
 }
@@ -14207,7 +14072,8 @@ resource "aws_db_instance" "test" {
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_name              = "test"
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -14216,10 +14082,6 @@ resource "aws_db_instance" "test" {
 
   storage_type      = %[2]q
   allocated_storage = %[5]d
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.InstanceEnginePostgres, storageType, mainInstanceClasses, rName, allocatedStorage))
 }
