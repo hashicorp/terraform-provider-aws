@@ -866,10 +866,9 @@ func TestAccSQSQueue_timeouts(t *testing.T) {
 	})
 }
 
-// SQS does not return the KMS Data Key Reuse Period Seconds attribute when not using managed encryption,
-// even if it is sent in the request. This causes hanging when statusQueueAttributeState() waits for the
-// attributes to propagate.
-// https://github.com/hashicorp/terraform-provider-aws/pull/41590
+// SQS does not return kms_data_key_reuse_period_seconds when not using encryption, even if it is sent in the
+// request, causing hanging when statusQueueAttributeState() waited for the attributes to propagate.
+// https://github.com/hashicorp/terraform-provider-aws/pull/41234
 func TestAccSQSQueue_noManagedEncryptionKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
 	var queueAttributes map[types.QueueAttributeName]string

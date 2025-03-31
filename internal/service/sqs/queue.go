@@ -79,7 +79,7 @@ var (
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				// KmsDataKeyReusePeriodSeconds is only valid for encrypted queues.
+				// Only valid for encrypted queues, not returned by SQS
 				return !d.Get("sqs_managed_sse_enabled").(bool) && d.Get("kms_master_key_id").(string) == ""
 			},
 		},
