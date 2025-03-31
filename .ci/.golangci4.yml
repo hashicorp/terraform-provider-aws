@@ -197,6 +197,7 @@ linters:
         - XRay
         - XSS
         - YAML
+  exclusions:
     rules:
       - linters:
           - paralleltest
@@ -292,10 +293,6 @@ linters:
           - staticcheck
         path: internal/service/worklink/
         text: 'SA1019: \w+.(\w+) is deprecated: Amazon WorkLink is no longer supported. This will be removed in a future version of the SDK.'
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
 issues:
   max-issues-per-linter: 10
   max-same-issues: 3

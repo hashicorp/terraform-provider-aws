@@ -12,6 +12,7 @@ linters:
     - staticcheck
   settings:
     goconst:
+      ignore-tests: true
       min-occurrences: 6
     gocritic:
       enabled-tags:
@@ -25,19 +26,23 @@ linters:
       checks:
         - argument
       ignored-functions:
+        # AWS Go SDK
         - aws.Int32
         - aws.Int64
         - request.ConstantWaiterDelay
         - request.WithWaiterMaxAttempts
+        # AWS Provider
         - nullable.*
         - tfresource.Retry*
         - tfresource.With*
+        # Terraform Plugin SDK
         - retry.RetryContext
         - schema.DefaultTimeout
         - validation.*
         - floatBetweenSchema
         - intBetweenSchema
         - stringLenBetweenSchema
+        # Terraform Plugin Framework
         - int32validator.*
         - int64validator.*
         - listvalidator.*
@@ -48,6 +53,7 @@ linters:
         - SetDefaultReadTimeout
         - SetDefaultUpdateTimeout
         - SetDefaultDeleteTimeout
+        # Go
         - make
         - strconv.FormatFloat
         - strconv.FormatInt

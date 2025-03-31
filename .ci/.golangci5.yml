@@ -10,9 +10,7 @@ linters:
     - usetesting
     - wastedassign
     - whitespace
-  settings:
-    usetesting:
-      os-setenv: true
+  exclusions:
     rules:
       - linters:
           - tparallel
@@ -20,6 +18,9 @@ linters:
       - linters:
           - unparam
         text: always receives
+  settings:
+    usetesting:
+      os-setenv: true
 issues:
   max-issues-per-linter: 10
   max-same-issues: 3
