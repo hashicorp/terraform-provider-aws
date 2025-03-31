@@ -855,7 +855,9 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
 }
 
 // ConfigRandomPassword returns the configuration for an ephemeral resource that
-// describes a random password. The ephemeral resource is named 'test'. Use
+// describes a random password.
+//
+// The ephemeral resource is named 'test'. Use
 // ephemeral.aws_secretsmanager_random_password.test.random_password to
 // reference the password value, assigning it to a write-only argument ("_wo").
 //
