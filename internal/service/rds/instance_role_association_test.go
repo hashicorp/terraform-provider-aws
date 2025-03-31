@@ -131,16 +131,13 @@ func testAccCheckInstanceRoleAssociationDestroy(ctx context.Context) resource.Te
 }
 
 func testAccInstanceRoleAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_db_instance_role_association" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   feature_name           = "S3_INTEGRATION"
   role_arn               = aws_iam_role.test.arn
-}
-
-data "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
 }
 
 resource "aws_db_instance" "test" {
@@ -149,13 +146,10 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo            = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -187,5 +181,5 @@ data "aws_iam_policy_document" "rds_assume_role_policy" {
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, rName))
 }

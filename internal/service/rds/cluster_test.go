@@ -4072,6 +4072,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_storageChange(rName string, sType string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccConfig_ClusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
@@ -4083,11 +4084,6 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_clusters          = true
 }
 
-data "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   apply_immediately    = true
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
@@ -4097,13 +4093,10 @@ resource "aws_db_instance" "test" {
   storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage    = 400
   iops                 = 12000
-  password             = data.aws_secretsmanager_random_password.test.random_password
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "test"
   skip_final_snapshot  = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, sType))
 }

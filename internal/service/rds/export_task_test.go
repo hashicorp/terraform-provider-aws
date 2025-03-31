@@ -158,7 +158,9 @@ func isInDestroyedStatus(s string) bool {
 }
 
 func testAccExportTaskConfigBase(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -226,11 +228,6 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 10
 }
 
-data "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   allocated_storage   = 10
@@ -238,19 +235,16 @@ resource "aws_db_instance" "test" {
   engine              = "mysql"
   instance_class      = "db.t3.micro"
   username            = "foo"
-  password            = data.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   skip_final_snapshot = true
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccExportTaskConfig_basic(rName string) string {

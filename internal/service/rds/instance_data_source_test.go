@@ -152,14 +152,10 @@ func TestAccRDSInstanceDataSource_matchTags(t *testing.T) {
 
 func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-data "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
@@ -169,7 +165,8 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "tfacctest"
   max_allocated_storage   = 100
@@ -181,10 +178,6 @@ resource "aws_db_instance" "test" {
 
   tags = {
     Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 
@@ -225,14 +218,10 @@ data "aws_db_instance" "test" {
 
 func testAccInstanceDataSourceConfig_matchTags(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-data "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
@@ -242,7 +231,8 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "tfacctest"
   max_allocated_storage   = 100
@@ -254,10 +244,6 @@ resource "aws_db_instance" "test" {
 
   tags = {
     Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [password]
   }
 }
 

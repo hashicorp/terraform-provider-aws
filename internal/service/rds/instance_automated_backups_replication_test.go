@@ -192,7 +192,10 @@ func testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx context.Context)
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_base(rName string, storageEncrypted bool) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -256,17 +259,13 @@ data "aws_rds_orderable_db_instance" "test" {
   provider = "awsalternate"
 }
 
-data "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
   engine                  = data.aws_rds_engine_version.default.engine
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = data.aws_secretsmanager_random_password.test.random_password
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   backup_retention_period = 7
   skip_final_snapshot     = true
@@ -274,10 +273,6 @@ resource "aws_db_instance" "test" {
   db_subnet_group_name    = aws_db_subnet_group.test.name
 
   provider = "awsalternate"
-
-  lifecycle {
-    ignore_changes = [password]
-  }
 }
 `, rName, storageEncrypted, mainInstanceClasses))
 }
