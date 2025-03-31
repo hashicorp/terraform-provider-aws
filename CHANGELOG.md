@@ -1,5 +1,9 @@
 ## 5.94.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_ssm_parameter: The `overwrite` argument is no longer deprecated ([#42030](https://github.com/hashicorp/terraform-provider-aws/issues/42030))
+
 ENHANCEMENTS:
 
 * resource/aws_s3_bucket_lifecycle_configuration: Adds warning if multiple attributes in `rule.expiration` are set ([#42036](https://github.com/hashicorp/terraform-provider-aws/issues/42036))
