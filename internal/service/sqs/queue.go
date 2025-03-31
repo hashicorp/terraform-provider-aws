@@ -550,7 +550,8 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 					sse, sseOK := got[types.QueueAttributeNameSqsManagedSseEnabled]
 					kmsMaster, kmsOK := got[types.QueueAttributeNameKmsMasterKeyId]
-					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && (!sseOK || sseOK && sse == "false") && (!kmsOK || kmsOK && kmsMaster == "") {
+					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds &&
+						((!sseOK || (sseOK && sse == "false")) && (!kmsOK || (kmsOK && kmsMaster == ""))) {
 						// API won't set if not encrypted
 						continue
 					}
