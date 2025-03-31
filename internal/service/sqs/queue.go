@@ -79,7 +79,7 @@ var (
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				// KmsDataKeyReusePeriodSeconds is only valid for SqsManagedSseEnabled queues.
+				// KmsDataKeyReusePeriodSeconds is only valid for encrypted queues.
 				return !d.Get("sqs_managed_sse_enabled").(bool) && d.Get("kms_master_key_id").(string) == ""
 			},
 		},
@@ -551,7 +551,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 					sse, sseOK := got[types.QueueAttributeNameSqsManagedSseEnabled]
 					kmsMaster, kmsOK := got[types.QueueAttributeNameKmsMasterKeyId]
 					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && (!sseOK || sseOK && sse == "false") && (!kmsOK || kmsOK && kmsMaster == "") {
-						// Won't be set if SqsManagedSseEnabled is false.
+						// API won't set if not encrypted
 						continue
 					}
 
