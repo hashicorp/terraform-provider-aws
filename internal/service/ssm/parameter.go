@@ -95,9 +95,8 @@ func resourceParameter() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"overwrite": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "overwrite is deprecated. This argument will be removed in a future major version.",
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -212,7 +211,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	// AWS SSM Service only supports PutParameter requests with Tags
-	// iff Overwrite is not provided or is false; in this resource's case,
+	// if Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
 	tags := getTagsIn(ctx)
 	if !aws.ToBool(input.Overwrite) {
