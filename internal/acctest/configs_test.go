@@ -98,6 +98,8 @@ data "aws_secretsmanager_random_password" "test" {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := acctest.ConfigRandomPassword(tt.overrides...)
 			result = strings.TrimSpace(result)
 			expected := strings.TrimSpace(tt.expected)
