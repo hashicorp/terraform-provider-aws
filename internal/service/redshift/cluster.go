@@ -223,43 +223,6 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"logging": {
-				Type: schema.TypeList,
-				Deprecated: "logging is deprecated. Use the aws_redshift_logging resource instead. " +
-					"This argument will be removed in a future major version.",
-				MaxItems:         1,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"enable": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"log_destination_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
-						},
-						"log_exports": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrS3KeyPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"maintenance_track_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -618,16 +581,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		tfMap := v.([]any)[0].(map[string]any)
-
-		if v, ok := tfMap["enable"].(bool); ok && v {
-			if err := enableLogging(ctx, conn, d.Id(), tfMap); err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): %s", d.Id(), err)
-			}
-		}
-	}
-
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
@@ -645,14 +598,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", d.Id(), err)
-	}
-
-	loggingStatus, err := conn.DescribeLoggingStatus(ctx, &redshift.DescribeLoggingStatusInput{
-		ClusterIdentifier: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s) logging status: %s", d.Id(), err)
 	}
 
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
@@ -697,9 +642,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return aws.ToString(v.IamRoleArn)
 	}))
 	d.Set(names.AttrKMSKeyID, rsc.KmsKeyId)
-	if err := d.Set("logging", flattenLogging(loggingStatus)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
-	}
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 	d.Set("master_username", rsc.MasterUsername)
@@ -742,7 +684,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	if d.HasChangesExcept("aqua_configuration_status", names.AttrAvailabilityZone, "iam_roles", "logging", "multi_az", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
+	if d.HasChangesExcept("aqua_configuration_status", names.AttrAvailabilityZone, "iam_roles", "multi_az", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
 		input := &redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 		}
@@ -928,22 +870,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if d.HasChange("logging") {
-		if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			tfMap := v.([]any)[0].(map[string]any)
-
-			if v, ok := tfMap["enable"].(bool); ok && v {
-				if err := enableLogging(ctx, conn, d.Id(), tfMap); err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s): %s", d.Id(), err)
-				}
-			} else {
-				if err := disableLogging(ctx, conn, d.Id()); err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s): %s", d.Id(), err)
-				}
-			}
-		}
-	}
-
 	if d.HasChange("multi_az") {
 		azRelocationEnabled, multiAZ := d.Get("availability_zone_relocation_enabled").(bool), d.Get("multi_az").(bool)
 		input := &redshift.ModifyClusterInput{
@@ -1032,56 +958,6 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any
 	return []*schema.ResourceData{d}, nil
 }
 
-func enableLogging(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
-	input := &redshift.EnableLoggingInput{
-		ClusterIdentifier: aws.String(clusterID),
-	}
-
-	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
-		input.BucketName = aws.String(v)
-	}
-
-	if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
-		input.LogDestinationType = awstypes.LogDestinationType(v)
-	}
-
-	if v, ok := tfMap["log_exports"].(*schema.Set); ok && v.Len() > 0 {
-		input.LogExports = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
-		input.S3KeyPrefix = aws.String(v)
-	}
-
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
-			return conn.EnableLogging(ctx, input)
-		})
-
-	if err != nil {
-		return fmt.Errorf("enabling logging: %w", err)
-	}
-
-	return nil
-}
-
-func disableLogging(ctx context.Context, conn *redshift.Client, clusterID string) error {
-	input := &redshift.DisableLoggingInput{
-		ClusterIdentifier: aws.String(clusterID),
-	}
-
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
-			return conn.DisableLogging(ctx, input)
-		})
-
-	if err != nil {
-		return fmt.Errorf("disabling logging: %w", err)
-	}
-
-	return nil
-}
-
 func flattenClusterNode(apiObject awstypes.ClusterNode) map[string]any {
 	tfMap := map[string]any{}
 
@@ -1136,30 +1012,4 @@ func clusterMultiAZStatus(cluster *awstypes.Cluster) (bool, error) {
 	default:
 		return false, fmt.Errorf("unexpected MultiAZ value %q returned by API", multiAZStatus)
 	}
-}
-
-func flattenLogging(ls *redshift.DescribeLoggingStatusOutput) []any {
-	if ls == nil {
-		return []any{}
-	}
-
-	cfg := make(map[string]any)
-
-	cfg["enable"] = aws.ToBool(ls.LoggingEnabled)
-
-	if ls.BucketName != nil {
-		cfg[names.AttrBucketName] = aws.ToString(ls.BucketName)
-	}
-
-	cfg["log_destination_type"] = ls.LogDestinationType
-
-	if ls.LogExports != nil {
-		cfg["log_exports"] = ls.LogExports
-	}
-
-	if ls.S3KeyPrefix != nil {
-		cfg[names.AttrS3KeyPrefix] = aws.ToString(ls.S3KeyPrefix)
-	}
-
-	return []any{cfg}
 }
