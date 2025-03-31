@@ -273,7 +273,7 @@ resource "aws_securitylake_aws_log_source" "test" {
   accounts    = [data.aws_caller_identity.current.account_id]
   regions     = [data.aws_region.current.name]
   source_name = "ROUTE53"
-  depends_on = [aws_securitylake_data_lake.test]
+  depends_on  = [aws_securitylake_data_lake.test]
 }
 
 data "aws_region" "current" {}
@@ -288,7 +288,7 @@ resource "aws_securitylake_aws_log_source" "test" {
   regions        = [data.aws_region.current.name]
   source_name    = "ROUTE53"
   source_version = %[1]q
-  depends_on = [aws_securitylake_data_lake.test]
+  depends_on     = [aws_securitylake_data_lake.test]
 }
 
 data "aws_region" "current" {}
