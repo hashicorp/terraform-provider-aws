@@ -63,6 +63,7 @@ The following arguments are optional:
 * `fast_launch_configuration` - (Optional) Set of Windows faster-launching configurations to use for AMI distribution. Detailed below.
 * `launch_template_configuration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `license_configuration_arns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
+* `s3_export_configuration` - (Optional) Configuration block with S3 export settings. Detailed below.
 
 ### ami_distribution_configuration
 
@@ -118,6 +119,13 @@ The following arguments are optional:
 * `default` - (Optional) Indicates whether to set the specified Amazon EC2 launch template as the default launch template. Defaults to `true`.
 * `account_id` - The account ID that this configuration applies to.
 * `launch_template_id` - (Required) The ID of the Amazon EC2 launch template to use.
+
+### s3_export_configuration
+
+* `disk_image_format` - (Required) The disk image format of the exported image (`RAW`, `VHD`, or `VMDK`)
+* `role_name` - (Required) The name of the IAM role to use for exporting.
+* `s3_bucket` - (Required) The name of the S3 bucket to store the exported image in. The bucket needs to exist before the export configuration is created.
+* `s3_prefix` - (Optional) The prefix for the exported image.
 
 ## Attribute Reference
 

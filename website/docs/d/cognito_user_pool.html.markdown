@@ -49,7 +49,8 @@ This data source exports the following attributes in addition to the arguments a
 * `sms_authentication_message` - The contents of the SMS authentication message.
 * `sms_configuration_failure` - The reason why the SMS configuration can't send the messages to your users.
 * `sms_verification_message` - The contents of the SMS authentication message.
-* `user_pool_tags` - The tags that are assigned to the user pool. A tag is a label that you can apply to user pools to categorize and manage them in different ways, such as by purpose, owner, environment, or other criteria.
+* `tags` - Map of tags assigned to the resource.
+* `user_pool_tags` - (Deprecated) Map of tags assigned to the resource.
 * `username_attributes` - Specifies whether a user can use an email address or phone number as a username when they sign up.
 
 ### account recover setting

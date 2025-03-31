@@ -60,8 +60,6 @@ resource "aws_s3_object" "test" {
   })
 }
 
-data "aws_partition" "current" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string

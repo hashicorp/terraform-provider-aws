@@ -23,12 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_medialive_multiplex", name="Multiplex")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput", importIgnore="start_multiplex")
+// @Testing(serialize=true)
 func ResourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,
@@ -100,8 +101,6 @@ func ResourceMultiplex() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -109,7 +108,7 @@ const (
 	ResNameMultiplex = "Multiplex"
 )
 
-func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -117,12 +116,12 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(id.UniqueId()),
 		Name:              aws.String(d.Get(names.AttrName).(string)),
-		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
+		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		Tags:              getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("multiplex_settings"); ok && len(v.([]interface{})) > 0 {
-		in.MultiplexSettings = expandMultiplexSettings(v.([]interface{}))
+	if v, ok := d.GetOk("multiplex_settings"); ok && len(v.([]any)) > 0 {
+		in.MultiplexSettings = expandMultiplexSettings(v.([]any))
 	}
 
 	out, err := conn.CreateMultiplex(ctx, in)
@@ -149,7 +148,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceMultiplexRead(ctx, d, meta)...)
 }
 
-func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -177,7 +176,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -191,7 +190,7 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			in.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 		if d.HasChange("multiplex_settings") {
-			in.MultiplexSettings = expandMultiplexSettings(d.Get("multiplex_settings").([]interface{}))
+			in.MultiplexSettings = expandMultiplexSettings(d.Get("multiplex_settings").([]any))
 		}
 
 		log.Printf("[DEBUG] Updating MediaLive Multiplex (%s): %#v", d.Id(), in)
@@ -228,7 +227,7 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceMultiplexRead(ctx, d, meta)...)
 }
 
-func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -242,7 +241,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 	}
 
 	if out.State == types.MultiplexStateRunning {
@@ -358,7 +357,7 @@ func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string
 }
 
 func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindMultiplexByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -396,27 +395,27 @@ func FindMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 	return out, nil
 }
 
-func flattenMultiplexSettings(apiObject *types.MultiplexSettings) []interface{} {
+func flattenMultiplexSettings(apiObject *types.MultiplexSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"transport_stream_bitrate":                apiObject.TransportStreamBitrate,
 		"transport_stream_id":                     apiObject.TransportStreamId,
 		"maximum_video_buffer_delay_milliseconds": apiObject.MaximumVideoBufferDelayMilliseconds,
 		"transport_stream_reserved_bitrate":       apiObject.TransportStreamReservedBitrate,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandMultiplexSettings(tfList []interface{}) *types.MultiplexSettings {
+func expandMultiplexSettings(tfList []any) *types.MultiplexSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	m := tfList[0].(map[string]any)
 
 	s := types.MultiplexSettings{}
 

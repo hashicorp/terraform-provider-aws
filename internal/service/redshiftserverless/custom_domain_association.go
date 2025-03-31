@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Domain Association")
+// @FrameworkResource("aws_redshiftserverless_custom_domain_association", name="Custom Domain Association")
 func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customDomainAssociationResource{}
 
@@ -45,10 +45,6 @@ type customDomainAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*customDomainAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_redshiftserverless_custom_domain_association"
 }
 
 func (r *customDomainAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -107,7 +103,12 @@ func (r *customDomainAssociationResource) Create(ctx context.Context, request re
 
 	// Set values for unknowns.
 	data.CustomDomainCertificateExpiryTime = timetypes.NewRFC3339TimePointerValue(output.CustomDomainCertificateExpiryTime)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Redshift Serverless Custom Domain Association", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -164,9 +165,9 @@ func (r *customDomainAssociationResource) Update(ctx context.Context, request re
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
 	input := &redshiftserverless.UpdateCustomDomainAssociationInput{
-		CustomDomainCertificateArn: aws.String(new.CustomDomainCertificateARN.ValueString()),
-		CustomDomainName:           aws.String(new.CustomDomainName.ValueString()),
-		WorkgroupName:              aws.String(new.WorkgroupName.ValueString()),
+		CustomDomainCertificateArn: new.CustomDomainCertificateARN.ValueStringPointer(),
+		CustomDomainName:           new.CustomDomainName.ValueStringPointer(),
+		WorkgroupName:              new.WorkgroupName.ValueStringPointer(),
 	}
 
 	output, err := conn.UpdateCustomDomainAssociation(ctx, input)
@@ -193,8 +194,8 @@ func (r *customDomainAssociationResource) Delete(ctx context.Context, request re
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
 	_, err := conn.DeleteCustomDomainAssociation(ctx, &redshiftserverless.DeleteCustomDomainAssociationInput{
-		CustomDomainName: aws.String(data.CustomDomainName.ValueString()),
-		WorkgroupName:    aws.String(data.WorkgroupName.ValueString()),
+		CustomDomainName: data.CustomDomainName.ValueStringPointer(),
+		WorkgroupName:    data.WorkgroupName.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -260,6 +261,11 @@ func (data *customDomainAssociationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *customDomainAssociationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkgroupName.ValueString(), data.CustomDomainName.ValueString()}, customDomainAssociationResourceIDPartCount, false)))
+func (data *customDomainAssociationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.WorkgroupName.ValueString(),
+		data.CustomDomainName.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, customDomainAssociationResourceIDPartCount, false)
 }

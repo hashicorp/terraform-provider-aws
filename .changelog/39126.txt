@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lexv2models_slot_type: Fix `slot_type_values` validator which limited configurations to 1 element
+```

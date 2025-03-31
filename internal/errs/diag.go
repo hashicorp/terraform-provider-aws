@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -112,6 +113,34 @@ func NewAttributeRequiredWhenError(neededPath, otherPath cty.Path, value string)
 			PathString(otherPath),
 			value,
 		),
+	)
+}
+
+// NewAtLeastOneOfChildrenError returns an error diagnostic indicating that at least on of the named children of
+// parentPath is required.
+func NewAtLeastOneOfChildrenError(parentPath cty.Path, paths ...cty.Path) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("At least one attribute out of [%s] must be specified", strings.Join(tfslices.ApplyToAll(paths, PathString), ", ")),
+	)
+}
+
+// NewAttributeRequiredWhenError should only be used for apply-time validation, as it replicates
+// the functionality of a `Required` attribute
+func NewAttributeRequiredError(parentPath cty.Path, attrname string) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Missing required argument",
+		fmt.Sprintf("The argument %q is required, but no definition was found.", attrname),
+	)
+}
+
+// NewAttributeRequiredWillBeError returns a warning diagnostic indicating that the attribute at the given path is required.
+// This is intended to be used for situations where the missing attribute will be an error in a future release.
+func NewAttributeRequiredWillBeError(parentPath cty.Path, attrname string) diag.Diagnostic {
+	return willBeError(
+		NewAttributeRequiredError(parentPath, attrname),
 	)
 }
 

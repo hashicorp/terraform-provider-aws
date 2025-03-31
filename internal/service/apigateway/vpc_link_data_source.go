@@ -21,11 +21,16 @@ import (
 
 // @SDKDataSource("aws_api_gateway_vpc_link", name="VPC Link")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -56,14 +61,14 @@ func dataSourceVPCLink() *schema.Resource {
 	}
 }
 
-func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName)
-	input := &apigateway.GetVpcLinksInput{}
+	input := apigateway.GetVpcLinksInput{}
 
-	match, err := findVPCLink(ctx, conn, input, func(v *types.VpcLink) bool {
+	match, err := findVPCLink(ctx, conn, &input, func(v *types.VpcLink) bool {
 		return aws.ToString(v.Name) == name
 	})
 
@@ -72,6 +77,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.ToString(match.Id))
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrDescription, match.Description)
 	d.Set(names.AttrName, match.Name)
 	d.Set(names.AttrStatus, match.Status)

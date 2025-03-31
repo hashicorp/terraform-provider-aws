@@ -5,8 +5,8 @@ package location
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	location_sdkv2 "github.com/aws/aws-sdk-go-v2/service/location"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,30 +27,37 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceGeofenceCollection,
 			TypeName: "aws_location_geofence_collection",
+			Name:     "Geofence Collection",
 		},
 		{
 			Factory:  DataSourceMap,
 			TypeName: "aws_location_map",
+			Name:     "Map",
 		},
 		{
 			Factory:  DataSourcePlaceIndex,
 			TypeName: "aws_location_place_index",
+			Name:     "Place Index",
 		},
 		{
 			Factory:  DataSourceRouteCalculator,
 			TypeName: "aws_location_route_calculator",
+			Name:     "Route Calculator",
 		},
 		{
 			Factory:  DataSourceTracker,
 			TypeName: "aws_location_tracker",
+			Name:     "Tracker",
 		},
 		{
 			Factory:  DataSourceTrackerAssociation,
 			TypeName: "aws_location_tracker_association",
+			Name:     "Tracker Association",
 		},
 		{
 			Factory:  DataSourceTrackerAssociations,
 			TypeName: "aws_location_tracker_associations",
+			Name:     "Tracker Associations",
 		},
 	}
 }
@@ -100,6 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrackerAssociation,
 			TypeName: "aws_location_tracker_association",
+			Name:     "Tracker Association",
 		},
 	}
 }
@@ -109,13 +117,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*location_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return location_sdkv2.NewFromConfig(cfg,
-		location_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*location.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*location.Options){
+		location.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return location.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*location.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*location.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *location.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*location.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

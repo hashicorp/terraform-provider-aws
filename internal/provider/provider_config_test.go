@@ -13,7 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/go-cmp/cmp"
 	configtesting "github.com/hashicorp/aws-sdk-go-base/v2/configtesting"
+	"github.com/hashicorp/aws-sdk-go-base/v2/mockdata"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +28,7 @@ import (
 // * https://github.com/aws/aws-sdk-go-v2/issues/2363: leading whitespace
 // * https://github.com/aws/aws-sdk-go-v2/issues/2369: trailing `#` in, e.g. SSO Start URLs
 func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
+	ctx := context.TODO()
 	testcases := map[string]struct {
 		Config                  map[string]any
 		SharedConfigurationFile string
@@ -38,7 +41,7 @@ region = us-west-2
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-west-2"; a != e {
+				if a, e := meta.Region(ctx), "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -51,7 +54,7 @@ region = us-west-2
 	`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-west-2"; a != e {
+				if a, e := meta.Region(ctx), "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -65,7 +68,7 @@ region = us-west-2
 		`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-west-2"; a != e {
+				if a, e := meta.Region(ctx), "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -85,7 +88,7 @@ region = us-west-2
 			`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-east-1"; a != e {
+				if a, e := meta.Region(ctx), "us-east-1"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -104,7 +107,7 @@ region = us-east-1
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
-				if a, e := meta.Region, "us-east-1"; a != e {
+				if a, e := meta.Region(ctx), "us-east-1"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
 				}
 			},
@@ -132,8 +135,6 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 	}
 
 	for name, tc := range testcases { //nolint:paralleltest
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			ctx := context.TODO()
 
@@ -149,7 +150,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 			maps.Copy(config, tc.Config)
 
 			if tc.SharedConfigurationFile != "" {
-				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
+				file, err := os.CreateTemp(t.TempDir(), "aws-sdk-go-base-shared-configuration-file")
 
 				if err != nil {
 					t.Fatalf("unexpected error creating temporary shared configuration file: %s", err)
@@ -181,14 +182,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 
 			diags = append(diags, p.Configure(ctx, rc)...)
 
-			// The provider always returns a warning if there is no account ID
 			var expected diag.Diagnostics
-			expected = append(expected,
-				errs.NewWarningDiagnostic(
-					"AWS account ID not found for provider",
-					"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-				),
-			)
 
 			if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -282,16 +276,7 @@ func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Contex
 
 	diags = append(diags, p.Configure(ctx, rc)...)
 
-	// The provider always returns a warning if there is no account ID
 	var expected diag.Diagnostics
-	if d.mode == configtesting.TestModeLocal {
-		expected = append(expected,
-			errs.NewWarningDiagnostic(
-				"AWS account ID not found for provider",
-				"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-			),
-		)
-	}
 
 	if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -379,4 +364,254 @@ func TestProviderConfig_Authentication_SSO(t *testing.T) { //nolint:paralleltest
 
 func TestProviderConfig_Authentication_LegacySSO(t *testing.T) { //nolint:paralleltest
 	configtesting.LegacySSO(t, &testDriver{})
+}
+
+func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
+	testCases := map[string]struct {
+		Config                   map[string]any
+		ExpectedCredentialsValue aws.Credentials
+		ExpectedDiags            diag.Diagnostics
+		MockStsEndpoints         []*servicemocks.MockEndpoint
+	}{
+		"config single": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+
+		"config multiple": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+				servicemocks.MockStsAssumeRoleValidEndpointWithOptions(map[string]string{
+					"RoleArn":         servicemocks.MockStsAssumeRoleArn2,
+					"RoleSessionName": servicemocks.MockStsAssumeRoleSessionName2,
+				}),
+			},
+		},
+
+		// For historical reasons, this is valid
+		"config empty": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredWillBeError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		// For historical reasons, this is valid
+		"config null string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": nil,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredWillBeError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		// For historical reasons, this is valid
+		"config empty string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": "",
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredWillBeError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		"config multiple first empty": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{},
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		"config multiple first null string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": nil,
+					},
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		"config multiple first empty string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn": nil,
+					},
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn2,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName2,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(0), "role_arn"),
+			},
+		},
+
+		"config multiple last empty": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+					map[string]any{},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(1), "role_arn"),
+			},
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+
+		"config multiple last null string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+					map[string]any{
+						"role_arn": nil,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(1), "role_arn"),
+			},
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+
+		"config multiple last empty string": {
+			Config: map[string]any{
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     servicemocks.MockStsAssumeRoleArn,
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+					map[string]any{
+						"role_arn": "",
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			ExpectedDiags: diag.Diagnostics{
+				errs.NewAttributeRequiredError(cty.GetAttrPath("assume_role").IndexInt(1), "role_arn"),
+			},
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+	}
+
+	for name, tc := range testCases { //nolint:paralleltest
+		t.Run(name, func(t *testing.T) {
+			ctx := context.TODO()
+
+			servicemocks.InitSessionTestEnv(t)
+
+			closeSts, _, stsEndpoint := mockdata.GetMockedAwsApiSession("STS", tc.MockStsEndpoints)
+			defer closeSts()
+
+			config := map[string]any{
+				"region":                      "us-west-2", //lintignore:AWSAT003
+				"access_key":                  servicemocks.MockStaticAccessKey,
+				"secret_key":                  servicemocks.MockStaticSecretKey,
+				"skip_credentials_validation": true,
+				"skip_requesting_account_id":  true,
+				"endpoints": []any{
+					map[string]any{
+						"sts": stsEndpoint,
+					},
+				},
+			}
+
+			maps.Copy(config, tc.Config)
+
+			rc := terraformsdk.NewResourceConfigRaw(config)
+
+			p, err := New(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var diags diag.Diagnostics
+			diags = append(diags, p.Validate(rc)...)
+			if diags.HasError() {
+				t.Fatalf("validating: %s", sdkdiag.DiagnosticsString(diags))
+			}
+
+			diags = append(diags, p.Configure(ctx, rc)...)
+
+			expectedDiags := tc.ExpectedDiags
+
+			if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+		})
+	}
 }

@@ -61,6 +61,7 @@ var (
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
+	ResourceNetworkInterfacePermission                    = newNetworkInterfacePermissionResource
 	ResourceNetworkInterfaceSGAttachment                  = resourceNetworkInterfaceSGAttachment
 	ResourceNetworkPerformanceMetricSubscription          = resourceNetworkPerformanceMetricSubscription
 	ResourcePlacementGroup                                = resourcePlacementGroup
@@ -69,6 +70,8 @@ var (
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
+	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
+	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -81,6 +84,8 @@ var (
 	ResourceTrafficMirrorSession                          = resourceTrafficMirrorSession
 	ResourceTrafficMirrorTarget                           = resourceTrafficMirrorTarget
 	ResourceTransitGatewayConnect                         = resourceTransitGatewayConnect
+	ResourceTransitGatewayDefaultRouteTableAssociation    = newTransitGatewayDefaultRouteTableAssociationResource
+	ResourceTransitGatewayDefaultRouteTablePropagation    = newTransitGatewayDefaultRouteTablePropagationResource
 	ResourceTransitGatewayMulticastDomain                 = resourceTransitGatewayMulticastDomain
 	ResourceTransitGatewayMulticastDomainAssociation      = resourceTransitGatewayMulticastDomainAssociation
 	ResourceTransitGatewayMulticastGroupMember            = resourceTransitGatewayMulticastGroupMember
@@ -96,6 +101,8 @@ var (
 	ResourceTransitGatewayRouteTablePropagation           = resourceTransitGatewayRouteTablePropagation
 	ResourceTransitGatewayVPCAttachment                   = resourceTransitGatewayVPCAttachment
 	ResourceTransitGatewayVPCAttachmentAccepter           = resourceTransitGatewayVPCAttachmentAccepter
+	ResourceVPCBlockPublicAccessExclusion                 = newVPCBlockPublicAccessExclusionResource
+	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
@@ -120,6 +127,7 @@ var (
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
+	CheckMostRecentAndMissingFilters                           = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
@@ -147,6 +155,7 @@ var (
 	FindHostByID                                               = findHostByID
 	FindIPAMByID                                               = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                         = findIPAMPoolAllocationByTwoPartKey
+	FindIPAMPoolAllocationsForVPC                              = findIPAMPoolAllocationsForVPC
 	FindIPAMPoolByID                                           = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                               = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                   = findIPAMResourceDiscoveryAssociationByID
@@ -173,6 +182,7 @@ var (
 	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                   = findNetworkInterfaceByID
+	FindNetworkInterfacePermissionByID                         = findNetworkInterfacePermissionByID
 	FindNetworkInterfaceSecurityGroup                          = findNetworkInterfaceSecurityGroup
 	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
 	FindPlacementGroupByName                                   = findPlacementGroupByName
@@ -214,6 +224,7 @@ var (
 	FindTransitGatewayRouteTablePropagationByTwoPartKey        = findTransitGatewayRouteTablePropagationByTwoPartKey
 	FindTransitGatewayStaticRoute                              = findTransitGatewayStaticRoute
 	FindTransitGatewayVPCAttachmentByID                        = findTransitGatewayVPCAttachmentByID
+	FindVPCBlockPublicAccessExclusionByID                      = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                            = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                              = findVPCDHCPOptionsAssociation
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID       = findVPCEndpointConnectionByServiceIDAndVPCEndpointID

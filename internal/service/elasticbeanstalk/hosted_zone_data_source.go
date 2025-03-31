@@ -6,7 +6,7 @@ package elasticbeanstalk
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +16,7 @@ import (
 
 // See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html
 
-var HostedZoneIDs = map[string]string{
+var hostedZoneIDs = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z1EI3BVKMKK4AM",
 	endpoints.ApSoutheast1RegionID: "Z16FZ9L249IFLT",
 	endpoints.ApSoutheast2RegionID: "Z2PCDNR3VC2G1N",
@@ -45,8 +45,8 @@ var HostedZoneIDs = map[string]string{
 	endpoints.UsGovWest1RegionID: "Z4KAURWC4UUUG",
 }
 
-// @SDKDataSource("aws_elastic_beanstalk_hosted_zone")
-func DataSourceHostedZone() *schema.Resource {
+// @SDKDataSource("aws_elastic_beanstalk_hosted_zone", name="Hosted Zone")
+func dataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
 
@@ -59,20 +59,20 @@ func DataSourceHostedZone() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
-	zoneID, ok := HostedZoneIDs[region]
-
+	zoneID, ok := hostedZoneIDs[region]
 	if !ok {
-		return sdkdiag.AppendErrorf(diags, "Unsupported region: %s", region)
+		return sdkdiag.AppendErrorf(diags, "unsupported Elastic Beanstalk Region (%s)", region)
 	}
 
 	d.SetId(zoneID)
 	d.Set(names.AttrRegion, region)
+
 	return diags
 }

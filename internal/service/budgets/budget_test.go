@@ -64,21 +64,21 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						names.AttrName: "Service",
-						"values.#":     acctest.Ct1,
+						"values.#":     "1",
 						"values.0":     "Amazon Redshift",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
@@ -107,20 +107,20 @@ func TestAccBudgetsBudget_Name_generated(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_nameGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_COVERAGE"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						names.AttrName: "Service",
-						"values.#":     acctest.Ct1,
+						"values.#":     "1",
 						"values.0":     "Amazon Redshift",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
@@ -149,15 +149,15 @@ func TestAccBudgetsBudget_namePrefix(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "SAVINGS_PLANS_UTILIZATION"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
@@ -187,7 +187,7 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -211,10 +211,10 @@ func TestAccBudgetsBudget_autoAdjustDataForecast(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_autoAdjustDataForecast(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "FORECAST"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -242,13 +242,13 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_autoAdjustDataHistorical(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
-					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.last_auto_adjust_time"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
 				),
@@ -261,13 +261,13 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_autoAdjustDataHistoricalUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "5"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.last_auto_adjust_time"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
 				),
@@ -301,16 +301,16 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_costTypes(rName, startDate1, endDate1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						names.AttrName: "AZ",
-						"values.#":     acctest.Ct2,
+						"values.#":     "2",
 						"values.0":     acctest.Region(),
 						"values.1":     acctest.AlternateRegion(),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "cost_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_other_subscription", acctest.CtTrue),
@@ -325,8 +325,8 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "456.78"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "time_period_end", endDate1),
 					resource.TestCheckResourceAttr(resourceName, "time_period_start", startDate1),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
@@ -340,16 +340,16 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_costTypesUpdated(rName, startDate2, endDate2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						names.AttrName: "AZ",
-						"values.#":     acctest.Ct2,
+						"values.#":     "2",
 						"values.0":     acctest.AlternateRegion(),
 						"values.1":     acctest.ThirdRegion(),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "cost_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_other_subscription", acctest.CtTrue),
@@ -364,8 +364,8 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "567.89"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "time_period_end", endDate2),
 					resource.TestCheckResourceAttr(resourceName, "time_period_start", startDate2),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
@@ -396,18 +396,18 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_notifications(rName, emailAddress1, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "USAGE"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "432.1"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "GBP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
 						"comparison_operator":          "GREATER_THAN",
 						"notification_type":            "ACTUAL",
-						"subscriber_email_addresses.#": acctest.Ct0,
-						"subscriber_sns_topic_arns.#":  acctest.Ct1,
+						"subscriber_email_addresses.#": "0",
+						"subscriber_sns_topic_arns.#":  "1",
 						"threshold":                    "150",
 						"threshold_type":               "PERCENTAGE",
 					}),
@@ -415,14 +415,14 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
 						"comparison_operator":          "EQUAL_TO",
 						"notification_type":            "FORECASTED",
-						"subscriber_email_addresses.#": acctest.Ct2,
-						"subscriber_sns_topic_arns.#":  acctest.Ct0,
+						"subscriber_email_addresses.#": "2",
+						"subscriber_sns_topic_arns.#":  "0",
 						"threshold":                    "200.1",
 						"threshold_type":               "ABSOLUTE_VALUE",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress2),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
 				),
 			},
@@ -434,23 +434,23 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 			{
 				Config: testAccBudgetConfig_notificationsUpdated(rName, emailAddress3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "USAGE"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "432.1"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "GBP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
 						"comparison_operator":          "LESS_THAN",
 						"notification_type":            "ACTUAL",
-						"subscriber_email_addresses.#": acctest.Ct1,
-						"subscriber_sns_topic_arns.#":  acctest.Ct0,
+						"subscriber_email_addresses.#": "1",
+						"subscriber_sns_topic_arns.#":  "0",
 						"threshold":                    "123.45",
 						"threshold_type":               "ABSOLUTE_VALUE",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress3),
-					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
 				),
 			},
@@ -478,7 +478,7 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					append(
 						testCheckFuncs1,
-						testAccBudgetExists(ctx, resourceName, &budget),
+						testAccCheckBudgetExists(ctx, resourceName, &budget),
 						resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 						resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 						resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
@@ -496,7 +496,7 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					append(
 						testCheckFuncs2,
-						testAccBudgetExists(ctx, resourceName, &budget),
+						testAccCheckBudgetExists(ctx, resourceName, &budget),
 						resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 						resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 						resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
@@ -508,53 +508,7 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 	})
 }
 
-func TestAccBudgetsBudget_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var budget awstypes.Budget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_budgets_budget.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBudgetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccBudgetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccBudgetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
-func testAccBudgetExists(ctx context.Context, resourceName string, v *awstypes.Budget) resource.TestCheckFunc {
+func testAccCheckBudgetExists(ctx context.Context, resourceName string, v *awstypes.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -844,49 +798,6 @@ resource "aws_budgets_budget" "test" {
 `, rName, config)
 }
 
-func testAccBudgetConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "RI_UTILIZATION"
-  limit_amount = "100.0"
-  limit_unit   = "PERCENTAGE"
-  time_unit    = "QUARTERLY"
-
-  cost_filter {
-    name   = "Service"
-    values = ["Amazon Redshift"]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccBudgetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "RI_UTILIZATION"
-  limit_amount = "100.0"
-  limit_unit   = "PERCENTAGE"
-  time_unit    = "QUARTERLY"
-
-  cost_filter {
-    name   = "Service"
-    values = ["Amazon Redshift"]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {
 	startTimes := make([]time.Time, 12)
 
@@ -898,7 +809,7 @@ func generateStartTimes(resourceName, amount string, now time.Time) (string, []r
 	}
 
 	configBuilder := strings.Builder{}
-	for i := 0; i < len(startTimes); i++ {
+	for i := range startTimes {
 		configBuilder.WriteString(fmt.Sprintf(`
 planned_limit {
   start_time = %[1]q
@@ -909,7 +820,7 @@ planned_limit {
 	}
 
 	testCheckFuncs := make([]resource.TestCheckFunc, len(startTimes))
-	for i := 0; i < len(startTimes); i++ {
+	for i := range startTimes {
 		testCheckFuncs[i] = resource.TestCheckTypeSetElemNestedAttrs(resourceName, "planned_limit.*", map[string]string{
 			names.AttrStartTime: tfbudgets.TimePeriodTimestampToString(&startTimes[i]),
 			"amount":            amount,

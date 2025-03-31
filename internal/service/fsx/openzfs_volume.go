@@ -37,7 +37,7 @@ func resourceOpenZFSVolume() *schema.Resource {
 		DeleteWithoutTimeout: resourceOpenZFSVolumeDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("delete_volume_options", nil)
 
 				return []*schema.ResourceData{d}, nil
@@ -205,12 +205,10 @@ func resourceOpenZFSVolume() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -227,11 +225,11 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("nfs_exports"); ok {
-		openzfsConfig.NfsExports = expandOpenZFSNfsExports(v.([]interface{}))
+		openzfsConfig.NfsExports = expandOpenZFSNfsExports(v.([]any))
 	}
 
 	if v, ok := d.GetOk("origin_snapshot"); ok {
-		openzfsConfig.OriginSnapshot = expandCreateOpenZFSOriginSnapshotConfiguration(v.([]interface{}))
+		openzfsConfig.OriginSnapshot = expandCreateOpenZFSOriginSnapshotConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("read_only"); ok {
@@ -278,7 +276,7 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceOpenZFSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -322,7 +320,7 @@ func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -334,7 +332,7 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if d.HasChange("nfs_exports") {
-			openzfsConfig.NfsExports = expandOpenZFSNfsExports(d.Get("nfs_exports").([]interface{}))
+			openzfsConfig.NfsExports = expandOpenZFSNfsExports(d.Get("nfs_exports").([]any))
 		}
 
 		if d.HasChange("read_only") {
@@ -386,7 +384,7 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceOpenZFSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -394,9 +392,9 @@ func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, me
 		VolumeId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("delete_volume_options"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("delete_volume_options"); ok && len(v.([]any)) > 0 {
 		input.OpenZFSConfiguration = &awstypes.DeleteVolumeOpenZFSConfiguration{
-			Options: flex.ExpandStringyValueList[awstypes.DeleteOpenZFSVolumeOption](v.([]interface{})),
+			Options: flex.ExpandStringyValueList[awstypes.DeleteOpenZFSVolumeOption](v.([]any)),
 		}
 	}
 
@@ -418,11 +416,11 @@ func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandOpenZFSUserOrGroupQuotas(cfg []interface{}) []awstypes.OpenZFSUserOrGroupQuota {
+func expandOpenZFSUserOrGroupQuotas(cfg []any) []awstypes.OpenZFSUserOrGroupQuota {
 	quotas := []awstypes.OpenZFSUserOrGroupQuota{}
 
 	for _, quota := range cfg {
-		expandedQuota := expandOpenZFSUserOrGroupQuota(quota.(map[string]interface{}))
+		expandedQuota := expandOpenZFSUserOrGroupQuota(quota.(map[string]any))
 		if expandedQuota != nil {
 			quotas = append(quotas, *expandedQuota)
 		}
@@ -431,7 +429,7 @@ func expandOpenZFSUserOrGroupQuotas(cfg []interface{}) []awstypes.OpenZFSUserOrG
 	return quotas
 }
 
-func expandOpenZFSUserOrGroupQuota(conf map[string]interface{}) *awstypes.OpenZFSUserOrGroupQuota {
+func expandOpenZFSUserOrGroupQuota(conf map[string]any) *awstypes.OpenZFSUserOrGroupQuota {
 	if len(conf) < 1 {
 		return nil
 	}
@@ -453,11 +451,11 @@ func expandOpenZFSUserOrGroupQuota(conf map[string]interface{}) *awstypes.OpenZF
 	return &out
 }
 
-func expandOpenZFSNfsExports(tfList []interface{}) []awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
+func expandOpenZFSNfsExports(tfList []any) []awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
 	apiObjects := []awstypes.OpenZFSNfsExport{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -468,7 +466,7 @@ func expandOpenZFSNfsExports(tfList []interface{}) []awstypes.OpenZFSNfsExport {
 	return apiObjects
 }
 
-func expandOpenZFSNfsExport(tfMap map[string]interface{}) awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
+func expandOpenZFSNfsExport(tfMap map[string]any) awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
 	apiObject := awstypes.OpenZFSNfsExport{}
 
 	if v, ok := tfMap["client_configurations"]; ok {
@@ -478,11 +476,11 @@ func expandOpenZFSNfsExport(tfMap map[string]interface{}) awstypes.OpenZFSNfsExp
 	return apiObject
 }
 
-func expandOpenZFSClientConfigurations(tfList []interface{}) []awstypes.OpenZFSClientConfiguration {
+func expandOpenZFSClientConfigurations(tfList []any) []awstypes.OpenZFSClientConfiguration {
 	apiObjects := []awstypes.OpenZFSClientConfiguration{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -493,26 +491,26 @@ func expandOpenZFSClientConfigurations(tfList []interface{}) []awstypes.OpenZFSC
 	return apiObjects
 }
 
-func expandOpenZFSClientConfiguration(tfMap map[string]interface{}) awstypes.OpenZFSClientConfiguration {
+func expandOpenZFSClientConfiguration(tfMap map[string]any) awstypes.OpenZFSClientConfiguration {
 	apiObject := awstypes.OpenZFSClientConfiguration{}
 
 	if v, ok := tfMap["clients"].(string); ok && len(v) > 0 {
 		apiObject.Clients = aws.String(v)
 	}
 
-	if v, ok := tfMap["options"].([]interface{}); ok {
+	if v, ok := tfMap["options"].([]any); ok {
 		apiObject.Options = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *awstypes.CreateOpenZFSOriginSnapshotConfiguration {
+func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []any) *awstypes.CreateOpenZFSOriginSnapshotConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
-	conf := cfg[0].(map[string]interface{})
+	conf := cfg[0].(map[string]any)
 
 	out := awstypes.CreateOpenZFSOriginSnapshotConfiguration{}
 
@@ -527,8 +525,8 @@ func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *awstypes
 	return &out
 }
 
-func flattenOpenZFSNfsExports(apiObjects []awstypes.OpenZFSNfsExport) []interface{} { // nosemgrep:ci.caps4-in-func-name
-	tfList := make([]interface{}, 0)
+func flattenOpenZFSNfsExports(apiObjects []awstypes.OpenZFSNfsExport) []any { // nosemgrep:ci.caps4-in-func-name
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		// The API may return '"NfsExports":[null]'.
@@ -536,7 +534,7 @@ func flattenOpenZFSNfsExports(apiObjects []awstypes.OpenZFSNfsExport) []interfac
 			continue
 		}
 
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 		tfMap["client_configurations"] = flattenOpenZFSClientConfigurations(apiObject.ClientConfigurations)
 		tfList = append(tfList, tfMap)
 	}
@@ -548,11 +546,11 @@ func flattenOpenZFSNfsExports(apiObjects []awstypes.OpenZFSNfsExport) []interfac
 	return nil
 }
 
-func flattenOpenZFSClientConfigurations(apiObjects []awstypes.OpenZFSClientConfiguration) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenOpenZFSClientConfigurations(apiObjects []awstypes.OpenZFSClientConfiguration) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 		tfMap["clients"] = aws.ToString(apiObject.Clients)
 		tfMap["options"] = apiObject.Options
 		tfList = append(tfList, tfMap)
@@ -565,11 +563,11 @@ func flattenOpenZFSClientConfigurations(apiObjects []awstypes.OpenZFSClientConfi
 	return nil
 }
 
-func flattenOpenZFSUserOrGroupQuotas(rs []awstypes.OpenZFSUserOrGroupQuota) []map[string]interface{} {
-	quotas := make([]map[string]interface{}, 0)
+func flattenOpenZFSUserOrGroupQuotas(rs []awstypes.OpenZFSUserOrGroupQuota) []map[string]any {
+	quotas := make([]map[string]any, 0)
 
 	for _, quota := range rs {
-		cfg := make(map[string]interface{})
+		cfg := make(map[string]any)
 		cfg[names.AttrID] = aws.ToInt32(quota.Id)
 		cfg["storage_capacity_quota_gib"] = aws.ToInt32(quota.StorageCapacityQuotaGiB)
 		cfg[names.AttrType] = string(quota.Type)
@@ -583,18 +581,18 @@ func flattenOpenZFSUserOrGroupQuotas(rs []awstypes.OpenZFSUserOrGroupQuota) []ma
 	return nil
 }
 
-func flattenOpenZFSOriginSnapshotConfiguration(rs *awstypes.OpenZFSOriginSnapshotConfiguration) []interface{} {
+func flattenOpenZFSOriginSnapshotConfiguration(rs *awstypes.OpenZFSOriginSnapshotConfiguration) []any {
 	if rs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	m["copy_strategy"] = string(rs.CopyStrategy)
 	if rs.SnapshotARN != nil {
 		m["snapshot_arn"] = aws.ToString(rs.SnapshotARN)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func findOpenZFSVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.Volume, error) {

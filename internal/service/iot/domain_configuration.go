@@ -38,8 +38,6 @@ func resourceDomainConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -65,6 +63,7 @@ func resourceDomainConfiguration() *schema.Resource {
 			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"domain_type": {
@@ -125,7 +124,7 @@ func resourceDomainConfiguration() *schema.Resource {
 	}
 }
 
-func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -135,8 +134,8 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AuthorizerConfig = expandAuthorizerConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDomainName); ok {
@@ -151,8 +150,8 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.ServiceType = awstypes.ServiceType(v.(string))
 	}
 
-	if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TlsConfig = expandTlsConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TlsConfig = expandTlsConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("validation_certificate_arn"); ok {
@@ -170,7 +169,7 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceDomainConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -188,7 +187,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set(names.AttrARN, output.DomainConfigurationArn)
 	if output.AuthorizerConfig != nil {
-		if err := d.Set("authorizer_config", []interface{}{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
+		if err := d.Set("authorizer_config", []any{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authorizer_config: %s", err)
 		}
 	} else {
@@ -203,7 +202,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("service_type", output.ServiceType)
 	d.Set(names.AttrStatus, output.DomainConfigurationStatus)
 	if output.TlsConfig != nil {
-		if err := d.Set("tls_config", []interface{}{flattenTlsConfig(output.TlsConfig)}); err != nil {
+		if err := d.Set("tls_config", []any{flattenTlsConfig(output.TlsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
 		}
 	} else {
@@ -214,7 +213,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -224,8 +223,8 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("authorizer_config") {
-			if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AuthorizerConfig = expandAuthorizerConfig(v.([]any)[0].(map[string]any))
 			} else {
 				input.RemoveAuthorizerConfig = true
 			}
@@ -236,8 +235,8 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("tls_config") {
-			if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TlsConfig = expandTlsConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TlsConfig = expandTlsConfig(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -251,7 +250,7 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceDomainConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -311,7 +310,7 @@ func findDomainConfigurationByName(ctx context.Context, conn *iot.Client, name s
 	return output, nil
 }
 
-func expandAuthorizerConfig(tfMap map[string]interface{}) *awstypes.AuthorizerConfig {
+func expandAuthorizerConfig(tfMap map[string]any) *awstypes.AuthorizerConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -329,7 +328,7 @@ func expandAuthorizerConfig(tfMap map[string]interface{}) *awstypes.AuthorizerCo
 	return apiObject
 }
 
-func expandTlsConfig(tfMap map[string]interface{}) *awstypes.TlsConfig { // nosemgrep:ci.caps5-in-func-name
+func expandTlsConfig(tfMap map[string]any) *awstypes.TlsConfig { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -343,12 +342,12 @@ func expandTlsConfig(tfMap map[string]interface{}) *awstypes.TlsConfig { // nose
 	return apiObject
 }
 
-func flattenAuthorizerConfig(apiObject *awstypes.AuthorizerConfig) map[string]interface{} {
+func flattenAuthorizerConfig(apiObject *awstypes.AuthorizerConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AllowAuthorizerOverride; v != nil {
 		tfMap["allow_authorizer_override"] = aws.ToBool(v)
@@ -361,12 +360,12 @@ func flattenAuthorizerConfig(apiObject *awstypes.AuthorizerConfig) map[string]in
 	return tfMap
 }
 
-func flattenTlsConfig(apiObject *awstypes.TlsConfig) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenTlsConfig(apiObject *awstypes.TlsConfig) map[string]any { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityPolicy; v != nil {
 		tfMap["security_policy"] = aws.ToString(v)

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -553,6 +554,12 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"availability_zone_rebalancing": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
+			},
 			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -745,7 +752,7 @@ func resourceService() *schema.Resource {
 						names.AttrField: {
 							Type:     schema.TypeString,
 							Optional: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								value := v.(string)
 								if value == "host" {
 									return "instanceId"
@@ -1050,8 +1057,60 @@ func resourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"tag_specifications": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrResourceType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.EBSResourceType](),
+												},
+												names.AttrPropagateTags: {
+													Type:     schema.TypeString,
+													Optional: true,
+													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+														if awstypes.PropagateTags(old) == awstypes.PropagateTagsNone && new == "" {
+															return true
+														}
+														return false
+													},
+													ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+												},
+												names.AttrTags: tftags.TagsSchema(),
+											},
+										},
+									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"vpc_lattice_configurations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 64),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase letters, numbers, underscores and hyphens"),
+								validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot begin with a hyphen"),
+							),
 						},
 					},
 				},
@@ -1062,12 +1121,12 @@ func resourceService() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type: resourceV0.CoreConfigSchema().ImpliedType(),
-				Upgrade: func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+				Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 					// Convert volume_configuration.managed_ebs_volume.throughput from string to int.
-					if v, ok := rawState["volume_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-						tfMap := v[0].(map[string]interface{})
-						if v, ok := tfMap["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-							tfMap := v[0].(map[string]interface{})
+					if v, ok := rawState["volume_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+						tfMap := v[0].(map[string]any)
+						if v, ok := tfMap["managed_ebs_volume"].([]any); ok && len(v) > 0 && v[0] != nil {
+							tfMap := v[0].(map[string]any)
 							if v, ok := tfMap[names.AttrThroughput]; ok {
 								if v, ok := v.(string); ok {
 									if v == "" {
@@ -1091,19 +1150,18 @@ func resourceService() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
 			triggersCustomizeDiff,
 		),
 	}
 }
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
-	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
+	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]any))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
 	name := d.Get(names.AttrName).(string)
 	schedulingStrategy := awstypes.SchedulingStrategy(d.Get("scheduling_strategy").(string))
@@ -1114,14 +1172,19 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DeploymentController:     deploymentController,
 		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),
 		EnableExecuteCommand:     d.Get("enable_execute_command").(bool),
-		NetworkConfiguration:     expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{})),
+		NetworkConfiguration:     expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]any)),
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
+		VpcLatticeConfigurations: expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set)),
 	}
 
-	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("alarms"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+		input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -1136,8 +1199,8 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DesiredCount = aws.Int32(int32(d.Get("desired_count").(int)))
 	}
 
-	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("health_check_grace_period_seconds"); ok {
@@ -1164,7 +1227,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
-		apiObject, err := expandPlacementStrategy(v.([]interface{}))
+		apiObject, err := expandPlacementStrategy(v.([]any))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -1189,11 +1252,11 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.PropagateTags = awstypes.PropagateTags(v.(string))
 	}
 
-	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.ServiceConnectConfiguration = expandServiceConnectConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]any)) > 0 {
+		input.ServiceConnectConfiguration = expandServiceConnectConfiguration(v.([]any))
 	}
 
-	if v := d.Get("service_registries").([]interface{}); len(v) > 0 {
+	if v := d.Get("service_registries").([]any); len(v) > 0 {
 		input.ServiceRegistries = expandServiceRegistries(v)
 	}
 
@@ -1201,8 +1264,8 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TaskDefinition = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("volume_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.VolumeConfigurations = expandVolumeConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("volume_configuration"); ok && len(v.([]any)) > 0 {
+		input.VolumeConfigurations = expandVolumeConfigurations(ctx, v.([]any))
 	}
 
 	output, err := retryServiceCreate(ctx, conn, input)
@@ -1233,7 +1296,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceRead(ctx, d, meta)...)
 		}
 
@@ -1245,7 +1308,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -1263,6 +1326,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(service.ServiceArn))
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
@@ -1277,7 +1341,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 
 		if service.DeploymentConfiguration.Alarms != nil {
-			if err := d.Set("alarms", []interface{}{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
+			if err := d.Set("alarms", []any{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting alarms: %s", err)
 			}
 		} else {
@@ -1285,7 +1349,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
-			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
+			if err := d.Set("deployment_circuit_breaker", []any{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
 			}
 		} else {
@@ -1317,6 +1381,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
+
+	for _, deployment := range service.Deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
+			}
+		}
+	}
+
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
 	}
@@ -1350,7 +1423,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -1367,8 +1440,14 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 			}
 
-			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("alarms"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("availability_zone_rebalancing") {
+			if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+				input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 			}
 		}
 
@@ -1384,8 +1463,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// To remove an existing deployment circuit breaker, specify an empty object.
 			input.DeploymentConfiguration.DeploymentCircuitBreaker = &awstypes.DeploymentCircuitBreaker{}
 
-			if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -1432,7 +1511,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange(names.AttrNetworkConfiguration) {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]any))
 		}
 
 		if d.HasChange("ordered_placement_strategy") {
@@ -1440,8 +1519,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// To remove an existing placement strategy, specify an empty object.
 			input.PlacementStrategy = []awstypes.PlacementStrategy{}
 
-			if v, ok := d.GetOk("ordered_placement_strategy"); ok && len(v.([]interface{})) > 0 {
-				apiObject, err := expandPlacementStrategy(v.([]interface{}))
+			if v, ok := d.GetOk("ordered_placement_strategy"); ok && len(v.([]any)) > 0 {
+				apiObject, err := expandPlacementStrategy(v.([]any))
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -1474,11 +1553,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("service_connect_configuration") {
-			input.ServiceConnectConfiguration = expandServiceConnectConfiguration(d.Get("service_connect_configuration").([]interface{}))
+			input.ServiceConnectConfiguration = expandServiceConnectConfiguration(d.Get("service_connect_configuration").([]any))
 		}
 
 		if d.HasChange("service_registries") {
-			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
+			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]any))
 		}
 
 		if d.HasChange("task_definition") {
@@ -1486,7 +1565,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("volume_configuration") {
-			input.VolumeConfigurations = expandVolumeConfigurations(d.Get("volume_configuration").([]interface{}))
+			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]any))
+		}
+
+		if d.HasChange("vpc_lattice_configurations") {
+			input.VpcLatticeConfigurations = expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set))
 		}
 
 		// Retry due to IAM eventual consistency.
@@ -1495,7 +1578,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			timeout              = propagationTimeout + serviceUpdateTimeout
 		)
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateService(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1527,7 +1610,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -1566,7 +1649,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Deleting ECS Service: %s", d.Id())
 	_, err = tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteService(ctx, &ecs.DeleteServiceInput{
 				Cluster: aws.String(cluster),
 				Force:   aws.Bool(forceDelete),
@@ -1597,7 +1680,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
 	}
@@ -1607,10 +1690,10 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(name)
 	clusterArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "ecs",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster/%s", cluster),
 	}.String()
 	d.Set("cluster", clusterArn)
@@ -1623,7 +1706,7 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 		timeout              = propagationTimeout + serviceCreateTimeout
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateService(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -1794,7 +1877,7 @@ const (
 )
 
 func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
 		if tfresource.NotFound(err) {
@@ -1810,7 +1893,7 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 }
 
 func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		outputRaw, status, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
 
 		if err != nil {
@@ -1889,7 +1972,7 @@ func waitServiceInactive(ctx context.Context, conn *ecs.Client, serviceName, clu
 	return nil, err
 }
 
-func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// clears diff to avoid extraneous diffs but lets it pass for triggering update
 	fnd := false
 	if v, ok := d.GetOk("force_new_deployment"); ok {
@@ -1902,7 +1985,7 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta inter
 
 	if d.HasChange(names.AttrTriggers) && fnd {
 		o, n := d.GetChange(names.AttrTriggers)
-		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+		if len(o.(map[string]any)) > 0 && len(n.(map[string]any)) == 0 {
 			return d.Clear(names.AttrTriggers)
 		}
 
@@ -1912,7 +1995,7 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta inter
 	return nil
 }
 
-func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
 	//   force_new_deployment is true and
 	//   neither the old set nor new set is 0 length
@@ -1943,7 +2026,7 @@ func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func expandAlarms(tfMap map[string]interface{}) *awstypes.DeploymentAlarms {
+func expandAlarms(tfMap map[string]any) *awstypes.DeploymentAlarms {
 	if tfMap == nil {
 		return nil
 	}
@@ -1965,12 +2048,12 @@ func expandAlarms(tfMap map[string]interface{}) *awstypes.DeploymentAlarms {
 	return apiObject
 }
 
-func flattenAlarms(apiObject *awstypes.DeploymentAlarms) map[string]interface{} {
+func flattenAlarms(apiObject *awstypes.DeploymentAlarms) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AlarmNames; v != nil {
 		tfMap["alarm_names"] = v
@@ -1983,12 +2066,12 @@ func flattenAlarms(apiObject *awstypes.DeploymentAlarms) map[string]interface{} 
 	return tfMap
 }
 
-func expandDeploymentController(l []interface{}) *awstypes.DeploymentController {
+func expandDeploymentController(l []any) *awstypes.DeploymentController {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	deploymentController := &awstypes.DeploymentController{
 		Type: awstypes.DeploymentControllerType(m[names.AttrType].(string)),
@@ -1997,21 +2080,21 @@ func expandDeploymentController(l []interface{}) *awstypes.DeploymentController 
 	return deploymentController
 }
 
-func flattenDeploymentController(deploymentController *awstypes.DeploymentController) []interface{} {
-	m := map[string]interface{}{
+func flattenDeploymentController(deploymentController *awstypes.DeploymentController) []any {
+	m := map[string]any{
 		names.AttrType: awstypes.DeploymentControllerTypeEcs,
 	}
 
 	if deploymentController == nil {
-		return []interface{}{m}
+		return []any{m}
 	}
 
 	m[names.AttrType] = string(deploymentController.Type)
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandDeploymentCircuitBreaker(tfMap map[string]interface{}) *awstypes.DeploymentCircuitBreaker {
+func expandDeploymentCircuitBreaker(tfMap map[string]any) *awstypes.DeploymentCircuitBreaker {
 	if tfMap == nil {
 		return nil
 	}
@@ -2024,12 +2107,12 @@ func expandDeploymentCircuitBreaker(tfMap map[string]interface{}) *awstypes.Depl
 	return apiObject
 }
 
-func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreaker) map[string]interface{} {
+func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreaker) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["enable"] = apiObject.Enable
 	tfMap["rollback"] = apiObject.Rollback
@@ -2037,26 +2120,26 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	return tfMap
 }
 
-func flattenNetworkConfiguration(nc *awstypes.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(nc *awstypes.NetworkConfiguration) []any {
 	if nc == nil {
 		return nil
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	result[names.AttrSecurityGroups] = flex.FlattenStringValueSet(nc.AwsvpcConfiguration.SecurityGroups)
 	result[names.AttrSubnets] = flex.FlattenStringValueSet(nc.AwsvpcConfiguration.Subnets)
 
 	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == awstypes.AssignPublicIpEnabled
 
-	return []interface{}{result}
+	return []any{result}
 }
 
-func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration {
+func expandNetworkConfiguration(nc []any) *awstypes.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
 	awsVpcConfig := &awstypes.AwsVpcConfiguration{}
-	raw := nc[0].(map[string]interface{})
+	raw := nc[0].(map[string]any)
 	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
@@ -2071,7 +2154,44 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConstraint, error) {
+func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
+	apiObjects := make([]awstypes.VpcLatticeConfiguration, 0)
+
+	for _, tfMapRaw := range tfSet.List() {
+		config := tfMapRaw.(map[string]any)
+
+		apiObject := awstypes.VpcLatticeConfiguration{
+			RoleArn:        aws.String(config[names.AttrRoleARN].(string)),
+			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
+			PortName:       aws.String(config["port_name"].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenVPCLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrRoleARN:  aws.ToString(apiObject.RoleArn),
+			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
+			"port_name":        aws.ToString(apiObject.PortName),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandPlacementConstraints(tfList []any) ([]awstypes.PlacementConstraint, error) {
 	if len(tfList) == 0 {
 		return nil, nil
 	}
@@ -2083,7 +2203,7 @@ func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConst
 			continue
 		}
 
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.PlacementConstraint{}
 
@@ -2105,13 +2225,13 @@ func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConst
 	return result, nil
 }
 
-func flattenServicePlacementConstraints(pcs []awstypes.PlacementConstraint) []map[string]interface{} {
+func flattenServicePlacementConstraints(pcs []awstypes.PlacementConstraint) []map[string]any {
 	if len(pcs) == 0 {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, pc := range pcs {
-		c := make(map[string]interface{})
+		c := make(map[string]any)
 		c[names.AttrType] = string(pc.Type)
 		if pc.Expression != nil {
 			c[names.AttrExpression] = aws.ToString(pc.Expression)
@@ -2122,13 +2242,13 @@ func flattenServicePlacementConstraints(pcs []awstypes.PlacementConstraint) []ma
 	return results
 }
 
-func expandPlacementStrategy(s []interface{}) ([]awstypes.PlacementStrategy, error) {
+func expandPlacementStrategy(s []any) ([]awstypes.PlacementStrategy, error) {
 	if len(s) == 0 {
 		return nil, nil
 	}
 	pss := make([]awstypes.PlacementStrategy, 0)
 	for _, raw := range s {
-		p, ok := raw.(map[string]interface{})
+		p, ok := raw.(map[string]any)
 
 		if !ok {
 			continue
@@ -2161,13 +2281,13 @@ func expandPlacementStrategy(s []interface{}) ([]awstypes.PlacementStrategy, err
 	return pss, nil
 }
 
-func flattenPlacementStrategy(pss []awstypes.PlacementStrategy) []interface{} {
+func flattenPlacementStrategy(pss []awstypes.PlacementStrategy) []any {
 	if len(pss) == 0 {
 		return nil
 	}
-	results := make([]interface{}, 0, len(pss))
+	results := make([]any, 0, len(pss))
 	for _, ps := range pss {
-		c := make(map[string]interface{})
+		c := make(map[string]any)
 		c[names.AttrType] = string(ps.Type)
 
 		if ps.Field != nil {
@@ -2184,20 +2304,20 @@ func flattenPlacementStrategy(pss []awstypes.PlacementStrategy) []interface{} {
 	return results
 }
 
-func expandServiceConnectConfiguration(sc []interface{}) *awstypes.ServiceConnectConfiguration {
+func expandServiceConnectConfiguration(sc []any) *awstypes.ServiceConnectConfiguration {
 	if len(sc) == 0 {
 		return &awstypes.ServiceConnectConfiguration{
 			Enabled: false,
 		}
 	}
-	raw := sc[0].(map[string]interface{})
+	raw := sc[0].(map[string]any)
 
 	config := &awstypes.ServiceConnectConfiguration{}
 	if v, ok := raw[names.AttrEnabled].(bool); ok {
 		config.Enabled = v
 	}
 
-	if v, ok := raw["log_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["log_configuration"].([]any); ok && len(v) > 0 {
 		config.LogConfiguration = expandLogConfiguration(v)
 	}
 
@@ -2205,41 +2325,41 @@ func expandServiceConnectConfiguration(sc []interface{}) *awstypes.ServiceConnec
 		config.Namespace = aws.String(v)
 	}
 
-	if v, ok := raw["service"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["service"].([]any); ok && len(v) > 0 {
 		config.Services = expandServices(v)
 	}
 
 	return config
 }
 
-func expandLogConfiguration(lc []interface{}) *awstypes.LogConfiguration {
+func expandLogConfiguration(lc []any) *awstypes.LogConfiguration {
 	if len(lc) == 0 {
 		return &awstypes.LogConfiguration{}
 	}
-	raw := lc[0].(map[string]interface{})
+	raw := lc[0].(map[string]any)
 
 	config := &awstypes.LogConfiguration{}
 	if v, ok := raw["log_driver"].(string); ok && v != "" {
 		config.LogDriver = awstypes.LogDriver(v)
 	}
-	if v, ok := raw["options"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["options"].(map[string]any); ok && len(v) > 0 {
 		config.Options = flex.ExpandStringValueMap(v)
 	}
-	if v, ok := raw["secret_option"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["secret_option"].([]any); ok && len(v) > 0 {
 		config.SecretOptions = expandSecretOptions(v)
 	}
 
 	return config
 }
 
-func expandSecretOptions(sop []interface{}) []awstypes.Secret {
+func expandSecretOptions(sop []any) []awstypes.Secret {
 	if len(sop) == 0 {
 		return nil
 	}
 
 	var out []awstypes.Secret
 	for _, item := range sop {
-		raw, ok := item.(map[string]interface{})
+		raw, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -2258,7 +2378,7 @@ func expandSecretOptions(sop []interface{}) []awstypes.Secret {
 	return out
 }
 
-func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfiguration {
+func expandVolumeConfigurations(ctx context.Context, vc []any) []awstypes.ServiceVolumeConfiguration {
 	if len(vc) == 0 {
 		return nil
 	}
@@ -2266,14 +2386,14 @@ func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfig
 	vcs := make([]awstypes.ServiceVolumeConfiguration, 0)
 
 	for _, raw := range vc {
-		p := raw.(map[string]interface{})
+		p := raw.(map[string]any)
 
 		config := awstypes.ServiceVolumeConfiguration{
 			Name: aws.String(p[names.AttrName].(string)),
 		}
 
-		if v, ok := p["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 {
-			config.ManagedEBSVolume = expandManagedEBSVolume(v)
+		if v, ok := p["managed_ebs_volume"].([]any); ok && len(v) > 0 {
+			config.ManagedEBSVolume = expandManagedEBSVolume(ctx, v)
 		}
 		vcs = append(vcs, config)
 	}
@@ -2281,11 +2401,11 @@ func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfig
 	return vcs
 }
 
-func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolumeConfiguration {
+func expandManagedEBSVolume(ctx context.Context, ebs []any) *awstypes.ServiceManagedEBSVolumeConfiguration {
 	if len(ebs) == 0 {
 		return &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	}
-	raw := ebs[0].(map[string]interface{})
+	raw := ebs[0].(map[string]any)
 
 	config := &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	if v, ok := raw[names.AttrRoleARN].(string); ok && v != "" {
@@ -2315,24 +2435,57 @@ func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolume
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
 		config.VolumeType = aws.String(v)
 	}
+	if v, ok := raw["tag_specifications"].([]any); ok && len(v) > 0 {
+		config.TagSpecifications = expandTagSpecifications(ctx, v)
+	}
 
 	return config
 }
 
-func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
+func expandTagSpecifications(ctx context.Context, ts []any) []awstypes.EBSTagSpecification {
+	if len(ts) == 0 {
+		return []awstypes.EBSTagSpecification{}
+	}
+
+	var s []awstypes.EBSTagSpecification
+	for _, item := range ts {
+		raw, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		var config awstypes.EBSTagSpecification
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
+			config.ResourceType = awstypes.EBSResourceType(v)
+		}
+		if v, ok := raw[names.AttrPropagateTags].(string); ok && v != "" {
+			config.PropagateTags = awstypes.PropagateTags(v)
+		}
+		if v, ok := raw[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+			if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
+				config.Tags = svcTags(v)
+			}
+		}
+		s = append(s, config)
+	}
+
+	return s
+}
+
+func expandServices(srv []any) []awstypes.ServiceConnectService {
 	if len(srv) == 0 {
 		return nil
 	}
 
 	var out []awstypes.ServiceConnectService
 	for _, item := range srv {
-		raw, ok := item.(map[string]interface{})
+		raw, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		var config awstypes.ServiceConnectService
-		if v, ok := raw["client_alias"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw["client_alias"].([]any); ok && len(v) > 0 {
 			config.ClientAliases = expandClientAliases(v)
 		}
 		if v, ok := raw["discovery_name"].(string); ok && v != "" {
@@ -2345,11 +2498,11 @@ func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
 			config.PortName = aws.String(v)
 		}
 
-		if v, ok := raw[names.AttrTimeout].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTimeout].([]any); ok && len(v) > 0 {
 			config.Timeout = expandTimeout(v)
 		}
 
-		if v, ok := raw["tls"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw["tls"].([]any); ok && len(v) > 0 {
 			config.Tls = expandTLS(v)
 		}
 
@@ -2359,12 +2512,12 @@ func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
 	return out
 }
 
-func expandTimeout(timeout []interface{}) *awstypes.TimeoutConfiguration {
+func expandTimeout(timeout []any) *awstypes.TimeoutConfiguration {
 	if len(timeout) == 0 {
 		return nil
 	}
 
-	raw, ok := timeout[0].(map[string]interface{})
+	raw, ok := timeout[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -2378,17 +2531,17 @@ func expandTimeout(timeout []interface{}) *awstypes.TimeoutConfiguration {
 	return timeoutConfig
 }
 
-func expandTLS(tls []interface{}) *awstypes.ServiceConnectTlsConfiguration {
+func expandTLS(tls []any) *awstypes.ServiceConnectTlsConfiguration {
 	if len(tls) == 0 {
 		return nil
 	}
 
-	raw, ok := tls[0].(map[string]interface{})
+	raw, ok := tls[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 	tlsConfig := &awstypes.ServiceConnectTlsConfiguration{}
-	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["issuer_cert_authority"].([]any); ok && len(v) > 0 {
 		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
 	}
 	if v, ok := raw[names.AttrKMSKey].(string); ok && v != "" {
@@ -2400,12 +2553,12 @@ func expandTLS(tls []interface{}) *awstypes.ServiceConnectTlsConfiguration {
 	return tlsConfig
 }
 
-func expandIssuerCertAuthority(pca []interface{}) *awstypes.ServiceConnectTlsCertificateAuthority {
+func expandIssuerCertAuthority(pca []any) *awstypes.ServiceConnectTlsCertificateAuthority {
 	if len(pca) == 0 {
 		return nil
 	}
 
-	raw, ok := pca[0].(map[string]interface{})
+	raw, ok := pca[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -2417,14 +2570,14 @@ func expandIssuerCertAuthority(pca []interface{}) *awstypes.ServiceConnectTlsCer
 	return config
 }
 
-func expandClientAliases(srv []interface{}) []awstypes.ServiceConnectClientAlias {
+func expandClientAliases(srv []any) []awstypes.ServiceConnectClientAlias {
 	if len(srv) == 0 {
 		return nil
 	}
 
 	var out []awstypes.ServiceConnectClientAlias
 	for _, item := range srv {
-		raw, ok := item.(map[string]interface{})
+		raw, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -2443,13 +2596,13 @@ func expandClientAliases(srv []interface{}) []awstypes.ServiceConnectClientAlias
 	return out
 }
 
-func flattenServiceRegistries(srs []awstypes.ServiceRegistry) []map[string]interface{} {
+func flattenServiceRegistries(srs []awstypes.ServiceRegistry) []map[string]any {
 	if len(srs) == 0 {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, sr := range srs {
-		c := map[string]interface{}{
+		c := map[string]any{
 			"registry_arn": aws.ToString(sr.RegistryArn),
 		}
 		if sr.Port != nil {

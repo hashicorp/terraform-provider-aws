@@ -38,9 +38,9 @@ func TestAccLogsDestination_basic(t *testing.T) {
 				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResourceName, names.AttrARN),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
@@ -131,7 +131,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
@@ -141,7 +141,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),

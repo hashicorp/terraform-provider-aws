@@ -6,7 +6,6 @@ package secretsmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -32,10 +31,6 @@ const (
 
 type dataSourceSecretVersions struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceSecretVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_secretsmanager_secret_versions"
 }
 
 func (d *dataSourceSecretVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -74,7 +69,7 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 	}
 
 	paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, &secretsmanager.ListSecretVersionIdsInput{
-		SecretId: aws.String(data.SecretID.ValueString()),
+		SecretId: data.SecretID.ValueStringPointer(),
 	})
 
 	var out secretsmanager.ListSecretVersionIdsOutput

@@ -314,8 +314,8 @@ This resource supports the following arguments:
 #### Share Rule arguments
 
 * `target_accounts` - (Required) The IDs of the AWS accounts with which to share the snapshots.
-* `interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
-* `interval_unit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `unshare_interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
+* `unshare_interval_unit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Cross Region Copy Rule arguments
 

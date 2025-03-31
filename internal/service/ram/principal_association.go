@@ -67,13 +67,17 @@ const (
 	principalAssociationResourceIDPartCount = 2
 )
 
-func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	resourceShareARN, principal := d.Get("resource_share_arn").(string), d.Get(names.AttrPrincipal).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false))
-	_, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
+	id, err := flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	_, err = findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 	switch {
 	case err == nil:
@@ -110,7 +114,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourcePrincipalAssociationRead(ctx, d, meta)...)
 }
 
-func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -123,13 +127,13 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 	principalAssociation, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RAM Resource Association %s not found, removing from state", d.Id())
+		log.Printf("[WARN] RAM Principal Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Principal Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrPrincipal, principalAssociation.AssociatedEntity)
@@ -138,7 +142,7 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -193,7 +197,7 @@ func findPrincipalAssociationByTwoPartKey(ctx context.Context, conn *ram.Client,
 }
 
 func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 		if tfresource.NotFound(err) {

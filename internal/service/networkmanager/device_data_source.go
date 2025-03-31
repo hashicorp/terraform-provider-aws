@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_device")
-func DataSourceDevice() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_device", name="Device")
+func dataSourceDevice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeviceRead,
 
@@ -97,15 +97,15 @@ func DataSourceDevice() *schema.Resource {
 	}
 }
 
-func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	deviceID := d.Get("device_id").(string)
-	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
+	device, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", deviceID, err)
@@ -114,7 +114,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(deviceID)
 	d.Set(names.AttrARN, device.DeviceArn)
 	if device.AWSLocation != nil {
-		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
+		if err := d.Set("aws_location", []any{flattenAWSLocation(device.AWSLocation)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
 		}
 	} else {
@@ -123,7 +123,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrDescription, device.Description)
 	d.Set("device_id", device.DeviceId)
 	if device.Location != nil {
-		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(device.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []any{flattenLocation(device.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {

@@ -5,12 +5,24 @@ package datazone
 
 // Exports for use in tests only.
 var (
+	ResourceAssetType                         = newResourceAssetType
 	ResourceDomain                            = newResourceDomain
 	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
-	IsResourceMissing                         = isResourceMissing
-	ResourceProject                           = newResourceProject
+	ResourceEnvironment                       = newResourceEnvironment
 	ResourceEnvironmentProfile                = newResourceEnvironmentProfile
-	FindEnvironmentProfileByID                = findEnvironmentProfileByID
+	ResourceFormType                          = newResourceFormType
 	ResourceGlossary                          = newResourceGlossary
-	FindGlossaryByID                          = findGlossaryByID
+	ResourceGlossaryTerm                      = newResourceGlossaryTerm
+	ResourceProject                           = newResourceProject
+	ResourceUserProfile                       = newResourceUserProfile
+
+	FindAssetTypeByID          = findAssetTypeByID
+	FindEnvironmentByID        = findEnvironmentByID
+	FindEnvironmentProfileByID = findEnvironmentProfileByID
+	FindFormTypeByID           = findFormTypeByID
+	FindGlossaryByID           = findGlossaryByID
+	FindGlossaryTermByID       = findGlossaryTermByID
+	FindUserProfileByID        = findUserProfileByID
+
+	IsResourceMissing = isResourceMissing
 )

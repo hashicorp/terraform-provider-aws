@@ -207,7 +207,6 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -247,7 +246,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 			valid: true,
 		},
 		names.AttrAccountID: {
-			value: "123456789012",
+			value: acctest.Ct12Digit,
 			valid: true,
 		},
 		"unique_id": {
@@ -257,7 +256,6 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -299,21 +297,21 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 		// Multiple distinct conditions
 		"multiple condition single value": {
 			cs: tfiam.IAMPolicyStatementConditionSet{
-				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: acctest.Ct1},
+				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: "1"},
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 			},
 			want: []byte(`{"ArnNotLike":{"aws:PrincipalArn":"1"},"StringLike":{"s3:prefix":"one/"}}`),
 		},
 		"multiple condition multiple values": {
 			cs: tfiam.IAMPolicyStatementConditionSet{
-				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: []string{acctest.Ct1, acctest.Ct2}},
+				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: []string{"1", "2"}},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 			},
 			want: []byte(`{"ArnNotLike":{"aws:PrincipalArn":["1","2"]},"StringLike":{"s3:prefix":["one/","two/"]}}`),
 		},
 		"multiple condition mixed value lengths": {
 			cs: tfiam.IAMPolicyStatementConditionSet{
-				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: acctest.Ct1},
+				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: "1"},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 			},
 			want: []byte(`{"ArnNotLike":{"aws:PrincipalArn":"1"},"StringLike":{"s3:prefix":["one/","two/"]}}`),
@@ -378,7 +376,6 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 		},
 	}
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

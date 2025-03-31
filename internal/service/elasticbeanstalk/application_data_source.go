@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elastic_beanstalk_application")
-func DataSourceApplication() *schema.Resource {
+// @SDKDataSource("aws_elastic_beanstalk_application", name="Application")
+func dataSourceApplication() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
@@ -59,12 +59,12 @@ func DataSourceApplication() *schema.Resource {
 	}
 }
 
-func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	app, err := FindApplicationByName(ctx, conn, name)
+	app, err := findApplicationByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", name, err)

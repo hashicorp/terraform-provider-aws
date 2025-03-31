@@ -7,7 +7,12 @@ package lakeformation
 var (
 	ResourceDataCellsFilter = newResourceDataCellsFilter
 	ResourceResourceLFTag   = newResourceResourceLFTag
+	ResourceOptIn           = newResourceOptIn
 
 	FindDataCellsFilterByID = findDataCellsFilterByID
 	FindResourceLFTagByID   = findResourceLFTagByID
+	LFTagParseResourceID    = lfTagParseResourceID
+	FindOptInByID           = findOptInByID
+
+	ValidPrincipal = validPrincipal
 )

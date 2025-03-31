@@ -83,7 +83,7 @@ func dataSourceEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -141,7 +141,12 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	var ips []*string
 
 	for _, v := range ipAddresses {
-		ips = append(ips, v.Ip)
+		if v.Ip != nil {
+			ips = append(ips, v.Ip)
+		}
+		if v.Ipv6 != nil {
+			ips = append(ips, v.Ipv6)
+		}
 	}
 
 	d.Set(names.AttrIPAddresses, aws.ToStringSlice(ips))
@@ -153,9 +158,9 @@ func buildR53ResolverTagFilters(set *schema.Set) []awstypes.Filter {
 	var filters []awstypes.Filter
 
 	for _, v := range set.List() {
-		m := v.(map[string]interface{})
+		m := v.(map[string]any)
 		var filterValues []string
-		for _, e := range m[names.AttrValues].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]any) {
 			filterValues = append(filterValues, e.(string))
 		}
 		filters = append(filters, awstypes.Filter{

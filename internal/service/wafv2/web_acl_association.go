@@ -61,24 +61,26 @@ func resourceWebACLAssociation() *schema.Resource {
 	}
 }
 
-func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	webACLARN := d.Get("web_acl_arn").(string)
 	resourceARN := d.Get(names.AttrResourceARN).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{webACLARN, resourceARN}, webACLAssociationResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{webACLARN, resourceARN}, webACLAssociationResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &wafv2.AssociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
 		WebACLArn:   aws.String(webACLARN),
 	}
 
 	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	if _, err = tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.AssociateWebACL(ctx, input)
-	})
-
-	if err != nil {
+	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAFv2 WebACL Association (%s): %s", id, err)
 	}
 
@@ -87,7 +89,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceWebACLAssociationRead(ctx, d, meta)...)
 }
 
-func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -115,7 +117,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -126,9 +128,10 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Association: %s", d.Id())
 	resourceARN := parts[1]
-	_, err = conn.DisassociateWebACL(ctx, &wafv2.DisassociateWebACLInput{
+	input := wafv2.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
-	})
+	}
+	_, err = conn.DisassociateWebACL(ctx, &input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags

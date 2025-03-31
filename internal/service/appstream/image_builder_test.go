@@ -166,7 +166,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				Config: testAccImageBuilderConfig_tags1(instanceType, rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				Config: testAccImageBuilderConfig_tags2(instanceType, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -189,7 +189,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				Config: testAccImageBuilderConfig_tags1(instanceType, rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -227,25 +227,6 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	})
 }
 
-func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AppStream ImageBuilder ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
-
-		return err
-	}
-}
-
 func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
@@ -255,7 +236,7 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
+			_, err := tfappstream.FindImageBuilderByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -269,6 +250,21 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+
+		_, err := tfappstream.FindImageBuilderByID(ctx, conn, rs.Primary.ID)
+
+		return err
 	}
 }
 

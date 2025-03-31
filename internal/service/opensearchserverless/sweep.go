@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -43,7 +44,7 @@ func RegisterSweepers() {
 
 func sweepAccessPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Access Policy sweep for region: %s", region)
 		return nil
 	}
@@ -90,7 +91,7 @@ func sweepAccessPolicies(region string) error {
 
 func sweepCollections(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Collection sweep for region: %s", region)
 		return nil
 	}
@@ -133,7 +134,7 @@ func sweepCollections(region string) error {
 
 func sweepSecurityConfigs(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Config sweep for region: %s", region)
 		return nil
 	}
@@ -163,7 +164,7 @@ func sweepSecurityConfigs(region string) error {
 			id := aws.ToString(sc.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Config: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityConfig, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -178,7 +179,7 @@ func sweepSecurityConfigs(region string) error {
 
 func sweepSecurityPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
 		return nil
 	}
@@ -208,7 +209,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -235,7 +236,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -252,7 +253,7 @@ func sweepSecurityPolicies(region string) error {
 
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
 		return nil
 	}
@@ -280,7 +281,7 @@ func sweepVPCEndpoints(region string) error {
 			id := aws.ToString(endpoint.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless VPC Endpoint: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCEndpointResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

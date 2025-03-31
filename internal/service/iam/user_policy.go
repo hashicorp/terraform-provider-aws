@@ -58,7 +58,7 @@ func resourceUserPolicy() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := verify.LegacyPolicyNormalize(v)
 					return json
 				},
@@ -72,7 +72,7 @@ func resourceUserPolicy() *schema.Resource {
 	}
 }
 
-func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", userName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 			return FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
 		})
 
@@ -110,7 +110,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceUserPolicyRead(ctx, d, meta)...)
 }
 
-func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -149,7 +149,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

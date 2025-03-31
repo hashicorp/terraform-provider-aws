@@ -5,8 +5,8 @@ package eks
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -14,15 +14,32 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory:  newEphemeralClusterAuth,
+			TypeName: "aws_eks_cluster_auth",
+			Name:     "ClusterAuth",
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceClusterVersions,
+			TypeName: "aws_eks_cluster_versions",
+			Name:     "Cluster Versions",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newPodIdentityAssociationResource,
-			Name:    "Pod Identity Association",
+			Factory:  newPodIdentityAssociationResource,
+			TypeName: "aws_eks_pod_identity_association",
+			Name:     "Pod Identity Association",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "association_arn",
 			},
@@ -40,30 +57,37 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
+			Name:     "Add-On",
 		},
 		{
 			Factory:  dataSourceAddonVersion,
 			TypeName: "aws_eks_addon_version",
+			Name:     "Add-On Version",
 		},
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_eks_cluster",
+			Name:     "Cluster",
 		},
 		{
 			Factory:  dataSourceClusterAuth,
 			TypeName: "aws_eks_cluster_auth",
+			Name:     "Cluster Authentication Token",
 		},
 		{
 			Factory:  dataSourceClusters,
 			TypeName: "aws_eks_clusters",
+			Name:     "Clusters",
 		},
 		{
 			Factory:  dataSourceNodeGroup,
 			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
 		},
 		{
 			Factory:  dataSourceNodeGroups,
 			TypeName: "aws_eks_node_groups",
+			Name:     "Node Groups",
 		},
 	}
 }
@@ -131,13 +155,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*eks_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return eks_sdkv2.NewFromConfig(cfg,
-		eks_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*eks.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*eks.Options){
+		eks.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return eks.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*eks.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*eks.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *eks.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*eks.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

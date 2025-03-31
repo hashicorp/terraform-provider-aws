@@ -33,7 +33,7 @@ func resourceThingType() *schema.Resource {
 		DeleteWithoutTimeout: resourceThingTypeDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set(names.AttrName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -85,12 +85,10 @@ func resourceThingType() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -101,8 +99,8 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrProperties); ok {
-		configs := v.([]interface{})
-		if config, ok := configs[0].(map[string]interface{}); ok && config != nil {
+		configs := v.([]any)
+		if config, ok := configs[0].(map[string]any); ok && config != nil {
 			input.ThingTypeProperties = expandThingTypeProperties(config)
 		}
 	}
@@ -131,7 +129,7 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceThingTypeRead(ctx, d, meta)...)
 }
 
-func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -158,7 +156,7 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -178,7 +176,7 @@ func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceThingTypeRead(ctx, d, meta)...)
 }
 
-func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -197,7 +195,7 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
 	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteThingType(ctx, &iot.DeleteThingTypeInput{
 				ThingTypeName: aws.String(d.Id()),
 			})
@@ -239,7 +237,7 @@ func findThingTypeByName(ctx context.Context, conn *iot.Client, name string) (*i
 	return output, nil
 }
 
-func expandThingTypeProperties(config map[string]interface{}) *awstypes.ThingTypeProperties {
+func expandThingTypeProperties(config map[string]any) *awstypes.ThingTypeProperties {
 	properties := &awstypes.ThingTypeProperties{
 		SearchableAttributes: flex.ExpandStringValueSet(config["searchable_attributes"].(*schema.Set)),
 	}
@@ -251,18 +249,18 @@ func expandThingTypeProperties(config map[string]interface{}) *awstypes.ThingTyp
 	return properties
 }
 
-func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]interface{} {
-	m := map[string]interface{}{
+func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]any {
+	m := map[string]any{
 		names.AttrDescription:   "",
 		"searchable_attributes": flex.FlattenStringSet(nil),
 	}
 
 	if s == nil {
-		return []map[string]interface{}{m}
+		return []map[string]any{m}
 	}
 
 	m[names.AttrDescription] = aws.ToString(s.ThingTypeDescription)
 	m["searchable_attributes"] = s.SearchableAttributes
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

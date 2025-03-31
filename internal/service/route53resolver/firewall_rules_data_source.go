@@ -93,7 +93,7 @@ func dataSourceResolverFirewallRules() *schema.Resource {
 	}
 }
 
-func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -129,12 +129,12 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func flattenFirewallRules(apiObjects []awstypes.FirewallRule) []interface{} {
+func flattenFirewallRules(apiObjects []awstypes.FirewallRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenFirewallRule(apiObject))
@@ -143,8 +143,8 @@ func flattenFirewallRules(apiObjects []awstypes.FirewallRule) []interface{} {
 	return tfList
 }
 
-func flattenFirewallRule(apiObject awstypes.FirewallRule) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenFirewallRule(apiObject awstypes.FirewallRule) map[string]any {
+	tfMap := map[string]any{
 		names.AttrAction:          apiObject.Action,
 		"block_override_dns_type": apiObject.BlockOverrideDnsType,
 		"block_response":          apiObject.BlockResponse,

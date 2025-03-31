@@ -96,12 +96,10 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -119,8 +117,8 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVerifiedAccessGroup(ctx, input)
@@ -134,7 +132,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceVerifiedAccessGroupRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -179,7 +177,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -223,8 +221,8 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			in.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, in)
@@ -237,15 +235,16 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceVerifiedAccessGroupRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
-	_, err := conn.DeleteVerifiedAccessGroup(ctx, &ec2.DeleteVerifiedAccessGroupInput{
+	input := ec2.DeleteVerifiedAccessGroupInput{
 		ClientToken:           aws.String(id.UniqueId()),
 		VerifiedAccessGroupId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVerifiedAccessGroup(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
 		return diags
@@ -258,7 +257,7 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]interface{}) *types.VerifiedAccessSseSpecificationRequest {
+func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -276,12 +275,12 @@ func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAccessSseSpecificationResponse) []interface{} {
+func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CustomerManagedKeyEnabled; v != nil {
 		tfMap["customer_managed_key_enabled"] = aws.ToBool(v)
@@ -291,5 +290,5 @@ func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAcce
 		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

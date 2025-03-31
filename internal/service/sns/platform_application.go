@@ -6,6 +6,7 @@ package sns
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"strings"
@@ -104,7 +105,7 @@ var (
 	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )
 
-// @SDKResource("aws_sns_platform_application")
+// @SDKResource("aws_sns_platform_application", name="Platform Application")
 func resourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlatformApplicationCreate,
@@ -120,7 +121,7 @@ func resourcePlatformApplication() *schema.Resource {
 	}
 }
 
-func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -136,7 +137,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		Platform:   aws.String(d.Get("platform").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreatePlatformApplication(ctx, input)
 	}, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
@@ -149,7 +150,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePlatformApplicationRead(ctx, d, meta)...)
 }
 
-func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -186,7 +187,7 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -228,7 +229,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 		return conn.SetPlatformApplicationAttributes(ctx, input)
 	}, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
@@ -239,7 +240,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePlatformApplicationRead(ctx, d, meta)...)
 }
 
-func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -309,7 +310,7 @@ func parsePlatformApplicationResourceID(input string) (arnS, name, platform stri
 	return
 }
 
-func isChangeSha256Removal(oldRaw, newRaw interface{}) bool {
+func isChangeSha256Removal(oldRaw, newRaw any) bool {
 	old, ok := oldRaw.(string)
 	if !ok {
 		return false
@@ -320,5 +321,6 @@ func isChangeSha256Removal(oldRaw, newRaw interface{}) bool {
 		return false
 	}
 
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(new))) == old
+	hash := sha256.Sum256([]byte(new))
+	return hex.EncodeToString(hash[:]) == old
 }

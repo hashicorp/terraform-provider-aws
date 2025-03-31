@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
+func TestAccKafkaSCRAMSecretAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_scram_secret_association.test"
@@ -29,14 +29,14 @@ func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScramSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSCRAMSecretAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
+				Config: testAccSCRAMSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScramSecretAssociationExists(ctx, resourceName),
+					testAccCheckSCRAMSecretAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", clusterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
+func TestAccKafkaSCRAMSecretAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_scram_secret_association.test"
@@ -61,29 +61,29 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScramSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSCRAMSecretAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
+				Config: testAccSCRAMSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScramSecretAssociationExists(ctx, resourceName),
+					testAccCheckSCRAMSecretAssociationExists(ctx, resourceName),
 				),
 			},
 			{
-				Config: testAccScramSecretAssociationConfig_basic(rName, 3),
+				Config: testAccSCRAMSecretAssociationConfig_basic(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScramSecretAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", acctest.Ct3),
+					testAccCheckSCRAMSecretAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "3"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName3, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccScramSecretAssociationConfig_basic(rName, 2),
+				Config: testAccSCRAMSecretAssociationConfig_basic(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScramSecretAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", acctest.Ct2),
+					testAccCheckSCRAMSecretAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, names.AttrARN),
 				),
@@ -97,7 +97,7 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 	})
 }
 
-func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
+func TestAccKafkaSCRAMSecretAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_scram_secret_association.test"
@@ -106,12 +106,12 @@ func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScramSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSCRAMSecretAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
+				Config: testAccSCRAMSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScramSecretAssociationExists(ctx, resourceName),
+					testAccCheckSCRAMSecretAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceSCRAMSecretAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,7 +120,7 @@ func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
+func TestAccKafkaSCRAMSecretAssociation_Disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_scram_secret_association.test"
@@ -130,12 +130,12 @@ func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScramSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSCRAMSecretAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
+				Config: testAccSCRAMSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScramSecretAssociationExists(ctx, resourceName),
+					testAccCheckSCRAMSecretAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -144,7 +144,7 @@ func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
 	})
 }
 
-func testAccCheckScramSecretAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSCRAMSecretAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_scram_secret_association" {
@@ -153,7 +153,7 @@ func testAccCheckScramSecretAssociationDestroy(ctx context.Context) resource.Tes
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
 
-			_, err := tfkafka.FindSCRAMSecretsByClusterARN(ctx, conn, rs.Primary.ID)
+			_, err := tfkafka.FindSCRAMSecretAssociation(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -163,14 +163,14 @@ func testAccCheckScramSecretAssociationDestroy(ctx context.Context) resource.Tes
 				return err
 			}
 
-			return fmt.Errorf("MSK Cluster %s still exists", rs.Primary.ID)
+			return fmt.Errorf("MSK SCRAM Secret Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckScramSecretAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSCRAMSecretAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -179,13 +179,13 @@ func testAccCheckScramSecretAssociationExists(ctx context.Context, n string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
 
-		_, err := tfkafka.FindSCRAMSecretsByClusterARN(ctx, conn, rs.Primary.ID)
+		_, err := tfkafka.FindSCRAMSecretAssociation(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccScramSecretAssociationConfig_base(rName string, count int) string {
+func testAccSCRAMSecretAssociationConfig_base(rName string, count int) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -251,8 +251,8 @@ POLICY
 `, rName, count))
 }
 
-func testAccScramSecretAssociationConfig_basic(rName string, count int) string {
-	return acctest.ConfigCompose(testAccScramSecretAssociationConfig_base(rName, count), `
+func testAccSCRAMSecretAssociationConfig_basic(rName string, count int) string {
+	return acctest.ConfigCompose(testAccSCRAMSecretAssociationConfig_base(rName, count), `
 resource "aws_msk_scram_secret_association" "test" {
   cluster_arn     = aws_msk_cluster.test.arn
   secret_arn_list = aws_secretsmanager_secret.test[*].arn

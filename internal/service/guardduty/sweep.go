@@ -55,19 +55,18 @@ func sweepDetectors(region string) error {
 		}
 
 		for _, detectorID := range page.DetectorIds {
-			id := detectorID
 			input := &guardduty.DeleteDetectorInput{
-				DetectorId: &id,
+				DetectorId: &detectorID,
 			}
 
-			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
+			log.Printf("[INFO] Deleting GuardDuty Detector: %s", detectorID)
 			_, err := conn.DeleteDetector(ctx, input)
 			if tfawserr.ErrCodeContains(err, "AccessDenied") {
-				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", id, err)
+				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", detectorID, err)
 				continue
 			}
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting GuardDuty Detector (%s): %w", id, err)
+				sweeperErr := fmt.Errorf("error deleting GuardDuty Detector (%s): %w", detectorID, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			}
@@ -102,9 +101,8 @@ func sweepPublishingDestinations(region string) error {
 		}
 
 		for _, detectorID := range page.DetectorIds {
-			id := detectorID
 			list_input := &guardduty.ListPublishingDestinationsInput{
-				DetectorId: &id,
+				DetectorId: &detectorID,
 			}
 
 			pages := guardduty.NewListPublishingDestinationsPaginator(conn, list_input)
@@ -124,7 +122,7 @@ func sweepPublishingDestinations(region string) error {
 				for _, destination_element := range page.Destinations {
 					input := &guardduty.DeletePublishingDestinationInput{
 						DestinationId: destination_element.DestinationId,
-						DetectorId:    &id,
+						DetectorId:    &detectorID,
 					}
 
 					log.Printf("[INFO] Deleting GuardDuty Publishing Destination: %s", *destination_element.DestinationId)

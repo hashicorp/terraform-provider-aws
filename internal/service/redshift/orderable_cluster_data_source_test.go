@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -99,13 +99,13 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 }
 
 func testAccOrderableClusterPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
-		MaxRecords: aws.Int64(20),
+		MaxRecords: aws.Int32(20),
 	}
 
-	_, err := conn.DescribeOrderableClusterOptionsWithContext(ctx, input)
+	_, err := conn.DescribeOrderableClusterOptions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

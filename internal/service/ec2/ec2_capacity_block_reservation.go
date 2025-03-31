@@ -47,10 +47,6 @@ type capacityBlockReservationResource struct {
 	framework.WithNoOpDelete
 }
 
-func (*capacityBlockReservationResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_reservation"
-}
-
 func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -173,15 +169,15 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.PurchaseCapacityBlockInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.PurchaseCapacityBlockInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation)
 
-	output, err := conn.PurchaseCapacityBlock(ctx, input)
+	output, err := conn.PurchaseCapacityBlock(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("purchasing EC2 Capacity Block Reservation", err.Error())
@@ -242,10 +238,6 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *capacityBlockReservationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type capacityBlockReservationReservationModel struct {
 	ARN                     types.String                                                     `tfsdk:"arn"`
 	AvailabilityZone        types.String                                                     `tfsdk:"availability_zone"`
@@ -262,8 +254,8 @@ type capacityBlockReservationReservationModel struct {
 	PlacementGroupARN       types.String                                                     `tfsdk:"placement_group_arn"`
 	ReservationType         fwtypes.StringEnum[awstypes.CapacityReservationType]             `tfsdk:"reservation_type"`
 	StartDate               timetypes.RFC3339                                                `tfsdk:"start_date"`
-	Tags                    types.Map                                                        `tfsdk:"tags"`
-	TagsAll                 types.Map                                                        `tfsdk:"tags_all"`
+	Tags                    tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                       `tfsdk:"tags_all"`
 	Tenancy                 types.String                                                     `tfsdk:"tenancy"`
 	Timeouts                timeouts.Value                                                   `tfsdk:"timeouts"`
 }

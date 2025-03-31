@@ -128,7 +128,7 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 				),
 				ConflictsWith:    []string{"filename"},
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -159,12 +159,10 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const (
 		mutexKey = `aws_rds_custom_engine_version`
 	)
@@ -174,7 +172,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 	input := &rds.CreateCustomDBEngineVersionInput{
 		Engine:        aws.String(d.Get(names.AttrEngine).(string)),
 		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
-		Tags:          getTagsInV2(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("database_installation_files_s3_bucket_name"); ok {
@@ -248,7 +246,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
 }
 
-func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -285,12 +283,12 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
 	d.Set(names.AttrStatus, out.Status)
 
-	setTagsOutV2(ctx, out.TagList)
+	setTagsOut(ctx, out.TagList)
 
 	return diags
 }
 
-func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -327,7 +325,7 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
 }
 
-func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -434,7 +432,7 @@ const (
 )
 
 func statusDBEngineVersion(ctx context.Context, conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
 		if tfresource.NotFound(err) {

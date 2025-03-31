@@ -8,16 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +34,7 @@ func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 			{
@@ -81,13 +78,9 @@ func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			params := &ses.DescribeReceiptRuleSetInput{
-				RuleSetName: aws.String(rs.Primary.ID),
-			}
+			_, err := tfses.FindReceiptRuleSetByName(ctx, conn, rs.Primary.ID)
 
-			_, err := conn.DescribeReceiptRuleSet(ctx, params)
-
-			if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -95,7 +88,7 @@ func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("SES Receipt Rule Set (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SES Receipt Rule Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -106,20 +99,13 @@ func testAccCheckReceiptRuleSetExists(ctx context.Context, n string) resource.Te
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Receipt Rule Set not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Receipt Rule Set name not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		params := &ses.DescribeReceiptRuleSetInput{
-			RuleSetName: aws.String(rs.Primary.ID),
-		}
+		_, err := tfses.FindReceiptRuleSetByName(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.DescribeReceiptRuleSet(ctx, params)
 		return err
 	}
 }
@@ -127,7 +113,7 @@ func testAccCheckReceiptRuleSetExists(ctx context.Context, n string) resource.Te
 func testAccReceiptRuleSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
-  rule_set_name = %q
+  rule_set_name = %[1]q
 }
 `, rName)
 }

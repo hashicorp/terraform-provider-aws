@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_dms_endpoint", name="Endpoint")
+// @Tags(identifierAttribute="endpoint_arn")
 func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
@@ -116,6 +117,10 @@ func dataSourceEndpoint() *schema.Resource {
 						},
 						"partition_include_schema_table": {
 							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"sasl_mechanism": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"sasl_password": {
@@ -570,11 +575,9 @@ func dataSourceEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endptID := d.Get("endpoint_id").(string)
 	out, err := findEndpointByID(ctx, conn, endptID)
@@ -597,19 +600,6 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err := resourceEndpointSetState(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

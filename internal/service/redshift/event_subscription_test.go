@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,16 +36,16 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`eventsubscription:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`eventsubscription:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "severity", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
-					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source_ids.#", acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -62,8 +62,8 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster-snapshot"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "monitoring"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
-					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -72,7 +72,7 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,7 +89,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "source_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "source_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "2"),
 				),
 			},
 			{
@@ -113,7 +113,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -177,7 +177,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -186,7 +186,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -196,7 +196,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 
 func TestAccRedshiftEventSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EventSubscription
+	var v awstypes.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -218,7 +218,7 @@ func TestAccRedshiftEventSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redshift.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *awstypes.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +229,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redsh
 			return fmt.Errorf("No Redshift Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		out, err := tfredshift.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
@@ -245,7 +245,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redsh
 
 func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_event_subscription" {

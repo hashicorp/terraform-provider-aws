@@ -47,12 +47,8 @@ const (
 
 type resourceEmailTemplate struct {
 	framework.ResourceWithConfigure
-	// framework.WithImportByID
+	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*resourceEmailTemplate) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_pinpoint_email_template"
 }
 
 func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -147,11 +143,6 @@ func (r *resourceEmailTemplate) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-
 	plan.Arn = flex.StringToFramework(ctx, out.CreateTemplateMessageBody.Arn)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -199,9 +190,8 @@ func (r *resourceEmailTemplate) Update(ctx context.Context, req resource.UpdateR
 	if !old.TemplateName.Equal(new.TemplateName) ||
 		!old.Arn.Equal(new.Arn) ||
 		!old.EmailTemplate.Equal(new.EmailTemplate) {
-		in := &pinpoint.UpdateEmailTemplateInput{
-			// TemplateName: aws.String(old.TemplateName.ValueString()),
-		}
+		in := &pinpoint.UpdateEmailTemplateInput{}
+
 		resp.Diagnostics.Append(flex.Expand(ctx, &old, in, flex.WithFieldNameSuffix("Request"))...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -238,7 +228,7 @@ func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	in := &pinpoint.DeleteEmailTemplateInput{
-		TemplateName: aws.String(state.TemplateName.ValueString()),
+		TemplateName: state.TemplateName.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteEmailTemplate(ctx, in)
@@ -281,16 +271,12 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 	return out, nil
 }
 
-func (r *resourceEmailTemplate) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type emailTemplateData struct {
 	TemplateName  types.String                                   `tfsdk:"template_name"`
 	EmailTemplate fwtypes.ListNestedObjectValueOf[emailTemplate] `tfsdk:"email_template"`
 	Arn           types.String                                   `tfsdk:"arn"`
-	Tags          types.Map                                      `tfsdk:"tags"`
-	TagsAll       types.Map                                      `tfsdk:"tags_all"`
+	Tags          tftags.Map                                     `tfsdk:"tags"`
+	TagsAll       tftags.Map                                     `tfsdk:"tags_all"`
 }
 
 type emailTemplate struct {

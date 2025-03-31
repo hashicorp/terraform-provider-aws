@@ -24,3 +24,8 @@ var (
 	FindSMSChannelByApplicationId             = findSMSChannelByApplicationId
 	FindEmailTemplateByName                   = findEmailTemplateByName
 )
+
+const (
+	DefaultAuthenticationMethodKey   = defaultAuthenticationMethodKey
+	DefaultAuthenticationMethodToken = defaultAuthenticationMethodToken
+)

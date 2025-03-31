@@ -6,15 +6,15 @@ package elasticsearch
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecurityOptionsInput {
-	config := elasticsearch.AdvancedSecurityOptionsInput{}
-	group := m[0].(map[string]interface{})
+func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInput {
+	config := awstypes.AdvancedSecurityOptionsInput{}
+	group := m[0].(map[string]any)
 
 	if advancedSecurityEnabled, ok := group[names.AttrEnabled]; ok {
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
@@ -24,10 +24,10 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
 			}
 
-			if v, ok := group["master_user_options"].([]interface{}); ok {
+			if v, ok := group["master_user_options"].([]any); ok {
 				if len(v) > 0 && v[0] != nil {
-					muo := elasticsearch.MasterUserOptions{}
-					masterUserOptions := v[0].(map[string]interface{})
+					muo := awstypes.MasterUserOptions{}
+					masterUserOptions := v[0].(map[string]any)
 
 					if v, ok := masterUserOptions["master_user_arn"].(string); ok && v != "" {
 						muo.MasterUserARN = aws.String(v)
@@ -41,7 +41,7 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 						muo.MasterUserPassword = aws.String(v)
 					}
 
-					config.SetMasterUserOptions(&muo)
+					config.MasterUserOptions = &muo
 				}
 			}
 		}
@@ -50,12 +50,12 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 	return &config
 }
 
-func expandAutoTuneOptions(tfMap map[string]interface{}) *elasticsearch.AutoTuneOptions {
+func expandAutoTuneOptions(tfMap map[string]any) *awstypes.AutoTuneOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &elasticsearch.AutoTuneOptions{}
+	options := &awstypes.AutoTuneOptions{}
 
 	autoTuneOptionsInput := expandAutoTuneOptionsInput(tfMap)
 
@@ -63,20 +63,20 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *elasticsearch.AutoTune
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
 
 	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
-		options.RollbackOnDisable = aws.String(v)
+		options.RollbackOnDisable = awstypes.RollbackOnDisable(v)
 	}
 
 	return options
 }
 
-func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *elasticsearch.AutoTuneOptionsInput {
+func expandAutoTuneOptionsInput(tfMap map[string]any) *awstypes.AutoTuneOptionsInput {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &elasticsearch.AutoTuneOptionsInput{}
+	options := &awstypes.AutoTuneOptionsInput{}
 
-	options.DesiredState = aws.String(tfMap["desired_state"].(string))
+	options.DesiredState = awstypes.AutoTuneDesiredState(tfMap["desired_state"].(string))
 
 	if v, ok := tfMap["maintenance_schedule"].(*schema.Set); ok && v.Len() > 0 {
 		options.MaintenanceSchedules = expandAutoTuneMaintenanceSchedules(v.List())
@@ -85,19 +85,19 @@ func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *elasticsearch.Aut
 	return options
 }
 
-func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*elasticsearch.AutoTuneMaintenanceSchedule {
-	var autoTuneMaintenanceSchedules []*elasticsearch.AutoTuneMaintenanceSchedule
+func expandAutoTuneMaintenanceSchedules(tfList []any) []awstypes.AutoTuneMaintenanceSchedule {
+	var autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
+		tfMap, _ := tfMapRaw.(map[string]any)
 
-		autoTuneMaintenanceSchedule := &elasticsearch.AutoTuneMaintenanceSchedule{}
+		autoTuneMaintenanceSchedule := awstypes.AutoTuneMaintenanceSchedule{}
 
 		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
 		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
 
-		if v, ok := tfMap[names.AttrDuration].([]interface{}); ok {
-			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
+		if v, ok := tfMap[names.AttrDuration].([]any); ok {
+			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]any))
 		}
 
 		autoTuneMaintenanceSchedule.CronExpressionForRecurrence = aws.String(tfMap["cron_expression_for_recurrence"].(string))
@@ -108,32 +108,32 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*elasticsearch.A
 	return autoTuneMaintenanceSchedules
 }
 
-func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *elasticsearch.Duration {
-	autoTuneMaintenanceScheduleDuration := &elasticsearch.Duration{
+func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]any) *awstypes.Duration {
+	autoTuneMaintenanceScheduleDuration := &awstypes.Duration{
 		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
-		Unit:  aws.String(tfMap[names.AttrUnit].(string)),
+		Unit:  awstypes.TimeUnit(tfMap[names.AttrUnit].(string)),
 	}
 
 	return autoTuneMaintenanceScheduleDuration
 }
 
-func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
+func expandESSAMLOptions(data []any) *awstypes.SAMLOptionsInput {
 	if len(data) == 0 {
 		return nil
 	}
 
 	if data[0] == nil {
-		return &elasticsearch.SAMLOptionsInput{}
+		return &awstypes.SAMLOptionsInput{}
 	}
 
-	options := elasticsearch.SAMLOptionsInput{}
-	group := data[0].(map[string]interface{})
+	options := awstypes.SAMLOptionsInput{}
+	group := data[0].(map[string]any)
 
 	if SAMLEnabled, ok := group[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(SAMLEnabled.(bool))
 
 		if SAMLEnabled.(bool) {
-			options.Idp = expandSAMLOptionsIdp(group["idp"].([]interface{}))
+			options.Idp = expandSAMLOptionsIdp(group["idp"].([]any))
 			if v, ok := group["master_backend_role"].(string); ok && v != "" {
 				options.MasterBackendRole = aws.String(v)
 			}
@@ -144,7 +144,7 @@ func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
 				options.RolesKey = aws.String(v)
 			}
 			if v, ok := group["session_timeout_minutes"].(int); ok {
-				options.SessionTimeoutMinutes = aws.Int64(int64(v))
+				options.SessionTimeoutMinutes = aws.Int32(int32(v))
 			}
 			if v, ok := group["subject_key"].(string); ok {
 				options.SubjectKey = aws.String(v)
@@ -155,70 +155,70 @@ func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
 	return &options
 }
 
-func expandSAMLOptionsIdp(l []interface{}) *elasticsearch.SAMLIdp {
+func expandSAMLOptionsIdp(l []any) *awstypes.SAMLIdp {
 	if len(l) == 0 {
 		return nil
 	}
 
 	if l[0] == nil {
-		return &elasticsearch.SAMLIdp{}
+		return &awstypes.SAMLIdp{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	return &elasticsearch.SAMLIdp{
+	return &awstypes.SAMLIdp{
 		EntityId:        aws.String(m["entity_id"].(string)),
 		MetadataContent: aws.String(m["metadata_content"].(string)),
 	}
 }
 
-func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.AdvancedSecurityOptions) []map[string]interface{} {
+func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSecurityOptions) []map[string]any {
 	if advancedSecurityOptions == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
-	m[names.AttrEnabled] = aws.BoolValue(advancedSecurityOptions.Enabled)
-	if aws.BoolValue(advancedSecurityOptions.Enabled) {
-		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
+	m := map[string]any{}
+	m[names.AttrEnabled] = aws.ToBool(advancedSecurityOptions.Enabled)
+	if aws.ToBool(advancedSecurityOptions.Enabled) {
+		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenAutoTuneOptions(autoTuneOptions *elasticsearch.AutoTuneOptions) map[string]interface{} {
+func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]any {
 	if autoTuneOptions == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
-	m["desired_state"] = aws.StringValue(autoTuneOptions.DesiredState)
+	m["desired_state"] = string(autoTuneOptions.DesiredState)
 
 	if v := autoTuneOptions.MaintenanceSchedules; v != nil {
 		m["maintenance_schedule"] = flattenAutoTuneMaintenanceSchedules(v)
 	}
 
-	m["rollback_on_disable"] = aws.StringValue(autoTuneOptions.RollbackOnDisable)
+	m["rollback_on_disable"] = string(autoTuneOptions.RollbackOnDisable)
 
 	return m
 }
 
-func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elasticsearch.AutoTuneMaintenanceSchedule) []interface{} {
+func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule) []any {
 	if len(autoTuneMaintenanceSchedules) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, autoTuneMaintenanceSchedule := range autoTuneMaintenanceSchedules {
-		m := map[string]interface{}{}
+		m := map[string]any{}
 
-		m["start_at"] = aws.TimeValue(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
+		m["start_at"] = aws.ToTime(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
 
-		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+		m[names.AttrDuration] = []any{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
-		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
+		m["cron_expression_for_recurrence"] = aws.ToString(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
 		tfList = append(tfList, m)
 	}
@@ -226,70 +226,70 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elastic
 	return tfList
 }
 
-func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *elasticsearch.Duration) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *awstypes.Duration) map[string]any {
+	m := map[string]any{}
 
-	m[names.AttrValue] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
-	m[names.AttrUnit] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+	m[names.AttrValue] = aws.ToInt64(autoTuneMaintenanceScheduleDuration.Value)
+	m[names.AttrUnit] = string(autoTuneMaintenanceScheduleDuration.Unit)
 
 	return m
 }
 
-func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *elasticsearch.SAMLOptionsOutput) []interface{} {
-	if samlOptions == nil {
+func flattenSAMLOptionsOutput(d *schema.ResourceData, apiObject *awstypes.SAMLOptionsOutput) []any {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		names.AttrEnabled: aws.BoolValue(samlOptions.Enabled),
-		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"idp":             flattenSAMLIdp(apiObject.Idp),
 	}
 
-	m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
-	m["session_timeout_minutes"] = aws.Int64Value(samlOptions.SessionTimeoutMinutes)
-	m["subject_key"] = aws.StringValue(samlOptions.SubjectKey)
+	tfMap["roles_key"] = aws.ToString(apiObject.RolesKey)
+	tfMap["session_timeout_minutes"] = aws.ToInt32(apiObject.SessionTimeoutMinutes)
+	tfMap["subject_key"] = aws.ToString(apiObject.SubjectKey)
 
 	// samlOptions.master_backend_role and samlOptions.master_user_name will be added to the
 	// all_access role in kibana's security manager.  These values cannot be read or
 	// modified by the elasticsearch API.  So, we ignore it on read and let persist
 	// the value already in the state.
-	m["master_backend_role"] = d.Get("saml_options.0.master_backend_role").(string)
-	m["master_user_name"] = d.Get("saml_options.0.master_user_name").(string)
+	tfMap["master_backend_role"] = d.Get("saml_options.0.master_backend_role").(string)
+	tfMap["master_user_name"] = d.Get("saml_options.0.master_user_name").(string)
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenESSAMLIdpOptions(SAMLIdp *elasticsearch.SAMLIdp) []interface{} {
-	if SAMLIdp == nil {
-		return []interface{}{}
+func flattenSAMLIdp(apiObject *awstypes.SAMLIdp) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"entity_id":        aws.StringValue(SAMLIdp.EntityId),
-		"metadata_content": aws.StringValue(SAMLIdp.MetadataContent),
+	tfMap := map[string]any{
+		"entity_id":        aws.ToString(apiObject.EntityId),
+		"metadata_content": aws.ToString(apiObject.MetadataContent),
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func getMasterUserOptions(d *schema.ResourceData) []interface{} {
+func getMasterUserOptions(d *schema.ResourceData) []any {
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 		if len(options) > 0 && options[0] != nil {
-			m := options[0].(map[string]interface{})
+			m := options[0].(map[string]any)
 			if opts, ok := m["master_user_options"]; ok {
-				return opts.([]interface{})
+				return opts.([]any)
 			}
 		}
 	}
-	return []interface{}{}
+	return []any{}
 }
 
 func getUserDBEnabled(d *schema.ResourceData) bool {
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 		if len(options) > 0 && options[0] != nil {
-			m := options[0].(map[string]interface{})
+			m := options[0].(map[string]any)
 			if enabled, ok := m["internal_user_database_enabled"]; ok {
 				return enabled.(bool)
 			}
@@ -298,12 +298,12 @@ func getUserDBEnabled(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandLogPublishingOptions(m *schema.Set) map[string]*elasticsearch.LogPublishingOption {
-	options := make(map[string]*elasticsearch.LogPublishingOption)
+func expandLogPublishingOptions(m *schema.Set) map[string]awstypes.LogPublishingOption {
+	options := make(map[string]awstypes.LogPublishingOption)
 
 	for _, vv := range m.List() {
-		lo := vv.(map[string]interface{})
-		options[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+		lo := vv.(map[string]any)
+		options[lo["log_type"].(string)] = awstypes.LogPublishingOption{
 			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
 			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
 		}
@@ -312,16 +312,16 @@ func expandLogPublishingOptions(m *schema.Set) map[string]*elasticsearch.LogPubl
 	return options
 }
 
-func flattenLogPublishingOptions(o map[string]*elasticsearch.LogPublishingOption) []map[string]interface{} {
-	m := make([]map[string]interface{}, 0)
+func flattenLogPublishingOptions(o map[string]awstypes.LogPublishingOption) []map[string]any {
+	m := make([]map[string]any, 0)
 	for logType, val := range o {
-		mm := map[string]interface{}{
+		mm := map[string]any{
 			"log_type":        logType,
-			names.AttrEnabled: aws.BoolValue(val.Enabled),
+			names.AttrEnabled: aws.ToBool(val.Enabled),
 		}
 
 		if val.CloudWatchLogsLogGroupArn != nil {
-			mm[names.AttrCloudWatchLogGroupARN] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
+			mm[names.AttrCloudWatchLogGroupARN] = aws.ToString(val.CloudWatchLogsLogGroupArn)
 		}
 
 		m = append(m, mm)

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_sqs_queue_redrive_allow_policy")
+// @SDKResource("aws_sqs_queue_redrive_allow_policy", name="Queue Redrive Allow Policy")
 func resourceQueueRedriveAllowPolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNameRedriveAllowPolicy,
@@ -32,10 +32,11 @@ func resourceQueueRedriveAllowPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"redrive_allow_policy": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},

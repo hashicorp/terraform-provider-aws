@@ -67,7 +67,7 @@ func resourceGlobalTable() *schema.Resource {
 	}
 }
 
-func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -92,7 +92,7 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceGlobalTableRead(ctx, d, meta)...)
 }
 
-func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -117,7 +117,7 @@ func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -156,15 +156,16 @@ func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
-func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %s", d.Id())
-	_, err := conn.UpdateGlobalTable(ctx, &dynamodb.UpdateGlobalTableInput{
+	input := dynamodb.UpdateGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
 		ReplicaUpdates:  expandReplicaUpdateDeleteReplicas(d.Get("replica").(*schema.Set).List()),
-	})
+	}
+	_, err := conn.UpdateGlobalTable(ctx, &input)
 
 	if errs.IsA[*awstypes.GlobalTableNotFoundException](err) || errs.IsA[*awstypes.ReplicaNotFoundException](err) {
 		return diags
@@ -207,7 +208,7 @@ func findGlobalTableByName(ctx context.Context, conn *dynamodb.Client, name stri
 }
 
 func statusGlobalTable(ctx context.Context, conn *dynamodb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGlobalTableByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -276,18 +277,18 @@ func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.Client, name str
 	return nil, err
 }
 
-func expandReplicaUpdateCreateReplicas(tfList []interface{}) []awstypes.ReplicaUpdate {
+func expandReplicaUpdateCreateReplicas(tfList []any) []awstypes.ReplicaUpdate {
 	apiObjects := make([]awstypes.ReplicaUpdate, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, *expandReplicaUpdateCreateReplica(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandReplicaUpdateCreateReplica(tfMap map[string]interface{}) *awstypes.ReplicaUpdate {
+func expandReplicaUpdateCreateReplica(tfMap map[string]any) *awstypes.ReplicaUpdate {
 	apiObject := &awstypes.ReplicaUpdate{
 		Create: &awstypes.CreateReplicaAction{
 			RegionName: aws.String(tfMap["region_name"].(string)),
@@ -297,18 +298,18 @@ func expandReplicaUpdateCreateReplica(tfMap map[string]interface{}) *awstypes.Re
 	return apiObject
 }
 
-func expandReplicaUpdateDeleteReplicas(tfList []interface{}) []awstypes.ReplicaUpdate {
+func expandReplicaUpdateDeleteReplicas(tfList []any) []awstypes.ReplicaUpdate {
 	apiObjects := make([]awstypes.ReplicaUpdate, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, *expandReplicaUpdateDeleteReplica(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandReplicaUpdateDeleteReplica(tfMap map[string]interface{}) *awstypes.ReplicaUpdate {
+func expandReplicaUpdateDeleteReplica(tfMap map[string]any) *awstypes.ReplicaUpdate {
 	apiObject := &awstypes.ReplicaUpdate{
 		Delete: &awstypes.DeleteReplicaAction{
 			RegionName: aws.String(tfMap["region_name"].(string)),
@@ -318,18 +319,18 @@ func expandReplicaUpdateDeleteReplica(tfMap map[string]interface{}) *awstypes.Re
 	return apiObject
 }
 
-func expandReplicas(tfList []interface{}) []awstypes.Replica {
+func expandReplicas(tfList []any) []awstypes.Replica {
 	apiObjects := make([]awstypes.Replica, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, *expandReplica(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandReplica(tfMap map[string]interface{}) *awstypes.Replica {
+func expandReplica(tfMap map[string]any) *awstypes.Replica {
 	apiObject := &awstypes.Replica{
 		RegionName: aws.String(tfMap["region_name"].(string)),
 	}
@@ -337,8 +338,8 @@ func expandReplica(tfMap map[string]interface{}) *awstypes.Replica {
 	return apiObject
 }
 
-func flattenReplicas(apiObjects []awstypes.ReplicaDescription) []interface{} {
-	tfList := []interface{}{}
+func flattenReplicas(apiObjects []awstypes.ReplicaDescription) []any {
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenReplica(&apiObject))
@@ -347,8 +348,8 @@ func flattenReplicas(apiObjects []awstypes.ReplicaDescription) []interface{} {
 	return tfList
 }
 
-func flattenReplica(apiObject *awstypes.ReplicaDescription) map[string]interface{} {
-	tfMap := make(map[string]interface{})
+func flattenReplica(apiObject *awstypes.ReplicaDescription) map[string]any {
+	tfMap := make(map[string]any)
 	tfMap["region_name"] = aws.ToString(apiObject.RegionName)
 
 	return tfMap

@@ -4,10 +4,11 @@
 package batch
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -54,10 +56,6 @@ type jobQueueResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*jobQueueResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_batch_job_queue"
 }
 
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -117,6 +115,30 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 					},
 				},
 			},
+			"job_state_time_limit_action": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobStateTimeLimitActionModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrAction: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.JobStateTimeLimitActionsAction](),
+							Required:   true,
+						},
+						"max_time_seconds": schema.Int64Attribute{
+							Required: true,
+							Validators: []validator.Int64{
+								int64validator.Between(600, 86400),
+							},
+						},
+						"reason": schema.StringAttribute{
+							Required: true,
+						},
+						names.AttrState: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.JobStateTimeLimitActionsState](),
+							Required:   true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -133,7 +155,7 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	name := data.JobQueueName.ValueString()
 	input := &batch.CreateJobQueueInput{
 		JobQueueName: aws.String(name),
-		Priority:     fwflex.Int32FromFramework(ctx, data.Priority),
+		Priority:     fwflex.Int32FromFrameworkInt64(ctx, data.Priority),
 		State:        awstypes.JQState(data.State.ValueString()),
 		Tags:         getTagsIn(ctx),
 	}
@@ -145,6 +167,10 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		}
 	} else {
 		input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, data.ComputeEnvironments)
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 	if !data.SchedulingPolicyARN.IsNull() {
 		input.SchedulingPolicyArn = fwflex.StringFromFramework(ctx, data.SchedulingPolicyARN)
@@ -211,9 +237,14 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	} else {
 		data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
 	}
+
 	data.JobQueueARN = fwflex.StringToFrameworkLegacy(ctx, jobQueue.JobQueueArn)
 	data.JobQueueName = fwflex.StringToFramework(ctx, jobQueue.JobQueueName)
-	data.Priority = fwflex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue.JobStateTimeLimitActions, &data.JobStateTimeLimitActions)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Priority = fwflex.Int32ToFrameworkInt64Legacy(ctx, jobQueue.Priority)
 	data.SchedulingPolicyARN = fwflex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
 	data.State = fwflex.StringValueToFramework(ctx, jobQueue.State)
 
@@ -252,8 +283,16 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 			update = true
 		}
 	}
+
+	if !new.JobStateTimeLimitActions.Equal(old.JobStateTimeLimitActions) {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		update = true
+	}
 	if !new.Priority.Equal(old.Priority) {
-		input.Priority = fwflex.Int32FromFramework(ctx, new.Priority)
+		input.Priority = fwflex.Int32FromFrameworkInt64(ctx, new.Priority)
 		update = true
 	}
 	if !new.State.Equal(old.State) {
@@ -305,10 +344,11 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().BatchClient(ctx)
 
-	_, err := conn.UpdateJobQueue(ctx, &batch.UpdateJobQueueInput{
+	updateInput := batch.UpdateJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
 		State:    awstypes.JQStateDisabled,
-	})
+	}
+	_, err := conn.UpdateJobQueue(ctx, &updateInput)
 
 	// "An error occurred (ClientException) when calling the UpdateJobQueue operation: ... does not exist".
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "does not exist") {
@@ -328,9 +368,10 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	_, err = conn.DeleteJobQueue(ctx, &batch.DeleteJobQueueInput{
+	deleteInput := batch.DeleteJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err = conn.DeleteJobQueue(ctx, &deleteInput)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Batch Job Queue (%s)", data.ID.ValueString()), err.Error())
@@ -343,10 +384,6 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
-}
-
-func (r *jobQueueResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *jobQueueResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
@@ -418,7 +455,7 @@ func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.Describ
 }
 
 func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -497,17 +534,18 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 type jobQueueResourceModel struct {
-	ComputeEnvironments     types.List                                                    `tfsdk:"compute_environments"`
-	ComputeEnvironmentOrder fwtypes.ListNestedObjectValueOf[computeEnvironmentOrderModel] `tfsdk:"compute_environment_order"`
-	ID                      types.String                                                  `tfsdk:"id"`
-	JobQueueARN             types.String                                                  `tfsdk:"arn"`
-	JobQueueName            types.String                                                  `tfsdk:"name"`
-	Priority                types.Int64                                                   `tfsdk:"priority"`
-	SchedulingPolicyARN     fwtypes.ARN                                                   `tfsdk:"scheduling_policy_arn"`
-	State                   types.String                                                  `tfsdk:"state"`
-	Tags                    types.Map                                                     `tfsdk:"tags"`
-	TagsAll                 types.Map                                                     `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
+	ComputeEnvironments      types.List                                                    `tfsdk:"compute_environments"`
+	ComputeEnvironmentOrder  fwtypes.ListNestedObjectValueOf[computeEnvironmentOrderModel] `tfsdk:"compute_environment_order"`
+	ID                       types.String                                                  `tfsdk:"id"`
+	JobQueueARN              types.String                                                  `tfsdk:"arn"`
+	JobQueueName             types.String                                                  `tfsdk:"name"`
+	JobStateTimeLimitActions fwtypes.ListNestedObjectValueOf[jobStateTimeLimitActionModel] `tfsdk:"job_state_time_limit_action"`
+	Priority                 types.Int64                                                   `tfsdk:"priority"`
+	SchedulingPolicyARN      fwtypes.ARN                                                   `tfsdk:"scheduling_policy_arn"`
+	State                    types.String                                                  `tfsdk:"state"`
+	Tags                     tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
 func (model *jobQueueResourceModel) InitFromID() error {
@@ -525,6 +563,13 @@ type computeEnvironmentOrderModel struct {
 	Order              types.Int64 `tfsdk:"order"`
 }
 
+type jobStateTimeLimitActionModel struct {
+	Action         fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsAction] `tfsdk:"action"`
+	MaxTimeSeconds types.Int64                                                 `tfsdk:"max_time_seconds"`
+	Reason         types.String                                                `tfsdk:"reason"`
+	State          fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsState]  `tfsdk:"state"`
+}
+
 func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstypes.ComputeEnvironmentOrder {
 	var apiObjects []awstypes.ComputeEnvironmentOrder
 
@@ -539,8 +584,8 @@ func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstype
 }
 
 func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.ComputeEnvironmentOrder) types.List {
-	sort.Slice(apiObjects, func(i, j int) bool {
-		return aws.ToInt32(apiObjects[i].Order) < aws.ToInt32(apiObjects[j].Order)
+	slices.SortFunc(apiObjects, func(a, b awstypes.ComputeEnvironmentOrder) int {
+		return cmp.Compare(aws.ToInt32(a.Order), aws.ToInt32(b.Order))
 	})
 
 	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {

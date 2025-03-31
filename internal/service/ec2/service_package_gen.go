@@ -5,6 +5,8 @@ package ec2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,16 +17,35 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newCapacityBlockOfferingDataSource,
-			Name:    "Capacity Block Offering",
+			Factory:  newCapacityBlockOfferingDataSource,
+			TypeName: "aws_ec2_capacity_block_offering",
+			Name:     "Capacity Block Offering",
 		},
 		{
-			Factory: newSecurityGroupRuleDataSource,
-			Name:    "Security Group Rule",
+			Factory:  newDataSourceSpotDataFeedSubscription,
+			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
-			Factory: newSecurityGroupRulesDataSource,
-			Name:    "Security Group Rules",
+			Factory:  newIPAMDataSource,
+			TypeName: "aws_vpc_ipam",
+			Name:     "IPAM",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  newIPAMsDataSource,
+			TypeName: "aws_vpc_ipams",
+			Name:     "IPAMs",
+		},
+		{
+			Factory:  newSecurityGroupRuleDataSource,
+			TypeName: "aws_vpc_security_group_rule",
+			Name:     "Security Group Rule",
+		},
+		{
+			Factory:  newSecurityGroupRulesDataSource,
+			TypeName: "aws_vpc_security_group_rules",
+			Name:     "Security Group Rules",
 		},
 	}
 }
@@ -32,52 +53,94 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCapacityBlockReservationResource,
-			Name:    "Capacity Block Reservation",
+			Factory:  newEBSFastSnapshotRestoreResource,
+			TypeName: "aws_ebs_fast_snapshot_restore",
+			Name:     "EBS Fast Snapshot Restore",
+		},
+		{
+			Factory:  newCapacityBlockReservationResource,
+			TypeName: "aws_ec2_capacity_block_reservation",
+			Name:     "Capacity Block Reservation",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newEBSFastSnapshotRestoreResource,
-			Name:    "EBS Fast Snapshot Restore",
-		},
-		{
-			Factory: newEIPDomainNameResource,
-			Name:    "EIP Domain Name",
-		},
-		{
-			Factory: newInstanceConnectEndpointResource,
-			Name:    "Instance Connect Endpoint",
+			Factory:  newInstanceConnectEndpointResource,
+			TypeName: "aws_ec2_instance_connect_endpoint",
+			Name:     "Instance Connect Endpoint",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newInstanceMetadataDefaultsResource,
-			Name:    "Instance Metadata Defaults",
+			Factory:  newInstanceMetadataDefaultsResource,
+			TypeName: "aws_ec2_instance_metadata_defaults",
+			Name:     "Instance Metadata Defaults",
 		},
 		{
-			Factory: newSecurityGroupEgressRuleResource,
-			Name:    "Security Group Egress Rule",
+			Factory:  newTransitGatewayDefaultRouteTableAssociationResource,
+			TypeName: "aws_ec2_transit_gateway_default_route_table_association",
+			Name:     "Transit Gateway Default Route Table Association",
+		},
+		{
+			Factory:  newTransitGatewayDefaultRouteTablePropagationResource,
+			TypeName: "aws_ec2_transit_gateway_default_route_table_propagation",
+			Name:     "Transit Gateway Default Route Table Propagation",
+		},
+		{
+			Factory:  newEIPDomainNameResource,
+			TypeName: "aws_eip_domain_name",
+			Name:     "EIP Domain Name",
+		},
+		{
+			Factory:  newNetworkInterfacePermissionResource,
+			TypeName: "aws_network_interface_permission",
+			Name:     "Network Interface Permission",
+		},
+		{
+			Factory:  newVPCBlockPublicAccessExclusionResource,
+			TypeName: "aws_vpc_block_public_access_exclusion",
+			Name:     "VPC Block Public Access Exclusion",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newSecurityGroupIngressRuleResource,
-			Name:    "Security Group Ingress Rule",
+			Factory:  newVPCBlockPublicAccessOptionsResource,
+			TypeName: "aws_vpc_block_public_access_options",
+			Name:     "VPC Block Public Access Options",
+		},
+		{
+			Factory:  newVPCEndpointPrivateDNSResource,
+			TypeName: "aws_vpc_endpoint_private_dns",
+			Name:     "VPC Endpoint Private DNS",
+		},
+		{
+			Factory:  newVPCEndpointServicePrivateDNSVerificationResource,
+			TypeName: "aws_vpc_endpoint_service_private_dns_verification",
+			Name:     "VPC Endpoint Service Private DNS Verification",
+		},
+		{
+			Factory:  newSecurityGroupEgressRuleResource,
+			TypeName: "aws_vpc_security_group_egress_rule",
+			Name:     "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory: newVPCEndpointPrivateDNSResource,
-			Name:    "VPC Endpoint Private DNS",
+			Factory:  newSecurityGroupIngressRuleResource,
+			TypeName: "aws_vpc_security_group_ingress_rule",
+			Name:     "Security Group Ingress Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
 		},
 		{
-			Factory: newVPCEndpointServicePrivateDNSVerificationResource,
-			Name:    "VPC Endpoint Service Private DNS Verification",
+			Factory:  newResourceSecurityGroupVPCAssociation,
+			TypeName: "aws_vpc_security_group_vpc_association",
+			Name:     "Security Group VPC Association",
 		},
 	}
 }
@@ -450,6 +513,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSecurityGroup,
 			TypeName: "aws_security_group",
+			Name:     "Security Group",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
@@ -460,10 +524,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
+			Name:     "Subnet",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceSubnets,
 			TypeName: "aws_subnets",
+			Name:     "Subnets",
 		},
 		{
 			Factory:  dataSourceVPC,
@@ -474,6 +541,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceVPCDHCPOptions,
 			TypeName: "aws_vpc_dhcp_options",
+			Name:     "DHCP Options",
 		},
 		{
 			Factory:  dataSourceVPCEndpoint,
@@ -737,6 +805,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceLocalGatewayRoute,
 			TypeName: "aws_ec2_local_gateway_route",
+			Name:     "Local Gateway Route",
 		},
 		{
 			Factory:  resourceLocalGatewayRouteTableVPCAssociation,
@@ -1216,6 +1285,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceVPCEndpointPolicy,
 			TypeName: "aws_vpc_endpoint_policy",
+			Name:     "VPC Endpoint Policy",
 		},
 		{
 			Factory:  resourceVPCEndpointRouteTableAssociation,
@@ -1377,6 +1447,36 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.EC2
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*ec2.Options){
+		ec2.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
+	}
+
+	return ec2.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*ec2.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*ec2.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *ec2.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*ec2.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

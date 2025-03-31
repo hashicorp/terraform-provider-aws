@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Slot")
+// @FrameworkResource("aws_lexv2models_slot", name="Slot")
 func newResourceSlot(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSlot{}
 
@@ -56,10 +56,6 @@ type resourceSlot struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceSlot) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_slot"
 }
 
 func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -332,7 +328,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	promptAttemptsSpecificationLNB := schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),
@@ -467,7 +463,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotSpecificationsData](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required: true,
 				},
@@ -591,7 +587,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	in := &lexmodelsv2.CreateSlotInput{
-		SlotName: aws.String(plan.Name.ValueString()),
+		SlotName: plan.Name.ValueStringPointer(),
 	}
 
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotFlexOpt)...)
@@ -724,11 +720,11 @@ func (r *resourceSlot) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	in := &lexmodelsv2.DeleteSlotInput{
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		IntentId:   aws.String(state.IntentID.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
-		SlotId:     aws.String(state.SlotID.ValueString()),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		IntentId:   state.IntentID.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
+		SlotId:     state.SlotID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSlot(ctx, in)

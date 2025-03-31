@@ -18,12 +18,15 @@ func SkipSweepError(err error) bool {
 		return dnsErr.IsNotFound
 	}
 
-	// Example (GovCloud): AccessDeniedException: Feature is not accessible
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Feature is not accessible") {
+	// Example: AccessDenied: The operation ListQueryLoggingConfigs is not available for the current AWS account ...
+	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not available for the current AWS account") {
 		return true
 	}
-	// Example (GovCloud): AccessDeniedException: Unable to determine service/operation name to be authorized
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+	// GovCloud has endpoints that respond with (no message provided):
+	// AccessDeniedException:
+	// Since acceptance test sweepers are best effort and this response is very common,
+	// we allow bypassing this error globally instead of individual test sweeper fixes.
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Example (GovCloud): AccessGrantsInstanceNotExistsError: Access Grants Instance does not exist
@@ -32,6 +35,18 @@ func SkipSweepError(err error) bool {
 	}
 	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
 	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
+		return true
+	}
+	// Example (GovCloud): ForbiddenException: HTTP status code 403: Access forbidden. You do not have permission to perform this operation. Check your credentials and try your request again
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+		return true
+	}
+	// Example (GovCloud): HttpConnectionTimeoutException: Failed to connect to ...
+	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
+		return true
+	}
+	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
 		return true
 	}
 	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
@@ -54,6 +69,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Domain-related APIs are only available in the us-east-1 Region") {
 		return true
 	}
+	// Example (codebuild): InvalidInputException: Unknown operation ListFleets
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+		return true
+	}
 	// For example from us-west-2 Route53 key signing key
 	if tfawserr.ErrMessageContains(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
 		return true
@@ -71,8 +90,16 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
+		return true
+	}
 	// For example from us-west-2 Route53 zone
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
+		return true
+	}
+	// Example (evidently):  NoLongerSupportedException: AWS Evidently has been discontinued.
+	if tfawserr.ErrCodeEquals(err, "NoLongerSupportedException") {
 		return true
 	}
 	// Example (shield): ResourceNotFoundException: The subscription does not exist
@@ -105,6 +132,10 @@ func SkipSweepError(err error) bool {
 	}
 	// Example (ssmcontacts): ValidationException: Invalid value provided - Account not found for the request
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
+		return true
+	}
+	// Example (redshiftserverless): ValidationException: The ServerlessToServerlessRestore operation isn't supported
+	if tfawserr.ErrMessageContains(err, "ValidationException", "operation isn't supported") {
 		return true
 	}
 	// For example from us-west-2 SageMaker device fleet

@@ -44,14 +44,14 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "portal_url"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "datazone", "domain/{id}"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 		},
 	})
@@ -113,7 +113,7 @@ func TestAccDataZoneDomain_kms_key_identifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 		},
 	})
@@ -148,7 +148,7 @@ func TestAccDataZoneDomain_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 		},
 	})
@@ -182,7 +182,7 @@ func TestAccDataZoneDomain_single_sign_on(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// we do not set single_sign_on if it's the default value
-				ImportStateVerifyIgnore: []string{"single_sign_on"},
+				ImportStateVerifyIgnore: []string{"single_sign_on", "skip_deletion_check"},
 			},
 		},
 	})
@@ -208,7 +208,7 @@ func TestAccDataZoneDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -221,7 +221,7 @@ func TestAccDataZoneDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -230,7 +230,7 @@ func TestAccDataZoneDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -247,9 +247,10 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetDomain(ctx, &datazone.GetDomainInput{
+			input := datazone.GetDomainInput{
 				Identifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetDomain(ctx, &input)
 
 			if tfdatazone.IsResourceMissing(err) {
 				return nil
@@ -278,9 +279,10 @@ func testAccCheckDomainExists(ctx context.Context, name string, domain *datazone
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := conn.GetDomain(ctx, &datazone.GetDomainInput{
+		input := datazone.GetDomainInput{
 			Identifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetDomain(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameDomain, rs.Primary.ID, err)

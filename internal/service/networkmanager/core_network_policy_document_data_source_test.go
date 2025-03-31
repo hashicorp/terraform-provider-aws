@@ -21,7 +21,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentBasicExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentBasicExpectedJSON),
 				),
 			},
 		},
@@ -38,7 +38,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_serviceInsertion(t
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_serviceInsertion,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentServiceInsertionExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentServiceInsertionExpectedJSON),
 				),
 			},
 		},
@@ -55,7 +55,41 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_whenSentTo(t *test
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_whenSentTo,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentWildCardWhenSentToExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentWildCardWhenSentToExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_via(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_via,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_viaCompat(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_viaCompat,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
 				),
 			},
 		},
@@ -540,8 +574,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
         "a"
       ]
     }
-  ],
-  "network-function-groups": []
+  ]
 }`
 
 // lintignore:AWSAT003
@@ -829,6 +862,250 @@ const testAccPolicyDocumentWildCardWhenSentToExpectedJSON = `{
       "via": {
         "network-function-groups": [
           "InspectionVPC"
+        ]
+      }
+    }
+  ],
+  "attachment-policies": [
+    {
+      "rule-number": 125,
+      "condition-logic": "and",
+      "conditions": [
+        {
+          "type": "tag-exists",
+          "key": "InspectionVpcs"
+        }
+      ],
+      "action": {
+        "add-to-network-function-group": "InspectionVPC"
+      }
+    }
+  ]
+}`
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_via = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    vpn_ecmp_support = true
+    asn_ranges = [
+      "64512-65534"
+    ]
+    inside_cidr_blocks = [
+      "10.0.0.0/16"
+    ]
+    edge_locations {
+      location = "us-east-2"
+    }
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name                          = "development"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segments {
+    name                          = "production"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segment_actions {
+    action  = "send-via"
+    segment = "development"
+    mode    = "single-hop"
+
+    when_sent_to {
+      segments = [
+        "*",
+      ]
+    }
+
+    via {
+      network_function_groups = ["InspectionVPC"]
+      with_edge_override {
+        edge_sets         = [["corenetwork1", "corenetwork2"]]
+        use_edge_location = "corenetwork2"
+      }
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 125
+    condition_logic = "and"
+
+    conditions {
+      type = "tag-exists"
+      key  = "InspectionVpcs"
+    }
+
+    action {
+      add_to_network_function_group = "InspectionVPC"
+    }
+  }
+
+  network_function_groups {
+    name                          = "InspectionVPC"
+    description                   = "Route segment traffic to the inspection VPC"
+    require_attachment_acceptance = true
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_viaCompat = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    vpn_ecmp_support = true
+    asn_ranges = [
+      "64512-65534"
+    ]
+    inside_cidr_blocks = [
+      "10.0.0.0/16"
+    ]
+    edge_locations {
+      location = "us-east-2"
+    }
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name                          = "development"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segments {
+    name                          = "production"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segment_actions {
+    action  = "send-via"
+    segment = "development"
+    mode    = "single-hop"
+
+    when_sent_to {
+      segments = [
+        "*",
+      ]
+    }
+
+    via {
+      network_function_groups = ["InspectionVPC"]
+      with_edge_override {
+        edge_sets = [["corenetwork1", "corenetwork2"]]
+        use_edge  = "corenetwork2"
+      }
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 125
+    condition_logic = "and"
+
+    conditions {
+      type = "tag-exists"
+      key  = "InspectionVpcs"
+    }
+
+    action {
+      add_to_network_function_group = "InspectionVPC"
+    }
+  }
+
+  network_function_groups {
+    name                          = "InspectionVPC"
+    description                   = "Route segment traffic to the inspection VPC"
+    require_attachment_acceptance = true
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccPolicyDocumentViaExpectedJSON = `{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "vpn-ecmp-support": true,
+    "inside-cidr-blocks": [
+      "10.0.0.0/16"
+    ],
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "edge-locations": [
+      {
+        "location": "us-east-2"
+      },
+      {
+        "location": "us-west-2"
+      }
+    ]
+  },
+  "segments": [
+    {
+      "name": "development",
+      "edge-locations": [
+        "us-east-2"
+      ],
+      "require-attachment-acceptance": true,
+      "isolate-attachments": true
+    },
+    {
+      "name": "production",
+      "edge-locations": [
+        "us-east-2"
+      ],
+      "require-attachment-acceptance": true,
+      "isolate-attachments": true
+    }
+  ],
+  "network-function-groups": [
+    {
+      "name": "InspectionVPC",
+      "description": "Route segment traffic to the inspection VPC",
+      "require-attachment-acceptance": true
+    }
+  ],
+  "segment-actions": [
+    {
+      "action": "send-via",
+      "segment": "development",
+      "mode": "single-hop",
+      "when-sent-to": {
+        "segments": "*"
+      },
+      "via": {
+        "network-function-groups": [
+          "InspectionVPC"
+        ],
+        "with-edge-overrides": [
+          {
+            "edge-sets": [[
+              "corenetwork1",
+              "corenetwork2"
+            ]],
+            "use-edge-location": "corenetwork2"
+          }
         ]
       }
     }

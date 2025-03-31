@@ -6,7 +6,6 @@ package bedrockagent
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -31,10 +30,6 @@ const (
 
 type dataSourceAgentVersions struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceAgentVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_bedrockagent_agent_versions"
 }
 
 func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -99,7 +94,7 @@ func (d *dataSourceAgentVersions) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	paginator := bedrockagent.NewListAgentVersionsPaginator(conn, &bedrockagent.ListAgentVersionsInput{
-		AgentId: aws.String(data.AgentID.ValueString()),
+		AgentId: data.AgentID.ValueStringPointer(),
 	})
 
 	var out bedrockagent.ListAgentVersionsOutput

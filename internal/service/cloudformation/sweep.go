@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -107,11 +106,14 @@ func sweepStackSetInstances(region string) error {
 
 					r := resourceStackSetInstance()
 					d := r.Data(nil)
-					id := errs.Must(flex.FlattenResourceId([]string{stackSetID, accountOrOrgID, aws.ToString(v.Region)}, stackSetInstanceResourceIDPartCount, false))
+					id, err := flex.FlattenResourceId([]string{stackSetID, accountOrOrgID, aws.ToString(v.Region)}, stackSetInstanceResourceIDPartCount, false)
+					if err != nil {
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error flattening resource ID CloudFormation StackSet Instances (%s): %w", region, err))
+					}
 					d.SetId(id)
 					d.Set("call_as", awstypes.CallAsSelf)
 					if ouID != "" {
-						d.Set("deployment_targets", []interface{}{map[string]interface{}{"organizational_unit_ids": schema.NewSet(schema.HashString, []interface{}{ouID})}})
+						d.Set("deployment_targets", []any{map[string]any{"organizational_unit_ids": schema.NewSet(schema.HashString, []any{ouID})}})
 					}
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

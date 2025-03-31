@@ -18,6 +18,7 @@ import (
 
 // @SDKDataSource("aws_batch_job_queue", name="Job Queue")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,
@@ -38,6 +39,30 @@ func dataSourceJobQueue() *schema.Resource {
 						},
 						"order": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"job_state_time_limit_action": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAction: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"max_time_seconds": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"reason": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrState: {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -72,7 +97,7 @@ func dataSourceJobQueue() *schema.Resource {
 	}
 }
 
-func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -92,15 +117,28 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrStatus, jobQueue.Status)
 	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 	for _, apiObject := range jobQueue.ComputeEnvironmentOrder {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap["compute_environment"] = aws.ToString(apiObject.ComputeEnvironment)
 		tfMap["order"] = aws.ToInt32(apiObject.Order)
 		tfList = append(tfList, tfMap)
 	}
 	if err := d.Set("compute_environment_order", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
+	}
+
+	tfList = make([]any, 0)
+	for _, apiObject := range jobQueue.JobStateTimeLimitActions {
+		tfMap := map[string]any{}
+		tfMap[names.AttrAction] = apiObject.Action
+		tfMap["max_time_seconds"] = aws.ToInt32(apiObject.MaxTimeSeconds)
+		tfMap["reason"] = aws.ToString(apiObject.Reason)
+		tfMap[names.AttrState] = apiObject.State
+		tfList = append(tfList, tfMap)
+	}
+	if err := d.Set("job_state_time_limit_action", tfList); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting job_state_time_limit_action: %s", err)
 	}
 
 	setTagsOut(ctx, jobQueue.Tags)

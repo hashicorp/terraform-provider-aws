@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,10 +40,6 @@ type hostedZoneIDDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *hostedZoneIDDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_hosted_zone_id"
-}
-
 func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -65,7 +61,7 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 
 	var region string
 	if data.Region.IsNull() {
-		region = d.Meta().Region
+		region = d.Meta().Region(ctx)
 	} else {
 		region = data.Region.ValueString()
 	}

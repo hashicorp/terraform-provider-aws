@@ -576,3 +576,154 @@ func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) 
 		t.Fatal("Expected definitions to be equal.")
 	}
 }
+
+func TestContainerDefinitionsAreEquivalent_sparseArrays(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresention := `
+[
+    {
+      "name": "wordpress",
+      "links": [
+        "mysql"
+      ],
+      "image": "wordpress",
+      "essential": true,
+      "portMappings": [
+        {}
+      ],
+      "memory": 500,
+      "cpu": 10,
+      "environment": [null],
+      "mountPoints": [{"containerPath": null}],
+      "command": [""]
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "name": "wordpress",
+        "image": "wordpress",
+        "cpu": 10,
+        "memory": 500,
+        "links": [
+            "mysql"
+        ],
+        "portMappings": [],
+        "essential": true,
+        "command": [""]
+    }
+]`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
+
+func TestContainerDefinitionsAreEquivalent_healthCheck(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresentation := `
+[
+    {
+        "cpu": 512,
+        "environment": [],
+        "healthCheck": {
+            "command": [
+                "CMD-SHELL",
+                "curl -f http://localhost:8080/health || exit 1"
+            ]
+        },
+        "image": "nginx",
+        "memory": 2048,
+        "name": "nginx",
+        "startTimeout": 10,
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "foo-bar-e196c99",
+                "awslogs-region": "region-1",
+                "awslogs-stream-prefix": "nginx"
+            }
+        }
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "cpu": 512,
+        "environment": [],
+        "essential": true,
+        "healthCheck": {
+            "command": [
+                "CMD-SHELL",
+                "curl -f http://localhost:8080/health || exit 1"
+            ],
+            "interval": 30,
+            "retries": 3,
+            "timeout": 5
+        },
+        "image": "nginx",
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "foo-bar-e196c99",
+                "awslogs-region": "region-1",
+                "awslogs-stream-prefix": "nginx"
+            }
+        },
+        "memory": 2048,
+        "mountPoints": [],
+        "name": "nginx",
+        "portMappings": [],
+        "startTimeout": 10,
+        "systemControls": [],
+        "volumesFrom": []
+    }
+]
+`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
+
+func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresention := `
+[
+    {
+      "name": "wordpress",
+      "image": "wordpress",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 80
+        }
+      ],
+      "memory": 500,
+      "cpu": 10,
+      "versionConsistency": "invalid"
+    }
+]`
+	_, err := expandContainerDefinitions(cfgRepresention)
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+
+	expectedErr := "invalid version consistency value (invalid) for container definition supplied at index (0)"
+	if err.Error() != expectedErr {
+		t.Fatalf("Expected message '%[1]s', got '%[2]s'", expectedErr, err.Error())
+	}
+}

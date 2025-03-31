@@ -5,8 +5,8 @@ package glue
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	glue_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +15,23 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceRegistry,
+			TypeName: "aws_glue_registry",
+			Name:     "Registry",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceCatalogTableOptimizer,
+			TypeName: "aws_glue_catalog_table_optimizer",
+			Name:     "Catalog Table Optimizer",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -27,18 +39,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
+			Name:     "Catalog Table",
 		},
 		{
 			Factory:  DataSourceConnection,
 			TypeName: "aws_glue_connection",
+			Name:     "Connection",
 		},
 		{
 			Factory:  DataSourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
+			Name:     "Data Catalog Encryption Settings",
 		},
 		{
 			Factory:  DataSourceScript,
 			TypeName: "aws_glue_script",
+			Name:     "Script",
 		},
 	}
 }
@@ -56,10 +72,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
+			Name:     "Catalog Table",
 		},
 		{
 			Factory:  ResourceClassifier,
 			TypeName: "aws_glue_classifier",
+			Name:     "Classifier",
 		},
 		{
 			Factory:  ResourceConnection,
@@ -80,6 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
+			Name:     "Data Catalog Encryption Settings",
 		},
 		{
 			Factory:  ResourceDataQualityRuleset,
@@ -116,10 +135,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePartition,
 			TypeName: "aws_glue_partition",
+			Name:     "Partition",
 		},
 		{
 			Factory:  ResourcePartitionIndex,
 			TypeName: "aws_glue_partition_index",
+			Name:     "Partition Index",
 		},
 		{
 			Factory:  ResourceRegistry,
@@ -132,6 +153,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourcePolicy,
 			TypeName: "aws_glue_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  ResourceSchema,
@@ -144,6 +166,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSecurityConfiguration,
 			TypeName: "aws_glue_security_configuration",
+			Name:     "Security Configuration",
 		},
 		{
 			Factory:  ResourceTrigger,
@@ -156,6 +179,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUserDefinedFunction,
 			TypeName: "aws_glue_user_defined_function",
+			Name:     "User Defined Function",
 		},
 		{
 			Factory:  ResourceWorkflow,
@@ -173,13 +197,33 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*glue_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return glue_sdkv2.NewFromConfig(cfg,
-		glue_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*glue.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*glue.Options){
+		glue.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return glue.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*glue.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*glue.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *glue.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*glue.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

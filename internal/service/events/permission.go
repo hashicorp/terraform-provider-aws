@@ -91,7 +91,7 @@ func resourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -100,7 +100,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	id := permissionCreateResourceID(eventBusName, statementID)
 	input := &eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
-		Condition:    expandCondition(d.Get(names.AttrCondition).([]interface{})),
+		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
 		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
@@ -118,7 +118,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
-func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -127,7 +127,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
 	})
 
@@ -151,7 +151,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	switch principal := policyStatement.Principal.(type) {
 	case string:
 		d.Set(names.AttrPrincipal, principal)
-	case map[string]interface{}:
+	case map[string]any:
 		if v, ok := principal["AWS"].(string); ok {
 			if arn.IsARN(v) {
 				principalARN, err := arn.Parse(v)
@@ -170,7 +170,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -181,7 +181,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
-		Condition:    expandCondition(d.Get(names.AttrCondition).([]interface{})),
+		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
 		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
@@ -196,7 +196,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -283,7 +283,7 @@ type permissionPolicyStatement struct {
 	Effect    string
 	Action    string
 	Condition *permissionPolicyStatementCondition `json:"Condition,omitempty"`
-	Principal interface{}                         // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
+	Principal any                                 // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
 	Resource  string
 }
 
@@ -318,12 +318,12 @@ func (c *permissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func expandCondition(l []interface{}) *types.Condition {
+func expandCondition(l []any) *types.Condition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	condition := &types.Condition{
 		Key:   aws.String(m[names.AttrKey].(string)),
@@ -334,22 +334,22 @@ func expandCondition(l []interface{}) *types.Condition {
 	return condition
 }
 
-func flattenPermissionPolicyStatementCondition(c *permissionPolicyStatementCondition) []interface{} {
+func flattenPermissionPolicyStatementCondition(c *permissionPolicyStatementCondition) []any {
 	if c == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrKey:   c.Key,
 		names.AttrType:  c.Type,
 		names.AttrValue: c.Value,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validatePermissionAction(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionAction(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 64) {
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
@@ -362,7 +362,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionPrincipal(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be * or a 12 digit AWS account ID", k))
@@ -371,7 +371,7 @@ func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []err
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validatePermissionStatementID(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionStatementID(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 64) {
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))

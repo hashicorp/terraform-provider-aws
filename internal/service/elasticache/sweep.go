@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // These timeouts are lower to fail faster during sweepers
@@ -76,6 +78,11 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticache_user_group", &resource.Sweeper{
 		Name: "aws_elasticache_user_group",
 		F:    sweepUserGroups,
+	})
+
+	resource.AddTestSweepers("aws_elasticache_serverless_cache", &resource.Sweeper{
+		Name: "aws_elasticache_serverless_cache",
+		F:    sweepServerlessCaches,
 	})
 }
 
@@ -155,9 +162,7 @@ func sweepGlobalReplicationGroups(region string) error {
 			grgErrs = multierror.Append(grgErrs, fmt.Errorf("listing ElastiCache Global Replication Groups: %w", err))
 		}
 
-		for _, v := range page.GlobalReplicationGroups {
-			globalReplicationGroup := v
-
+		for _, globalReplicationGroup := range page.GlobalReplicationGroups {
 			grgGroup.Go(func() error {
 				id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
@@ -271,6 +276,45 @@ func sweepReplicationGroups(region string) error {
 	return nil
 }
 
+func sweepServerlessCaches(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.ElastiCacheClient(ctx)
+	input := &elasticache.DescribeServerlessCachesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := elasticache.NewDescribeServerlessCachesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ElastiCache Serverless Cache sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing ElastiCache Serverless Caches (%s): %w", region, err)
+		}
+
+		for _, v := range page.ServerlessCaches {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newServerlessCacheResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ServerlessCacheName)),
+			))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping ElastiCache Serverless Caches (%s): %w", region, err)
+	}
+
+	return nil
+}
+
 func sweepSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -282,7 +326,6 @@ func sweepSubnetGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := elasticache.NewDescribeCacheSubnetGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -331,7 +374,6 @@ func sweepUsers(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := elasticache.NewDescribeUsersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -380,7 +422,6 @@ func sweepUserGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := elasticache.NewDescribeUserGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -415,8 +456,6 @@ func disassociateMembers(ctx context.Context, conn *elasticache.Client, globalRe
 	var membersGroup multierror.Group
 
 	for _, member := range globalReplicationGroup.Members {
-		member := member
-
 		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
 			continue
 		}

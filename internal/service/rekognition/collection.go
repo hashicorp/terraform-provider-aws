@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Collection")
+// @FrameworkResource("aws_rekognition_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
 func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCollection{}
@@ -47,10 +47,6 @@ type resourceCollection struct {
 const (
 	ResNameCollection = "Collection"
 )
-
-func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_collection"
-}
 
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
@@ -117,7 +113,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
-	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
 	})
 
@@ -210,10 +206,6 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
 	in := &rekognition.DescribeCollectionInput{
 		CollectionId: aws.String(id),
@@ -244,7 +236,7 @@ type resourceCollectionData struct {
 	CollectionID     types.String   `tfsdk:"collection_id"`
 	FaceModelVersion types.String   `tfsdk:"face_model_version"`
 	ID               types.String   `tfsdk:"id"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Tags             tftags.Map     `tfsdk:"tags"`
+	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }

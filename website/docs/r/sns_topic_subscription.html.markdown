@@ -225,6 +225,39 @@ resource "aws_sns_topic_subscription" "sns-topic" {
 }
 ```
 
+## Example with Delivery Policy
+
+This example demonstrates how to define a `delivery_policy` for an HTTPS subscription. Unlike the `aws_sns_topic` resource, the `delivery_policy` for `aws_sns_topic_subscription` should not be wrapped in an `"http"` object.
+
+```hcl
+resource "aws_sns_topic_subscription" "example_with_delivery_policy" {
+  topic_arn            = "arn:aws:sns:us-west-2:123456789012:my-topic"
+  protocol             = "https"
+  endpoint             = "https://example.com/endpoint"
+  raw_message_delivery = true
+
+  delivery_policy = <<EOF
+{
+  "healthyRetryPolicy": {
+    "minDelayTarget": 20,
+    "maxDelayTarget": 20,
+    "numRetries": 3,
+    "numMaxDelayRetries": 0,
+    "numNoDelayRetries": 0,
+    "numMinDelayRetries": 0,
+    "backoffFunction": "linear"
+  },
+  "sicklyRetryPolicy": null,
+  "throttlePolicy": null,
+  "requestPolicy": {
+    "headerContentType": "text/plain; application/json"
+  },
+  "guaranteed": false
+}
+EOF
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -282,12 +315,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sns_topic_subscription.user_updates_sqs_target
-  id = "arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
+  id = "arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
 }
 ```
 
 Using `terraform import`, import SNS Topic Subscriptions using the subscription `arn`. For example:
 
 ```console
-% terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
+% terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```

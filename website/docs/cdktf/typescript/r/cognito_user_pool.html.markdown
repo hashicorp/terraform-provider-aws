@@ -120,12 +120,14 @@ The following arguments are optional:
 * `deletionProtection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `deviceConfiguration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `emailConfiguration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
+* `emailMfaConfiguration` -  (Optional) Configuration block for configuring email Multi-Factor Authentication (MFA); requires at least 2 `accountRecoverySetting` entries; requires an `emailConfiguration` configuration block. [Detailed below](#email_mfa_configuration).
 * `emailVerificationMessage` - (Optional) String representing the email verification message. Conflicts with `verificationMessageTemplate` configuration block `emailMessage` argument.
 * `emailVerificationSubject` - (Optional) String representing the email verification subject. Conflicts with `verificationMessageTemplate` configuration block `emailSubject` argument.
 * `lambdaConfig` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
 * `mfaConfiguration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `smsConfiguration` or `softwareTokenMfaConfiguration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `smsConfiguration` or `softwareTokenMfaConfiguration` to be configured).
 * `passwordPolicy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
+* `signInPolicy` - (Optional) Configuration block for information about the user pool sign in policy. [Detailed below](#sign_in_policy).
 * `smsAuthenticationMessage` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
 * `smsConfiguration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 * `smsVerificationMessage` - (Optional) String representing the SMS verification message. Conflicts with `verificationMessageTemplate` configuration block `smsMessage` argument.
@@ -133,9 +135,11 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `userAttributeUpdateSettings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `userPoolAddOns` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
+* `userPoolTier` - (Optional) The user pool [feature plan](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-sign-in-feature-plans.html), or tier. Valid values: `LITE`, `ESSENTIALS`, `PLUS`.
 * `usernameAttributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `aliasAttributes`.
 * `usernameConfiguration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verificationMessageTemplate` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
+* `webAuthnConfiguration` - (Optional) Configuration block for web authn configuration. [Detailed below](#web_authn_configuration).
 
 ### account_recovery_setting
 
@@ -167,6 +171,11 @@ The following arguments are optional:
 * `replyToEmailAddress` - (Optional) REPLY-TO email address.
 * `sourceArn` - (Optional) ARN of the SES verified email identity to use. Required if `emailSendingAccount` is set to `DEVELOPER`.
 
+### email_mfa_configuration
+
+* `message` - (Optional) The template for the email messages that your user pool sends to users with codes for MFA and sign-in with email OTPs. The message must contain the {####} placeholder. In the message, Amazon Cognito replaces this placeholder with the code. If you don't provide this parameter, Amazon Cognito sends messages in the default format.
+* `subject` - (Optional) The subject of the email messages that your user pool sends to users with codes for MFA and email OTP sign-in.
+
 ### lambda_config
 
 * `createAuthChallenge` - (Optional) ARN of the lambda creating an authentication challenge.
@@ -197,16 +206,28 @@ The following arguments are optional:
 #### pre_token_configuration_type
 
 * `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `preTokenGeneration`, its value must be identical to this one.
-* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`, `V3_0`.
 
 ### password_policy
 
 * `minimumLength` - (Optional) Minimum length of the password policy that you have set.
+* `passwordHistorySize` - (Optional) Number of previous passwords that you want Amazon Cognito to restrict each user from reusing. Users can't set a password that matches any of number of previous passwords specified by this argument. A value of 0 means that password history is not enforced. Valid values are between 0 and 24.
+
+  **Note:** This argument requires advanced security features to be active in the user pool.
 * `requireLowercase` - (Optional) Whether you have required users to use at least one lowercase letter in their password.
 * `requireNumbers` - (Optional) Whether you have required users to use at least one number in their password.
 * `requireSymbols` - (Optional) Whether you have required users to use at least one symbol in their password.
 * `requireUppercase` - (Optional) Whether you have required users to use at least one uppercase letter in their password.
 * `temporaryPasswordValidityDays` - (Optional) In the password policy you have set, refers to the number of days a temporary password is valid. If the user does not sign-in during this time, their password will need to be reset by an administrator.
+
+### sign_in_policy
+
+* `allowedFirstAuthFactors` (Optional) The sign in methods your user pool supports as the first factor. This is a list of strings, allowed values are `PASSWORD`, `EMAIL_OTP`, `SMS_OTP`, and `WEB_AUTHN`.
+
+### web_authn_configuration
+
+* `relyingPartyId` - (Optional) The authentication domain that passkeys providers use as a relying party.
+* `userVerification` - (Optional) If your user pool should require a passkey. Must be one of `required` or `preferred`.
 
 ### schema
 
@@ -292,7 +313,7 @@ The following arguments are required in the `softwareTokenMfaConfiguration` conf
 
 ### username_configuration
 
-* `caseSensitive` - (Required) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
+* `caseSensitive` - (Optional) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
 
 ### verification_message_template
 
@@ -345,4 +366,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d2add4de169176a18d535e64e6b4e2b8a61a2e7ab8a1120b63e928572a07990e -->
+<!-- cache-key: cdktf-0.20.8 input-1de089d90b5bc7a6d3a592c8987de03ad29aa1c45f9f1fa7b61945e93c3552b1 -->

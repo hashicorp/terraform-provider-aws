@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_feature_group: Add `feature_definition.collection_config`, `feature_definition.collection_type`, and `throughput_config` arguments
+```

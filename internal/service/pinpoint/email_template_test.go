@@ -48,7 +48,7 @@ func TestAccPinpointEmailTemplate_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "template_name"),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 				ImportStateVerify:                    true,
 			},
@@ -83,7 +83,7 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "template_name"),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 			},
 			{
@@ -97,13 +97,6 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_template.0.subject", "update"),
 				),
 			},
-			// {
-			// 	ResourceName:                         resourceName,
-			// 	ImportState:                          true,
-			// 	ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
-			// 	ImportStateVerifyIdentifierAttribute: "template_name",
-			// 	ImportStateVerify:                    true,
-			// },
 		},
 	})
 }
@@ -125,7 +118,7 @@ func TestAccPinpointEmailTemplate_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -133,7 +126,7 @@ func TestAccPinpointEmailTemplate_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "template_name"),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 			},
 		},
@@ -181,17 +174,6 @@ func testAccCheckEmailTemplateDestroy(ctx context.Context) resource.TestCheckFun
 		}
 
 		return nil
-	}
-}
-
-func testAccEmailtemplateImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["template_name"], nil
 	}
 }
 

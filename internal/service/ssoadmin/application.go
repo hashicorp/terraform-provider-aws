@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_ssoadmin_application", name="Application")
 // @Tags
 func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplication{}, nil
@@ -45,10 +45,6 @@ const (
 
 type resourceApplication struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application"
 }
 
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -158,14 +154,14 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	in := &ssoadmin.CreateApplicationInput{
-		ApplicationProviderArn: aws.String(plan.ApplicationProviderARN.ValueString()),
-		InstanceArn:            aws.String(plan.InstanceARN.ValueString()),
-		Name:                   aws.String(plan.Name.ValueString()),
+		ApplicationProviderArn: plan.ApplicationProviderARN.ValueStringPointer(),
+		InstanceArn:            plan.InstanceARN.ValueStringPointer(),
+		Name:                   plan.Name.ValueStringPointer(),
 		Tags:                   getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 	if !plan.PortalOptions.IsNull() {
 		var tfList []portalOptionsData
@@ -267,7 +263,7 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		)
 		return
 	}
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -287,14 +283,14 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		!plan.PortalOptions.Equal(state.PortalOptions) ||
 		!plan.Status.Equal(state.Status) {
 		in := &ssoadmin.UpdateApplicationInput{
-			ApplicationArn: aws.String(plan.ApplicationARN.ValueString()),
+			ApplicationArn: plan.ApplicationARN.ValueStringPointer(),
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 		if !plan.Name.IsNull() {
-			in.Name = aws.String(plan.Name.ValueString())
+			in.Name = plan.Name.ValueStringPointer()
 		}
 		if !plan.PortalOptions.IsNull() {
 			var tfList []portalOptionsData
@@ -356,7 +352,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	in := &ssoadmin.DeleteApplicationInput{
-		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
+		ApplicationArn: state.ApplicationARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplication(ctx, in)
@@ -374,10 +370,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 
 func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceApplication) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationOutput, error) {
@@ -504,7 +496,7 @@ func expandSignInOptions(tfList []signInOptionsData) *awstypes.SignInOptions {
 	}
 
 	if !tfObj.ApplicationURL.IsNull() {
-		apiObject.ApplicationUrl = aws.String(tfObj.ApplicationURL.ValueString())
+		apiObject.ApplicationUrl = tfObj.ApplicationURL.ValueStringPointer()
 	}
 
 	return apiObject
@@ -521,8 +513,8 @@ type resourceApplicationData struct {
 	Name                   types.String `tfsdk:"name"`
 	PortalOptions          types.List   `tfsdk:"portal_options"`
 	Status                 types.String `tfsdk:"status"`
-	Tags                   types.Map    `tfsdk:"tags"`
-	TagsAll                types.Map    `tfsdk:"tags_all"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
+	TagsAll                tftags.Map   `tfsdk:"tags_all"`
 }
 
 type portalOptionsData struct {

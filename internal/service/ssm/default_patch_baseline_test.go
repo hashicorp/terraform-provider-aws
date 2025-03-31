@@ -56,7 +56,7 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -124,7 +124,7 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -165,7 +165,7 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -226,7 +226,7 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -276,7 +276,7 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -324,7 +324,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -387,17 +387,6 @@ func testAccCheckDefaultPatchBaselineExists(ctx context.Context, n string, v *ss
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccDefaultPatchBaselineImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["baseline_id"], nil
 	}
 }
 

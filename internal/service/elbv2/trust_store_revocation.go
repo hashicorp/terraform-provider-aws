@@ -76,7 +76,7 @@ const (
 	trustStoreRevocationResourceIDPartCount = 2
 )
 
-func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -102,11 +102,14 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	revocationID := aws.ToInt64(output.TrustStoreRevocations[0].RevocationId)
-	id := errs.Must(flex.FlattenResourceId([]string{trustStoreARN, strconv.FormatInt(revocationID, 10)}, trustStoreRevocationResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{trustStoreARN, strconv.FormatInt(revocationID, 10)}, trustStoreRevocationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Trust Store (%s) Revocation (s3://%s/%s): %s", trustStoreARN, s3Bucket, s3Key, err)
+	}
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
 	})
 
@@ -117,7 +120,7 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceTrustStoreRevocationRead(ctx, d, meta)...)
 }
 
-func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -127,7 +130,11 @@ func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	trustStoreARN := parts[0]
-	revocationID := errs.Must(strconv.ParseInt(parts[1], 10, 64))
+	revocationID, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Trust Store Revocation (%s): %s", d.Id(), err)
+	}
+
 	revocation, err := findTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -146,7 +153,7 @@ func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -156,7 +163,10 @@ func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	trustStoreARN := parts[0]
-	revocationID := errs.Must(strconv.ParseInt(parts[1], 10, 64))
+	revocationID, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Trust Store Revocation (%s): %s", d.Id(), err)
+	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Trust Store Revocation: %s", d.Id())
 	_, err = conn.RemoveTrustStoreRevocations(ctx, &elasticloadbalancingv2.RemoveTrustStoreRevocationsInput{

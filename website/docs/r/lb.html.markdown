@@ -114,10 +114,12 @@ This resource supports the following arguments:
 * `enable_tls_version_and_cipher_suite_headers` - (Optional) Whether the two headers (`x-amzn-tls-version` and `x-amzn-tls-cipher-suite`), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. Only valid for Load Balancers of type `application`. Defaults to `false`
 * `enable_xff_client_port` - (Optional) Whether the X-Forwarded-For header should preserve the source port that the client used to connect to the load balancer in `application` load balancers. Defaults to `false`.
 * `enable_waf_fail_open` - (Optional) Whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. Defaults to `false`.
+* `enable_zonal_shift` - (Optional) Whether zonal shift is enabled. Defaults to `false`.
 * `enforce_security_group_inbound_rules_on_private_link_traffic` - (Optional) Whether inbound security group rules are enforced for traffic originating from a PrivateLink. Only valid for Load Balancers of type `network`. The possible values are `on` and `off`.
 * `idle_timeout` - (Optional) Time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
 * `internal` - (Optional) If true, the LB will be internal. Defaults to `false`.
 * `ip_address_type` - (Optional) Type of IP addresses used by the subnets for your load balancer. The possible values depend upon the load balancer type: `ipv4` (all load balancer types), `dualstack` (all load balancer types), and `dualstack-without-public-ipv4` (type `application` only).
+* `ipam_pools` (Optional). The IPAM pools to use with the load balancer.  Only valid for Load Balancers of type `application`. See [ipam_pools](#ipam_pools) for more information.
 * `load_balancer_type` - (Optional) Type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
 * `name` - (Optional) Name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with `tf-lb`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -139,6 +141,10 @@ This resource supports the following arguments:
 * `bucket` - (Required) S3 bucket name to store the logs in.
 * `enabled` - (Optional) Boolean to enable / disable `connection_logs`. Defaults to `false`, even when `bucket` is specified.
 * `prefix` - (Optional) S3 bucket prefix. Logs are stored in the root if not configured.
+
+### ipam_pools
+
+* `ipv4_ipam_pool_id` - (Required) The ID of the IPv4 IPAM pool.
 
 ### subnet_mapping
 

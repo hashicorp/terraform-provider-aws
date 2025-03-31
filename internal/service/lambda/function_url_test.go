@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +22,7 @@ import (
 )
 
 func testAccFunctionURLPreCheck(t *testing.T) {
-	acctest.PreCheckPartition(t, names.StandardPartitionID)
+	acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 }
 
 func TestAccLambdaFunctionURL_basic(t *testing.T) {
@@ -44,7 +45,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
-					resource.TestCheckResourceAttr(resourceName, "cors.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(resourceName, "function_url"),
@@ -83,16 +84,16 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
-					resource.TestCheckResourceAttr(resourceName, "cors.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "date"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "keep-alive"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_methods.*", "*"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_origins.*", "*"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.expose_headers.*", "date"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.expose_headers.*", "keep-alive"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.max_age", "86400"),
@@ -108,17 +109,17 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
-					resource.TestCheckResourceAttr(resourceName, "cors.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "x-custom-header"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_methods.*", "GET"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_methods.*", "POST"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_origins.*", "https://www.example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_origins.*", "http://localhost:60905"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.expose_headers.*", "date"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.max_age", "72000"),
 				),
@@ -128,7 +129,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
-					resource.TestCheckResourceAttr(resourceName, "cors.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 				),
 			},
 		},
@@ -191,7 +192,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, latestResourceName, &conf),
 					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
-					resource.TestCheckResourceAttr(latestResourceName, "cors.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(latestResourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(latestResourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttr(latestResourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(latestResourceName, "function_url"),
@@ -200,7 +201,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 
 					testAccCheckFunctionURLExists(ctx, liveResourceName, &conf),
 					resource.TestCheckResourceAttr(liveResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
-					resource.TestCheckResourceAttr(liveResourceName, "cors.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(liveResourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(liveResourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttr(liveResourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(liveResourceName, "function_url"),

@@ -54,10 +54,6 @@ type resourceProject struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_project"
-}
-
 func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -283,7 +279,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 
 	in := &datazone.DeleteProjectInput{
 		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
-		Identifier:       aws.String((*state.ID.ValueStringPointer())),
+		Identifier:       state.ID.ValueStringPointer(),
 	}
 	if !state.SkipDeletionCheck.IsNull() {
 		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()
@@ -318,7 +314,9 @@ func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportSt
 
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
+		return
 	}
+
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 }
@@ -326,7 +324,7 @@ func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportSt
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusActive),
+		Target:                    enum.Slice(awstypes.ProjectStatusActive),
 		Refresh:                   statusProject(ctx, conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            40,
@@ -343,7 +341,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
+		Pending: enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:  []string{},
 		Refresh: statusProject(ctx, conn, domain, identifier),
 		Timeout: timeout,
@@ -358,7 +356,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 }
 
 func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

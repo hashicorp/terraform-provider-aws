@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -37,10 +37,6 @@ func newResourceKeyAlias(context.Context) (resource.ResourceWithConfigure, error
 type keyAliasResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*keyAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_paymentcryptography_key_alias"
 }
 
 func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
