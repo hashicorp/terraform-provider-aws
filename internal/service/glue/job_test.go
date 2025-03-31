@@ -1424,19 +1424,19 @@ resource "aws_glue_job" "test" {
 func testAccJobConfig_sourceControlDetails(rName, repo string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
-  name         = %[1]q
-  role_arn     = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
   }
 
   source_control_details {
-    provider        = "GITHUB"
-    repository      = %[2]q
-    branch          = "test-branch"
-    owner           = "test-owner"
-    last_commit_id  = "test-commit-id"
+    provider       = "GITHUB"
+    repository     = %[2]q
+    branch         = "test-branch"
+    owner          = "test-owner"
+    last_commit_id = "test-commit-id"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
