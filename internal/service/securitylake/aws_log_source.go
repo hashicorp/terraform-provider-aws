@@ -87,11 +87,17 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
+	in := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	thing1, thing2 := setupSerializationObjects[awsLogSourceResourceModel, awstypes.AwsLogSourceConfiguration](in)
+
 	input := &securitylake.CreateAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, thing1, &thing2)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Sources = thing2.Data
 
 	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
@@ -250,4 +256,20 @@ type awsLogSourceResourceModel struct {
 	Regions       fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
 	SourceName    types.String                     `tfsdk:"source_name"`
 	SourceVersion types.String                     `tfsdk:"source_version"`
+}
+
+type objectForInput[T any] struct {
+	Data fwtypes.ListNestedObjectValueOf[T]
+}
+
+type objectForOutput[T any] struct {
+	Data []T
+}
+
+func setupSerializationObjects[T any, V any](input fwtypes.ListNestedObjectValueOf[T]) (objectForInput[T], objectForOutput[V]) { //nolint:unparam
+	in := objectForInput[T]{
+		Data: input,
+	}
+
+	return in, objectForOutput[V]{}
 }
