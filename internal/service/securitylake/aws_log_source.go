@@ -6,6 +6,7 @@ package securitylake
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -62,7 +63,8 @@ func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.Sche
 				},
 			},
 			"source_name": schema.StringAttribute{
-				Required: true,
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.AwsLogSourceName](),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -98,6 +100,8 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	input.Sources = thing2.Data
+
+	log.Printf("[DEBUG] input: %v", input)
 
 	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
@@ -171,11 +175,17 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
+	in := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	delete1, delete2 := setupSerializationObjects[awsLogSourceResourceModel, awstypes.AwsLogSourceConfiguration](in)
+
 	input := &securitylake.DeleteAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, delete1, &delete2)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Sources = delete2.Data
 
 	// Workaround for acceptance tests deletion.
 	if len(input.Sources) == 0 {
@@ -251,11 +261,11 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 }
 
 type awsLogSourceResourceModel struct {
-	ID            types.String                     `tfsdk:"id"`
-	Accounts      fwtypes.SetValueOf[types.String] `tfsdk:"accounts"`
-	Regions       fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
-	SourceName    types.String                     `tfsdk:"source_name"`
-	SourceVersion types.String                     `tfsdk:"source_version"`
+	ID            types.String                                  `tfsdk:"id"`
+	Accounts      fwtypes.SetValueOf[types.String]              `tfsdk:"accounts"`
+	Regions       fwtypes.SetValueOf[types.String]              `tfsdk:"regions"`
+	SourceName    fwtypes.StringEnum[awstypes.AwsLogSourceName] `tfsdk:"source_name"`
+	SourceVersion types.String                                  `tfsdk:"source_version"`
 }
 
 type objectForInput[T any] struct {
