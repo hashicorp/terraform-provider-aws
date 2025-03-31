@@ -30,11 +30,11 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "initech:CreateReport"
-                - "initech:DeleteReport"
-                - "initech:DescribeReport"
-                - "initech:ListReports"
-                - "initech:UpdateReport"
+                  - "initech:CreateReport"
+                  - "initech:DeleteReport"
+                  - "initech:DescribeReport"
+                  - "initech:ListReports"
+                  - "initech:UpdateReport"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
