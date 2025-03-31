@@ -8389,6 +8389,7 @@ service "worklink" {
   provider_package_correct = "worklink"
   doc_prefix               = ["worklink_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "workmail" {

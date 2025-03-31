@@ -2269,14 +2269,6 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// worklink
-
-				"worklink": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// workspaces
 
 				"workspaces": {
