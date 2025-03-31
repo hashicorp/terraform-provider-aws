@@ -866,6 +866,32 @@ func TestAccSQSQueue_timeouts(t *testing.T) {
 	})
 }
 
+// SQS does not return the KMS Data Key Reuse Period Seconds attribute when not using managed encryption,
+// even if it is sent in the request. This causes hanging when statusQueueAttributeState() waits for the
+// attributes to propagate.
+// https://github.com/hashicorp/terraform-provider-aws/pull/41590
+func TestAccSQSQueue_noManagedEncryptionKMSDataKeyReusePeriodSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
@@ -1321,6 +1347,21 @@ resource "aws_sqs_queue_policy" "test" {
       }
     }]
   })
+}
+`, rName)
+}
+
+func testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  fifo_queue                        = true
+  kms_data_key_reuse_period_seconds = "60"
+  max_message_size                  = "261244"
+  message_retention_seconds         = "60"
+  name                              = "%[1]s.fifo"
+  receive_wait_time_seconds         = "10"
+  sqs_managed_sse_enabled           = false
+  visibility_timeout_seconds        = "60"
 }
 `, rName)
 }

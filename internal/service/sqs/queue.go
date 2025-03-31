@@ -78,6 +78,10 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// KmsDataKeyReusePeriodSeconds is only valid for SqsManagedSseEnabled queues.
+				return !d.Get("sqs_managed_sse_enabled").(bool)
+			},
 		},
 		"kms_master_key_id": {
 			Type:          schema.TypeString,
@@ -541,6 +545,12 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 					// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(defaultQueueKMSDataKeyReusePeriodSeconds) {
+						continue
+					}
+
+					sse, ok := got[types.QueueAttributeNameSqsManagedSseEnabled]
+					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && ok && sse == "false" {
+						// Won't be set if SqsManagedSseEnabled is false.
 						continue
 					}
 
