@@ -198,7 +198,7 @@ func ResourceJob() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"owner": {
+						names.AttrOwner: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -614,7 +614,7 @@ func expandSourceControlDetails(l []any) *awstypes.SourceControlDetails {
 	if v, ok := m["last_commit_id"].(string); ok && v != "" {
 		sourceControlDetails.LastCommitId = aws.String(v)
 	}
-	if v, ok := m["owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrOwner].(string); ok && v != "" {
 		sourceControlDetails.Owner = aws.String(v)
 	}
 	if v, ok := m["provider"].(string); ok && v != "" {
@@ -637,7 +637,7 @@ func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDet
 		"branch":         aws.ToString(sourceControlDetails.Branch),
 		"folder":         aws.ToString(sourceControlDetails.Folder),
 		"last_commit_id": aws.ToString(sourceControlDetails.LastCommitId),
-		"owner":          aws.ToString(sourceControlDetails.Owner),
+		names.AttrOwner:  aws.ToString(sourceControlDetails.Owner),
 		"provider":       sourceControlDetails.Provider,
 		"repository":     aws.ToString(sourceControlDetails.Repository),
 	}
