@@ -146,7 +146,7 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password_wo            = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
   password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
