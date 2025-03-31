@@ -6,6 +6,8 @@ NOTES:
 
 ENHANCEMENTS:
 
+* resource/aws_lambda_function: Add support for `ruby3.4` `runtime` value ([#42052](https://github.com/hashicorp/terraform-provider-aws/issues/42052))
+* resource/aws_lambda_layer_version: Add support for `ruby3.4` `compatible_runtimes` value ([#42052](https://github.com/hashicorp/terraform-provider-aws/issues/42052))
 * resource/aws_s3_bucket_lifecycle_configuration: Adds warning if multiple attributes in `rule.expiration` are set ([#42036](https://github.com/hashicorp/terraform-provider-aws/issues/42036))
 * resource/aws_s3_bucket_lifecycle_configuration: Adds warning if neither `rule.prefix` nor `rule.filter` is set ([#42036](https://github.com/hashicorp/terraform-provider-aws/issues/42036))
 * resource/aws_s3_bucket_lifecycle_configuration: Adds warning if neither `rule.transition.date` nor `rule.transition.days` is set and error if both are set ([#42036](https://github.com/hashicorp/terraform-provider-aws/issues/42036))
