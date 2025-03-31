@@ -5,8 +5,8 @@ package organizations
 
 import (
 	"context"
+	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -22,7 +22,89 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits)
+	awsv2.Register("aws_organizations_account", sweepAccounts)
+
+	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
+		"aws_organizations_account")
+}
+
+func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.OrganizationsClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	orgInput := organizations.DescribeOrganizationInput{}
+	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not part of an AWS Organization",
+		})
+		return nil, nil
+	}
+
+	r := resourceAccount()
+
+	input := organizations.ListAccountsInput{}
+	pages := organizations.NewListAccountsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, account := range page.Accounts {
+			if aws.ToString(account.Id) == aws.ToString(orgOutput.Organization.MasterAccountId) {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"attr.id":     account.Id,
+					"skip_reason": "Organization management account",
+				})
+				continue
+			}
+
+			if account.Status != awstypes.AccountStatusActive {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"attr.id":     account.Id,
+					"skip_reason": fmt.Sprintf("Account status is %q", account.Status),
+				})
+				continue
+			}
+
+			// TODO: Figure out how to not do the retry
+
+			d := r.Data(nil)
+			d.SetId(aws.ToString(account.Id))
+			d.Set("close_on_deletion", true)
+
+			sweepResources = append(sweepResources, newAccountSweeper(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+type accountSweeper struct {
+	d         *schema.ResourceData
+	sweepable sweep.Sweepable
+}
+
+func newAccountSweeper(resource *schema.Resource, d *schema.ResourceData, client *conns.AWSClient) *accountSweeper {
+	return &accountSweeper{
+		d:         d,
+		sweepable: sdk.NewSweepResource(resource, d, client),
+	}
+}
+
+func (as accountSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := as.sweepable.Delete(ctx, optFns...); err != nil {
+		if strings.Contains(err.Error(), "exceeded close account quota") {
+			tflog.Info(ctx, "Ignoring error", map[string]any{
+				"error": err.Error(),
+			})
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func sweepOrganizationalUnits(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -113,8 +195,8 @@ func newOrganizationalUnitSweeper(resource *schema.Resource, d *schema.ResourceD
 	}
 }
 
-func (ous organizationalUnitSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	if err := ous.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+func (ous organizationalUnitSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := ous.sweepable.Delete(ctx, optFns...); err != nil {
 		if strings.Contains(err.Error(), "OrganizationalUnitNotEmptyException:") {
 			tflog.Info(ctx, "Ignoring error", map[string]any{
 				"error": err.Error(),

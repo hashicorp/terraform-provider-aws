@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,8 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Caution: Because of cross account usage, using Tags(identifierAttribute="arn") causes Access Denied
+// errors because tags need special handling. See crossAccountSetTags().
+
 // @SDKDataSource("aws_vpclattice_service", name="Service")
-// @Tags(identifierAttribute="arn")
+// @Tags
 // @Testing(tagsTest=false)
 func dataSourceService() *schema.Resource {
 	return &schema.Resource{
@@ -79,7 +81,7 @@ func dataSourceService() *schema.Resource {
 	}
 }
 
-func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -119,7 +121,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
-		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
+		if err := d.Set("dns_entry", []any{flattenDNSEntry(out.DnsEntry)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
@@ -129,23 +131,5 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("service_identifier", out.Id)
 	d.Set(names.AttrStatus, out.Status)
 
-	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
-	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
-	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
-	parsedARN, err := arn.Parse(serviceARN)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID(ctx) {
-		tags, err := listTags(ctx, conn, serviceARN)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service (%s): %s", serviceARN, err)
-		}
-
-		setTagsOut(ctx, Tags(tags))
-	}
-
-	return diags
+	return crossAccountSetTags(ctx, conn, diags, serviceARN, meta.(*conns.AWSClient).AccountID(ctx), "Service")
 }

@@ -50,10 +50,6 @@ type resourceBotVersion struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceBotVersion) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_version"
-}
-
 func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -281,7 +277,7 @@ func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, id str
 }
 
 func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotVersionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

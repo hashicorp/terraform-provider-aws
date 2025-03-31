@@ -163,7 +163,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"routing_rule"},
 				ValidateFunc:  validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -180,26 +180,26 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	websiteConfig := &types.WebsiteConfiguration{}
 
-	if v, ok := d.GetOk("error_document"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.ErrorDocument = expandErrorDocument(v.([]interface{}))
+	if v, ok := d.GetOk("error_document"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.ErrorDocument = expandErrorDocument(v.([]any))
 	}
 
-	if v, ok := d.GetOk("index_document"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.IndexDocument = expandIndexDocument(v.([]interface{}))
+	if v, ok := d.GetOk("index_document"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.IndexDocument = expandIndexDocument(v.([]any))
 	}
 
-	if v, ok := d.GetOk("redirect_all_requests_to"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.RedirectAllRequestsTo = expandRedirectAllRequestsTo(v.([]interface{}))
+	if v, ok := d.GetOk("redirect_all_requests_to"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.RedirectAllRequestsTo = expandRedirectAllRequestsTo(v.([]any))
 	}
 
-	if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.RoutingRules = expandRoutingRules(v.([]interface{}))
+	if v, ok := d.GetOk("routing_rule"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.RoutingRules = expandRoutingRules(v.([]any))
 	}
 
 	if v, ok := d.GetOk("routing_rules"); ok {
@@ -223,7 +223,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutBucketWebsite(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -235,9 +235,9 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Website Configuration: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -248,11 +248,11 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceBucketWebsiteConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -308,11 +308,11 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -323,21 +323,21 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 
 	websiteConfig := &types.WebsiteConfiguration{}
 
-	if v, ok := d.GetOk("error_document"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.ErrorDocument = expandErrorDocument(v.([]interface{}))
+	if v, ok := d.GetOk("error_document"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.ErrorDocument = expandErrorDocument(v.([]any))
 	}
 
-	if v, ok := d.GetOk("index_document"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.IndexDocument = expandIndexDocument(v.([]interface{}))
+	if v, ok := d.GetOk("index_document"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.IndexDocument = expandIndexDocument(v.([]any))
 	}
 
-	if v, ok := d.GetOk("redirect_all_requests_to"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.RedirectAllRequestsTo = expandRedirectAllRequestsTo(v.([]interface{}))
+	if v, ok := d.GetOk("redirect_all_requests_to"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		websiteConfig.RedirectAllRequestsTo = expandRedirectAllRequestsTo(v.([]any))
 	}
 
 	if d.HasChanges("routing_rule", "routing_rules") {
 		if d.HasChange("routing_rule") {
-			websiteConfig.RoutingRules = expandRoutingRules(d.Get("routing_rule").([]interface{}))
+			websiteConfig.RoutingRules = expandRoutingRules(d.Get("routing_rule").([]any))
 		} else {
 			var unmarshalledRules []types.RoutingRule
 			if err := json.Unmarshal([]byte(d.Get("routing_rules").(string)), &unmarshalledRules); err != nil {
@@ -347,8 +347,8 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		}
 	} else {
 		// Still send the current RoutingRules configuration
-		if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			websiteConfig.RoutingRules = expandRoutingRules(v.([]interface{}))
+		if v, ok := d.GetOk("routing_rule"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			websiteConfig.RoutingRules = expandRoutingRules(v.([]any))
 		}
 
 		if v, ok := d.GetOk("routing_rules"); ok {
@@ -377,11 +377,11 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 	return append(diags, resourceBucketWebsiteConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -407,7 +407,7 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -474,12 +474,12 @@ func findBucketLocation(ctx context.Context, conn *s3.Client, bucket, expectedBu
 	return output, nil
 }
 
-func expandErrorDocument(l []interface{}) *types.ErrorDocument {
+func expandErrorDocument(l []any) *types.ErrorDocument {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -493,12 +493,12 @@ func expandErrorDocument(l []interface{}) *types.ErrorDocument {
 	return result
 }
 
-func expandIndexDocument(l []interface{}) *types.IndexDocument {
+func expandIndexDocument(l []any) *types.IndexDocument {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -512,12 +512,12 @@ func expandIndexDocument(l []interface{}) *types.IndexDocument {
 	return result
 }
 
-func expandRedirectAllRequestsTo(l []interface{}) *types.RedirectAllRequestsTo {
+func expandRedirectAllRequestsTo(l []any) *types.RedirectAllRequestsTo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -535,22 +535,22 @@ func expandRedirectAllRequestsTo(l []interface{}) *types.RedirectAllRequestsTo {
 	return result
 }
 
-func expandRoutingRules(l []interface{}) []types.RoutingRule {
+func expandRoutingRules(l []any) []types.RoutingRule {
 	var results []types.RoutingRule
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		rule := types.RoutingRule{}
 
-		if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrCondition].([]any); ok && len(v) > 0 && v[0] != nil {
 			rule.Condition = expandCondition(v)
 		}
 
-		if v, ok := tfMap["redirect"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["redirect"].([]any); ok && len(v) > 0 && v[0] != nil {
 			rule.Redirect = expandRedirect(v)
 		}
 
@@ -560,12 +560,12 @@ func expandRoutingRules(l []interface{}) []types.RoutingRule {
 	return results
 }
 
-func expandCondition(l []interface{}) *types.Condition {
+func expandCondition(l []any) *types.Condition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -583,12 +583,12 @@ func expandCondition(l []interface{}) *types.Condition {
 	return result
 }
 
-func expandRedirect(l []interface{}) *types.Redirect {
+func expandRedirect(l []any) *types.Redirect {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -618,40 +618,40 @@ func expandRedirect(l []interface{}) *types.Redirect {
 	return result
 }
 
-func flattenIndexDocument(i *types.IndexDocument) []interface{} {
+func flattenIndexDocument(i *types.IndexDocument) []any {
 	if i == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if i.Suffix != nil {
 		m["suffix"] = aws.ToString(i.Suffix)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenErrorDocument(e *types.ErrorDocument) []interface{} {
+func flattenErrorDocument(e *types.ErrorDocument) []any {
 	if e == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if e.Key != nil {
 		m[names.AttrKey] = aws.ToString(e.Key)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenRedirectAllRequestsTo(r *types.RedirectAllRequestsTo) []interface{} {
+func flattenRedirectAllRequestsTo(r *types.RedirectAllRequestsTo) []any {
 	if r == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrProtocol: string(r.Protocol),
 	}
 
@@ -659,14 +659,14 @@ func flattenRedirectAllRequestsTo(r *types.RedirectAllRequestsTo) []interface{} 
 		m["host_name"] = aws.ToString(r.HostName)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenRoutingRules(rules []types.RoutingRule) []interface{} {
-	var results []interface{}
+func flattenRoutingRules(rules []types.RoutingRule) []any {
+	var results []any
 
 	for _, rule := range rules {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if rule.Condition != nil {
 			m[names.AttrCondition] = flattenCondition(rule.Condition)
@@ -682,12 +682,12 @@ func flattenRoutingRules(rules []types.RoutingRule) []interface{} {
 	return results
 }
 
-func flattenCondition(c *types.Condition) []interface{} {
+func flattenCondition(c *types.Condition) []any {
 	if c == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if c.KeyPrefixEquals != nil {
 		m["key_prefix_equals"] = aws.ToString(c.KeyPrefixEquals)
@@ -697,15 +697,15 @@ func flattenCondition(c *types.Condition) []interface{} {
 		m["http_error_code_returned_equals"] = aws.ToString(c.HttpErrorCodeReturnedEquals)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenRedirect(r *types.Redirect) []interface{} {
+func flattenRedirect(r *types.Redirect) []any {
 	if r == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrProtocol: string(r.Protocol),
 	}
 
@@ -725,7 +725,7 @@ func flattenRedirect(r *types.Redirect) []interface{} {
 		m["replace_key_prefix_with"] = aws.ToString(r.ReplaceKeyPrefixWith)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func normalizeRoutingRules(w []types.RoutingRule) (string, error) {
@@ -734,12 +734,12 @@ func normalizeRoutingRules(w []types.RoutingRule) (string, error) {
 		return "", err
 	}
 
-	var rules []map[string]interface{}
+	var rules []map[string]any
 	if err := json.Unmarshal(withNulls, &rules); err != nil {
 		return "", err
 	}
 
-	var cleanRules []map[string]interface{}
+	var cleanRules []map[string]any
 	for _, rule := range rules {
 		cleanRules = append(cleanRules, removeNilOrEmptyProtocol(rule))
 	}
@@ -753,8 +753,8 @@ func normalizeRoutingRules(w []types.RoutingRule) (string, error) {
 }
 
 // removeNilOrEmptyProtocol removes nils and empty ("") Protocol values from a RoutingRule JSON document.
-func removeNilOrEmptyProtocol(data map[string]interface{}) map[string]interface{} {
-	withoutNil := make(map[string]interface{})
+func removeNilOrEmptyProtocol(data map[string]any) map[string]any {
+	withoutNil := make(map[string]any)
 
 	for k, v := range data {
 		if v == nil {
@@ -762,7 +762,7 @@ func removeNilOrEmptyProtocol(data map[string]interface{}) map[string]interface{
 		}
 
 		switch v := v.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			withoutNil[k] = removeNilOrEmptyProtocol(v)
 		case string:
 			// With AWS SDK for Go v2 Protocol changed type from *string to types.Protocol.

@@ -9,6 +9,7 @@ go test \
     ./internal/attrmap/... \
     ./internal/conns/... \
     ./internal/create/... \
+    ./internal/dns/... \
     ./internal/enum/... \
     ./internal/envvar/... \
     ./internal/errs/... \
@@ -23,6 +24,7 @@ go test \
     ./internal/maps/... \
     ./internal/namevaluesfilters/... \
     ./internal/provider/... \
+    ./internal/reflect/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
     ./internal/semver/... \

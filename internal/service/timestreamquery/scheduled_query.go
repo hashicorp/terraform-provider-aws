@@ -54,10 +54,6 @@ type resourceScheduledQuery struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceScheduledQuery) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_timestreamquery_scheduled_query"
-}
-
 func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -673,7 +669,7 @@ func (r *resourceScheduledQuery) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -753,10 +749,6 @@ func (r *resourceScheduledQuery) ImportState(ctx context.Context, req resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
-func (r *resourceScheduledQuery) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client, id string, timeout time.Duration) (*awstypes.ScheduledQueryDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -813,7 +805,7 @@ func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client
 // and returns the state of the scheduled query, not the run status of the most
 // recent run.
 func statusScheduledQuery(ctx context.Context, conn *timestreamquery.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findScheduledQueryByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

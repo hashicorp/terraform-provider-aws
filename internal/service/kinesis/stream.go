@@ -44,8 +44,7 @@ func resourceStream() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				switch streamMode, shardCount := getStreamMode(diff), diff.Get("shard_count").(int); streamMode {
 				case types.StreamModeOnDemand:
 					if shardCount > 0 {
@@ -59,7 +58,7 @@ func resourceStream() *schema.Resource {
 
 				return nil
 			},
-			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 				output, err := findLimits(ctx, conn)
@@ -167,7 +166,7 @@ func resourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -176,8 +175,8 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		StreamName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.StreamModeDetails = expandStreamModeDetails(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.StreamModeDetails = expandStreamModeDetails(v.([]any)[0].(map[string]any))
 	}
 
 	if streamMode := getStreamMode(d); streamMode == types.StreamModeProvisioned {
@@ -266,7 +265,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
@@ -303,7 +302,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("shard_level_metrics", shardLevelMetrics)
 	if details := stream.StreamModeDetails; details != nil {
-		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
+		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(details)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {
@@ -313,7 +312,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -484,7 +483,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 	name := d.Get(names.AttrName).(string)
@@ -510,7 +509,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 	output, err := findStreamByName(ctx, conn, d.Id())
@@ -565,7 +564,7 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 }
 
 func streamStatus(ctx context.Context, conn *kinesis.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStreamByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -646,7 +645,7 @@ func getStreamMode(d sdkv2.ResourceDiffer) types.StreamMode {
 	return types.StreamMode(streamMode.(string))
 }
 
-func expandStreamModeDetails(d map[string]interface{}) *types.StreamModeDetails {
+func expandStreamModeDetails(d map[string]any) *types.StreamModeDetails {
 	if d == nil {
 		return nil
 	}
@@ -660,12 +659,12 @@ func expandStreamModeDetails(d map[string]interface{}) *types.StreamModeDetails 
 	return apiObject
 }
 
-func flattenStreamModeDetails(apiObject *types.StreamModeDetails) map[string]interface{} {
+func flattenStreamModeDetails(apiObject *types.StreamModeDetails) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"stream_mode": apiObject.StreamMode,
 	}
 

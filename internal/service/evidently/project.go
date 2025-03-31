@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -154,12 +153,10 @@ func ResourceProject() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -174,8 +171,8 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("data_delivery"); ok && len(v.([]interface{})) > 0 {
-		input.DataDelivery = expandDataDelivery(v.([]interface{}))
+	if v, ok := d.GetOk("data_delivery"); ok && len(v.([]any)) > 0 {
+		input.DataDelivery = expandDataDelivery(v.([]any))
 	}
 
 	output, err := conn.CreateProject(ctx, input)
@@ -193,7 +190,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -231,7 +228,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -260,21 +257,21 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Project: aws.String(d.Id()),
 		}
 
-		dataDelivery := d.Get("data_delivery").([]interface{})
+		dataDelivery := d.Get("data_delivery").([]any)
 
-		tfMap, ok := dataDelivery[0].(map[string]interface{})
+		tfMap, ok := dataDelivery[0].(map[string]any)
 
 		if !ok {
 			return sdkdiag.AppendErrorf(diags, "updating Project (%s)", d.Id())
 		}
 
 		// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-		if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
-			input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
+		if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]any)) > 0 {
+			input.CloudWatchLogs = expandCloudWatchLogs(v.([]any))
 		}
 
-		if v, ok := tfMap["s3_destination"]; ok && len(v.([]interface{})) > 0 {
-			input.S3Destination = expandS3Destination(v.([]interface{}))
+		if v, ok := tfMap["s3_destination"]; ok && len(v.([]any)) > 0 {
+			input.S3Destination = expandS3Destination(v.([]any))
 		}
 
 		_, err := conn.UpdateProjectDataDelivery(ctx, input)
@@ -291,7 +288,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -316,35 +313,35 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func expandDataDelivery(dataDelivery []interface{}) *awstypes.ProjectDataDeliveryConfig {
+func expandDataDelivery(dataDelivery []any) *awstypes.ProjectDataDeliveryConfig {
 	if len(dataDelivery) == 0 || dataDelivery[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := dataDelivery[0].(map[string]interface{})
+	tfMap, ok := dataDelivery[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &awstypes.ProjectDataDeliveryConfig{}
 
-	if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
-		result.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
+	if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]any)) > 0 {
+		result.CloudWatchLogs = expandCloudWatchLogs(v.([]any))
 	}
 
-	if v, ok := tfMap["s3_destination"]; ok && len(v.([]interface{})) > 0 {
-		result.S3Destination = expandS3Destination(v.([]interface{}))
+	if v, ok := tfMap["s3_destination"]; ok && len(v.([]any)) > 0 {
+		result.S3Destination = expandS3Destination(v.([]any))
 	}
 
 	return result
 }
 
-func expandCloudWatchLogs(cloudWatchLogs []interface{}) *awstypes.CloudWatchLogsDestinationConfig {
+func expandCloudWatchLogs(cloudWatchLogs []any) *awstypes.CloudWatchLogsDestinationConfig {
 	if len(cloudWatchLogs) == 0 || cloudWatchLogs[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := cloudWatchLogs[0].(map[string]interface{})
+	tfMap, ok := cloudWatchLogs[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -358,12 +355,12 @@ func expandCloudWatchLogs(cloudWatchLogs []interface{}) *awstypes.CloudWatchLogs
 	return result
 }
 
-func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationConfig {
+func expandS3Destination(s3Destination []any) *awstypes.S3DestinationConfig {
 	if len(s3Destination) == 0 || s3Destination[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := s3Destination[0].(map[string]interface{})
+	tfMap, ok := s3Destination[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -381,12 +378,12 @@ func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationCon
 	return result
 }
 
-func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []interface{} {
+func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []any {
 	if dataDelivery == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if dataDelivery.CloudWatchLogs != nil {
 		values[names.AttrCloudWatchLogs] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
@@ -396,29 +393,29 @@ func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []interface
 		values["s3_destination"] = flattenS3Destination(dataDelivery.S3Destination)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenCloudWatchLogs(cloudWatchLogs *awstypes.CloudWatchLogsDestination) []interface{} {
+func flattenCloudWatchLogs(cloudWatchLogs *awstypes.CloudWatchLogsDestination) []any {
 	if cloudWatchLogs == nil || cloudWatchLogs.LogGroup == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if cloudWatchLogs.LogGroup != nil {
 		values["log_group"] = aws.ToString(cloudWatchLogs.LogGroup)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
+func flattenS3Destination(s3Destination *awstypes.S3Destination) []any {
 	if s3Destination == nil || s3Destination.Bucket == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if s3Destination.Bucket != nil {
 		values[names.AttrBucket] = aws.ToString(s3Destination.Bucket)
@@ -428,5 +425,5 @@ func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 		values[names.AttrPrefix] = aws.ToString(s3Destination.Prefix)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }

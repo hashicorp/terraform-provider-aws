@@ -84,8 +84,6 @@ func resourceVirtualService() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -144,14 +142,14 @@ func resourceVirtualServiceSpecSchema() *schema.Schema {
 	}
 }
 
-func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
+		Spec:               expandVirtualServiceSpec(d.Get("spec").([]any)),
 		Tags:               getTagsIn(ctx),
 		VirtualServiceName: aws.String(name),
 	}
@@ -171,11 +169,11 @@ func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVirtualServiceRead(ctx, d, meta)...)
 }
 
-func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -205,14 +203,14 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualServiceInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
-			Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
+			Spec:               expandVirtualServiceSpec(d.Get("spec").([]any)),
 			VirtualServiceName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -230,7 +228,7 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVirtualServiceRead(ctx, d, meta)...)
 }
 
-func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -257,7 +255,7 @@ func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())

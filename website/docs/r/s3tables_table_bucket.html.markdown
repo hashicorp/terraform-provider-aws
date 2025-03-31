@@ -27,26 +27,26 @@ The following argument is required:
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.
   Can consist of lowercase letters, numbers, and hyphens, and must begin and end with a lowercase letter or number.
-  A full list of bucket naming rules may be found in [S3 Tables documentation](???).
+  A full list of bucket naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#table-buckets-naming-rules).
 
 The following argument is optional:
 
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration block.
-  [See `maintenance_configuration` below](#maintenance_configuration)
+  [See `maintenance_configuration` below](#maintenance_configuration).
 
-### maintenance_configuration
+### `maintenance_configuration`
 
 The `maintenance_configuration` configuration block supports the following argument:
 
 * `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings block.
-  [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal)
+  [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal).
 
 ### `iceberg_unreferenced_file_removal`
 
 The `iceberg_unreferenced_file_removal` configuration block supports the following arguments:
 
 * `settings` - (Required) Settings for unreferenced file removal.
-  [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings)
+  [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 

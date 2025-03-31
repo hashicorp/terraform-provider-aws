@@ -477,6 +477,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_dashboard*'
               - 'website/**/cloudwatch_metric_*'
               - 'website/**/cloudwatch_composite_*'
+              - 'website/**/cloudwatch_contributor_*'
 service/codeartifact:
   - any:
       - changed-files:
@@ -745,6 +746,12 @@ service/ds:
           - any-glob-to-any-file:
               - 'internal/service/ds/**/*'
               - 'website/**/directory_service_*'
+service/dsql:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/dsql/**/*'
+              - 'website/**/dsql_*'
 service/dynamodb:
   - any:
       - changed-files:

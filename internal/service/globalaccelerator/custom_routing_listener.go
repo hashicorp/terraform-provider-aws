@@ -75,7 +75,7 @@ func resourceCustomRoutingListener() *schema.Resource {
 	}
 }
 
-func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -156,7 +156,7 @@ func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 

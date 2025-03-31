@@ -42,8 +42,6 @@ func ResourceDevEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"arguments": {
 				Type:     schema.TypeMap,
@@ -174,7 +172,7 @@ func ResourceDevEndpoint() *schema.Resource {
 	}
 }
 
-func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -186,7 +184,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
-		input.Arguments = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Arguments = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("extra_jars_s3_path"); ok {
@@ -273,7 +271,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDevEndpointRead(ctx, d, meta)...)
 }
 
-func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -392,7 +390,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -406,8 +404,8 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("arguments") {
 		oldRaw, newRaw := d.GetChange("arguments")
-		old := oldRaw.(map[string]interface{})
-		new := newRaw.(map[string]interface{})
+		old := oldRaw.(map[string]any)
+		new := newRaw.(map[string]any)
 		add, remove, _ := flex.DiffStringValueMaps(old, new)
 
 		removeKeys := make([]string, 0)
@@ -491,7 +489,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDevEndpointRead(ctx, d, meta)...)
 }
 
-func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 

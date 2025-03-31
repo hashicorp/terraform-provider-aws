@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -314,69 +312,35 @@ func testAccCheckConfigurationProfileDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			confProfID, appID, err := tfappconfig.ConfigurationProfileParseID(rs.Primary.ID)
+			_, err := tfappconfig.FindConfigurationProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["configuration_profile_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			input := &appconfig.GetConfigurationProfileInput{
-				ApplicationId:          aws.String(appID),
-				ConfigurationProfileId: aws.String(confProfID),
-			}
-
-			output, err := conn.GetConfigurationProfile(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
-			}
-
-			if output != nil {
-				return fmt.Errorf("AppConfig Configuration Profile (%s) for Application (%s) still exists", confProfID, appID)
-			}
+			return fmt.Errorf("AppConfig Configuration Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConfigurationProfileExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckConfigurationProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
-
-		confProfID, appID, err := tfappconfig.ConfigurationProfileParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetConfigurationProfile(ctx, &appconfig.GetConfigurationProfileInput{
-			ApplicationId:          aws.String(appID),
-			ConfigurationProfileId: aws.String(confProfID),
-		})
+		_, err := tfappconfig.FindConfigurationProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["configuration_profile_id"])
 
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Configuration Profile (%s) for Application (%s) not found", confProfID, appID)
-		}
-
-		return nil
+		return err
 	}
 }
 

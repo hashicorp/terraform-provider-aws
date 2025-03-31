@@ -1,0 +1,256 @@
+name: Maintainer Helpers
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  issues:
+    types:
+      - assigned
+      - opened
+      - labeled
+
+  pull_request_target:
+    types:
+      - assigned
+      - closed
+      - opened
+      - labeled
+
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+  schedule:
+    - cron: "0 15 * * 1-5"
+
+env:
+  AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+  ISSUE_URL: ${{ github.event.issue.html_url ||  github.event.pull_request.html_url }}
+
+jobs:
+  workboard:
+    name: Team Workboard
+    runs-on: ubuntu-latest
+    if: contains(fromJSON('["assigned", "labeled", "opened"]'), github.event.action)
+    env:
+      CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
+      GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
+    steps:
+      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
+        id: token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: .github/actions/
+
+      - name: Community Check
+        id: community_check
+        if: contains(fromJSON('["opened", "assigned"]'), github.event.action)
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || env.AUTHOR }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Add Maintainer Pull Requests and Assignments
+        id: workboard_maintainer
+        if: |
+          ((github.event_name == 'pull_request_target' && github.event.action == 'opened') || github.event.action == 'assigned')
+          && steps.community_check.outputs.maintainer == 'true'
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ env.ISSUE_URL }}
+          status: ${{ github.event.action == 'opened' && 'Maintainer PR' || 'In Progress' }}
+          view: "working-board"
+
+      - name: Label Prioritized Items
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # prevents an additional 'labeled' event
+        if: |
+          ((steps.workboard_maintainer.outcome != 'skipped' && github.actor != 'dependabot[bot]') || contains(fromJSON('["crash", "regression"]'), github.event.label.name))
+          && !contains(fromJSON(env.CURRENT_LABELS), 'prioritized')
+        run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --add-label prioritized
+
+      - name: Add Prioritized Items
+        if: contains(fromJSON('["crash", "prioritized", "regression"]'), github.event.label.name)
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ env.ISSUE_URL }}
+          view: "working-board"
+          move_to_top: ${{ github.event.label.name == 'regression' }}
+
+      - name: Add Engineering Initiatives
+        if: github.event.label.name == 'engineering-initiative'
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ env.ISSUE_URL }}
+          view: "engineering-initiative"
+
+  slack:
+    name: Slack Feeds
+    runs-on: ubuntu-latest
+    if: github.event.action != 'assigned' # the only situation without any notifications
+    env:
+      ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+      AUTHOR_URL: ${{ github.event.issue.user.html_url || github.event.pull_request.user.html_url }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: .github/actions/
+
+      - name: Community Check
+        id: community_check
+        if: |
+          github.event.action == 'opened'
+          && github.event_name == 'pull_request_target'
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ env.AUTHOR }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+          partners: ${{ secrets.PARTNERS }}
+
+      - name: New Maintainer Pull Request
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && github.actor != 'dependabot[bot]'
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':open: <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }
+
+      - name: New Partner Pull Request
+        if: steps.community_check.outputs.partner == 'true'
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':open: :aws: contributor <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }
+
+      - name: Crashes and Regressions
+        if: github.event.label.name == 'regression' || github.event.label.name == 'crash'
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel" : "${{ secrets.SLACK_CHANNEL }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ":warning: The following ${{ github.event_name == 'issues' && 'issue' || 'pull request' }} has been labeled as a ${{ github.event.label.name }}:",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "link",
+                          "text": ${{ toJSON(env.ISSUE_TITLE) }},
+                          "url": ${{ toJSON(env.ISSUE_URL) }}
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - name: Pull Request Merged
+        if: github.event.pull_request.merged
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        env:
+          MERGED_BY_URL: ${{ github.event.pull_request.merged_by.html_url }}
+          MERGED_BY_LOGIN: ${{ github.event.pull_request.merged_by.login }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':merged: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }
+
+      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
+        if: github.event_name == 'schedule'
+        id: token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Open Maintainer Pull Request Stats
+        if: steps.token.outcome != 'skipped'
+        uses: breathingdust/github-team-slackbot@3519d5c7bdd556317b6158aeff5ae9c93c960bdd # v18.5.2
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          team_slug: terraform-aws
+          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL }}
+
+      - name: Release Tag
+        if: github.event_name == 'push'
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":tag: <https://github.com/${{ github.event.pusher.name }}|${{ github.event.pusher.name }}> pushed tag <https://github.com/hashicorp/terraform-provider-aws/tree/${{ github.event.ref }}|${{ github.event.ref }}>"
+                  }
+                }
+              ]
+            }

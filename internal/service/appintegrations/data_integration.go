@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -106,12 +105,10 @@ func resourceDataIntegration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
@@ -121,7 +118,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 		ClientToken:    aws.String(id.UniqueId()),
 		KmsKey:         aws.String(d.Get(names.AttrKMSKey).(string)),
 		Name:           aws.String(name),
-		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
+		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]any)),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
 		Tags:           getTagsIn(ctx),
 	}
@@ -141,14 +138,15 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDataIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	output, err := conn.GetDataIntegration(ctx, &appintegrations.GetDataIntegrationInput{
+	input := appintegrations.GetDataIntegrationInput{
 		Identifier: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.GetDataIntegration(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppIntegrations Data Integration (%s) not found, removing from state", d.Id())
@@ -174,17 +172,18 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	if d.HasChanges(names.AttrDescription, names.AttrName) {
-		_, err := conn.UpdateDataIntegration(ctx, &appintegrations.UpdateDataIntegrationInput{
+		input := appintegrations.UpdateDataIntegrationInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			Identifier:  aws.String(d.Id()),
 			Name:        aws.String(d.Get(names.AttrName).(string)),
-		})
+		}
+		_, err := conn.UpdateDataIntegration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppIntegrations Data Integration (%s): %s", d.Id(), err)
@@ -194,14 +193,15 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDataIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	_, err := conn.DeleteDataIntegration(ctx, &appintegrations.DeleteDataIntegrationInput{
+	input := appintegrations.DeleteDataIntegrationInput{
 		DataIntegrationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataIntegration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting AppIntegrations Data Integration (%s): %s", d.Id(), err)
@@ -210,12 +210,12 @@ func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandScheduleConfig(scheduleConfig []interface{}) *awstypes.ScheduleConfiguration {
+func expandScheduleConfig(scheduleConfig []any) *awstypes.ScheduleConfiguration {
 	if len(scheduleConfig) == 0 || scheduleConfig[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := scheduleConfig[0].(map[string]interface{})
+	tfMap, ok := scheduleConfig[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -229,16 +229,16 @@ func expandScheduleConfig(scheduleConfig []interface{}) *awstypes.ScheduleConfig
 	return result
 }
 
-func flattenScheduleConfig(scheduleConfig *awstypes.ScheduleConfiguration) []interface{} {
+func flattenScheduleConfig(scheduleConfig *awstypes.ScheduleConfiguration) []any {
 	if scheduleConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"first_execution_from":       aws.ToString(scheduleConfig.FirstExecutionFrom),
 		"object":                     aws.ToString(scheduleConfig.Object),
 		names.AttrScheduleExpression: aws.ToString(scheduleConfig.ScheduleExpression),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }

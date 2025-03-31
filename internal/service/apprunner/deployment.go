@@ -45,10 +45,6 @@ type deploymentResource struct {
 	framework.WithTimeouts
 }
 
-func (r *deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_deployment"
-}
-
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -200,7 +196,7 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 }
 
 func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
 		if tfresource.NotFound(err) {

@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,417 +51,593 @@ func resourcePipeline() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"artifact_store": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_key": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrID: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.EncryptionKeyType](),
-									},
-								},
-							},
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ArtifactStoreType](),
-						},
+		SchemaFunc: func() map[string]*schema.Schema {
+			conditionsSchema := func() map[string]*schema.Schema {
+				return map[string]*schema.Schema{
+					"result": {
+						Type:             schema.TypeString,
+						Optional:         true,
+						ValidateDiagFunc: enum.Validate[types.Result](),
 					},
-				},
-			},
-			"execution_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.ExecutionModeSuperseded,
-				ValidateDiagFunc: enum.Validate[types.ExecutionMode](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-				),
-			},
-			"pipeline_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.PipelineTypeV1,
-				ValidateDiagFunc: enum.Validate[types.PipelineType](),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStage: {
-				Type:     schema.TypeList,
-				MinItems: 2,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"category": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ActionCategory](),
-									},
-									names.AttrConfiguration: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										ValidateDiagFunc: validation.AllDiag(
-											validation.MapKeyLenBetween(1, 50),
-											validation.MapKeyLenBetween(1, 1000),
-										),
-										Elem:             &schema.Schema{Type: schema.TypeString},
-										DiffSuppressFunc: pipelineSuppressStageActionConfigurationDiff,
-									},
-									"input_artifacts": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
+					names.AttrRule: {
+						Type:     schema.TypeList,
+						MinItems: 1,
+						MaxItems: 5,
+						Required: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"commands": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MaxItems: 50,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
 										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-										),
-									},
-									names.AttrNamespace: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
-										),
-									},
-									"output_artifacts": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrOwner: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ActionOwner](),
-									},
-									"provider": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: pipelineValidateActionProvider,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"run_order": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntBetween(1, 999),
-									},
-									"timeout_in_minutes": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(5, 86400),
-									},
-									names.AttrVersion: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+											validation.StringLenBetween(1, 1000),
 										),
 									},
 								},
-							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-							),
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"trigger": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"git_configuration": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"pull_request": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 3,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"branches": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-												"events": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 3,
-													Elem: &schema.Schema{
-														Type:             schema.TypeString,
-														ValidateDiagFunc: enum.Validate[types.GitPullRequestEventType](),
-													},
-												},
-												"file_paths": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
+								names.AttrConfiguration: {
+									Type:     schema.TypeMap,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10000),
+										),
+									},
+								},
+								"input_artifacts": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
+											validation.StringLenBetween(1, 100),
+										),
+									},
+								},
+								names.AttrName: {
+									Type:         schema.TypeString,
+									Required:     true,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+								},
+								names.AttrRegion: {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								names.AttrRoleARN: {
+									Type:         schema.TypeString,
+									Optional:     true,
+									ValidateFunc: verify.ValidARN,
+								},
+								"rule_type_id": {
+									Type:     schema.TypeList,
+									Required: true,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"category": {
+												Type:             schema.TypeString,
+												Required:         true,
+												ValidateDiagFunc: enum.Validate[types.RuleCategory](),
+											},
+											names.AttrOwner: {
+												Type:             schema.TypeString,
+												Optional:         true,
+												ValidateDiagFunc: enum.Validate[types.RuleOwner](),
+											},
+											"provider": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+											names.AttrVersion: {
+												Type:     schema.TypeString,
+												Optional: true,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(1, 9),
+													validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+												),
 											},
 										},
 									},
-									"push": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 3,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"branches": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-												"file_paths": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-												names.AttrTags: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"excludes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-															"includes": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 8,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"source_action_name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-										),
-									},
+								},
+								"timeout_in_minutes": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									ValidateFunc: validation.IntBetween(5, 86400),
 								},
 							},
 						},
-						"provider_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
-						},
 					},
-				},
-			},
-			"variable": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-		},
+				}
+			}
 
-		CustomizeDiff: verify.SetTagsDiff,
+			triggerSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"git_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"pull_request": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"branches": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													"events": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 3,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[types.GitPullRequestEventType](),
+														},
+													},
+													"file_paths": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"push": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"branches": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													"file_paths": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+													names.AttrTags: {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"excludes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+																"includes": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 8,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"source_action_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+											),
+										},
+									},
+								},
+							},
+							"provider_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
+							},
+						},
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"artifact_store": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_key": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.EncryptionKeyType](),
+										},
+									},
+								},
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ArtifactStoreType](),
+							},
+						},
+					},
+				},
+				"execution_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.ExecutionModeSuperseded,
+					ValidateDiagFunc: enum.Validate[types.ExecutionMode](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+					),
+				},
+				"pipeline_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.PipelineTypeV1,
+					ValidateDiagFunc: enum.Validate[types.PipelineType](),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrStage: {
+					Type:     schema.TypeList,
+					MinItems: 2,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ActionCategory](),
+										},
+										names.AttrConfiguration: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											ValidateDiagFunc: validation.AllDiag(
+												validation.MapKeyLenBetween(1, 50),
+												validation.MapKeyLenBetween(1, 1000),
+											),
+											Elem:             &schema.Schema{Type: schema.TypeString},
+											DiffSuppressFunc: pipelineSuppressStageActionConfigurationDiff,
+										},
+										"input_artifacts": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+											),
+										},
+										names.AttrNamespace: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
+											),
+										},
+										"output_artifacts": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrOwner: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ActionOwner](),
+										},
+										"provider": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: pipelineValidateActionProvider,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"run_order": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(1, 999),
+										},
+										"timeout_in_minutes": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(5, 86400),
+										},
+										names.AttrVersion: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 9),
+												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+											),
+										},
+									},
+								},
+							},
+							"before_entry": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCondition: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: conditionsSchema(),
+											},
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 100),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+								),
+							},
+							"on_failure": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCondition: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: conditionsSchema(),
+											},
+										},
+										"result": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Result](),
+										},
+										"retry_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"retry_mode": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.StageRetryMode](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"on_success": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCondition: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: conditionsSchema(),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"trigger":         triggerSchema(),
+				"trigger_all":     sdkv2.DataSourcePropertyFromResourceProperty(triggerSchema()),
+				"variable": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+			}
+		},
 	}
 }
 
-func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
@@ -476,7 +653,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStructureException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStructureException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreatePipeline(ctx, input)
 	}, "not authorized")
 
@@ -489,7 +666,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
@@ -511,7 +688,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := aws.ToString(metadata.PipelineArn)
 	d.Set(names.AttrARN, arn)
 	if pipeline.ArtifactStore != nil {
-		if err := d.Set("artifact_store", []interface{}{flattenArtifactStore(pipeline.ArtifactStore)}); err != nil {
+		if err := d.Set("artifact_store", []any{flattenArtifactStore(pipeline.ArtifactStore)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
 		}
 	} else if pipeline.ArtifactStores != nil {
@@ -526,8 +703,9 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set(names.AttrStage, flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
-	if err := d.Set("trigger", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
+	d.Set("trigger", d.Get("trigger"))
+	if err := d.Set("trigger_all", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting trigger_all: %s", err)
 	}
 	if err := d.Set("variable", flattenVariableDeclarations(pipeline.Variables)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
@@ -536,7 +714,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
@@ -561,15 +739,16 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline Pipeline: %s", d.Id())
-	_, err := conn.DeletePipeline(ctx, &codepipeline.DeletePipelineInput{
+	input := codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeletePipeline(ctx, &input)
 
 	if errs.IsA[*types.PipelineNotFoundException](err) {
 		return diags
@@ -607,7 +786,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	return output, nil
 }
 
-func pipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnostics {
+func pipelineValidateActionProvider(i any, path cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, ok := i.(string)
@@ -655,7 +834,13 @@ func hashGitHubToken(token string) string {
 }
 
 func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclaration, error) {
-	apiObject := &types.PipelineDeclaration{}
+	pipelineType := types.PipelineType(d.Get("pipeline_type").(string))
+	apiObject := &types.PipelineDeclaration{
+		Name:         aws.String(d.Get(names.AttrName).(string)),
+		PipelineType: pipelineType,
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+		Stages:       expandStageDeclarations(d.Get(names.AttrStage).([]any)),
+	}
 
 	if v, ok := d.GetOk("artifact_store"); ok && v.(*schema.Set).Len() > 0 {
 		artifactStores := expandArtifactStores(v.(*schema.Set).List())
@@ -686,42 +871,28 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		apiObject.ExecutionMode = types.ExecutionMode(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
-		apiObject.Name = aws.String(v.(string))
+	// explicitly send trigger for all V2 pipelines (even when unset) to ensure
+	// removed custom triggers are handled correctly
+	if v, ok := d.GetOk("trigger"); (ok && len(v.([]any)) > 0) || pipelineType == types.PipelineTypeV2 {
+		apiObject.Triggers = expandTriggerDeclarations(v.([]any))
 	}
 
-	if v, ok := d.GetOk("pipeline_type"); ok {
-		apiObject.PipelineType = types.PipelineType(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
-		apiObject.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrStage); ok && len(v.([]interface{})) > 0 {
-		apiObject.Stages = expandStageDeclarations(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("trigger"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Triggers = expandTriggerDeclarations(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("variable"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Variables = expandVariableDeclarations(v.([]interface{}))
+	if v, ok := d.GetOk("variable"); ok && len(v.([]any)) > 0 {
+		apiObject.Variables = expandVariableDeclarations(v.([]any))
 	}
 
 	return apiObject, nil
 }
 
-func expandArtifactStore(tfMap map[string]interface{}) *types.ArtifactStore {
+func expandArtifactStore(tfMap map[string]any) *types.ArtifactStore {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ArtifactStore{}
 
-	if v, ok := tfMap["encryption_key"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EncryptionKey = expandEncryptionKey(v[0].(map[string]interface{}))
+	if v, ok := tfMap["encryption_key"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EncryptionKey = expandEncryptionKey(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
@@ -735,7 +906,7 @@ func expandArtifactStore(tfMap map[string]interface{}) *types.ArtifactStore {
 	return apiObject
 }
 
-func expandArtifactStores(tfList []interface{}) map[string]types.ArtifactStore {
+func expandArtifactStores(tfList []any) map[string]types.ArtifactStore {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -743,7 +914,7 @@ func expandArtifactStores(tfList []interface{}) map[string]types.ArtifactStore {
 	apiObjects := make(map[string]types.ArtifactStore, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -767,7 +938,7 @@ func expandArtifactStores(tfList []interface{}) map[string]types.ArtifactStore {
 	return apiObjects
 }
 
-func expandEncryptionKey(tfMap map[string]interface{}) *types.EncryptionKey {
+func expandEncryptionKey(tfMap map[string]any) *types.EncryptionKey {
 	if tfMap == nil {
 		return nil
 	}
@@ -785,14 +956,14 @@ func expandEncryptionKey(tfMap map[string]interface{}) *types.EncryptionKey {
 	return apiObject
 }
 
-func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaration {
+func expandStageDeclaration(tfMap map[string]any) *types.StageDeclaration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.StageDeclaration{}
 
-	if v, ok := tfMap[names.AttrAction].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrAction].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandActionDeclarations(v)
 	}
 
@@ -800,10 +971,22 @@ func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaratio
 		apiObject.Name = aws.String(v)
 	}
 
+	if v, ok := tfMap["before_entry"].([]any); ok && len(v) > 0 {
+		apiObject.BeforeEntry = expandBeforeEntryDeclaration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["on_success"].([]any); ok && len(v) > 0 {
+		apiObject.OnSuccess = expandOnSuccessDeclaration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["on_failure"].([]any); ok && len(v) > 0 {
+		apiObject.OnFailure = expandOnFailureDeclaration(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
-func expandStageDeclarations(tfList []interface{}) []types.StageDeclaration {
+func expandStageDeclarations(tfList []any) []types.StageDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -811,7 +994,7 @@ func expandStageDeclarations(tfList []interface{}) []types.StageDeclaration {
 	var apiObjects []types.StageDeclaration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -829,7 +1012,7 @@ func expandStageDeclarations(tfList []interface{}) []types.StageDeclaration {
 	return apiObjects
 }
 
-func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclaration {
+func expandActionDeclaration(tfMap map[string]any) *types.ActionDeclaration {
 	if tfMap == nil {
 		return nil
 	}
@@ -842,11 +1025,11 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
-	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].(map[string]any); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["input_artifacts"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["input_artifacts"].([]any); ok && len(v) > 0 {
 		apiObject.InputArtifacts = expandInputArtifacts(v)
 	}
 
@@ -858,7 +1041,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.Namespace = aws.String(v)
 	}
 
-	if v, ok := tfMap["output_artifacts"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["output_artifacts"].([]any); ok && len(v) > 0 {
 		apiObject.OutputArtifacts = expandOutputArtifacts(v)
 	}
 
@@ -893,7 +1076,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 	return apiObject
 }
 
-func expandActionDeclarations(tfList []interface{}) []types.ActionDeclaration {
+func expandActionDeclarations(tfList []any) []types.ActionDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -901,7 +1084,7 @@ func expandActionDeclarations(tfList []interface{}) []types.ActionDeclaration {
 	var apiObjects []types.ActionDeclaration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -919,7 +1102,7 @@ func expandActionDeclarations(tfList []interface{}) []types.ActionDeclaration {
 	return apiObjects
 }
 
-func expandInputArtifacts(tfList []interface{}) []types.InputArtifact {
+func expandInputArtifacts(tfList []any) []types.InputArtifact {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -943,7 +1126,7 @@ func expandInputArtifacts(tfList []interface{}) []types.InputArtifact {
 	return apiObjects
 }
 
-func expandOutputArtifacts(tfList []interface{}) []types.OutputArtifact {
+func expandOutputArtifacts(tfList []any) []types.OutputArtifact {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -967,7 +1150,7 @@ func expandOutputArtifacts(tfList []interface{}) []types.OutputArtifact {
 	return apiObjects
 }
 
-func expandVariableDeclaration(tfMap map[string]interface{}) *types.PipelineVariableDeclaration {
+func expandVariableDeclaration(tfMap map[string]any) *types.PipelineVariableDeclaration {
 	if tfMap == nil {
 		return nil
 	}
@@ -989,7 +1172,7 @@ func expandVariableDeclaration(tfMap map[string]interface{}) *types.PipelineVari
 	return apiObject
 }
 
-func expandVariableDeclarations(tfList []interface{}) []types.PipelineVariableDeclaration {
+func expandVariableDeclarations(tfList []any) []types.PipelineVariableDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -997,7 +1180,7 @@ func expandVariableDeclarations(tfList []interface{}) []types.PipelineVariableDe
 	var apiObjects []types.PipelineVariableDeclaration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1015,20 +1198,20 @@ func expandVariableDeclarations(tfList []interface{}) []types.PipelineVariableDe
 	return apiObjects
 }
 
-func expandGitBranchFilterCriteria(tfMap map[string]interface{}) *types.GitBranchFilterCriteria {
+func expandGitBranchFilterCriteria(tfMap map[string]any) *types.GitBranchFilterCriteria {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.GitBranchFilterCriteria{}
 
-	if v, ok := tfMap["excludes"].([]interface{}); ok && len(v) != 0 {
+	if v, ok := tfMap["excludes"].([]any); ok && len(v) != 0 {
 		for _, exclude := range v {
 			apiObject.Excludes = append(apiObject.Excludes, exclude.(string))
 		}
 	}
 
-	if v, ok := tfMap["includes"].([]interface{}); ok && len(v) != 0 {
+	if v, ok := tfMap["includes"].([]any); ok && len(v) != 0 {
 		for _, include := range v {
 			apiObject.Includes = append(apiObject.Includes, include.(string))
 		}
@@ -1037,20 +1220,20 @@ func expandGitBranchFilterCriteria(tfMap map[string]interface{}) *types.GitBranc
 	return apiObject
 }
 
-func expandGitFilePathFilterCriteria(tfMap map[string]interface{}) *types.GitFilePathFilterCriteria {
+func expandGitFilePathFilterCriteria(tfMap map[string]any) *types.GitFilePathFilterCriteria {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.GitFilePathFilterCriteria{}
 
-	if v, ok := tfMap["excludes"].([]interface{}); ok && len(v) != 0 {
+	if v, ok := tfMap["excludes"].([]any); ok && len(v) != 0 {
 		for _, exclude := range v {
 			apiObject.Excludes = append(apiObject.Excludes, exclude.(string))
 		}
 	}
 
-	if v, ok := tfMap["includes"].([]interface{}); ok && len(v) != 0 {
+	if v, ok := tfMap["includes"].([]any); ok && len(v) != 0 {
 		for _, include := range v {
 			apiObject.Includes = append(apiObject.Includes, include.(string))
 		}
@@ -1059,20 +1242,20 @@ func expandGitFilePathFilterCriteria(tfMap map[string]interface{}) *types.GitFil
 	return apiObject
 }
 
-func expandGitTagFilterCriteria(tfMap map[string]interface{}) *types.GitTagFilterCriteria {
+func expandGitTagFilterCriteria(tfMap map[string]any) *types.GitTagFilterCriteria {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.GitTagFilterCriteria{}
 
-	if v, ok := tfMap["excludes"].([]interface{}); ok && len(v) != 0 {
+	if v, ok := tfMap["excludes"].([]any); ok && len(v) != 0 {
 		for _, exclude := range v {
 			apiObject.Excludes = append(apiObject.Excludes, exclude.(string))
 		}
 	}
 
-	if v, ok := tfMap["includes"].([]interface{}); ok && len(v) != 0 {
+	if v, ok := tfMap["includes"].([]any); ok && len(v) != 0 {
 		for _, include := range v {
 			apiObject.Includes = append(apiObject.Includes, include.(string))
 		}
@@ -1081,7 +1264,7 @@ func expandGitTagFilterCriteria(tfMap map[string]interface{}) *types.GitTagFilte
 	return apiObject
 }
 
-func expandGitPullRequestEventTypes(tfList []interface{}) []types.GitPullRequestEventType {
+func expandGitPullRequestEventTypes(tfList []any) []types.GitPullRequestEventType {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1101,7 +1284,7 @@ func expandGitPullRequestEventTypes(tfList []interface{}) []types.GitPullRequest
 	return apiObjects
 }
 
-func expandGitPullRequestFilters(tfList []interface{}) []types.GitPullRequestFilter {
+func expandGitPullRequestFilters(tfList []any) []types.GitPullRequestFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1109,7 +1292,7 @@ func expandGitPullRequestFilters(tfList []interface{}) []types.GitPullRequestFil
 	apiObjects := []types.GitPullRequestFilter{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1117,16 +1300,16 @@ func expandGitPullRequestFilters(tfList []interface{}) []types.GitPullRequestFil
 
 		apiObject := types.GitPullRequestFilter{}
 
-		if v, ok := tfMap["branches"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.Branches = expandGitBranchFilterCriteria(v[0].(map[string]interface{}))
+		if v, ok := tfMap["branches"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Branches = expandGitBranchFilterCriteria(v[0].(map[string]any))
 		}
 
-		if v, ok := tfMap["events"].([]interface{}); ok && len(v) > 0 && v != nil {
+		if v, ok := tfMap["events"].([]any); ok && len(v) > 0 && v != nil {
 			apiObject.Events = expandGitPullRequestEventTypes(v)
 		}
 
-		if v, ok := tfMap["file_paths"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.FilePaths = expandGitFilePathFilterCriteria(v[0].(map[string]interface{}))
+		if v, ok := tfMap["file_paths"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.FilePaths = expandGitFilePathFilterCriteria(v[0].(map[string]any))
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -1135,7 +1318,7 @@ func expandGitPullRequestFilters(tfList []interface{}) []types.GitPullRequestFil
 	return apiObjects
 }
 
-func expandGitPushFilters(tfList []interface{}) []types.GitPushFilter {
+func expandGitPushFilters(tfList []any) []types.GitPushFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1143,7 +1326,7 @@ func expandGitPushFilters(tfList []interface{}) []types.GitPushFilter {
 	apiObjects := []types.GitPushFilter{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1151,16 +1334,16 @@ func expandGitPushFilters(tfList []interface{}) []types.GitPushFilter {
 
 		apiObject := types.GitPushFilter{}
 
-		if v, ok := tfMap["branches"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.Branches = expandGitBranchFilterCriteria(v[0].(map[string]interface{}))
+		if v, ok := tfMap["branches"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Branches = expandGitBranchFilterCriteria(v[0].(map[string]any))
 		}
 
-		if v, ok := tfMap["file_paths"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.FilePaths = expandGitFilePathFilterCriteria(v[0].(map[string]interface{}))
+		if v, ok := tfMap["file_paths"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.FilePaths = expandGitFilePathFilterCriteria(v[0].(map[string]any))
 		}
 
-		if v, ok := tfMap[names.AttrTags].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.Tags = expandGitTagFilterCriteria(v[0].(map[string]interface{}))
+		if v, ok := tfMap[names.AttrTags].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Tags = expandGitTagFilterCriteria(v[0].(map[string]any))
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -1169,18 +1352,18 @@ func expandGitPushFilters(tfList []interface{}) []types.GitPushFilter {
 	return apiObjects
 }
 
-func expandGitConfigurationDeclaration(tfMap map[string]interface{}) *types.GitConfiguration {
+func expandGitConfigurationDeclaration(tfMap map[string]any) *types.GitConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.GitConfiguration{}
 
-	if v, ok := tfMap["pull_request"].([]interface{}); ok && len(v) > 0 && v != nil {
+	if v, ok := tfMap["pull_request"].([]any); ok && len(v) > 0 && v != nil {
 		apiObject.PullRequest = expandGitPullRequestFilters(v)
 	}
 
-	if v, ok := tfMap["push"].([]interface{}); ok && len(v) > 0 && v != nil {
+	if v, ok := tfMap["push"].([]any); ok && len(v) > 0 && v != nil {
 		apiObject.Push = expandGitPushFilters(v)
 	}
 
@@ -1189,15 +1372,15 @@ func expandGitConfigurationDeclaration(tfMap map[string]interface{}) *types.GitC
 	return apiObject
 }
 
-func expandTriggerDeclaration(tfMap map[string]interface{}) *types.PipelineTriggerDeclaration {
+func expandTriggerDeclaration(tfMap map[string]any) *types.PipelineTriggerDeclaration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.PipelineTriggerDeclaration{}
 
-	if v, ok := tfMap["git_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.GitConfiguration = expandGitConfigurationDeclaration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["git_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.GitConfiguration = expandGitConfigurationDeclaration(v[0].(map[string]any))
 	}
 
 	apiObject.ProviderType = types.PipelineTriggerProviderType(tfMap["provider_type"].(string))
@@ -1205,15 +1388,11 @@ func expandTriggerDeclaration(tfMap map[string]interface{}) *types.PipelineTrigg
 	return apiObject
 }
 
-func expandTriggerDeclarations(tfList []interface{}) []types.PipelineTriggerDeclaration {
-	if len(tfList) == 0 {
-		return nil
-	}
-
+func expandTriggerDeclarations(tfList []any) []types.PipelineTriggerDeclaration {
 	var apiObjects []types.PipelineTriggerDeclaration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1231,13 +1410,237 @@ func expandTriggerDeclarations(tfList []interface{}) []types.PipelineTriggerDecl
 	return apiObjects
 }
 
-func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func expandConditionRuleTypeId(tfMap map[string]any) *types.RuleTypeId {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RuleTypeId{}
+
+	if v, ok := tfMap["category"].(string); ok && v != "" {
+		apiObject.Category = types.RuleCategory(v)
+	}
+
+	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
+		apiObject.Owner = types.RuleOwner(v)
+	}
+
+	if v, ok := tfMap["provider"].(string); ok && v != "" {
+		apiObject.Provider = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandConditionRuleInputArtifacts(tfList []any) []types.InputArtifact {
+	if len(tfList) == 0 {
+		return nil
+	}
+	var apiObjects []types.InputArtifact
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(string)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := types.InputArtifact{
+			Name: aws.String(tfMap),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
+func expandConditionRule(tfMap map[string]any) *types.RuleDeclaration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RuleDeclaration{}
+
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["rule_type_id"].([]any); ok && len(v) > 0 {
+		apiObject.RuleTypeId = expandConditionRuleTypeId(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["commands"].([]any); ok && len(v) > 0 {
+		for _, command := range v {
+			apiObject.Commands = append(apiObject.Commands, command.(string))
+		}
+	}
+
+	if v, ok := tfMap[names.AttrConfiguration].(map[string]any); ok && v != nil {
+		apiObject.Configuration = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["input_artifacts"].([]any); ok && len(v) > 0 {
+		apiObject.InputArtifacts = expandConditionRuleInputArtifacts(v)
+	}
+
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["timeout_in_minutes"].(int32); ok && v != 0 {
+		apiObject.TimeoutInMinutes = aws.Int32(v)
+	}
+
+	return apiObject
+}
+
+func expandConditionRules(tfList []any) []types.RuleDeclaration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RuleDeclaration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandConditionRule(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandCondition(tfMap map[string]any) *types.Condition {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.Condition{}
+
+	if v, ok := tfMap["result"].(string); ok && v != "" {
+		apiObject.Result = types.Result(v)
+	}
+
+	if v, ok := tfMap[names.AttrRule].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Rules = expandConditionRules(v)
+	}
+
+	return apiObject
+}
+
+func expandConditions(tfList []any) []types.Condition {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Condition
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+		apiObject := expandCondition(tfMap)
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBeforeEntryDeclaration(tfMap map[string]any) *types.BeforeEntryConditions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BeforeEntryConditions{}
+
+	if v, ok := tfMap[names.AttrCondition].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Conditions = expandConditions(v)
+	}
+
+	return apiObject
+}
+
+func expandOnSuccessDeclaration(tfMap map[string]any) *types.SuccessConditions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SuccessConditions{}
+
+	if v, ok := tfMap[names.AttrCondition].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Conditions = expandConditions(v)
+	}
+
+	return apiObject
+}
+
+func expandRetryConfiguration(tfMap map[string]any) *types.RetryConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RetryConfiguration{}
+
+	if v, ok := tfMap["retry_mode"].(string); ok && v != "" {
+		apiObject.RetryMode = types.StageRetryMode(v)
+	}
+
+	return apiObject
+}
+
+func expandOnFailureDeclaration(tfMap map[string]any) *types.FailureConditions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.FailureConditions{}
+
+	if v, ok := tfMap[names.AttrCondition].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Conditions = expandConditions(v)
+	}
+
+	if v, ok := tfMap["result"].(string); ok && v != "" {
+		apiObject.Result = types.Result(v)
+	}
+
+	if v, ok := tfMap["retry_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RetryConfiguration = expandRetryConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]any {
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.EncryptionKey; v != nil {
-		tfMap["encryption_key"] = []interface{}{flattenEncryptionKey(v)}
+		tfMap["encryption_key"] = []any{flattenEncryptionKey(v)}
 	}
 
 	if v := apiObject.Location; v != nil {
@@ -1247,12 +1650,12 @@ func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]interface{}
 	return tfMap
 }
 
-func flattenArtifactStores(apiObjects map[string]types.ArtifactStore) []interface{} {
+func flattenArtifactStores(apiObjects map[string]types.ArtifactStore) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for region, apiObject := range apiObjects {
 		tfMap := flattenArtifactStore(&apiObject)
@@ -1264,12 +1667,12 @@ func flattenArtifactStores(apiObjects map[string]types.ArtifactStore) []interfac
 	return tfList
 }
 
-func flattenEncryptionKey(apiObject *types.EncryptionKey) map[string]interface{} {
+func flattenEncryptionKey(apiObject *types.EncryptionKey) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
@@ -1280,8 +1683,166 @@ func flattenEncryptionKey(apiObject *types.EncryptionKey) map[string]interface{}
 	return tfMap
 }
 
-func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.StageDeclaration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenConditionRuleTypeId(apiObject *types.RuleTypeId) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Category; v != "" {
+		tfMap["category"] = v
+	}
+
+	if v := apiObject.Owner; v != "" {
+		tfMap[names.AttrOwner] = v
+	}
+
+	if v := apiObject.Provider; v != nil {
+		tfMap["provider"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Version; v != nil {
+		tfMap[names.AttrVersion] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenConditionRule(apiObjects types.RuleDeclaration) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObjects.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
+	}
+
+	if v := apiObjects.RuleTypeId; v != nil {
+		tfMap["rule_type_id"] = []any{flattenConditionRuleTypeId(v)}
+	}
+
+	if v := apiObjects.Commands; v != nil {
+		var tfList []any
+		for _, command := range apiObjects.Commands {
+			tfList = append(tfList, command)
+		}
+		tfMap["commands"] = tfList
+	}
+
+	if v := apiObjects.Configuration; v != nil {
+		tfMap[names.AttrConfiguration] = v
+	}
+
+	if v := apiObjects.InputArtifacts; v != nil {
+		tfMap["input_artifacts"] = flattenInputArtifacts(v)
+	}
+
+	if v := apiObjects.Region; v != nil {
+		tfMap[names.AttrRegion] = aws.ToString(v)
+	}
+
+	if v := apiObjects.RoleArn; v != nil {
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
+	}
+
+	if v := apiObjects.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenConditionRules(apiObjects []types.RuleDeclaration) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenConditionRule(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenCondition(apiObject types.Condition) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.Result; v != "" {
+		tfMap["result"] = v
+	}
+
+	if v := apiObject.Rules; v != nil {
+		tfMap[names.AttrRule] = flattenConditionRules(v)
+	}
+
+	return tfMap
+}
+
+func flattenConditions(apiObjects []types.Condition) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenCondition(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenBeforeEntryDeclaration(apiObject *types.BeforeEntryConditions) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.Conditions; v != nil {
+		tfMap[names.AttrCondition] = flattenConditions(v)
+	}
+
+	return tfMap
+}
+
+func flattenOnSuccessDeclaration(apiObject *types.SuccessConditions) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.Conditions; v != nil {
+		tfMap[names.AttrCondition] = flattenConditions(v)
+	}
+
+	return tfMap
+}
+
+func flattenRetryConfiguration(apiObject *types.RetryConfiguration) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.RetryMode; v != "" {
+		tfMap["retry_mode"] = v
+	}
+
+	return tfMap
+}
+
+func flattenOnFailureDeclaration(apiObject *types.FailureConditions) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.Conditions; v != nil {
+		tfMap[names.AttrCondition] = flattenConditions(v)
+	}
+
+	if v := apiObject.Result; v != "" {
+		tfMap["result"] = v
+	}
+
+	if v := apiObject.RetryConfiguration; v != nil {
+		tfMap["retry_configuration"] = []any{flattenRetryConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.StageDeclaration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Actions; v != nil {
 		tfMap[names.AttrAction] = flattenActionDeclarations(d, i, v)
@@ -1291,15 +1852,27 @@ func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.Stag
 		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
+	if v := apiObject.BeforeEntry; v != nil {
+		tfMap["before_entry"] = []any{flattenBeforeEntryDeclaration(v)}
+	}
+
+	if v := apiObject.OnSuccess; v != nil {
+		tfMap["on_success"] = []any{flattenOnSuccessDeclaration(v)}
+	}
+
+	if v := apiObject.OnFailure; v != nil {
+		tfMap["on_failure"] = []any{flattenOnFailureDeclaration(v)}
+	}
+
 	return tfMap
 }
 
-func flattenStageDeclarations(d *schema.ResourceData, apiObjects []types.StageDeclaration) []interface{} {
+func flattenStageDeclarations(d *schema.ResourceData, apiObjects []types.StageDeclaration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for i, apiObject := range apiObjects {
 		tfList = append(tfList, flattenStageDeclaration(d, i, apiObject))
@@ -1308,9 +1881,9 @@ func flattenStageDeclarations(d *schema.ResourceData, apiObjects []types.StageDe
 	return tfList
 }
 
-func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.ActionDeclaration) map[string]interface{} {
+func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.ActionDeclaration) map[string]any {
 	var actionProvider string
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject := apiObject.ActionTypeId; apiObject != nil {
 		tfMap["category"] = apiObject.Category
@@ -1373,12 +1946,12 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	return tfMap
 }
 
-func flattenActionDeclarations(d *schema.ResourceData, i int, apiObjects []types.ActionDeclaration) []interface{} {
+func flattenActionDeclarations(d *schema.ResourceData, i int, apiObjects []types.ActionDeclaration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for j, apiObject := range apiObjects {
 		tfList = append(tfList, flattenActionDeclaration(d, i, j, apiObject))
@@ -1415,8 +1988,8 @@ func flattenOutputArtifacts(apiObjects []types.OutputArtifact) []string {
 	return aws.ToStringSlice(tfList)
 }
 
-func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DefaultValue; v != nil {
 		tfMap[names.AttrDefaultValue] = aws.ToString(v)
@@ -1433,12 +2006,12 @@ func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map
 	return tfMap
 }
 
-func flattenVariableDeclarations(apiObjects []types.PipelineVariableDeclaration) []interface{} {
+func flattenVariableDeclarations(apiObjects []types.PipelineVariableDeclaration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVariableDeclaration(apiObject))
@@ -1447,11 +2020,11 @@ func flattenVariableDeclarations(apiObjects []types.PipelineVariableDeclaration)
 	return tfList
 }
 
-func flattenGitBranchFilterCriteria(apiObject *types.GitBranchFilterCriteria) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenGitBranchFilterCriteria(apiObject *types.GitBranchFilterCriteria) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Excludes; v != nil {
-		var tfList []interface{}
+		var tfList []any
 		for _, exclude := range apiObject.Excludes {
 			tfList = append(tfList, exclude)
 		}
@@ -1459,7 +2032,7 @@ func flattenGitBranchFilterCriteria(apiObject *types.GitBranchFilterCriteria) ma
 	}
 
 	if v := apiObject.Includes; v != nil {
-		var tfList []interface{}
+		var tfList []any
 		for _, include := range apiObject.Includes {
 			tfList = append(tfList, include)
 		}
@@ -1469,11 +2042,11 @@ func flattenGitBranchFilterCriteria(apiObject *types.GitBranchFilterCriteria) ma
 	return tfMap
 }
 
-func flattenGitFilePathFilterCriteria(apiObject *types.GitFilePathFilterCriteria) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenGitFilePathFilterCriteria(apiObject *types.GitFilePathFilterCriteria) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Excludes; v != nil {
-		var tfList []interface{}
+		var tfList []any
 		for _, exclude := range apiObject.Excludes {
 			tfList = append(tfList, exclude)
 		}
@@ -1481,7 +2054,7 @@ func flattenGitFilePathFilterCriteria(apiObject *types.GitFilePathFilterCriteria
 	}
 
 	if v := apiObject.Includes; v != nil {
-		var tfList []interface{}
+		var tfList []any
 		for _, include := range apiObject.Includes {
 			tfList = append(tfList, include)
 		}
@@ -1491,8 +2064,8 @@ func flattenGitFilePathFilterCriteria(apiObject *types.GitFilePathFilterCriteria
 	return tfMap
 }
 
-func flattenGitPullRequestEventTypes(apiObjects []types.GitPullRequestEventType) []interface{} {
-	var tfList []interface{}
+func flattenGitPullRequestEventTypes(apiObjects []types.GitPullRequestEventType) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, apiObject)
@@ -1501,11 +2074,11 @@ func flattenGitPullRequestEventTypes(apiObjects []types.GitPullRequestEventType)
 	return tfList
 }
 
-func flattenGitTagFilterCriteria(apiObject *types.GitTagFilterCriteria) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenGitTagFilterCriteria(apiObject *types.GitTagFilterCriteria) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Excludes; v != nil {
-		var tfList []interface{}
+		var tfList []any
 		for _, exclude := range apiObject.Excludes {
 			tfList = append(tfList, exclude)
 		}
@@ -1513,7 +2086,7 @@ func flattenGitTagFilterCriteria(apiObject *types.GitTagFilterCriteria) map[stri
 	}
 
 	if v := apiObject.Includes; v != nil {
-		var tfList []interface{}
+		var tfList []any
 		for _, include := range apiObject.Includes {
 			tfList = append(tfList, include)
 		}
@@ -1523,11 +2096,11 @@ func flattenGitTagFilterCriteria(apiObject *types.GitTagFilterCriteria) map[stri
 	return tfMap
 }
 
-func flattenPullRequestFilter(apiObject types.GitPullRequestFilter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPullRequestFilter(apiObject types.GitPullRequestFilter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Branches; v != nil {
-		tfMap["branches"] = []interface{}{flattenGitBranchFilterCriteria(apiObject.Branches)}
+		tfMap["branches"] = []any{flattenGitBranchFilterCriteria(apiObject.Branches)}
 	}
 
 	if v := apiObject.Events; v != nil {
@@ -1535,18 +2108,18 @@ func flattenPullRequestFilter(apiObject types.GitPullRequestFilter) map[string]i
 	}
 
 	if v := apiObject.FilePaths; v != nil {
-		tfMap["file_paths"] = []interface{}{flattenGitFilePathFilterCriteria(apiObject.FilePaths)}
+		tfMap["file_paths"] = []any{flattenGitFilePathFilterCriteria(apiObject.FilePaths)}
 	}
 
 	return tfMap
 }
 
-func flattenPullRequestFilters(apiObjects []types.GitPullRequestFilter) []interface{} {
+func flattenPullRequestFilters(apiObjects []types.GitPullRequestFilter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPullRequestFilter(apiObject))
@@ -1555,30 +2128,30 @@ func flattenPullRequestFilters(apiObjects []types.GitPullRequestFilter) []interf
 	return tfList
 }
 
-func flattenGitPushFilter(apiObject types.GitPushFilter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenGitPushFilter(apiObject types.GitPushFilter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Branches; v != nil {
-		tfMap["branches"] = []interface{}{flattenGitBranchFilterCriteria(apiObject.Branches)}
+		tfMap["branches"] = []any{flattenGitBranchFilterCriteria(apiObject.Branches)}
 	}
 
 	if v := apiObject.FilePaths; v != nil {
-		tfMap["file_paths"] = []interface{}{flattenGitFilePathFilterCriteria(apiObject.FilePaths)}
+		tfMap["file_paths"] = []any{flattenGitFilePathFilterCriteria(apiObject.FilePaths)}
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = []interface{}{flattenGitTagFilterCriteria(apiObject.Tags)}
+		tfMap[names.AttrTags] = []any{flattenGitTagFilterCriteria(apiObject.Tags)}
 	}
 
 	return tfMap
 }
 
-func flattenGitPushFilters(apiObjects []types.GitPushFilter) []interface{} {
+func flattenGitPushFilters(apiObjects []types.GitPushFilter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenGitPushFilter(apiObject))
@@ -1587,8 +2160,8 @@ func flattenGitPushFilters(apiObjects []types.GitPushFilter) []interface{} {
 	return tfList
 }
 
-func flattenGitConfiguration(apiObject *types.GitConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenGitConfiguration(apiObject *types.GitConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.PullRequest; v != nil {
 		tfMap["pull_request"] = flattenPullRequestFilters(apiObject.PullRequest)
@@ -1603,21 +2176,21 @@ func flattenGitConfiguration(apiObject *types.GitConfiguration) map[string]inter
 	return tfMap
 }
 
-func flattenTriggerDeclaration(apiObject types.PipelineTriggerDeclaration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTriggerDeclaration(apiObject types.PipelineTriggerDeclaration) map[string]any {
+	tfMap := map[string]any{}
 
-	tfMap["git_configuration"] = []interface{}{flattenGitConfiguration(apiObject.GitConfiguration)}
+	tfMap["git_configuration"] = []any{flattenGitConfiguration(apiObject.GitConfiguration)}
 	tfMap["provider_type"] = apiObject.ProviderType
 
 	return tfMap
 }
 
-func flattenTriggerDeclarations(apiObjects []types.PipelineTriggerDeclaration) []interface{} {
+func flattenTriggerDeclarations(apiObjects []types.PipelineTriggerDeclaration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTriggerDeclaration(apiObject))

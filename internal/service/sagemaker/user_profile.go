@@ -922,12 +922,10 @@ func resourceUserProfile() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -939,7 +937,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
-		input.UserSettings = expandUserSettings(v.([]interface{}))
+		input.UserSettings = expandUserSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk("single_sign_on_user_identifier"); ok {
@@ -953,7 +951,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateUserProfile(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker User Profile (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI User Profile (%s): %s", name, err)
 	}
 
 	userProfileARN := aws.ToString(output.UserProfileArn)
@@ -965,13 +963,13 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(userProfileARN)
 
 	if _, err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker User Profile (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI User Profile (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -984,12 +982,12 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker User Profile (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI User Profile (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker User Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI User Profile (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, userProfile.UserProfileArn)
@@ -1005,7 +1003,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1018,24 +1016,24 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &sagemaker.UpdateUserProfileInput{
 			DomainId:        aws.String(domainID),
 			UserProfileName: aws.String(userProfileName),
-			UserSettings:    expandUserSettings(d.Get("user_settings").([]interface{})),
+			UserSettings:    expandUserSettings(d.Get("user_settings").([]any)),
 		}
 
 		_, err := conn.UpdateUserProfile(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker User Profile (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI User Profile (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker User Profile (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI User Profile (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1054,11 +1052,11 @@ func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker User Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI User Profile (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitUserProfileDeleted(ctx, conn, domainID, userProfileName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker User Profile (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI User Profile (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1110,7 +1108,7 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 }
 
 func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
 		if tfresource.NotFound(err) {

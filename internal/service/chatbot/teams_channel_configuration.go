@@ -52,10 +52,6 @@ type teamsChannelConfigurationResource struct {
 	framework.WithTimeouts
 }
 
-func (r *teamsChannelConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_chatbot_teams_channel_configuration"
-}
-
 func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -224,7 +220,7 @@ func (r *teamsChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -275,7 +271,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]any{
 		"team_id":                data.TeamID.ValueString(),
 		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
@@ -284,7 +280,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
 		return conn.DeleteMicrosoftTeamsChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -301,10 +297,6 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
 		return
 	}
-}
-
-func (r *teamsChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *teamsChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -358,7 +350,7 @@ const (
 )
 
 func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
 
 		if tfresource.NotFound(err) {

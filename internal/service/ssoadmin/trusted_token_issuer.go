@@ -50,10 +50,6 @@ type resourceTrustedTokenIssuer struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceTrustedTokenIssuer) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_trusted_token_issuer"
-}
-
 func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -233,7 +229,7 @@ func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.Read
 		)
 		return
 	}
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -332,10 +328,6 @@ func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.De
 
 func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {

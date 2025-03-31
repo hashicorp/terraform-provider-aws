@@ -44,10 +44,6 @@ type appBundleResource struct {
 	framework.WithImportByID
 }
 
-func (*appBundleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_bundle"
-}
-
 func (r *appBundleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -147,9 +143,10 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteAppBundle(ctx, &appfabric.DeleteAppBundleInput{
+	input := appfabric.DeleteAppBundleInput{
 		AppBundleIdentifier: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteAppBundle(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -160,10 +157,6 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 
 		return
 	}
-}
-
-func (r *appBundleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) (*awstypes.AppBundle, error) {

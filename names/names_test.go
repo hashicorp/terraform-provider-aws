@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -259,11 +260,8 @@ func TestServicesForDirectories(t *testing.T) {
 			}
 
 			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); errors.Is(err, fs.ErrNotExist) {
-				for _, service := range nonExisting {
-					if service == testCase {
-						t.Skipf("skipping %s because not yet implemented", testCase)
-						break
-					}
+				if slices.Contains(nonExisting, testCase) {
+					t.Skipf("skipping %s because not yet implemented", testCase)
 				}
 				t.Errorf("expected %s/../internal/service/%s to exist %s", wd, testCase, err)
 			}

@@ -44,10 +44,6 @@ type resourcePolicyTemplate struct {
 	framework.WithImportByID
 }
 
-func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_policy_template"
-}
-
 // Schema returns the schema for this resource.
 func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -218,7 +214,7 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

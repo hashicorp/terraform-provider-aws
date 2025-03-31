@@ -1,0 +1,171 @@
+name: Beta Release Feedback
+description: Choose this option to provide feedback or report issues related to beta versions of the provider
+labels:
+  - beta-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for providing feedback on our beta release!
+
+        Before submission, we ask that you first [search existing issues](https://github.com/hashicorp/terraform-provider-aws/issues?q=is%3Aissue%20state%3Aopen%20label%3Abeta-feedback) to see if someone else may have experienced the same issue or provided similar feedback. This helps to keep all relevant information in one place, including any potential workarounds.
+
+        ### A Note on Terraform Core Issues
+
+        We ask that you consider whether an issues may be related to Terraform Core. If you're experiencing issues similar to the following examples, we recommend [opening an issue](https://github.com/hashicorp/terraform/issues/new/choose) in the Terraform Core repository instead:
+
+        * [Configuration Language](https://developer.hashicorp.com/terraform/language) or resource ordering issues
+        * [State](https://developer.hashicorp.com/terraform/language/state) and [State Backend](https://developer.hashicorp.com/terraform/language/backend) issues
+        * [Provisioner](https://developer.hashicorp.com/terraform/language/resources/provisioners/syntax) issues
+        * [Registry](https://registry.terraform.io/) issues
+        * Issues that span resources across multiple providers
+
+  - type: textarea
+    id: tf_version
+    attributes:
+      label: Terraform and AWS Provider Version
+      description: |
+        Please run `terraform --version` to collect the Terraform and AWS Provider versions and paste the result below. If multiple versions have been tested, feel free to add that additional information here as well.
+      placeholder: |
+        ...output of `terraform --version`...
+      render: console
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_resource
+    attributes:
+      label: Affected Resource(s) or Data Sources
+      description: |
+        If applicable, please list the affected Resource(s) and/or Data Source(s).
+      placeholder: |
+        * `aws_example_resource`
+        * `aws_example_data_source`
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: |
+        When reporting an issue with a beta release, use this section to describe what behavior should have happened that isn't currently. Note that there is a section later in the template for providing a sample configuration, so a short description is all that's necessary here.
+
+        When providing more general feedback, use this section to describe that feedback.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: |
+        If the current behavior differs from the behavior outlined in the Expected Behavior section, use this section to provide those details.
+
+        When providing more general feedback, where this section may not be relevent, feel free to enter "n/a" to satisfy this being a required field.
+    validations:
+      required: true
+
+  - type: textarea
+    id: log_snippet
+    attributes:
+      label: Relevant Error/Panic Output
+      description: |
+        If applicable, provide a snippet of output logging that contains the error or panic. Note that here is a section later in the template for providing more complete debug output, so a small snippet is all that's necessary here.
+
+        For convenience, we pre-populate this section with a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) to help with formatting in the resulting issue. Placing the log output between the sets of backticks (\```) will result in a well-formatted issue.
+      value: |
+        ```console
+
+        ```
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Providing Configurations and Logging
+
+        When providing a reproduction configuration and/or debug logging, please paste, upload, or link to a file or [public Gist](https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists) containing the relevant information. Files under 25MB may be [attached directly](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) in the relevant field. Files larger than this should be uploaded to a file hosting service and a link shared. For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
+
+        Configurations should be applyable with minimal modifications, and should not rely on external modules. This helps maintainers and contributors efficiently reproduce issues and implement acceptance tests to ensure any fixes do not regress.
+
+        > [!WARNING]
+        > Bug reports without a functional and standalone sample configuration may be closed without further investigation.
+
+  - type: textarea
+    id: tf_config
+    attributes:
+      label: Sample Terraform Configuration
+      description: |
+        Please provide a sample Terraform configuration that can be used to reproduce the issue.
+
+        For convenience, we pre-populate this section such that configurations pasted between the backticks (\```) will be contained within a disclosure triangle in the resulting issue. Where appropriate, feel free to delete this.
+
+        When providing more general feedback, where this section may not be relevent, feel free to clear out the pre-populated text and enter "n/a" to satisfy this being a required field.
+      value: |
+        <details>
+        <summary>Click to expand configuration</summary>
+
+        ```hcl
+
+        ```
+        </details>
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to Reproduce
+      description: |
+        If applicable, please list the steps to reproduce the issue.
+      placeholder: |
+        1. Apply the configuration
+        2. Make a change
+        3. etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: extended_logs
+    attributes:
+      label: Debug Logging
+      description: |
+        Where possible and applicable, please provide log output captured while reproducing the issue with [debug logging enabled](https://developer.hashicorp.com/terraform/internals/debugging). If a panic is produced, that information should be included.
+
+        For convenience, we pre-populate this section such that logs pasted between the backticks (\```) will be contained within a disclosure triangle in the resulting issue.
+
+        When providing more general feedback, where this section may not be relevent, feel free to clear out the pre-populated text and enter "n/a" to satisfy this being a required field.
+      value: |
+        <details>
+        <summary>Click to expand log output</summary>
+
+        ```console
+
+        ```
+        </details>
+    validations:
+      required: false
+
+  - type: textarea
+    id: genai_llm
+    attributes:
+      label: GenAI / LLM Assisted Development
+      description: |
+        If you used a generative AI / LLM tool to assist in the development of your config, please let us know which tool you used here.
+      value: n/a
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Important Facts and References
+      description: |
+        If there is any additional information that might be relevant, provide those details here. This might include information such as, but not limited to:
+
+        * Any atypical situations that might apply (airgapped environments, specific [AWS partitions](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html), etc.)
+        * [References to other GitHub issues](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#referencing-issues-and-pull-requests)
+        * Links to external references such as AWS or other vendor documentation, third party articles, etc.
+    validations:
+      required: false

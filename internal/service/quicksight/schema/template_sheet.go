@@ -574,42 +574,42 @@ var spacingSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-func expandAnalysisDefaults(tfList []interface{}) *awstypes.AnalysisDefaults {
+func expandAnalysisDefaults(tfList []any) *awstypes.AnalysisDefaults {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AnalysisDefaults{}
 
-	if v, ok := tfMap["default_new_sheet_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["default_new_sheet_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DefaultNewSheetConfiguration = expandDefaultNewSheetConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandDefaultNewSheetConfiguration(tfList []interface{}) *awstypes.DefaultNewSheetConfiguration {
+func expandDefaultNewSheetConfiguration(tfList []any) *awstypes.DefaultNewSheetConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DefaultNewSheetConfiguration{}
 
-	if v, ok := tfMap["interactive_layout_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["interactive_layout_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.InteractiveLayoutConfiguration = expandDefaultInteractiveLayoutConfiguration(v)
 	}
 
-	if v, ok := tfMap["paginated_layout_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["paginated_layout_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PaginatedLayoutConfiguration = expandDefaultPaginatedLayoutConfiguration(v)
 	}
 
@@ -620,73 +620,73 @@ func expandDefaultNewSheetConfiguration(tfList []interface{}) *awstypes.DefaultN
 	return apiObject
 }
 
-func expandDefaultInteractiveLayoutConfiguration(tfList []interface{}) *awstypes.DefaultInteractiveLayoutConfiguration {
+func expandDefaultInteractiveLayoutConfiguration(tfList []any) *awstypes.DefaultInteractiveLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DefaultInteractiveLayoutConfiguration{}
 
-	if v, ok := tfMap["free_form"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["free_form"].([]any); ok && len(v) > 0 {
 		apiObject.FreeForm = expandDefaultFreeFormLayoutConfiguration(v)
 	}
 
-	if v, ok := tfMap["grid"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["grid"].([]any); ok && len(v) > 0 {
 		apiObject.Grid = expandDefaultGridLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandDefaultFreeFormLayoutConfiguration(tfList []interface{}) *awstypes.DefaultFreeFormLayoutConfiguration {
+func expandDefaultFreeFormLayoutConfiguration(tfList []any) *awstypes.DefaultFreeFormLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DefaultFreeFormLayoutConfiguration{}
 
-	if v, ok := tfMap["canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandFreeFormLayoutCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandFreeFormLayoutCanvasSizeOptions(tfList []interface{}) *awstypes.FreeFormLayoutCanvasSizeOptions {
+func expandFreeFormLayoutCanvasSizeOptions(tfList []any) *awstypes.FreeFormLayoutCanvasSizeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FreeFormLayoutCanvasSizeOptions{}
 
-	if v, ok := tfMap["screen_canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["screen_canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.ScreenCanvasSizeOptions = expandFreeFormLayoutScreenCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandFreeFormLayoutScreenCanvasSizeOptions(tfList []interface{}) *awstypes.FreeFormLayoutScreenCanvasSizeOptions {
+func expandFreeFormLayoutScreenCanvasSizeOptions(tfList []any) *awstypes.FreeFormLayoutScreenCanvasSizeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -700,50 +700,50 @@ func expandFreeFormLayoutScreenCanvasSizeOptions(tfList []interface{}) *awstypes
 	return apiObject
 }
 
-func expandDefaultGridLayoutConfiguration(tfList []interface{}) *awstypes.DefaultGridLayoutConfiguration {
+func expandDefaultGridLayoutConfiguration(tfList []any) *awstypes.DefaultGridLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DefaultGridLayoutConfiguration{}
 
-	if v, ok := tfMap["canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandGridLayoutCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGridLayoutCanvasSizeOptions(tfList []interface{}) *awstypes.GridLayoutCanvasSizeOptions {
+func expandGridLayoutCanvasSizeOptions(tfList []any) *awstypes.GridLayoutCanvasSizeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GridLayoutCanvasSizeOptions{}
 
-	if v, ok := tfMap["screen_canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["screen_canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.ScreenCanvasSizeOptions = expandGridLayoutScreenCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGridLayoutScreenCanvasSizeOptions(tfList []interface{}) *awstypes.GridLayoutScreenCanvasSizeOptions {
+func expandGridLayoutScreenCanvasSizeOptions(tfList []any) *awstypes.GridLayoutScreenCanvasSizeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -760,76 +760,76 @@ func expandGridLayoutScreenCanvasSizeOptions(tfList []interface{}) *awstypes.Gri
 	return apiObject
 }
 
-func expandDefaultPaginatedLayoutConfiguration(tfList []interface{}) *awstypes.DefaultPaginatedLayoutConfiguration {
+func expandDefaultPaginatedLayoutConfiguration(tfList []any) *awstypes.DefaultPaginatedLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DefaultPaginatedLayoutConfiguration{}
 
-	if v, ok := tfMap["section_based"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["section_based"].([]any); ok && len(v) > 0 {
 		apiObject.SectionBased = expandDefaultSectionBasedLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandDefaultSectionBasedLayoutConfiguration(tfList []interface{}) *awstypes.DefaultSectionBasedLayoutConfiguration {
+func expandDefaultSectionBasedLayoutConfiguration(tfList []any) *awstypes.DefaultSectionBasedLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DefaultSectionBasedLayoutConfiguration{}
 
-	if v, ok := tfMap["canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandSectionBasedLayoutCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandSectionBasedLayoutCanvasSizeOptions(tfList []interface{}) *awstypes.SectionBasedLayoutCanvasSizeOptions {
+func expandSectionBasedLayoutCanvasSizeOptions(tfList []any) *awstypes.SectionBasedLayoutCanvasSizeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SectionBasedLayoutCanvasSizeOptions{}
 
-	if v, ok := tfMap["paper_canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["paper_canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.PaperCanvasSizeOptions = expandSectionBasedLayoutPaperCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandSectionBasedLayoutPaperCanvasSizeOptions(tfList []interface{}) *awstypes.SectionBasedLayoutPaperCanvasSizeOptions {
+func expandSectionBasedLayoutPaperCanvasSizeOptions(tfList []any) *awstypes.SectionBasedLayoutPaperCanvasSizeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SectionBasedLayoutPaperCanvasSizeOptions{}
 
-	if v, ok := tfMap["paper_margin"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["paper_margin"].([]any); ok && len(v) > 0 {
 		apiObject.PaperMargin = expandSpacing(v)
 	}
 	if v, ok := tfMap["paper_orientation"].(string); ok && v != "" {
@@ -842,12 +842,12 @@ func expandSectionBasedLayoutPaperCanvasSizeOptions(tfList []interface{}) *awsty
 	return apiObject
 }
 
-func expandSpacing(tfList []interface{}) *awstypes.Spacing {
+func expandSpacing(tfList []any) *awstypes.Spacing {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -873,7 +873,7 @@ func expandSpacing(tfList []interface{}) *awstypes.Spacing {
 	return apiObject
 }
 
-func expandSheetDefinition(tfMap map[string]interface{}) *awstypes.SheetDefinition {
+func expandSheetDefinition(tfMap map[string]any) *awstypes.SheetDefinition {
 	if tfMap == nil {
 		return nil
 	}
@@ -895,29 +895,29 @@ func expandSheetDefinition(tfMap map[string]interface{}) *awstypes.SheetDefiniti
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
-	if v, ok := tfMap["filter_controls"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_controls"].([]any); ok && len(v) > 0 {
 		apiObject.FilterControls = expandFilterControls(v)
 	}
-	if v, ok := tfMap["layouts"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["layouts"].([]any); ok && len(v) > 0 {
 		apiObject.Layouts = expandLayouts(v)
 	}
-	if v, ok := tfMap["parameter_controls"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["parameter_controls"].([]any); ok && len(v) > 0 {
 		apiObject.ParameterControls = expandParameterControls(v)
 	}
-	if v, ok := tfMap["sheet_control_layouts"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sheet_control_layouts"].([]any); ok && len(v) > 0 {
 		apiObject.SheetControlLayouts = expandSheetControlLayouts(v)
 	}
-	if v, ok := tfMap["text_boxes"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["text_boxes"].([]any); ok && len(v) > 0 {
 		apiObject.TextBoxes = expandSheetTextBoxes(v)
 	}
-	if v, ok := tfMap["visuals"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visuals"].([]any); ok && len(v) > 0 {
 		apiObject.Visuals = expandVisuals(v)
 	}
 
 	return apiObject
 }
 
-func expandFilterControls(tfList []interface{}) []awstypes.FilterControl {
+func expandFilterControls(tfList []any) []awstypes.FilterControl {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -925,7 +925,7 @@ func expandFilterControls(tfList []interface{}) []awstypes.FilterControl {
 	var apiObjects []awstypes.FilterControl
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -941,7 +941,7 @@ func expandFilterControls(tfList []interface{}) []awstypes.FilterControl {
 	return apiObjects
 }
 
-func expandLayouts(tfList []interface{}) []awstypes.Layout {
+func expandLayouts(tfList []any) []awstypes.Layout {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -949,7 +949,7 @@ func expandLayouts(tfList []interface{}) []awstypes.Layout {
 	var apiObjects []awstypes.Layout
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -965,68 +965,68 @@ func expandLayouts(tfList []interface{}) []awstypes.Layout {
 	return apiObjects
 }
 
-func expandLayout(tfMap map[string]interface{}) *awstypes.Layout {
+func expandLayout(tfMap map[string]any) *awstypes.Layout {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Layout{}
 
-	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.Configuration = expandLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandLayoutConfiguration(tfList []interface{}) *awstypes.LayoutConfiguration {
+func expandLayoutConfiguration(tfList []any) *awstypes.LayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.LayoutConfiguration{}
 
-	if v, ok := tfMap["free_form_layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["free_form_layout"].([]any); ok && len(v) > 0 {
 		apiObject.FreeFormLayout = expandFreeFormLayoutConfiguration(v)
 	}
-	if v, ok := tfMap["grid_layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["grid_layout"].([]any); ok && len(v) > 0 {
 		apiObject.GridLayout = expandGridLayoutConfiguration(v)
 	}
-	if v, ok := tfMap["section_based_layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["section_based_layout"].([]any); ok && len(v) > 0 {
 		apiObject.SectionBasedLayout = expandSectionBasedLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandFreeFormLayoutConfiguration(tfList []interface{}) *awstypes.FreeFormLayoutConfiguration {
+func expandFreeFormLayoutConfiguration(tfList []any) *awstypes.FreeFormLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FreeFormLayoutConfiguration{}
 
-	if v, ok := tfMap["elements"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["elements"].([]any); ok && len(v) > 0 {
 		apiObject.Elements = expandFreeFormLayoutElements(v)
 	}
-	if v, ok := tfMap["canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandFreeFormLayoutCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandFreeFormLayoutElements(tfList []interface{}) []awstypes.FreeFormLayoutElement {
+func expandFreeFormLayoutElements(tfList []any) []awstypes.FreeFormLayoutElement {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1034,7 +1034,7 @@ func expandFreeFormLayoutElements(tfList []interface{}) []awstypes.FreeFormLayou
 	var apiObjects []awstypes.FreeFormLayoutElement
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1050,7 +1050,7 @@ func expandFreeFormLayoutElements(tfList []interface{}) []awstypes.FreeFormLayou
 	return apiObjects
 }
 
-func expandFreeFormLayoutElement(tfMap map[string]interface{}) *awstypes.FreeFormLayoutElement {
+func expandFreeFormLayoutElement(tfMap map[string]any) *awstypes.FreeFormLayoutElement {
 	if tfMap == nil {
 		return nil
 	}
@@ -1078,31 +1078,31 @@ func expandFreeFormLayoutElement(tfMap map[string]interface{}) *awstypes.FreeFor
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["background_style"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["background_style"].([]any); ok && len(v) > 0 {
 		apiObject.BackgroundStyle = expandFreeFormLayoutElementBackgroundStyle(v)
 	}
-	if v, ok := tfMap["border_style"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["border_style"].([]any); ok && len(v) > 0 {
 		apiObject.BorderStyle = expandFreeFormLayoutElementBorderStyle(v)
 	}
-	if v, ok := tfMap["loading_animation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["loading_animation"].([]any); ok && len(v) > 0 {
 		apiObject.LoadingAnimation = expandLoadingAnimation(v)
 	}
-	if v, ok := tfMap["rendering_rules"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["rendering_rules"].([]any); ok && len(v) > 0 {
 		apiObject.RenderingRules = expandSheetElementRenderingRules(v)
 	}
-	if v, ok := tfMap["selected_border_style"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["selected_border_style"].([]any); ok && len(v) > 0 {
 		apiObject.SelectedBorderStyle = expandFreeFormLayoutElementBorderStyle(v)
 	}
 
 	return apiObject
 }
 
-func expandFreeFormLayoutElementBackgroundStyle(tfList []interface{}) *awstypes.FreeFormLayoutElementBackgroundStyle {
+func expandFreeFormLayoutElementBackgroundStyle(tfList []any) *awstypes.FreeFormLayoutElementBackgroundStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1119,12 +1119,12 @@ func expandFreeFormLayoutElementBackgroundStyle(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func expandFreeFormLayoutElementBorderStyle(tfList []interface{}) *awstypes.FreeFormLayoutElementBorderStyle {
+func expandFreeFormLayoutElementBorderStyle(tfList []any) *awstypes.FreeFormLayoutElementBorderStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1141,12 +1141,12 @@ func expandFreeFormLayoutElementBorderStyle(tfList []interface{}) *awstypes.Free
 	return apiObject
 }
 
-func expandLoadingAnimation(tfList []interface{}) *awstypes.LoadingAnimation {
+func expandLoadingAnimation(tfList []any) *awstypes.LoadingAnimation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1160,7 +1160,7 @@ func expandLoadingAnimation(tfList []interface{}) *awstypes.LoadingAnimation {
 	return apiObject
 }
 
-func expandSheetElementRenderingRules(tfList []interface{}) []awstypes.SheetElementRenderingRule {
+func expandSheetElementRenderingRules(tfList []any) []awstypes.SheetElementRenderingRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1168,7 +1168,7 @@ func expandSheetElementRenderingRules(tfList []interface{}) []awstypes.SheetElem
 	var apiObjects []awstypes.SheetElementRenderingRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1184,7 +1184,7 @@ func expandSheetElementRenderingRules(tfList []interface{}) []awstypes.SheetElem
 	return apiObjects
 }
 
-func expandSheetElementRenderingRule(tfMap map[string]interface{}) *awstypes.SheetElementRenderingRule {
+func expandSheetElementRenderingRule(tfMap map[string]any) *awstypes.SheetElementRenderingRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -1194,19 +1194,19 @@ func expandSheetElementRenderingRule(tfMap map[string]interface{}) *awstypes.She
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		apiObject.Expression = aws.String(v)
 	}
-	if v, ok := tfMap["configuration_overrides"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["configuration_overrides"].([]any); ok && len(v) > 0 {
 		apiObject.ConfigurationOverrides = expandSheetElementConfigurationOverrides(v)
 	}
 
 	return apiObject
 }
 
-func expandSheetElementConfigurationOverrides(tfList []interface{}) *awstypes.SheetElementConfigurationOverrides {
+func expandSheetElementConfigurationOverrides(tfList []any) *awstypes.SheetElementConfigurationOverrides {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1220,29 +1220,29 @@ func expandSheetElementConfigurationOverrides(tfList []interface{}) *awstypes.Sh
 	return apiObject
 }
 
-func expandGridLayoutConfiguration(tfList []interface{}) *awstypes.GridLayoutConfiguration {
+func expandGridLayoutConfiguration(tfList []any) *awstypes.GridLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GridLayoutConfiguration{}
 
-	if v, ok := tfMap["elements"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["elements"].([]any); ok && len(v) > 0 {
 		apiObject.Elements = expandGridLayoutElements(v)
 	}
-	if v, ok := tfMap["canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandGridLayoutCanvasSizeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGridLayoutElements(tfList []interface{}) []awstypes.GridLayoutElement {
+func expandGridLayoutElements(tfList []any) []awstypes.GridLayoutElement {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1250,7 +1250,7 @@ func expandGridLayoutElements(tfList []interface{}) []awstypes.GridLayoutElement
 	var apiObjects []awstypes.GridLayoutElement
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1266,7 +1266,7 @@ func expandGridLayoutElements(tfList []interface{}) []awstypes.GridLayoutElement
 	return apiObjects
 }
 
-func expandGridLayoutElement(tfMap map[string]interface{}) *awstypes.GridLayoutElement {
+func expandGridLayoutElement(tfMap map[string]any) *awstypes.GridLayoutElement {
 	if tfMap == nil {
 		return nil
 	}
@@ -1299,35 +1299,35 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *awstypes.GridLayoutE
 	return apiObject
 }
 
-func expandSectionBasedLayoutConfiguration(tfList []interface{}) *awstypes.SectionBasedLayoutConfiguration {
+func expandSectionBasedLayoutConfiguration(tfList []any) *awstypes.SectionBasedLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SectionBasedLayoutConfiguration{}
 
-	if v, ok := tfMap["body_sections"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["body_sections"].([]any); ok && len(v) > 0 {
 		apiObject.BodySections = expandBodySectionConfigurations(v)
 	}
-	if v, ok := tfMap["canvas_size_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["canvas_size_options"].([]any); ok && len(v) > 0 {
 		apiObject.CanvasSizeOptions = expandSectionBasedLayoutCanvasSizeOptions(v)
 	}
-	if v, ok := tfMap["footer_sections"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["footer_sections"].([]any); ok && len(v) > 0 {
 		apiObject.FooterSections = expandHeaderFooterSectionConfigurations(v)
 	}
-	if v, ok := tfMap["header_sections"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["header_sections"].([]any); ok && len(v) > 0 {
 		apiObject.HeaderSections = expandHeaderFooterSectionConfigurations(v)
 	}
 
 	return apiObject
 }
 
-func expandBodySectionConfigurations(tfList []interface{}) []awstypes.BodySectionConfiguration {
+func expandBodySectionConfigurations(tfList []any) []awstypes.BodySectionConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1335,7 +1335,7 @@ func expandBodySectionConfigurations(tfList []interface{}) []awstypes.BodySectio
 	var apiObjects []awstypes.BodySectionConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1351,7 +1351,7 @@ func expandBodySectionConfigurations(tfList []interface{}) []awstypes.BodySectio
 	return apiObjects
 }
 
-func expandBodySectionConfiguration(tfMap map[string]interface{}) *awstypes.BodySectionConfiguration {
+func expandBodySectionConfiguration(tfMap map[string]any) *awstypes.BodySectionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1361,101 +1361,101 @@ func expandBodySectionConfiguration(tfMap map[string]interface{}) *awstypes.Body
 	if v, ok := tfMap["section_id"].(string); ok && v != "" {
 		apiObject.SectionId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrContent].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrContent].([]any); ok && len(v) > 0 {
 		apiObject.Content = expandBodySectionContent(v)
 	}
-	if v, ok := tfMap["page_break_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["page_break_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PageBreakConfiguration = expandSectionPageBreakConfiguration(v)
 	}
-	if v, ok := tfMap["style"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["style"].([]any); ok && len(v) > 0 {
 		apiObject.Style = expandSectionStyle(v)
 	}
 
 	return apiObject
 }
 
-func expandBodySectionContent(tfList []interface{}) *awstypes.BodySectionContent {
+func expandBodySectionContent(tfList []any) *awstypes.BodySectionContent {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.BodySectionContent{}
 
-	if v, ok := tfMap["layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["layout"].([]any); ok && len(v) > 0 {
 		apiObject.Layout = expandSectionLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandSectionLayoutConfiguration(tfList []interface{}) *awstypes.SectionLayoutConfiguration {
+func expandSectionLayoutConfiguration(tfList []any) *awstypes.SectionLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SectionLayoutConfiguration{}
 
-	if v, ok := tfMap["free_form_layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["free_form_layout"].([]any); ok && len(v) > 0 {
 		apiObject.FreeFormLayout = expandFreeFormSectionLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandFreeFormSectionLayoutConfiguration(tfList []interface{}) *awstypes.FreeFormSectionLayoutConfiguration {
+func expandFreeFormSectionLayoutConfiguration(tfList []any) *awstypes.FreeFormSectionLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FreeFormSectionLayoutConfiguration{}
 
-	if v, ok := tfMap["elements"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["elements"].([]any); ok && len(v) > 0 {
 		apiObject.Elements = expandFreeFormLayoutElements(v)
 	}
 
 	return apiObject
 }
 
-func expandSectionPageBreakConfiguration(tfList []interface{}) *awstypes.SectionPageBreakConfiguration {
+func expandSectionPageBreakConfiguration(tfList []any) *awstypes.SectionPageBreakConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SectionPageBreakConfiguration{}
 
-	if v, ok := tfMap["after"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["after"].([]any); ok && len(v) > 0 {
 		apiObject.After = expandSectionAfterPageBreak(v)
 	}
 
 	return apiObject
 }
 
-func expandSectionAfterPageBreak(tfList []interface{}) *awstypes.SectionAfterPageBreak {
+func expandSectionAfterPageBreak(tfList []any) *awstypes.SectionAfterPageBreak {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1469,12 +1469,12 @@ func expandSectionAfterPageBreak(tfList []interface{}) *awstypes.SectionAfterPag
 	return apiObject
 }
 
-func expandSectionStyle(tfList []interface{}) *awstypes.SectionStyle {
+func expandSectionStyle(tfList []any) *awstypes.SectionStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1484,14 +1484,14 @@ func expandSectionStyle(tfList []interface{}) *awstypes.SectionStyle {
 	if v, ok := tfMap["height"].(string); ok && v != "" {
 		apiObject.Height = aws.String(v)
 	}
-	if v, ok := tfMap["padding"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["padding"].([]any); ok && len(v) > 0 {
 		apiObject.Padding = expandSpacing(v)
 	}
 
 	return apiObject
 }
 
-func expandHeaderFooterSectionConfigurations(tfList []interface{}) []awstypes.HeaderFooterSectionConfiguration {
+func expandHeaderFooterSectionConfigurations(tfList []any) []awstypes.HeaderFooterSectionConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1499,7 +1499,7 @@ func expandHeaderFooterSectionConfigurations(tfList []interface{}) []awstypes.He
 	var apiObjects []awstypes.HeaderFooterSectionConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1515,7 +1515,7 @@ func expandHeaderFooterSectionConfigurations(tfList []interface{}) []awstypes.He
 	return apiObjects
 }
 
-func expandHeaderFooterSectionConfiguration(tfMap map[string]interface{}) *awstypes.HeaderFooterSectionConfiguration {
+func expandHeaderFooterSectionConfiguration(tfMap map[string]any) *awstypes.HeaderFooterSectionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1525,17 +1525,17 @@ func expandHeaderFooterSectionConfiguration(tfMap map[string]interface{}) *awsty
 	if v, ok := tfMap["section_id"].(string); ok && v != "" {
 		apiObject.SectionId = aws.String(v)
 	}
-	if v, ok := tfMap["layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["layout"].([]any); ok && len(v) > 0 {
 		apiObject.Layout = expandSectionLayoutConfiguration(v)
 	}
-	if v, ok := tfMap["style"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["style"].([]any); ok && len(v) > 0 {
 		apiObject.Style = expandSectionStyle(v)
 	}
 
 	return apiObject
 }
 
-func expandParameterControls(tfList []interface{}) []awstypes.ParameterControl {
+func expandParameterControls(tfList []any) []awstypes.ParameterControl {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1543,7 +1543,7 @@ func expandParameterControls(tfList []interface{}) []awstypes.ParameterControl {
 	var apiObjects []awstypes.ParameterControl
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1559,7 +1559,7 @@ func expandParameterControls(tfList []interface{}) []awstypes.ParameterControl {
 	return apiObjects
 }
 
-func expandSheetControlLayouts(tfList []interface{}) []awstypes.SheetControlLayout {
+func expandSheetControlLayouts(tfList []any) []awstypes.SheetControlLayout {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1567,7 +1567,7 @@ func expandSheetControlLayouts(tfList []interface{}) []awstypes.SheetControlLayo
 	var apiObjects []awstypes.SheetControlLayout
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1583,40 +1583,40 @@ func expandSheetControlLayouts(tfList []interface{}) []awstypes.SheetControlLayo
 	return apiObjects
 }
 
-func expandSheetControlLayout(tfMap map[string]interface{}) *awstypes.SheetControlLayout {
+func expandSheetControlLayout(tfMap map[string]any) *awstypes.SheetControlLayout {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SheetControlLayout{}
 
-	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.Configuration = expandSheetControlLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandSheetControlLayoutConfiguration(tfList []interface{}) *awstypes.SheetControlLayoutConfiguration {
+func expandSheetControlLayoutConfiguration(tfList []any) *awstypes.SheetControlLayoutConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SheetControlLayoutConfiguration{}
 
-	if v, ok := tfMap["grid_layout"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["grid_layout"].([]any); ok && len(v) > 0 {
 		apiObject.GridLayout = expandGridLayoutConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandSheetTextBoxes(tfList []interface{}) []awstypes.SheetTextBox {
+func expandSheetTextBoxes(tfList []any) []awstypes.SheetTextBox {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1624,7 +1624,7 @@ func expandSheetTextBoxes(tfList []interface{}) []awstypes.SheetTextBox {
 	var apiObjects []awstypes.SheetTextBox
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1640,7 +1640,7 @@ func expandSheetTextBoxes(tfList []interface{}) []awstypes.SheetTextBox {
 	return apiObjects
 }
 
-func expandSheetTextBox(tfMap map[string]interface{}) *awstypes.SheetTextBox {
+func expandSheetTextBox(tfMap map[string]any) *awstypes.SheetTextBox {
 	if tfMap == nil {
 		return nil
 	}
@@ -1657,7 +1657,7 @@ func expandSheetTextBox(tfMap map[string]interface{}) *awstypes.SheetTextBox {
 	return apiObject
 }
 
-func expandVisuals(tfList []interface{}) []awstypes.Visual {
+func expandVisuals(tfList []any) []awstypes.Visual {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1665,7 +1665,7 @@ func expandVisuals(tfList []interface{}) []awstypes.Visual {
 	var apiObjects []awstypes.Visual
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1681,26 +1681,26 @@ func expandVisuals(tfList []interface{}) []awstypes.Visual {
 	return apiObjects
 }
 
-func flattenAnalysisDefaults(apiObject *awstypes.AnalysisDefaults) []interface{} {
+func flattenAnalysisDefaults(apiObject *awstypes.AnalysisDefaults) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DefaultNewSheetConfiguration != nil {
 		tfMap["default_new_sheet_configuration"] = flattenDefaultNewSheetConfiguration(apiObject.DefaultNewSheetConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultNewSheetConfiguration(apiObject *awstypes.DefaultNewSheetConfiguration) []interface{} {
+func flattenDefaultNewSheetConfiguration(apiObject *awstypes.DefaultNewSheetConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.InteractiveLayoutConfiguration != nil {
 		tfMap["interactive_layout_configuration"] = flattenDefaultInteractiveLayoutConfiguration(apiObject.InteractiveLayoutConfiguration)
@@ -1710,15 +1710,15 @@ func flattenDefaultNewSheetConfiguration(apiObject *awstypes.DefaultNewSheetConf
 	}
 	tfMap["sheet_content_type"] = apiObject.SheetContentType
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultInteractiveLayoutConfiguration(apiObject *awstypes.DefaultInteractiveLayoutConfiguration) []interface{} {
+func flattenDefaultInteractiveLayoutConfiguration(apiObject *awstypes.DefaultInteractiveLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FreeForm != nil {
 		tfMap["free_form"] = flattenDefaultFreeFormLayoutConfiguration(apiObject.FreeForm)
@@ -1727,142 +1727,142 @@ func flattenDefaultInteractiveLayoutConfiguration(apiObject *awstypes.DefaultInt
 		tfMap["grid"] = flattenDefaultGridLayoutConfiguration(apiObject.Grid)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultFreeFormLayoutConfiguration(apiObject *awstypes.DefaultFreeFormLayoutConfiguration) []interface{} {
+func flattenDefaultFreeFormLayoutConfiguration(apiObject *awstypes.DefaultFreeFormLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
 		tfMap["canvas_size_options"] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFreeFormLayoutCanvasSizeOptions(apiObject *awstypes.FreeFormLayoutCanvasSizeOptions) []interface{} {
+func flattenFreeFormLayoutCanvasSizeOptions(apiObject *awstypes.FreeFormLayoutCanvasSizeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ScreenCanvasSizeOptions != nil {
 		tfMap["screen_canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject *awstypes.FreeFormLayoutScreenCanvasSizeOptions) []interface{} {
+func flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject *awstypes.FreeFormLayoutScreenCanvasSizeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.OptimizedViewPortWidth != nil {
 		tfMap["optimized_view_port_width"] = aws.ToString(apiObject.OptimizedViewPortWidth)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultGridLayoutConfiguration(apiObject *awstypes.DefaultGridLayoutConfiguration) []interface{} {
+func flattenDefaultGridLayoutConfiguration(apiObject *awstypes.DefaultGridLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
 		tfMap["canvas_size_options"] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGridLayoutCanvasSizeOptions(apiObject *awstypes.GridLayoutCanvasSizeOptions) []interface{} {
+func flattenGridLayoutCanvasSizeOptions(apiObject *awstypes.GridLayoutCanvasSizeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ScreenCanvasSizeOptions != nil {
 		tfMap["screen_canvas_size_options"] = flattenGridLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGridLayoutScreenCanvasSizeOptions(apiObject *awstypes.GridLayoutScreenCanvasSizeOptions) []interface{} {
+func flattenGridLayoutScreenCanvasSizeOptions(apiObject *awstypes.GridLayoutScreenCanvasSizeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.OptimizedViewPortWidth != nil {
 		tfMap["optimized_view_port_width"] = aws.ToString(apiObject.OptimizedViewPortWidth)
 	}
 	tfMap["resize_option"] = apiObject.ResizeOption
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultPaginatedLayoutConfiguration(apiObject *awstypes.DefaultPaginatedLayoutConfiguration) []interface{} {
+func flattenDefaultPaginatedLayoutConfiguration(apiObject *awstypes.DefaultPaginatedLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SectionBased != nil {
 		tfMap["section_based"] = flattenDefaultSectionBasedLayoutConfiguration(apiObject.SectionBased)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDefaultSectionBasedLayoutConfiguration(apiObject *awstypes.DefaultSectionBasedLayoutConfiguration) []interface{} {
+func flattenDefaultSectionBasedLayoutConfiguration(apiObject *awstypes.DefaultSectionBasedLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
 		tfMap["canvas_size_options"] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSectionBasedLayoutCanvasSizeOptions(apiObject *awstypes.SectionBasedLayoutCanvasSizeOptions) []interface{} {
+func flattenSectionBasedLayoutCanvasSizeOptions(apiObject *awstypes.SectionBasedLayoutCanvasSizeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.PaperCanvasSizeOptions != nil {
 		tfMap["paper_canvas_size_options"] = flattenSectionBasedLayoutPaperCanvasSizeOptions(apiObject.PaperCanvasSizeOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSectionBasedLayoutPaperCanvasSizeOptions(apiObject *awstypes.SectionBasedLayoutPaperCanvasSizeOptions) []interface{} {
+func flattenSectionBasedLayoutPaperCanvasSizeOptions(apiObject *awstypes.SectionBasedLayoutPaperCanvasSizeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.PaperMargin != nil {
 		tfMap["paper_margin"] = flattenSpacing(apiObject.PaperMargin)
@@ -1870,15 +1870,15 @@ func flattenSectionBasedLayoutPaperCanvasSizeOptions(apiObject *awstypes.Section
 	tfMap["paper_orientation"] = apiObject.PaperOrientation
 	tfMap["paper_size"] = apiObject.PaperSize
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSpacing(apiObject *awstypes.Spacing) []interface{} {
+func flattenSpacing(apiObject *awstypes.Spacing) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Bottom != nil {
 		tfMap["bottom"] = aws.ToString(apiObject.Bottom)
@@ -1893,18 +1893,18 @@ func flattenSpacing(apiObject *awstypes.Spacing) []interface{} {
 		tfMap["top"] = aws.ToString(apiObject.Top)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLayouts(apiObjects []awstypes.Layout) []interface{} {
+func flattenLayouts(apiObjects []awstypes.Layout) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrConfiguration: flattenLayoutConfiguration(apiObject.Configuration),
 		}
 
@@ -1914,12 +1914,12 @@ func flattenLayouts(apiObjects []awstypes.Layout) []interface{} {
 	return tfList
 }
 
-func flattenLayoutConfiguration(apiObject *awstypes.LayoutConfiguration) []interface{} {
+func flattenLayoutConfiguration(apiObject *awstypes.LayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FreeFormLayout != nil {
 		tfMap["free_form_layout"] = flattenFreeFormLayoutConfiguration(apiObject.FreeFormLayout)
@@ -1931,15 +1931,15 @@ func flattenLayoutConfiguration(apiObject *awstypes.LayoutConfiguration) []inter
 		tfMap["section_based_layout"] = flattenSectionBasedLayoutConfiguration(apiObject.SectionBasedLayout)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFreeFormLayoutConfiguration(apiObject *awstypes.FreeFormLayoutConfiguration) []interface{} {
+func flattenFreeFormLayoutConfiguration(apiObject *awstypes.FreeFormLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
 		tfMap["canvas_size_options"] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
@@ -1948,18 +1948,18 @@ func flattenFreeFormLayoutConfiguration(apiObject *awstypes.FreeFormLayoutConfig
 		tfMap["elements"] = flattenFreeFormLayoutElement(apiObject.Elements)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFreeFormLayoutElement(apiObjects []awstypes.FreeFormLayoutElement) []interface{} {
+func flattenFreeFormLayoutElement(apiObjects []awstypes.FreeFormLayoutElement) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"element_id":      aws.ToString(apiObject.ElementId),
 			"element_type":    apiObject.ElementType,
 			"height":          aws.ToString(apiObject.Height),
@@ -1991,57 +1991,57 @@ func flattenFreeFormLayoutElement(apiObjects []awstypes.FreeFormLayoutElement) [
 	return tfList
 }
 
-func flattenFreeFormLayoutElementBackgroundStyle(apiObject *awstypes.FreeFormLayoutElementBackgroundStyle) []interface{} {
+func flattenFreeFormLayoutElementBackgroundStyle(apiObject *awstypes.FreeFormLayoutElementBackgroundStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
 		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFreeFormLayoutElementBorderStyle(apiObject *awstypes.FreeFormLayoutElementBorderStyle) []interface{} {
+func flattenFreeFormLayoutElementBorderStyle(apiObject *awstypes.FreeFormLayoutElementBorderStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
 		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLoadingAnimation(apiObject *awstypes.LoadingAnimation) []interface{} {
+func flattenLoadingAnimation(apiObject *awstypes.LoadingAnimation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSheetElementRenderingRule(apiObjects []awstypes.SheetElementRenderingRule) []interface{} {
+func flattenSheetElementRenderingRule(apiObjects []awstypes.SheetElementRenderingRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ConfigurationOverrides != nil {
 			tfMap["configuration_overrides"] = flattenSheetElementConfigurationOverrides(apiObject.ConfigurationOverrides)
@@ -2056,24 +2056,24 @@ func flattenSheetElementRenderingRule(apiObjects []awstypes.SheetElementRenderin
 	return tfList
 }
 
-func flattenSheetElementConfigurationOverrides(apiObject *awstypes.SheetElementConfigurationOverrides) []interface{} {
+func flattenSheetElementConfigurationOverrides(apiObject *awstypes.SheetElementConfigurationOverrides) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGridLayoutConfiguration(apiObject *awstypes.GridLayoutConfiguration) []interface{} {
+func flattenGridLayoutConfiguration(apiObject *awstypes.GridLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CanvasSizeOptions != nil {
 		tfMap["canvas_size_options"] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
@@ -2082,18 +2082,18 @@ func flattenGridLayoutConfiguration(apiObject *awstypes.GridLayoutConfiguration)
 		tfMap["elements"] = flattenGridLayoutElement(apiObject.Elements)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGridLayoutElement(apiObjects []awstypes.GridLayoutElement) []interface{} {
+func flattenGridLayoutElement(apiObjects []awstypes.GridLayoutElement) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"column_span":  aws.ToInt32(apiObject.ColumnSpan),
 			"element_id":   aws.ToString(apiObject.ElementId),
 			"element_type": apiObject.ElementType,
@@ -2113,12 +2113,12 @@ func flattenGridLayoutElement(apiObjects []awstypes.GridLayoutElement) []interfa
 	return tfList
 }
 
-func flattenSectionBasedLayoutConfiguration(apiObject *awstypes.SectionBasedLayoutConfiguration) []interface{} {
+func flattenSectionBasedLayoutConfiguration(apiObject *awstypes.SectionBasedLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BodySections != nil {
 		tfMap["body_sections"] = flattenBodySectionConfiguration(apiObject.BodySections)
@@ -2133,18 +2133,18 @@ func flattenSectionBasedLayoutConfiguration(apiObject *awstypes.SectionBasedLayo
 		tfMap["header_sections"] = flattenHeaderFooterSectionConfiguration(apiObject.HeaderSections)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBodySectionConfiguration(apiObjects []awstypes.BodySectionConfiguration) []interface{} {
+func flattenBodySectionConfiguration(apiObjects []awstypes.BodySectionConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrContent: flattenBodySectionContent(apiObject.Content),
 			"section_id":      aws.ToString(apiObject.SectionId),
 		}
@@ -2162,80 +2162,80 @@ func flattenBodySectionConfiguration(apiObjects []awstypes.BodySectionConfigurat
 	return tfList
 }
 
-func flattenBodySectionContent(apiObject *awstypes.BodySectionContent) []interface{} {
+func flattenBodySectionContent(apiObject *awstypes.BodySectionContent) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Layout != nil {
 		tfMap["layout"] = flattenSectionLayoutConfiguration(apiObject.Layout)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSectionLayoutConfiguration(apiObject *awstypes.SectionLayoutConfiguration) []interface{} {
+func flattenSectionLayoutConfiguration(apiObject *awstypes.SectionLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FreeFormLayout != nil {
 		tfMap["free_form_layout"] = flattenFreeFormSectionLayoutConfiguration(apiObject.FreeFormLayout)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFreeFormSectionLayoutConfiguration(apiObject *awstypes.FreeFormSectionLayoutConfiguration) []interface{} {
+func flattenFreeFormSectionLayoutConfiguration(apiObject *awstypes.FreeFormSectionLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Elements != nil {
 		tfMap["free_form_layout"] = flattenFreeFormLayoutElement(apiObject.Elements)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSectionPageBreakConfiguration(apiObject *awstypes.SectionPageBreakConfiguration) []interface{} {
+func flattenSectionPageBreakConfiguration(apiObject *awstypes.SectionPageBreakConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.After != nil {
 		tfMap["after"] = flattenSectionAfterPageBreak(apiObject.After)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSectionAfterPageBreak(apiObject *awstypes.SectionAfterPageBreak) []interface{} {
+func flattenSectionAfterPageBreak(apiObject *awstypes.SectionAfterPageBreak) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrStatus] = apiObject.Status
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSectionStyle(apiObject *awstypes.SectionStyle) []interface{} {
+func flattenSectionStyle(apiObject *awstypes.SectionStyle) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Height != nil {
 		tfMap["height"] = aws.ToString(apiObject.Height)
@@ -2244,18 +2244,18 @@ func flattenSectionStyle(apiObject *awstypes.SectionStyle) []interface{} {
 		tfMap["padding"] = flattenSpacing(apiObject.Padding)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHeaderFooterSectionConfiguration(apiObjects []awstypes.HeaderFooterSectionConfiguration) []interface{} {
+func flattenHeaderFooterSectionConfiguration(apiObjects []awstypes.HeaderFooterSectionConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"section_id": aws.ToString(apiObject.SectionId),
 		}
 
@@ -2272,15 +2272,15 @@ func flattenHeaderFooterSectionConfiguration(apiObjects []awstypes.HeaderFooterS
 	return tfList
 }
 
-func flattenSheetControlLayouts(apiObjects []awstypes.SheetControlLayout) []interface{} {
+func flattenSheetControlLayouts(apiObjects []awstypes.SheetControlLayout) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrConfiguration: flattenSheetControlLayoutConfiguration(apiObject.Configuration),
 		}
 
@@ -2290,16 +2290,16 @@ func flattenSheetControlLayouts(apiObjects []awstypes.SheetControlLayout) []inte
 	return tfList
 }
 
-func flattenSheetControlLayoutConfiguration(apiObject *awstypes.SheetControlLayoutConfiguration) []interface{} {
+func flattenSheetControlLayoutConfiguration(apiObject *awstypes.SheetControlLayoutConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.GridLayout != nil {
 		tfMap["grid_layout"] = flattenGridLayoutConfiguration(apiObject.GridLayout)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -54,10 +54,6 @@ type resourceGlossaryTerm struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceGlossaryTerm) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_glossary_term"
-}
-
 func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -175,7 +171,7 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findGlossaryTermByID(ctx, conn, *out.Id, *out.DomainId)
 	})
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -53,10 +54,6 @@ type pipelineResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *pipelineResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_osis_pipeline"
 }
 
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -198,6 +195,10 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 								setvalidator.SizeBetween(1, 12),
 							},
 						},
+						"vpc_endpoint_management": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.VpcEndpointManagement](),
+							Optional:   true,
+						},
 					},
 				},
 			},
@@ -215,8 +216,8 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
 	name := data.PipelineName.ValueString()
-	input := &osis.CreatePipelineInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := osis.CreatePipelineInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -225,8 +226,8 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	input.Tags = getTagsIn(ctx)
 
 	// Retry for IAM eventual consistency.
-	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreatePipeline(ctx, input)
+	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+		return conn.CreatePipeline(ctx, &input)
 	})
 
 	if err != nil {
@@ -240,6 +241,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	pipeline, err := waitPipelineCreated(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("pipeline_name"), name)...)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Ingestion Pipeline (%s) create", name), err.Error())
 
 		return
@@ -304,20 +306,21 @@ func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	if !new.BufferOptions.Equal(old.BufferOptions) ||
-		!new.EncryptionAtRestOptions.Equal(old.EncryptionAtRestOptions) ||
-		!new.LogPublishingOptions.Equal(old.LogPublishingOptions) ||
-		!new.MaxUnits.Equal(old.MaxUnits) ||
-		!new.MinUnits.Equal(old.MinUnits) ||
-		!new.PipelineConfigurationBody.Equal(old.PipelineConfigurationBody) {
-		input := &osis.UpdatePipelineInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := osis.UpdatePipelineInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		name := new.PipelineName.ValueString()
-		_, err := conn.UpdatePipeline(ctx, input)
+		_, err := conn.UpdatePipeline(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Ingestion Pipeline (%s)", name), err.Error())
@@ -368,10 +371,6 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *pipelineResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {
 	input := &osis.GetPipelineInput{
 		PipelineName: aws.String(name),
@@ -398,7 +397,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 }
 
 func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPipelineByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -527,6 +526,7 @@ type cloudWatchLogDestinationModel struct {
 }
 
 type vpcOptionsModel struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+	SecurityGroupIDs      fwtypes.SetValueOf[types.String]                   `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetValueOf[types.String]                   `tfsdk:"subnet_ids"`
+	VpcEndpointManagement fwtypes.StringEnum[awstypes.VpcEndpointManagement] `tfsdk:"vpc_endpoint_management"`
 }

@@ -39,7 +39,6 @@ func ResourceConnection() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -114,7 +113,7 @@ func ResourceConnection() *schema.Resource {
 	}
 }
 
-func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -143,7 +142,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -189,7 +188,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -215,7 +214,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -261,7 +260,7 @@ func DeleteConnection(ctx context.Context, conn *glue.Client, catalogID, connect
 func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {
 	connectionProperties := make(map[string]string)
 	if val, ok := d.GetOkExists("connection_properties"); ok {
-		for k, v := range val.(map[string]interface{}) {
+		for k, v := range val.(map[string]any) {
 			connectionProperties[k] = v.(string)
 		}
 	}
@@ -277,18 +276,18 @@ func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {
 	}
 
 	if v, ok := d.GetOk("match_criteria"); ok {
-		connectionInput.MatchCriteria = flex.ExpandStringValueList(v.([]interface{}))
+		connectionInput.MatchCriteria = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("physical_connection_requirements"); ok && v.([]interface{})[0] != nil {
-		physicalConnectionRequirementsMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("physical_connection_requirements"); ok && v.([]any)[0] != nil {
+		physicalConnectionRequirementsMap := v.([]any)[0].(map[string]any)
 		connectionInput.PhysicalConnectionRequirements = expandPhysicalConnectionRequirements(physicalConnectionRequirementsMap)
 	}
 
 	return connectionInput
 }
 
-func expandPhysicalConnectionRequirements(m map[string]interface{}) *awstypes.PhysicalConnectionRequirements {
+func expandPhysicalConnectionRequirements(m map[string]any) *awstypes.PhysicalConnectionRequirements {
 	physicalConnectionRequirements := &awstypes.PhysicalConnectionRequirements{}
 
 	if v, ok := m[names.AttrAvailabilityZone]; ok {
@@ -306,18 +305,18 @@ func expandPhysicalConnectionRequirements(m map[string]interface{}) *awstypes.Ph
 	return physicalConnectionRequirements
 }
 
-func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *awstypes.PhysicalConnectionRequirements) []map[string]interface{} {
+func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *awstypes.PhysicalConnectionRequirements) []map[string]any {
 	if physicalConnectionRequirements == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrAvailabilityZone: aws.ToString(physicalConnectionRequirements.AvailabilityZone),
 		"security_group_id_list":   flex.FlattenStringValueSet(physicalConnectionRequirements.SecurityGroupIdList),
 		names.AttrSubnetID:         aws.ToString(physicalConnectionRequirements.SubnetId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
 func connectionPropertyKey_Values() []string {

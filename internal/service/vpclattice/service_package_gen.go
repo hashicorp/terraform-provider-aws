@@ -50,17 +50,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAuthPolicy,
+			Factory:  dataSourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
 			Name:     "Auth Policy",
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_vpclattice_listener",
 			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
-			Factory:  DataSourceResourcePolicy,
+			Factory:  dataSourceResourcePolicy,
 			TypeName: "aws_vpclattice_resource_policy",
 			Name:     "Resource Policy",
 		},
@@ -68,17 +71,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceServiceNetwork,
 			TypeName: "aws_vpclattice_service_network",
 			Name:     "Service Network",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -94,7 +93,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAuthPolicy,
+			Factory:  resourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
 			Name:     "Auth Policy",
 		},
@@ -107,7 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListenerRule,
+			Factory:  resourceListenerRule,
 			TypeName: "aws_vpclattice_listener_rule",
 			Name:     "Listener Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -115,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_vpclattice_resource_policy",
 			Name:     "Resource Policy",
 		},
@@ -152,7 +151,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroup,
+			Factory:  resourceTargetGroup,
 			TypeName: "aws_vpclattice_target_group",
 			Name:     "Target Group",
 			Tags: &types.ServicePackageResourceTags{

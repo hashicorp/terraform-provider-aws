@@ -70,7 +70,7 @@ func resourceDeployment() *schema.Resource {
 						},
 					},
 				},
-				Deprecated: `The attribute "canary_settings" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
+				Deprecated: "canary_settings is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"execution_arn": {
 				Type:     schema.TypeString,
@@ -89,13 +89,13 @@ func resourceDeployment() *schema.Resource {
 				Type:       schema.TypeString,
 				Optional:   true,
 				ForceNew:   true,
-				Deprecated: `The attribute "stage_description" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
+				Deprecated: "stage_description is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"stage_name": {
 				Type:       schema.TypeString,
 				Optional:   true,
 				ForceNew:   true,
-				Deprecated: `The attribute "stage_name" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
+				Deprecated: "stage_name is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			names.AttrTriggers: {
 				Type:     schema.TypeMap,
@@ -113,7 +113,7 @@ func resourceDeployment() *schema.Resource {
 	}
 }
 
-func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -122,7 +122,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		RestApiId:        aws.String(d.Get("rest_api_id").(string)),
 		StageDescription: aws.String(d.Get("stage_description").(string)),
 		StageName:        aws.String(d.Get("stage_name").(string)),
-		Variables:        flex.ExpandStringValueMap(d.Get("variables").(map[string]interface{})),
+		Variables:        flex.ExpandStringValueMap(d.Get("variables").(map[string]any)),
 	}
 
 	_, hasStageName := d.GetOk("stage_name")
@@ -134,8 +134,8 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		))
 	}
 
-	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CanarySettings = expandDeploymentCanarySettings(v.([]any)[0].(map[string]any))
 		if !hasStageName {
 			diags = append(diags, noEffectWithoutWarningDiag(
 				cty.GetAttrPath("canary_settings"),
@@ -155,7 +155,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -188,7 +188,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -218,7 +218,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -288,7 +288,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 {
 		return nil, fmt.Errorf("Unexpected format of ID (%s), use: 'REST-API-ID/DEPLOYMENT-ID'", d.Id())
@@ -329,7 +329,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 	return output, nil
 }
 
-func expandDeploymentCanarySettings(tfMap map[string]interface{}) *types.DeploymentCanarySettings {
+func expandDeploymentCanarySettings(tfMap map[string]any) *types.DeploymentCanarySettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -340,7 +340,7 @@ func expandDeploymentCanarySettings(tfMap map[string]interface{}) *types.Deploym
 		apiObject.PercentTraffic = v
 	}
 
-	if v, ok := tfMap["stage_variable_overrides"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["stage_variable_overrides"].(map[string]any); ok && len(v) > 0 {
 		apiObject.StageVariableOverrides = flex.ExpandStringValueMap(v)
 	}
 

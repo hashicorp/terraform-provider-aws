@@ -37,7 +37,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );
@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
     awsS3TablesNamespaceExample.overrideLogicalId("example");
     const awsS3TablesTableExample = new S3TablesTable(this, "example_2", {
       format: "ICEBERG",
-      name: "example-table",
+      name: "example_table",
       namespace: Token.asString(awsS3TablesNamespaceExample.namespace),
       tableBucketArn: Token.asString(
         awsS3TablesNamespaceExample.tableBucketArn
@@ -67,6 +67,7 @@ The following arguments are required:
 * `name` - (Required) Name of the table.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+  A full list of table naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#naming-rules-table).
 * `namespace` - (Required) Name of the namespace for this table.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
@@ -75,23 +76,23 @@ The following arguments are required:
 The following argument is optional:
 
 * `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration block.
-  [See `maintenanceConfiguration` below](#maintenance_configuration)
+  [See `maintenanceConfiguration` below](#maintenance_configuration).
 
-### maintenance_configuration
+### `maintenanceConfiguration`
 
 The `maintenanceConfiguration` configuration block supports the following arguments:
 
 * `iceberg_compaction` - (Required) A single Iceberg compaction settings block.
-  [See `iceberg_compaction` below](#iceberg_compaction)
+  [See `iceberg_compaction` below](#iceberg_compaction).
 * `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings block.
-  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management)
+  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
 
 ### `iceberg_compaction`
 
 The `iceberg_compaction` configuration block supports the following arguments:
 
 * `settings` - (Required) Settings for compaction.
-  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings)
+  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
@@ -107,7 +108,7 @@ The `iceberg_compaction.settings` configuration block supports the following arg
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
 * `settings` - (Required) Settings for snapshot management.
-  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings)
+  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
@@ -168,4 +169,4 @@ Using `terraform import`, import S3 Tables Table using the `tableBucketArn`, the
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8f3e7f177b00e212e962fca8903f022245d26601468f14ba20d662a02b6a350c -->
+<!-- cache-key: cdktf-0.20.8 input-1b0334bf078537baac156fabb7f8bff27cbf2351a1e4db60cfa59ebb04a9a318 -->

@@ -45,10 +45,6 @@ type accessGrantResource struct {
 	framework.WithImportByID
 }
 
-func (r *accessGrantResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grant"
-}
-
 func (r *accessGrantResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -178,7 +174,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	// "InvalidRequest: Invalid Grantee in the request".
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func() (any, error) {
 		return conn.CreateAccessGrant(ctx, input)
 	}, errCodeInvalidRequest, "Invalid Grantee in the request")
 
@@ -253,7 +249,7 @@ func (r *accessGrantResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -311,10 +307,6 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {

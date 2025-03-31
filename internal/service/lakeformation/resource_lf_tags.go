@@ -225,7 +225,7 @@ func ResourceResourceLFTags() *schema.Resource {
 	}
 }
 
-func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
@@ -294,7 +294,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceResourceLFTagsRead(ctx, d, meta)...)
 }
 
-func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
@@ -328,7 +328,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
@@ -385,11 +385,11 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 
 func lfTagsTagger(d *schema.ResourceData) (tagger, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &databaseTagger{}, diags
-	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &tableTagger{}, diags
-	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return &columnTagger{}, diags
 	} else {
 		diags = append(diags, errs.NewErrorDiagnostic(
@@ -456,8 +456,8 @@ func (t *columnTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput
 	return flattenLFTagPairs(tags.LFTags)
 }
 
-func lfTagsHash(v interface{}) int {
-	m, ok := v.(map[string]interface{})
+func lfTagsHash(v any) int {
+	m, ok := v.(map[string]any)
 
 	if !ok {
 		return 0
@@ -471,7 +471,7 @@ func lfTagsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func expandLFTagPair(tfMap map[string]interface{}) awstypes.LFTagPair {
+func expandLFTagPair(tfMap map[string]any) awstypes.LFTagPair {
 	if tfMap == nil {
 		return awstypes.LFTagPair{}
 	}
@@ -493,7 +493,7 @@ func expandLFTagPair(tfMap map[string]interface{}) awstypes.LFTagPair {
 	return apiObject
 }
 
-func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
+func expandLFTagPairs(tfList []any) []awstypes.LFTagPair {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -501,7 +501,7 @@ func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
 	var apiObjects []awstypes.LFTagPair
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -519,12 +519,12 @@ func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
 	return apiObjects
 }
 
-func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]interface{} {
+func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]any {
 	if reflect.ValueOf(apiObject).IsZero() {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -541,12 +541,12 @@ func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]interface{} {
 	return tfMap
 }
 
-func flattenLFTagPairs(apiObjects []awstypes.LFTagPair) []interface{} {
+func flattenLFTagPairs(apiObjects []awstypes.LFTagPair) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if reflect.ValueOf(apiObject).IsZero() {

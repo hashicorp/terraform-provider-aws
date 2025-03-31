@@ -52,7 +52,7 @@ func resourceVaultPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -61,7 +61,7 @@ func resourceVaultPolicy() *schema.Resource {
 	}
 }
 
-func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -77,7 +77,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutBackupVaultAccessPolicy(ctx, input)
 		},
 		errCodeInvalidParameterValueException, "Provided principal is not valid",
@@ -92,7 +92,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceVaultPolicyRead(ctx, d, meta)...)
 }
 
-func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -126,14 +126,15 @@ func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())
-	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &backup.DeleteBackupVaultAccessPolicyInput{
+	input := backup.DeleteBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return diags

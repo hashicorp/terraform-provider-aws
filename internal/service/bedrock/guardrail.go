@@ -63,10 +63,6 @@ type resourceGuardrail struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceGuardrail) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_guardrail"
-}
-
 func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -551,10 +547,6 @@ func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.Import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
-func (r *resourceGuardrail) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
@@ -608,7 +600,7 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
