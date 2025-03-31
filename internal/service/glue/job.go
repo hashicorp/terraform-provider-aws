@@ -170,6 +170,50 @@ func ResourceJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"source_control_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
+						},
+						"auth_token": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"branch": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"folder": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"last_commit_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"owner": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"provider": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
+						},
+						"repository": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
@@ -225,6 +269,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v, ok := d.GetOk("execution_property"); ok {
 		input.ExecutionProperty = expandExecutionProperty(v.([]any))
+	}
+
+	if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceControlDetails = expandSourceControlDetails(v.([]any))
 	}
 
 	if v, ok := d.GetOk("glue_version"); ok {
@@ -317,6 +365,9 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("execution_class", job.ExecutionClass)
 	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
+	}
+	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
 	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
@@ -411,6 +462,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		if v, ok := d.GetOk("worker_type"); ok {
 			jobUpdate.WorkerType = awstypes.WorkerType(v.(string))
+		}
+
+		if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
 		}
 
 		input := &glue.UpdateJobInput{
@@ -533,6 +588,58 @@ func flattenNotificationProperty(notificationProperty *awstypes.NotificationProp
 
 	m := map[string]any{
 		"notify_delay_after": int(aws.ToInt32(notificationProperty.NotifyDelayAfter)),
+	}
+
+	return []map[string]any{m}
+}
+
+func expandSourceControlDetails(l []any) *awstypes.SourceControlDetails {
+	m := l[0].(map[string]any)
+
+	sourceControlDetails := &awstypes.SourceControlDetails{}
+
+	if v, ok := m["auth_token"].(string); ok && v != "" {
+		sourceControlDetails.AuthToken = aws.String(v)
+	}
+
+	if v, ok := m["folder"].(string); ok && v != "" {
+		sourceControlDetails.Folder = aws.String(v)
+	}
+	if v, ok := m["auth_strategy"].(string); ok && v != "" {
+		sourceControlDetails.AuthStrategy = awstypes.SourceControlAuthStrategy(v)
+	}
+	if v, ok := m["branch"].(string); ok && v != "" {
+		sourceControlDetails.Branch = aws.String(v)
+	}
+	if v, ok := m["last_commit_id"].(string); ok && v != "" {
+		sourceControlDetails.LastCommitId = aws.String(v)
+	}
+	if v, ok := m["owner"].(string); ok && v != "" {
+		sourceControlDetails.Owner = aws.String(v)
+	}
+	if v, ok := m["provider"].(string); ok && v != "" {
+		sourceControlDetails.Provider = awstypes.SourceControlProvider(v)
+	}
+	if v, ok := m["repository"].(string); ok && v != "" {
+		sourceControlDetails.Repository = aws.String(v)
+	}
+
+	return sourceControlDetails
+}
+
+func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDetails) []map[string]any {
+	if sourceControlDetails == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"auth_strategy":  sourceControlDetails.AuthStrategy,
+		"branch":         aws.ToString(sourceControlDetails.Branch),
+		"folder":         aws.ToString(sourceControlDetails.Folder),
+		"last_commit_id": aws.ToString(sourceControlDetails.LastCommitId),
+		"owner":          aws.ToString(sourceControlDetails.Owner),
+		"provider":       sourceControlDetails.Provider,
+		"repository":     aws.ToString(sourceControlDetails.Repository),
 	}
 
 	return []map[string]any{m}
