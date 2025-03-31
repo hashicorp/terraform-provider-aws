@@ -3707,7 +3707,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_securityGroup(rName, sgName string, sgCt int) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count       = %[4]d
@@ -4009,7 +4009,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
-	return acctest.ConfigCompose(testAccConfig_ClusterSubnetGroup(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_clusterSubnetGroup(rName), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[2]q
   engine_latest_version      = true
@@ -4042,7 +4042,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_storageType(rName string, sType string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4073,7 +4073,7 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_storageChange(rName string, sType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4103,7 +4103,7 @@ resource "aws_db_instance" "test" {
 
 func testAccClusterConfig_allocatedStorage(rName, storageType string, allocatedStorage, iops int) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4133,7 +4133,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_iops(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4172,7 +4172,7 @@ func testAccClusterConfig_dbClusterInstanceClass(rName string, oddClasses bool) 
 	}
 	halfPreferredClasses := strings.Join(halfClasses, ", ")
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4216,7 +4216,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_subnetGroupName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
@@ -4277,7 +4277,7 @@ resource "aws_rds_cluster" "default" {
 
 func testAccClusterConfig_baseForPITR(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
@@ -4341,9 +4341,9 @@ resource "aws_rds_cluster" "restore" {
 
 func testAccClusterConfig_domain(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
-		testAccConfig_ServiceRole(rName),
-		testAccConfig_DirectoryService(rName, domain),
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		testAccClusterConfig_serviceRole(rName),
+		testAccClusterConfig_directoryService(rName, domain),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier     = %[1]q
@@ -4388,7 +4388,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, enabledCloudwatchLogExports1 string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4419,9 +4419,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsAuroraPostgreSQL(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
-
 data "aws_rds_engine_version" "test" {
   engine = "aurora-postgresql"
   latest = true
@@ -4443,7 +4442,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -6358,7 +6357,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, password, tfrds.ClusterEngineAuroraMySQL, passwordVersion)
 }
 
-func testAccConfig_ClusterSubnetGroup(rName string) string {
+func testAccClusterConfig_clusterSubnetGroup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 3),
 		fmt.Sprintf(`
@@ -6370,7 +6369,7 @@ resource "aws_db_subnet_group" "test" {
 	)
 }
 
-func testAccConfig_ServiceRole(rName string) string {
+func testAccClusterConfig_serviceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = %[1]q
@@ -6402,7 +6401,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
 `, rName)
 }
 
-func testAccConfig_DirectoryService(rName, domain string) string {
+func testAccClusterConfig_directoryService(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
