@@ -216,6 +216,10 @@ func resourceAMI() *schema.Resource {
 				ForceNew:     true, // this attribute can only be set at registration time
 				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
 			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -446,6 +450,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
 	d.Set(names.AttrName, image.Name)
 	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform_details", image.PlatformDetails)
