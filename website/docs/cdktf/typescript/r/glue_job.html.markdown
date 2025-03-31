@@ -32,8 +32,10 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new GlueJob(this, "example", {
       command: {
+        pythonVersion: "3",
         scriptLocation: "s3://${" + awsS3BucketExample.bucket + "}/example.py",
       },
+      glueVersion: "5.0",
       name: "example",
       roleArn: Token.asString(awsIamRoleExample.arn),
     });
@@ -209,7 +211,7 @@ This resource supports the following arguments:
 
 * `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `glueray` for Ray Job Type, or `gluestreaming` for Streaming Job Type. `maxCapacity` needs to be set if `pythonshell` is chosen.
 * `scriptLocation` - (Required) Specifies the S3 path to a script that executes a job.
-* `pythonVersion` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.6.
+* `pythonVersion` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.11 when `glueVersion` is set to 5.0.
 * `runtime` - (Optional) In Ray jobs, runtime is used to specify the versions of Ray, Python and additional libraries available in your environment. This field is not used in other job types. For supported runtime environment values, see [Working with Ray jobs](https://docs.aws.amazon.com/glue/latest/dg/ray-jobs-section.html#author-job-ray-runtimes) in the Glue Developer Guide.
 
 ### execution_property Argument Reference
@@ -256,4 +258,4 @@ Using `terraform import`, import Glue Jobs using `name`. For example:
 % terraform import aws_glue_job.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fcece4b7aecbbb3197c48e8ab15ec2463c3c86877b777540be3e3af8470e4c6f -->
+<!-- cache-key: cdktf-0.20.8 input-c1af8cddcb6a5d328c057f1dbc4536d1e418abe19e7cf17a156d00838c959ffe -->
