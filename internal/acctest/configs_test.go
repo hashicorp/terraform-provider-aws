@@ -11,6 +11,8 @@ import (
 )
 
 func TestConfigRandomPassword(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		overrides []string
