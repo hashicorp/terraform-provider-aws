@@ -10,14 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -47,51 +44,34 @@ func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.Sche
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrSource: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+			"accounts": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
+			},
+			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Required:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
 				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"accounts": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Optional:    true,
-							Computed:    true,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-						"regions": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-						"source_name": schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						"source_version": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
+			},
+			"source_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"source_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -134,15 +114,8 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	sourceData, diags := data.Source.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	sourceData.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
-	sourceData.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
-	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
+	data.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
+	data.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -172,13 +145,13 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 	}
 
 	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
-	var sourceData awsLogSourceSourceModel
+	var sourceData awsLogSourceResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, logSource, &sourceData)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sourceData)
+	data = sourceData
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -272,11 +245,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 }
 
 type awsLogSourceResourceModel struct {
-	ID     types.String                                             `tfsdk:"id"`
-	Source fwtypes.ListNestedObjectValueOf[awsLogSourceSourceModel] `tfsdk:"source"`
-}
-
-type awsLogSourceSourceModel struct {
+	ID            types.String                     `tfsdk:"id"`
 	Accounts      fwtypes.SetValueOf[types.String] `tfsdk:"accounts"`
 	Regions       fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
 	SourceName    types.String                     `tfsdk:"source_name"`
