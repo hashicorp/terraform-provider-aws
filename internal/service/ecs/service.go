@@ -875,6 +875,7 @@ func resourceService() *schema.Resource {
 												names.AttrDNSName: {
 													Type:     schema.TypeString,
 													Optional: true,
+													Computed: true,
 												},
 												names.AttrPort: {
 													Type:         schema.TypeInt,
@@ -887,6 +888,7 @@ func resourceService() *schema.Resource {
 									"discovery_name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 									"ingress_port_override": {
 										Type:         schema.TypeInt,
@@ -2340,7 +2342,7 @@ func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectCon
 	}
 
 	if v, ok := tfMap["service"].([]any); ok && len(v) > 0 {
-		apiObject.Services = expandServices(v)
+		apiObject.Services = expandServiceConnectServices(v)
 	}
 
 	return apiObject
@@ -2634,44 +2636,44 @@ func flattenEBSTagSpecifications(ctx context.Context, apiObjects []awstypes.EBST
 	return tfList
 }
 
-func expandServices(srv []any) []awstypes.ServiceConnectService {
-	if len(srv) == 0 {
+func expandServiceConnectServices(tfList []any) []awstypes.ServiceConnectService {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var out []awstypes.ServiceConnectService
-	for _, item := range srv {
-		raw, ok := item.(map[string]any)
+	var apiObjects []awstypes.ServiceConnectService
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		var config awstypes.ServiceConnectService
-		if v, ok := raw["client_alias"].([]any); ok && len(v) > 0 {
-			config.ClientAliases = expandClientAliases(v)
+		var apiObject awstypes.ServiceConnectService
+
+		if v, ok := tfMap["client_alias"].([]any); ok && len(v) > 0 {
+			apiObject.ClientAliases = expandClientAliases(v)
 		}
-		if v, ok := raw["discovery_name"].(string); ok && v != "" {
-			config.DiscoveryName = aws.String(v)
+		if v, ok := tfMap["discovery_name"].(string); ok && v != "" {
+			apiObject.DiscoveryName = aws.String(v)
 		}
-		if v, ok := raw["ingress_port_override"].(int); ok && v != 0 {
-			config.IngressPortOverride = aws.Int32(int32(v))
+		if v, ok := tfMap["ingress_port_override"].(int); ok && v != 0 {
+			apiObject.IngressPortOverride = aws.Int32(int32(v))
 		}
-		if v, ok := raw["port_name"].(string); ok && v != "" {
-			config.PortName = aws.String(v)
+		if v, ok := tfMap["port_name"].(string); ok && v != "" {
+			apiObject.PortName = aws.String(v)
+		}
+		if v, ok := tfMap[names.AttrTimeout].([]any); ok && len(v) > 0 {
+			apiObject.Timeout = expandTimeout(v)
+		}
+		if v, ok := tfMap["tls"].([]any); ok && len(v) > 0 {
+			apiObject.Tls = expandTLS(v)
 		}
 
-		if v, ok := raw[names.AttrTimeout].([]any); ok && len(v) > 0 {
-			config.Timeout = expandTimeout(v)
-		}
-
-		if v, ok := raw["tls"].([]any); ok && len(v) > 0 {
-			config.Tls = expandTLS(v)
-		}
-
-		out = append(out, config)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return out
+	return apiObjects
 }
 
 func flattenServiceConnectServices(apiObjects []awstypes.ServiceConnectService) []any {
