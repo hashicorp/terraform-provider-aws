@@ -2098,41 +2098,13 @@ resource "aws_s3_bucket" "tester" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_public_access_block" "tester" {
-  bucket = aws_s3_bucket.tester.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-resource "aws_s3_bucket_ownership_controls" "tester" {
-  bucket = aws_s3_bucket.tester.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "tester" {
-  depends_on = [
-    aws_s3_bucket_public_access_block.tester,
-    aws_s3_bucket_ownership_controls.tester,
-  ]
-
-  bucket = aws_s3_bucket.tester.id
-  acl    = "public-read"
-}
-
 resource "aws_s3_object" "testobject" {
-  bucket  = aws_s3_bucket_acl.tester.bucket
+  bucket  = aws_s3_bucket.tester.bucket
   key     = "testscript.sh"
   content = <<EOF
 #!/bin/bash
 echo $@
 EOF
-
-  acl = "public-read"
 }
 `, rName)
 }
