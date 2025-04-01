@@ -39,7 +39,7 @@ func FindDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	return output.DevEndpoint, nil
 }
 
-func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
+func findDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
 	input := &glue.GetDataQualityRulesetInput{
 		Name: aws.String(name),
 	}

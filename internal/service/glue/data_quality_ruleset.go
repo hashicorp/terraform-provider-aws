@@ -26,12 +26,13 @@ import (
 
 // @SDKResource("aws_glue_data_quality_ruleset", name="Data Quality Ruleset")
 // @Tags(identifierAttribute="arn")
-func ResourceDataQualityRuleset() *schema.Resource {
+func resourceDataQualityRuleset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataQualityRulesetCreate,
 		ReadWithoutTimeout:   resourceDataQualityRulesetRead,
 		UpdateWithoutTimeout: resourceDataQualityRulesetUpdate,
 		DeleteWithoutTimeout: resourceDataQualityRulesetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -139,7 +140,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Id()
 
-	dataQualityRuleset, err := FindDataQualityRulesetByName(ctx, conn, name)
+	dataQualityRuleset, err := findDataQualityRulesetByName(ctx, conn, name)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Data Quality Ruleset (%s) not found, removing from state", d.Id())
 		d.SetId("")

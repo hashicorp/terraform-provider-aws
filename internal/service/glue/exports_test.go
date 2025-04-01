@@ -12,13 +12,15 @@ var (
 	ResourceConnection                    = resourceConnection
 	ResourceCrawler                       = resourceCrawler
 	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
+	ResourceDataQualityRuleset            = resourceDataQualityRuleset
 	ResourceJob                           = resourceJob
 
-	FindCatalogTableOptimizer  = findCatalogTableOptimizer
-	FindClassifierByName       = findClassifierByName
-	FindConnectionByTwoPartKey = findConnectionByTwoPartKey
-	FindCrawlerByName          = findCrawlerByName
-	FindDatabaseByName         = findDatabaseByName
-	FindJobByName              = findJobByName
-	FindTableByName            = findTableByName
+	FindCatalogTableOptimizer    = findCatalogTableOptimizer
+	FindClassifierByName         = findClassifierByName
+	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
+	FindCrawlerByName            = findCrawlerByName
+	FindDatabaseByName           = findDatabaseByName
+	FindDataQualityRulesetByName = findDataQualityRulesetByName
+	FindJobByName                = findJobByName
+	FindTableByName              = findTableByName
 )

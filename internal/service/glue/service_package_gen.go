@@ -101,7 +101,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Data Catalog Encryption Settings",
 		},
 		{
-			Factory:  ResourceDataQualityRuleset,
+			Factory:  resourceDataQualityRuleset,
 			TypeName: "aws_glue_data_quality_ruleset",
 			Name:     "Data Quality Ruleset",
 			Tags: &types.ServicePackageResourceTags{
