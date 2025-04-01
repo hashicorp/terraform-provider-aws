@@ -1467,8 +1467,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// we'll only set one or the other here to avoid a perma-diff.
 			// Since user_data_base64 was added later, we'll prefer to set
 			// user_data.
-			b64, ok := d.Get("user_data_base64").(string)
-			if ok && b64 != "" {
+			_, b64 := d.GetOk("user_data_base64")
+			if b64 {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
 				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
