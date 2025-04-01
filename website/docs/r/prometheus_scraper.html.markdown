@@ -166,6 +166,39 @@ Your source Amazon EKS cluster must be configured to allow the scraper to access
 metrics. Follow the [user guide](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-eks-setup)
 to setup the appropriate Kubernetes permissions.
 
+### Cross-Account Configuration
+
+This setup allows the scraper, running in a source acccount, to remote write its collected metrics to a workspace in a target account. Note that:
+
+- The target Role and target Workspace must be in the same account
+- The source Scraper and target Workspace must be in the same Region
+
+Follow [the AWS Best Practices guide](https://aws-observability.github.io/observability-best-practices/patterns/ampxa) to learn about the IAM roles configuration and overall setup.
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    eks {
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = "<target_account_workspace_arn>"
+    }
+  }
+
+  role_configuration {
+    source_role_arn = aws_iam_role.source.arn
+    target_role_arn = "arn:aws:iam::ACCOUNT-ID:role/target-role-name"
+  }
+
+  scrape_configuration = "..."
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -177,6 +210,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
+
+* `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration`](#role_configuration) below.
 
 ### `destination`
 
@@ -195,6 +230,11 @@ The following arguments are optional:
 * `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the source EKS cluster.
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 * `security_group_ids` - (Optional) List of the security group IDs for the Amazon EKS cluster VPC configuration.
+
+### `role_configuration`
+
+* `source_role_arn` - (Required) The Amazon Resource Name (ARN) of the source role configuration. Must be an IAM role ARN.
+* `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the target role configuration. Must be an IAM role ARN.
 
 ## Attribute Reference
 
