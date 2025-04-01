@@ -29,12 +29,12 @@ body:
     attributes:
       label: Affected Resource(s) or Data Source(s)
       description: |
-        Please list the resource(s) and/or data source(s) that you're requesting to be enhanced.
+        Where applicable, please list the resource(s) and/or data source(s) that you're requesting to be enhanced.
       placeholder: |
         * `aws_example_resource`
         * `aws_example_data_source`
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: tf_config
