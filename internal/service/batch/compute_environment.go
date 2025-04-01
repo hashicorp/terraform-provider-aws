@@ -58,7 +58,7 @@ func resourceComputeEnvironment() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
 			names.AttrNamePrefix: {
@@ -66,7 +66,7 @@ func resourceComputeEnvironment() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
 			"compute_resources": {
@@ -278,7 +278,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	computeEnvironmentName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	computeEnvironmentName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	computeEnvironmentType := awstypes.CEType(d.Get(names.AttrType).(string))
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
