@@ -817,16 +817,20 @@ func resourceInstance() *schema.Resource {
 						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
 						return true
 					}
+
+					if userDataHashSum(old) == userDataHashSum(new) {
+						return true
+					}
 					return false
 				},
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
+				//StateFunc: func(v any) string {
+				//	switch v := v.(type) {
+				//	case string:
+				//		return userDataHashSum(v)
+				//	default:
+				//		return ""
+				//	}
+				//},
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
 			"user_data_base64": {
@@ -913,7 +917,7 @@ func resourceInstance() *schema.Resource {
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
 					// user_data is stored in state as a hash.
 					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
-						if o, n := diff.GetChange("user_data"); userDataHashSum(n.(string)) == o.(string) {
+						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
 							return nil
 						}
 					}
@@ -1454,7 +1458,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			if b64 {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				d.Set("user_data", userDataHashSum(aws.ToString(attr.UserData.Value)))
+				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
+				}
+				d.Set("user_data", string(data))
 			}
 		}
 	}

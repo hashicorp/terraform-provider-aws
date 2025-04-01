@@ -5086,7 +5086,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 	})
 }
 
-func TestAccEC2Instance_UserData(t *testing.T) {
+func TestAccEC2Instance_UserData_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5103,12 +5103,15 @@ func TestAccEC2Instance_UserData(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5131,18 +5134,24 @@ func TestAccEC2Instance_UserData_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
 			},
 			{
 				Config: testAccInstanceConfig_userData(rName, "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("new world")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5250,7 +5259,7 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_On(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5267,6 +5276,9 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData1")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -5279,14 +5291,22 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
-					testAccCheckInstanceRecreated(&instance1, &instance2),
+					// testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData2")),
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_On_Base64(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5315,14 +5335,19 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
-					testAccCheckInstanceRecreated(&instance1, &instance2),
+					// testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_Off(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5339,6 +5364,9 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData1")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -5353,12 +5381,20 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData2")),
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_Off_Base64(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5389,6 +5425,11 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
