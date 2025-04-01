@@ -41,6 +41,16 @@ func resourceJobDefinition() *schema.Resource {
 		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
+		Identity: &schema.ResourceIdentity{
+			Version: 1,
+			Schema: map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:              schema.TypeString,
+					RequiredForImport: true,
+				},
+			},
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -820,6 +830,14 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.ToString(output.JobDefinitionArn))
+	identity, err := d.Identity()
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	err = identity.Set(names.AttrARN, aws.ToString(output.JobDefinitionArn))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
