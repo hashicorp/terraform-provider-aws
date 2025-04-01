@@ -22,6 +22,7 @@ var (
 	ResourceResourcePolicy                = resourceResourcePolicy
 	ResourceSchema                        = resourceSchema
 	ResourceSecurityConfiguration         = resourceSecurityConfiguration
+	ResourceTrigger                       = resourceTrigger
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
@@ -36,4 +37,5 @@ var (
 	FindRegistryByID             = findRegistryByID
 	FindSchemaByID               = findSchemaByID
 	FindTableByName              = findTableByName
+	FindTriggerByName            = findTriggerByName
 )

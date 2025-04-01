@@ -173,7 +173,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("registry_name", output.RegistryName)
 	d.Set("schema_checkpoint", output.SchemaCheckpoint)
 
-	schemeDefOutput, err := FindSchemaVersionByID(ctx, conn, d.Id())
+	schemeDefOutput, err := findSchemaVersionByID(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Schema Definition (%s): %s", d.Id(), err)
 	}
@@ -333,6 +333,62 @@ func waitSchemaDeleted(ctx context.Context, conn *glue.Client, registryID string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaVersionOutput, error) {
+	input := &glue.GetSchemaVersionInput{
+		SchemaId: createSchemaID(id),
+		SchemaVersionNumber: &awstypes.SchemaVersionNumber{
+			LatestVersion: true,
+		},
+	}
+
+	output, err := conn.GetSchemaVersion(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// statusSchemaVersion fetches the Schema Version and its Status
+func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+	const (
+		schemaVersionStatusUnknown = "Unknown"
+	)
+	return func() (any, string, error) {
+		output, err := findSchemaVersionByID(ctx, conn, id)
+
+		if err != nil {
+			return nil, schemaVersionStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, schemaVersionStatusUnknown, nil
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaVersionOutput, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SchemaVersionStatusPending),
+		Target:  enum.Slice(awstypes.SchemaVersionStatusAvailable),
+		Refresh: statusSchemaVersion(ctx, conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetSchemaVersionOutput); ok {
 		return output, err
 	}
 

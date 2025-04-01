@@ -169,7 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Security Configuration",
 		},
 		{
-			Factory:  ResourceTrigger,
+			Factory:  resourceTrigger,
 			TypeName: "aws_glue_trigger",
 			Name:     "Trigger",
 			Tags: &types.ServicePackageResourceTags{

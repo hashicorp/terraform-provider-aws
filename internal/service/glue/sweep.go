@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -31,11 +30,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_registry", sweepRegistries)
 	awsv2.Register("aws_glue_schema", sweepSchemas)
 	awsv2.Register("aws_glue_security_configuration", sweepSecurityConfigurations)
-
-	resource.AddTestSweepers("aws_glue_trigger", &resource.Sweeper{
-		Name: "aws_glue_trigger",
-		F:    sweepTriggers,
-	})
+	awsv2.Register("aws_glue_trigger", sweepTriggers)
 
 	resource.AddTestSweepers("aws_glue_workflow", &resource.Sweeper{
 		Name: "aws_glue_workflow",
@@ -317,49 +312,29 @@ func sweepSecurityConfigurations(ctx context.Context, client *conns.AWSClient) (
 	return sweepResources, nil
 }
 
-func sweepTriggers(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepTriggers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.GetTriggersInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetTriggersInput{}
-
-	pages := glue.NewGetTriggersPaginator(conn, input)
-
+	pages := glue.NewGetTriggersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Glue Trigger sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Glue Triggers: %s", err)
+			return nil, err
 		}
 
-		for _, trigger := range page.Triggers {
-			name := aws.ToString(trigger.Name)
-
-			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
-			r := ResourceTrigger()
+		for _, v := range page.Triggers {
+			r := resourceTrigger()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Triggers: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepWorkflow(region string) error {
